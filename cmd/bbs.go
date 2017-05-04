@@ -10,6 +10,8 @@ import (
 	"os"
 	"os/signal"
 	"time"
+	"github.com/evanlinjin/bbs/rpc"
+	"strconv"
 )
 
 const (
@@ -39,9 +41,8 @@ type Config struct {
 func MakeConfig() *Config {
 	//pk, sc := cipher.GenerateKeyPair()
 	return &Config{
-		Master: false,
-		//PublicKey:        "",
-		//SecretKey:        "",
+		Master:           false,
+		RPCPort:          6421,
 		CXOAddress:       "[::]:8998",
 		WebInterface:     true,
 		WebInterfacePort: 6420,
@@ -88,6 +89,8 @@ func configureDatastore(c *Config) *cxo.CXOConfig {
 }
 
 func Run(c *Config) {
+	fmt.Println("[MASTER MODE]", c.Master)
+
 	host := fmt.Sprintf("%s:%d", LocalhostAddress, c.WebInterfacePort)
 	fullAddress := fmt.Sprintf("%s://%s", "http", host)
 	fmt.Println("[FULL ADDRESS]", fullAddress)
@@ -99,9 +102,29 @@ func Run(c *Config) {
 	// Datastore.
 	cxoClientConfig := configureDatastore(c)
 	cxoClient, e := cxo.NewClient(cxoClientConfig)
-	panicIfError(e, "unable to create CXOClient")
-	panicIfError(cxoClient.AddRandomIdentity(), "unable to create random indentity for CXOClient")
-	panicIfError(cxoClient.Launch(), "unable to launch CXOClient")
+	panicIfError(
+		e,
+		"unable to create CXOClient",
+	)
+	panicIfError(
+		cxoClient.AddRandomIdentity(),
+		"unable to create random identity for CXOClient",
+	)
+	panicIfError(
+		cxoClient.Launch(),
+		"unable to launch CXOClient",
+	)
+
+	// RPC Server.
+	var rpcServer *rpc.Server
+	if c.Master {
+		rpcServer = rpc.NewServer(cxoClient)
+		panicIfError(
+			rpcServer.Launch("[::]:" + strconv.Itoa(c.RPCPort)),
+			"unable to start rpc server",
+		)
+		fmt.Println("[RPC SERVER] Address:", rpcServer.Address())
+	}
 
 	// Start web interface.
 	if c.WebInterface {
@@ -125,8 +148,11 @@ func Run(c *Config) {
 	// Wait for Ctrl-C signal.
 	<-quit
 	fmt.Println("Shutting down...")
-	cxoClient.Shutdown()
 	gui.Shutdown()
+	if c.Master {
+		rpcServer.Shutdown()
+	}
+	cxoClient.Shutdown()
 	fmt.Println("Goodbye.")
 }
 

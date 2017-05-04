@@ -6,5 +6,6 @@ import (
 
 func main() {
 	config := cmd.MakeConfig()
+	config.Parse()
 	cmd.Run(config)
 }

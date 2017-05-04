@@ -11,7 +11,7 @@ import (
 type Server struct {
 	l   net.Listener
 	rpc *rpc.Server
-	cxo *cxo.Client
+	cxo *CXO
 
 	// For closing.
 	waiter sync.WaitGroup
@@ -21,14 +21,14 @@ type Server struct {
 func NewServer(c *cxo.Client) *Server {
 	return &Server{
 		rpc: rpc.NewServer(),
-		cxo: c,
+		cxo: NewCXO(c),
 	}
 }
 
 // Launch launches the rpc server.
 func (s *Server) Launch(address string) error {
 	var e error
-	if e = s.rpc.RegisterName("bbs", s); e != nil {
+	if e = s.rpc.RegisterName("bbs", s.cxo); e != nil {
 		return e
 	}
 	if s.l, e = net.Listen("tcp", address); e != nil {
@@ -50,20 +50,10 @@ func (s *Server) Shutdown() error {
 	return nil
 }
 
-/******************************************************
- * Exposed RPC Methods                                *
- *****************************************************/
-
-// NewPost injects a new post to specified board and thread.
-// TODO: Implement.
-func (s *Server) NewPost(req *NewPostReq, ok *bool) error {
-	*ok = true
-	return nil
-}
-
-// NewThread injects a new thread to specified board.
-// TODO: Implement.
-func (s *Server) NewThread(req *NewThreadReq, ok *bool) error {
-	*ok = true
-	return nil
+// Address prints the rpc server's address.
+func (s *Server) Address() string {
+	if s.l != nil {
+		return s.l.Addr().String()
+	}
+	return ""
 }
