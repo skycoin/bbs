@@ -49,7 +49,7 @@ func NewClient(conf *CXOConfig) (*Client, error) {
 		CXOConfig:    conf,
 		Client:       client,
 		Identities:   make(map[cipher.PubKey]*UserConfig),
-		BoardManager: NewBoardManager(),
+		BoardManager: NewBoardManager(conf.Master),
 	}
 	return &c, nil
 }
@@ -60,23 +60,18 @@ func (c *Client) Launch() error {
 		return e
 	}
 	time.Sleep(5 * time.Second)
-	c.InitRegister()
+	c.Client.Execute(func(ct *node.Container) error {
+		ct.Register("Board", Board{},
+			"Thread", Thread{},
+			"Post", Post{})
+		return nil
+	})
 	return nil
 }
 
 // Shutdown shutdowns the Client.
 func (c *Client) Shutdown() error {
 	return c.Client.Close()
-}
-
-// InitRegister initiates schema registration.
-func (c *Client) InitRegister() {
-	c.Client.Execute(func(ct *node.Container) (_ error) {
-		ct.Register("Board", Board{},
-			"Thread", Thread{},
-			"Post", Post{})
-		return
-	})
 }
 
 // AddIdentity Adds an identity.
