@@ -1,7 +1,7 @@
 package gui
 
 import (
-	"github.com/evanlinjin/bbs-server/datastore"
+	"github.com/evanlinjin/bbs/cxo"
 	"net"
 	"net/http"
 )
@@ -17,7 +17,7 @@ const (
 	indexPage   = "index.html"
 )
 
-func LaunchWebInterface(host, staticDir string, cc *datastore.CXOClient) (e error) {
+func LaunchWebInterface(host, staticDir string, cc *cxo.Client) (e error) {
 	quit = make(chan struct{})
 	//appLoc, e := util.DetermineResourcePath(staticDir, resourceDir, devDir)
 	//if e != nil {
@@ -57,7 +57,7 @@ func Shutdown() {
 }
 
 // NewJsonMux creates a http.ServeMux with handlers registered.
-func NewJsonMux(cc *datastore.CXOClient) *http.ServeMux {
+func NewJsonMux(cc *cxo.Client) *http.ServeMux {
 	mux := http.NewServeMux()
 	RegisterApiHandlers(mux, cc)
 	return mux

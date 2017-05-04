@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/evanlinjin/bbs/datastore"
+	"github.com/evanlinjin/bbs/cxo"
 	"net"
 	"net/rpc"
 	"sync"
@@ -11,14 +11,14 @@ import (
 type Server struct {
 	l   net.Listener
 	rpc *rpc.Server
-	cxo *datastore.CXOClient
+	cxo *cxo.Client
 
 	// For closing.
 	waiter sync.WaitGroup
 }
 
 // NewServer creates a new RPC server.
-func NewServer(c *datastore.CXOClient) *Server {
+func NewServer(c *cxo.Client) *Server {
 	return &Server{
 		rpc: rpc.NewServer(),
 		cxo: c,

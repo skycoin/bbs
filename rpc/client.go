@@ -27,3 +27,8 @@ func (c *Client) NewThread(req *NewThreadReq) (ok bool, e error) {
 	e = c.rpc.Call("rpc.NewThread", req, &ok)
 	return
 }
+
+// Close closes the rpc client.
+func (c *Client) Close() error {
+	return c.rpc.Close()
+}

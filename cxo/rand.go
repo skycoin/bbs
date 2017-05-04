@@ -1,4 +1,4 @@
-package datastore
+package cxo
 
 import (
 	"github.com/skycoin/skycoin/src/cipher"

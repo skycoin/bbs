@@ -3,7 +3,7 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"github.com/evanlinjin/bbs/datastore"
+	"github.com/evanlinjin/bbs/cxo"
 	"github.com/evanlinjin/bbs/gui"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
@@ -80,8 +80,8 @@ func catchInterrupt(quit chan<- int) {
 	quit <- 1
 }
 
-func configureDatastore(c *Config) *datastore.CXOConfig {
-	dc := datastore.NewCXOConfig()
+func configureDatastore(c *Config) *cxo.CXOConfig {
+	dc := cxo.NewCXOConfig()
 	dc.Master = c.Master
 	dc.Address = c.CXOAddress
 	return dc
@@ -98,7 +98,7 @@ func Run(c *Config) {
 
 	// Datastore.
 	cxoClientConfig := configureDatastore(c)
-	cxoClient, e := datastore.NewCXOClient(cxoClientConfig)
+	cxoClient, e := cxo.NewClient(cxoClientConfig)
 	panicIfError(e, "unable to create CXOClient")
 	panicIfError(cxoClient.AddRandomIdentity(), "unable to create random indentity for CXOClient")
 	panicIfError(cxoClient.Launch(), "unable to launch CXOClient")

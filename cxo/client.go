@@ -1,4 +1,4 @@
-package datastore
+package cxo
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// CXOConfig represents a configuration for CXOClient.
+// CXOConfig represents a configuration for Client.
 type CXOConfig struct {
 	Master          bool
 	Address         string
@@ -23,8 +23,8 @@ func NewCXOConfig() *CXOConfig {
 	return &c
 }
 
-// CXOClient contains all the boards, threads and posts.
-type CXOClient struct {
+// Client contains all the boards, threads and posts.
+type Client struct {
 	*CXOConfig
 	Client *node.Client
 
@@ -35,8 +35,8 @@ type CXOClient struct {
 	BoardManager *BoardManager
 }
 
-// NewCXOClient creates a new CXOClient.
-func NewCXOClient(conf *CXOConfig) (*CXOClient, error) {
+// NewClient creates a new Client.
+func NewClient(conf *CXOConfig) (*Client, error) {
 
 	// Setup cxo client.
 	clientConfig := node.NewClientConfig()
@@ -45,7 +45,7 @@ func NewCXOClient(conf *CXOConfig) (*CXOClient, error) {
 		return nil, e
 	}
 
-	c := CXOClient{
+	c := Client{
 		CXOConfig:    conf,
 		Client:       client,
 		Identities:   make(map[cipher.PubKey]*UserConfig),
@@ -54,8 +54,8 @@ func NewCXOClient(conf *CXOConfig) (*CXOClient, error) {
 	return &c, nil
 }
 
-// Launch runs the CXOClient.
-func (c *CXOClient) Launch() error {
+// Launch runs the Client.
+func (c *Client) Launch() error {
 	if e := c.Client.Start(c.Address); e != nil {
 		return e
 	}
@@ -64,13 +64,13 @@ func (c *CXOClient) Launch() error {
 	return nil
 }
 
-// Shutdown shutdowns the CXOClient.
-func (c *CXOClient) Shutdown() error {
+// Shutdown shutdowns the Client.
+func (c *Client) Shutdown() error {
 	return c.Client.Close()
 }
 
 // InitRegister initiates schema registration.
-func (c *CXOClient) InitRegister() {
+func (c *Client) InitRegister() {
 	c.Client.Execute(func(ct *node.Container) (_ error) {
 		ct.Register("Board", Board{},
 			"Thread", Thread{},
@@ -80,7 +80,7 @@ func (c *CXOClient) InitRegister() {
 }
 
 // AddIdentity Adds an identity.
-func (c *CXOClient) AddIdentity(uc *UserConfig) error {
+func (c *Client) AddIdentity(uc *UserConfig) error {
 	if uc == nil {
 		return errors.New("nil UserConfig")
 	}
@@ -98,7 +98,7 @@ func (c *CXOClient) AddIdentity(uc *UserConfig) error {
 }
 
 // AddRandomIdentity adds a random identity.
-func (c *CXOClient) AddRandomIdentity() error {
+func (c *Client) AddRandomIdentity() error {
 	pk, sk := cipher.GenerateKeyPair()
 	uc := &UserConfig{
 		PublicKey: pk,
@@ -108,7 +108,7 @@ func (c *CXOClient) AddRandomIdentity() error {
 }
 
 // SetCurrentIdentity sets the current identity.
-func (c *CXOClient) SetCurrentIdentity(pk cipher.PubKey) error {
+func (c *Client) SetCurrentIdentity(pk cipher.PubKey) error {
 	if e := pk.Verify(); e != nil {
 		return errors.New("invalid public key")
 	}
@@ -120,13 +120,13 @@ func (c *CXOClient) SetCurrentIdentity(pk cipher.PubKey) error {
 }
 
 // CheckIdentity checks whether current identity is set.
-func (c *CXOClient) CheckCurrentIdentity() bool {
+func (c *Client) CheckCurrentIdentity() bool {
 	_, has := c.Identities[c.CurrentIdentity]
 	return has
 }
 
 // SubscribeToBoard subscribes to a board.
-func (c *CXOClient) SubscribeToBoard(pk cipher.PubKey) (*BoardConfig, error) {
+func (c *Client) SubscribeToBoard(pk cipher.PubKey) (*BoardConfig, error) {
 	bc := &BoardConfig{
 		Master:    false,
 		PublicKey: pk.Hex(),
@@ -144,18 +144,18 @@ func (c *CXOClient) SubscribeToBoard(pk cipher.PubKey) (*BoardConfig, error) {
 }
 
 // UnSubscribeFromBoard unsubscribes from a board.
-func (c *CXOClient) UnSubscribeFromBoard(pk cipher.PubKey) bool {
+func (c *Client) UnSubscribeFromBoard(pk cipher.PubKey) bool {
 	c.BoardManager.RemoveConfig(pk)
 	return c.Client.Unsubscribe(pk)
 }
 
 // ListBoards lists all boards we are subscribed to.
-func (c *CXOClient) ListBoards() []*BoardConfig {
+func (c *Client) ListBoards() []*BoardConfig {
 	return c.BoardManager.GetList()
 }
 
 // NewBoard creates a new board with a seed.
-func (c *CXOClient) NewBoard(name, seed string) (*BoardConfig, error) {
+func (c *Client) NewBoard(name, seed string) (*BoardConfig, error) {
 	bc, pk, sk, e := c.BoardManager.NewMasterConfigFromSeed(seed, "")
 	if e != nil {
 		return nil, e
@@ -172,7 +172,7 @@ func (c *CXOClient) NewBoard(name, seed string) (*BoardConfig, error) {
 }
 
 // ListThreads lists the threads of specified board.
-func (c *CXOClient) ListThreads(pk cipher.PubKey) (*BoardPage, error) {
+func (c *Client) ListThreads(pk cipher.PubKey) (*BoardPage, error) {
 	bc, e := c.BoardManager.GetConfig(pk)
 	if e != nil {
 		return nil, e
@@ -181,7 +181,7 @@ func (c *CXOClient) ListThreads(pk cipher.PubKey) (*BoardPage, error) {
 }
 
 // NewThread creates a new thread under specified board.
-func (c *CXOClient) NewThread(pk cipher.PubKey, title, desc string) (*Thread, error) {
+func (c *Client) NewThread(pk cipher.PubKey, title, desc string) (*Thread, error) {
 	bc, e := c.BoardManager.GetConfig(pk)
 	if e != nil {
 		return nil, e
@@ -209,7 +209,7 @@ func (c *CXOClient) NewThread(pk cipher.PubKey, title, desc string) (*Thread, er
 }
 
 // ListPosts lists all posts of a specified board and thread.
-func (c *CXOClient) ListPosts(id []byte) (*ThreadPage, error) {
+func (c *Client) ListPosts(id []byte) (*ThreadPage, error) {
 	// Find thread of id.
 
 	e := c.Client.Execute(func(ct *node.Container) error {

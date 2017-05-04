@@ -2,7 +2,7 @@ package gui
 
 import (
 	"encoding/json"
-	"github.com/evanlinjin/bbs/datastore"
+	"github.com/evanlinjin/bbs/cxo"
 	"github.com/skycoin/skycoin/src/cipher"
 	"net/http"
 )
@@ -14,7 +14,7 @@ const (
 	QueryDescription = "description"
 )
 
-func RegisterApiHandlers(mux *http.ServeMux, cc *datastore.CXOClient) {
+func RegisterApiHandlers(mux *http.ServeMux, cc *cxo.Client) {
 	h := NewAPIHandler(cc)
 
 	mux.HandleFunc("/api/subscribe_to_board", h.SubscribeToBoard)
@@ -31,10 +31,10 @@ func RegisterApiHandlers(mux *http.ServeMux, cc *datastore.CXOClient) {
 }
 
 type APIHandler struct {
-	cc *datastore.CXOClient
+	cc *cxo.Client
 }
 
-func NewAPIHandler(cc *datastore.CXOClient) *APIHandler {
+func NewAPIHandler(cc *cxo.Client) *APIHandler {
 	return &APIHandler{cc: cc}
 }
 

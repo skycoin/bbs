@@ -1,4 +1,4 @@
-package datastore
+package cxo
 
 import (
 	"fmt"
