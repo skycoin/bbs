@@ -52,7 +52,7 @@ func (bm *BoardManager) NewMasterConfigFromSeed(seed, URL string) (
 	*BoardConfig, cipher.PubKey, cipher.SecKey, error,
 ) {
 	if bm.Master == false {
-		return nil, nil, nil, errors.New("not master")
+		return nil, cipher.PubKey{}, cipher.SecKey{}, errors.New("not master")
 	}
 	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
 	bc := &BoardConfig{
