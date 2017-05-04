@@ -44,10 +44,12 @@ func (s *Server) Launch(address string) error {
 
 // Shutdown shutdowns the rpc server.
 func (s *Server) Shutdown() error {
+	var e error
 	if s.l != nil {
-		return s.l.Close()
+		e = s.l.Close()
 	}
-	return nil
+	s.waiter.Wait()
+	return e
 }
 
 // Address prints the rpc server's address.
