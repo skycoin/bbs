@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/evanlinjin/bbs-server/cmd"
+	"github.com/evanlinjin/bbs/cmd"
 )
 
 func main() {

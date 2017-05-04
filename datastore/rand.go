@@ -1,9 +1,9 @@
 package datastore
 
 import (
+	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
 	"time"
-	"github.com/skycoin/skycoin/src/cipher"
 )
 
 // MakeTimeStampedRandomID makes a timestamped, random ID.

@@ -3,8 +3,8 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"github.com/evanlinjin/bbs-server/datastore"
-	"github.com/evanlinjin/bbs-server/gui"
+	"github.com/evanlinjin/bbs/datastore"
+	"github.com/evanlinjin/bbs/gui"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"os"

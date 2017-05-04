@@ -1,2 +1,2 @@
-# bbs
-Sycoin BBS
+# Skycoin BBS
+Next generation decentralised social network.

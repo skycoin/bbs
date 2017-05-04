@@ -2,7 +2,7 @@ package gui
 
 import (
 	"encoding/json"
-	"github.com/evanlinjin/bbs-server/datastore"
+	"github.com/evanlinjin/bbs/datastore"
 	"github.com/skycoin/skycoin/src/cipher"
 	"net/http"
 )
