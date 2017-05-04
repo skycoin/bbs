@@ -1,4 +1,4 @@
-package cxo
+package types
 
 import (
 	"github.com/skycoin/skycoin/src/cipher"

@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	config := cmd.MakeConfig()
+	config := cmd.NewConfig()
 	config.Parse()
 	cmd.Run(config)
 }

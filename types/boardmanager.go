@@ -1,4 +1,4 @@
-package cxo
+package types
 
 import (
 	"errors"
@@ -17,14 +17,14 @@ type BoardConfig struct {
 // BoardManager manages board configurations.
 type BoardManager struct {
 	sync.Mutex
-	Master bool
+	Master  bool
 	Configs map[cipher.PubKey]*BoardConfig
 }
 
 // NewBoardManager creates a new empty BoardManager.
 func NewBoardManager(master bool) *BoardManager {
 	bm := BoardManager{
-		Master: master,
+		Master:  master,
 		Configs: make(map[cipher.PubKey]*BoardConfig),
 	}
 	return &bm

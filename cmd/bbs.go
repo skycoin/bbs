@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/evanlinjin/bbs/cxo"
 	"github.com/evanlinjin/bbs/gui"
+	"github.com/evanlinjin/bbs/rpc"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"os"
 	"os/signal"
-	"time"
-	"github.com/evanlinjin/bbs/rpc"
 	"strconv"
+	"time"
 )
 
 const (
@@ -22,28 +22,26 @@ const (
 type Config struct {
 	// Master determines whether BBS Server is in Master Mode.
 	Master bool
-
+	// ConfigDir determines the directory where user and board configuration are to be stored.
+	ConfigDir string
 	// RPC.
 	RPCPort int
-
-	// Address of CXO Daemon.
-	CXOAddress string
-
+	// Port of CXO Daemon.
+	CXOPort int
 	// Localhost web interface.
 	WebInterface     bool
 	WebInterfacePort int
-
 	// Launch System Default Browser after client startup
 	LaunchBrowser bool
 }
 
-// MakeConfig makes a default configuration.
-func MakeConfig() *Config {
+// NewConfig makes a default configuration.
+func NewConfig() *Config {
 	//pk, sc := cipher.GenerateKeyPair()
 	return &Config{
 		Master:           false,
 		RPCPort:          6421,
-		CXOAddress:       "[::]:8998",
+		CXOPort:          8998,
 		WebInterface:     true,
 		WebInterfacePort: 6420,
 		LaunchBrowser:    true,
@@ -53,10 +51,12 @@ func MakeConfig() *Config {
 func (c *Config) register() {
 	// Master mode.
 	flag.BoolVar(&c.Master, "master", c.Master, "whether node is started as master")
+	// Configuration directory.
+	flag.StringVar(&c.ConfigDir, "config-dir", c.ConfigDir, "directory for configuration files")
 	// RPC Port (Only enabled if Master mode).
 	flag.IntVar(&c.RPCPort, "rpc-port", c.RPCPort, "port number for RPC")
 	// CXO Address.
-	flag.StringVar(&c.CXOAddress, "cxo-address", c.CXOAddress, "address of cxo daemon to connect to")
+	flag.IntVar(&c.CXOPort, "cxo-port", c.CXOPort, "port of cxo daemon to connect to")
 	// Web Interface.
 	flag.BoolVar(&c.WebInterface, "web-interface", c.WebInterface, "enable the web interface")
 	flag.IntVar(&c.WebInterfacePort, "web-interface-port", c.WebInterfacePort, "port to serve web interface on")
@@ -65,6 +65,7 @@ func (c *Config) register() {
 }
 
 func (c *Config) postProcess() {
+	//os.MkdirAll()
 }
 
 func (c *Config) Parse() {
@@ -81,10 +82,10 @@ func catchInterrupt(quit chan<- int) {
 	quit <- 1
 }
 
-func configureDatastore(c *Config) *cxo.CXOConfig {
+func configureCXO(c *Config) *cxo.CXOConfig {
 	dc := cxo.NewCXOConfig()
 	dc.Master = c.Master
-	dc.Address = c.CXOAddress
+	dc.Port = c.CXOPort
 	return dc
 }
 
@@ -100,15 +101,11 @@ func Run(c *Config) {
 	go catchInterrupt(quit)
 
 	// Datastore.
-	cxoClientConfig := configureDatastore(c)
-	cxoClient, e := cxo.NewClient(cxoClientConfig)
+	cxoConfig := configureCXO(c)
+	cxoClient, e := cxo.NewClient(cxoConfig)
 	panicIfError(
 		e,
 		"unable to create CXOClient",
-	)
-	panicIfError(
-		cxoClient.AddRandomIdentity(),
-		"unable to create random identity for CXOClient",
 	)
 	panicIfError(
 		cxoClient.Launch(),
@@ -120,7 +117,7 @@ func Run(c *Config) {
 	if c.Master {
 		rpcServer = rpc.NewServer(cxoClient)
 		panicIfError(
-			rpcServer.Launch("[::]:" + strconv.Itoa(c.RPCPort)),
+			rpcServer.Launch("[::]:"+strconv.Itoa(c.RPCPort)),
 			"unable to start rpc server",
 		)
 		fmt.Println("[RPC SERVER] Address:", rpcServer.Address())

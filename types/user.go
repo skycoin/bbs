@@ -1,4 +1,4 @@
-package cxo
+package types
 
 import (
 	"encoding/json"
