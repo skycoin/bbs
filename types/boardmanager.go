@@ -6,14 +6,6 @@ import (
 	"sync"
 )
 
-// BoardConfig represents a board's configuration as stored on a local file.
-type BoardConfig struct {
-	Master    bool   `json:"master"`
-	PublicKey string `json:"public_key"`
-	SecretKey string `json:"secret_key,omitempty"` // Empty if Master = false.
-	URL       string `json:"url"`
-}
-
 // BoardManager manages board configurations.
 type BoardManager struct {
 	sync.Mutex
@@ -35,7 +27,7 @@ func (bm *BoardManager) AddConfig(bc *BoardConfig) error {
 	bm.Lock()
 	defer bm.Unlock()
 
-	pk, e := cipher.PubKeyFromHex(bc.PublicKey)
+	pk, e := cipher.PubKeyFromHex(bc.PublicKeyStr)
 	if e != nil {
 		return e
 	}
@@ -44,25 +36,6 @@ func (bm *BoardManager) AddConfig(bc *BoardConfig) error {
 	}
 	bm.Configs[pk] = bc
 	return nil
-}
-
-// NewMasterConfigFromSeed generates a new BoardConfig from a seed.
-// This BoardConfig is one which is master.
-func (bm *BoardManager) NewMasterConfigFromSeed(seed, URL string) (
-	*BoardConfig, cipher.PubKey, cipher.SecKey, error,
-) {
-	if bm.Master == false {
-		return nil, cipher.PubKey{}, cipher.SecKey{}, errors.New("not master")
-	}
-	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
-	bc := &BoardConfig{
-		Master:    true,
-		PublicKey: pk.Hex(),
-		SecretKey: sk.Hex(),
-		URL:       URL,
-	}
-	e := bm.AddConfig(bc)
-	return bc, pk, sk, e
 }
 
 // RemoveConfig removes a BoardConfig.

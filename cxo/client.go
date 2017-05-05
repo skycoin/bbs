@@ -83,8 +83,8 @@ func (c *Client) Shutdown() error {
 // SubscribeToBoard subscribes to a board.
 func (c *Client) SubscribeToBoard(pk cipher.PubKey) (*types.BoardConfig, error) {
 	bc := &types.BoardConfig{
-		Master:    false,
-		PublicKey: pk.Hex(),
+		Master:       false,
+		PublicKeyStr: pk.Hex(),
 	}
 	// See if board exists in manager, if not create it.
 	if c.BoardManager.AddConfig(bc) != nil {
@@ -94,7 +94,11 @@ func (c *Client) SubscribeToBoard(pk cipher.PubKey) (*types.BoardConfig, error) 
 			return nil, e
 		}
 	}
-	c.Client.Subscribe(pk)
+	// Subscribe to board in cxo.
+	if c.Client.Subscribe(pk) == false {
+		c.BoardManager.RemoveConfig(pk)
+		return nil, errors.New("cxo failed to subscribe")
+	}
 	return bc, nil
 }
 
@@ -111,18 +115,22 @@ func (c *Client) ListBoards() []*types.BoardConfig {
 
 // NewBoard creates a new board with a seed.
 func (c *Client) NewBoard(name, seed string) (*types.BoardConfig, error) {
-	bc, pk, sk, e := c.BoardManager.NewMasterConfigFromSeed(seed, "")
-	if e != nil {
+	bc := types.NewMasterBoardConfig(seed, "")
+	if e := c.BoardManager.AddConfig(bc) ;e != nil {
 		return nil, e
 	}
 	// Create Board for cxo.
-	e = c.Client.Execute(func(ct *node.Container) error {
-		root := ct.NewRoot(pk, sk)
+	e := c.Client.Execute(func(ct *node.Container) error {
+		root := ct.NewRoot(bc.PublicKey, bc.SecretKey)
 		board := types.NewBoard(name, "")
-		root.Inject(*board, sk)
+		root.Inject(*board, bc.SecretKey)
 		return nil
 	})
-	c.Client.Subscribe(pk)
+	// Subscribe to board in cxo.
+	if c.Client.Subscribe(bc.PublicKey) == false {
+		c.BoardManager.RemoveConfig(bc.PublicKey)
+		return nil, errors.New("cxo failed to subscribe")
+	}
 	return bc, e
 }
 
@@ -146,7 +154,7 @@ func (c *Client) NewThread(pk cipher.PubKey, title, desc string) (*types.Thread,
 		return nil, errors.New("not master")
 	}
 	// Obtain secret key from config.
-	sk, e := cipher.SecKeyFromHex(bc.SecretKey)
+	sk, e := cipher.SecKeyFromHex(bc.SecretKeyStr)
 	if e != nil {
 		return nil, e
 	}

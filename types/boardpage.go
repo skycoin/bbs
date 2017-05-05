@@ -23,8 +23,8 @@ type BoardPage struct {
 func (bc *BoardConfig) NewBoardPage(pk cipher.PubKey, client *node.Client) (*BoardPage, error) {
 	bp := &BoardPage{
 		Master:    bc.Master,
-		PublicKey: bc.PublicKey,
-		SecretKey: bc.SecretKey,
+		PublicKey: bc.PublicKeyStr,
+		SecretKey: bc.SecretKeyStr,
 		URL:       bc.URL,
 	}
 	// Get latest board from cxo and add board data to board page.

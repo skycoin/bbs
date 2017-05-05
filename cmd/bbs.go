@@ -40,6 +40,7 @@ func NewConfig() *Config {
 	//pk, sc := cipher.GenerateKeyPair()
 	return &Config{
 		Master:           false,
+		ConfigDir:        ".",
 		RPCPort:          6421,
 		CXOPort:          8998,
 		WebInterface:     true,
@@ -99,6 +100,9 @@ func Run(c *Config) {
 	// If the user Ctrl-C's, shutdown properly.
 	quit := make(chan int)
 	go catchInterrupt(quit)
+
+	// Config files.
+	fmt.Println("[CONFIG DIRECTORY]", util.InitDataDir(c.ConfigDir))
 
 	// Datastore.
 	cxoConfig := configureCXO(c)

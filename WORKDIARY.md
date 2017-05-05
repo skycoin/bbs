@@ -12,6 +12,6 @@ Information regarding development progress.
 ## DONE
 
 ### 2017 May 5
-* Implement `user` module.
+* Implement `UserManager`.
   * Load user config as JSON file on startup.
   * Create new user if config does not exist, and save to config.
