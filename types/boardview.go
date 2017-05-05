@@ -18,7 +18,7 @@ type BoardView struct {
 
 // NewBoardView obtains a BoardView from BoardConfig and cxo client.
 // parameter "withThreads" determines whether or not to list threads in BoardView.
-func NewBoardView(bc *BoardConfig, client *node.Client, withThreads bool) (*BoardView, error) {
+func NewBoardView(bc *BoardConfig, client *node.Client) (*BoardView, error) {
 	// Extract data from BoardConfig.
 	bv := BoardView{
 		Name:      bc.Name,
@@ -37,9 +37,6 @@ func NewBoardView(bc *BoardConfig, client *node.Client, withThreads bool) (*Boar
 
 	// TODO: ObtainLatestBoardThreads. Obtain threads.
 	bv.ThreadCount = 0
-	if withThreads {
-
-	}
 
 	return &bv, nil
 }

@@ -17,7 +17,7 @@ const (
 	indexPage   = "index.html"
 )
 
-func LaunchWebInterface(host, staticDir string, cc *cxo.Client) (e error) {
+func LaunchWebInterface(host, staticDir string, g *cxo.Gateway) (e error) {
 	quit = make(chan struct{})
 	//appLoc, e := util.DetermineResourcePath(staticDir, resourceDir, devDir)
 	//if e != nil {
@@ -27,7 +27,7 @@ func LaunchWebInterface(host, staticDir string, cc *cxo.Client) (e error) {
 	if e != nil {
 		return
 	}
-	serve(listener, NewJsonMux(cc), quit)
+	serve(listener, NewJsonMux(g), quit)
 	return
 }
 
@@ -57,8 +57,8 @@ func Shutdown() {
 }
 
 // NewJsonMux creates a http.ServeMux with handlers registered.
-func NewJsonMux(cc *cxo.Client) *http.ServeMux {
+func NewJsonMux(g *cxo.Gateway) *http.ServeMux {
 	mux := http.NewServeMux()
-	RegisterApiHandlers(mux, cc)
+	RegisterApiHandlers(mux, g)
 	return mux
 }

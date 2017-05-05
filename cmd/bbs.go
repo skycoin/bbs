@@ -129,7 +129,8 @@ func Run(c *Config) {
 
 	// Start web interface.
 	if c.WebInterface {
-		if e := gui.LaunchWebInterface(host, "", cxoClient); e != nil {
+		gateway := cxo.NewGateWay(cxoClient)
+		if e := gui.LaunchWebInterface(host, "", gateway); e != nil {
 			fmt.Println("[FAILED START]", e)
 			os.Exit(1)
 		}

@@ -108,11 +108,6 @@ func (c *Client) UnSubscribeFromBoard(pk cipher.PubKey) bool {
 	return c.Client.Unsubscribe(pk)
 }
 
-// ListBoards lists all boards we are subscribed to.
-func (c *Client) ListBoards() []*types.BoardConfig {
-	return c.BoardManager.GetList()
-}
-
 // InjectBoard injects a board with specified BoardConfig.
 func (c *Client) InjectBoard(bc *types.BoardConfig) error {
 	// Check if BoardConfig is master.
@@ -140,35 +135,13 @@ func (c *Client) InjectBoard(bc *types.BoardConfig) error {
 	return e
 }
 
-// NewBoard creates a new board with a seed.
-// TODO: Replace.
-func (c *Client) NewBoard(name, seed string) (*types.BoardConfig, error) {
-	bc := types.NewMasterBoardConfig(name, seed, "")
-	if e := c.BoardManager.AddConfig(bc); e != nil {
-		return nil, e
-	}
-	// Create Board for cxo.
-	e := c.Client.Execute(func(ct *node.Container) error {
-		root := ct.NewRoot(bc.PublicKey, bc.SecretKey)
-		board := types.NewBoard(name, "")
-		root.Inject(*board, bc.SecretKey)
-		return nil
-	})
-	// Subscribe to board in cxo.
-	if c.Client.Subscribe(bc.PublicKey) == false {
-		c.BoardManager.RemoveConfig(bc.PublicKey)
-		return nil, errors.New("cxo failed to subscribe")
-	}
-	return bc, e
-}
-
 // ListThreads lists the threads of specified board.
 func (c *Client) ListThreads(pk cipher.PubKey) (*types.BoardView, error) {
 	bc, e := c.BoardManager.GetConfig(pk)
 	if e != nil {
 		return nil, e
 	}
-	return types.NewBoardView(bc, c.Client, true)
+	return types.NewBoardView(bc, c.Client)
 }
 
 // NewThread creates a new thread under specified board.
