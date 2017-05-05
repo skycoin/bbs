@@ -11,10 +11,8 @@ import (
 
 // CXOConfig represents a configuration for CXO Client.
 type CXOConfig struct {
-	Master          bool
-	Port            int
-	BoardConfigFile string
-	ConfigDir       string
+	Master bool
+	Port   int
 }
 
 // NewCXOConfig creates a new CXOConfig.
@@ -30,6 +28,7 @@ func NewCXOConfig() *CXOConfig {
 type Client struct {
 	*CXOConfig
 	Client       *node.Client
+	UserManager  *types.UserManager
 	BoardManager *types.BoardManager
 }
 
@@ -42,13 +41,23 @@ func NewClient(conf *CXOConfig) (*Client, error) {
 	if e != nil {
 		return nil, e
 	}
-
 	c := Client{
 		CXOConfig:    conf,
 		Client:       client,
+		UserManager:  types.NewUserManager(),
 		BoardManager: types.NewBoardManager(conf.Master),
 	}
+	c.initUsers()
 	return &c, nil
+}
+
+func (c *Client) initUsers() {
+	m := c.UserManager
+	if m.Load() != nil {
+		m.Clear()
+		m.AddNewRandomMaster()
+		m.Save()
+	}
 }
 
 // Launch runs the Client.

@@ -1,15 +1,16 @@
 package types
 
 import (
-	"fmt"
+	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"time"
 )
 
 // Board represents a board as stored in cxo.
 type Board struct {
 	Name         string
-	Threads      skyobject.References `skyobject:"schema=Thread"`
 	URL          string
 	Created      int64
 	LastModified int64
@@ -28,27 +29,50 @@ func NewBoard(name, url string) *Board {
 	}
 }
 
-// GetBoardFromSkyValue obtains a Board from skyobject.Value.
-func GetBoardFromSkyValue(v *skyobject.Value) (*Board, error) {
-	board := Board{}
-
-	e := v.RangeFields(func(fn string, mv *skyobject.Value) error {
-		var e error
-		switch fn {
-		case "Name":
-			board.Name, e = mv.String()
-		case "Threads":
-			fmt.Println("Unprocessed field: Threads")
-		case "URL":
-			board.URL, e = mv.String()
-		case "Created":
-			board.Created, e = mv.Int()
-		case "LastModified":
-			board.LastModified, e = mv.Int()
-		case "Version":
-			board.Version, e = mv.Uint()
+// ObtainLatestBoard obtains the latest board of given public key from cxo.
+func ObtainLatestBoard(pk cipher.PubKey, client *node.Client) (*Board, error) {
+	var board Board
+	e := client.Execute(func(ct *node.Container) error {
+		// Get values from root.
+		values, e := ct.Root(pk).Values()
+		if e != nil {
+			return e
 		}
-		return e
+		// Loop through values, and if type is Board, compare.
+		for _, v := range values {
+			if v.Schema().Name() != "Board" {
+				continue
+			}
+			// Temporary board.
+			b := Board{}
+			if e := encoder.DeserializeRaw(v.Data(), &b); e != nil {
+				return e
+			}
+			if b.LastModified > board.LastModified {
+				board = b
+			}
+		}
+		return nil
 	})
 	return &board, e
 }
+
+// BoardThreads references the threads of the board.
+type BoardThreads struct {
+	Threads      skyobject.References `skyobject:"schema=Thread"`
+	Count        uint64
+	LastModified int64
+	Version      uint64
+}
+
+// NewBoardThreads creates a new board thread with no threads.
+func NewBoardThreads() *BoardThreads {
+	now := time.Now().UnixNano()
+	return &BoardThreads{
+		Count:        0,
+		LastModified: now,
+		Version:      0,
+	}
+}
+
+//func (bt *BoardThreads) IterateAddThreads()
