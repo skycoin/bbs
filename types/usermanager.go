@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"fmt"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 )
@@ -27,7 +26,6 @@ func NewUserManager() *UserManager {
 
 // Load loads data from config file.
 func (m *UserManager) Load() error {
-	fmt.Println(util.DataDir)
 	// Load from file.
 	uc := UsersConfig{}
 	if e := util.LoadJSON(UsersConfigFileName, &uc); e != nil {

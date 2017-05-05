@@ -1,12 +1,13 @@
 package types
 
 import (
-	"github.com/skycoin/skycoin/src/cipher"
 	"errors"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 // BoardConfig represents a board's configuration as stored on a local file.
 type BoardConfig struct {
+	Name         string        `json:"name,omitempty"`
 	Master       bool          `json:"master"`
 	URL          string        `json:"url"`
 	PublicKey    cipher.PubKey `json:"-"`
@@ -21,22 +22,23 @@ func NewBoardConfig(pk cipher.PubKey, url string) (*BoardConfig, error) {
 		return nil, e
 	}
 	bc := BoardConfig{
-		Master: false,
-		URL: url,
-		PublicKey: pk,
+		Master:       false,
+		URL:          url,
+		PublicKey:    pk,
 		PublicKeyStr: pk.Hex(),
 	}
 	return &bc, nil
 }
 
 // NewMasterBoardConfig creates a new master BoardConfig from a seed.
-func NewMasterBoardConfig(seed, url string) *BoardConfig {
+func NewMasterBoardConfig(name, seed, url string) *BoardConfig {
 	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
 	bc := BoardConfig{
-		Master: true,
-		URL: url,
-		PublicKey: pk,
-		SecretKey: sk,
+		Name:         name,
+		Master:       true,
+		URL:          url,
+		PublicKey:    pk,
+		SecretKey:    sk,
 		PublicKeyStr: pk.Hex(),
 		SecretKeyStr: sk.Hex(),
 	}

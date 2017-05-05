@@ -46,6 +46,15 @@ func (bm *BoardManager) RemoveConfig(pk cipher.PubKey) {
 	delete(bm.Configs, pk)
 }
 
+// HasConfig checks whether we have specified BoardConfig.
+func (bm *BoardManager) HasConfig(pk cipher.PubKey) bool {
+	bm.Lock()
+	defer bm.Unlock()
+
+	_, has := bm.Configs[pk]
+	return has
+}
+
 // GetList gets a list of BoardConfigs.
 func (bm *BoardManager) GetList() []*BoardConfig {
 	bm.Lock()
