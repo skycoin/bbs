@@ -2,11 +2,11 @@ package cxo
 
 import (
 	"errors"
+	"github.com/evanlinjin/bbs/types"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
 	"time"
-	"github.com/evanlinjin/bbs/types"
 )
 
 // CXOConfig represents a configuration for CXO Client.

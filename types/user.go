@@ -4,15 +4,62 @@ import (
 	"encoding/json"
 	"github.com/skycoin/skycoin/src/cipher"
 	"io/ioutil"
+	"errors"
 )
+
+// User represents a user.
+type User struct {
+	Alias         string        `json:"alias"`
+	PublicKey     cipher.PubKey `json:"-"`
+	SecretKey     cipher.SecKey `json:"-"`
+	PublicKeyStr  string        `json:"public_key"`
+	PrivateKeyStr string        `json:"private_key,omitempty"`
+}
+
+// NewUser creates a new user.
+func NewUser(alias string, pk cipher.PubKey, sk ...cipher.SecKey) (*User, error) {
+	if len(sk) > 1 {
+		return nil, errors.New("invalid number of secret keys provided")
+	}
+	var user User
+	user.Alias = alias
+
+	// Check Public Key. If okay, add to user.
+	if e := pk.Verify(); e != nil {
+		return nil, e
+	}
+	user.PublicKey = pk
+	user.PublicKeyStr = pk.Hex()
+
+	// If secret key is provided, check it. If okay, add to user.
+	if len(sk) == 1 {
+		e := sk[0].Verify()
+		if e != nil {
+			return nil, e
+		}
+		user.SecretKey = sk[0]
+		user.PublicKeyStr = sk[0].Hex()
+	}
+	return &user, nil
+}
+
+
+
+// UserConfigFile represents a user configuration file.
+type UserConfigFile struct {
+	Master *User   `json:"master"` // Master user.
+	Others []*User `json:"others"` // Other users.
+}
 
 // UserConfig represents a user configuration.
 type UserConfig struct {
+	Alias     string
 	PublicKey cipher.PubKey
 	SecretKey cipher.SecKey
 }
 
 type UserConfigRaw struct {
+	Alias     string `json:"alias"`
 	PublicKey string `json:"public_key"`
 	SecretKey string `json:"secret_key"`
 }
