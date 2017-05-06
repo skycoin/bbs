@@ -4,12 +4,15 @@ Information regarding development progress.
 * **DONE** shows what has been implemented (split into days).
 
 ## TODO
-* Split `Board` into `Board` and `BoardThreads`.
-  * Hence, `Board` is for the metadata of the board. Name, etc.
-  * `BoardThreads` will be the list of Threads in the board and the number of total Threads.
+* Implement adding posts.
 * Implement loading/saving `BoardConfig` from/into JSON file.
 
 ## DONE
+
+### 2017 May 6
+* Split `Board` into `Board` and `BoardThreads`.
+  * Hence, `Board` is for the metadata of the board. Name, etc.
+  * `BoardThreads` will be the list of Threads in the board and the number of total Threads.
 
 ### 2017 May 5
 * Implement `UserManager`.
