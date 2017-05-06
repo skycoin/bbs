@@ -41,9 +41,9 @@ func (m *BoardManager) Load() error {
 		if e := b.PrepAndCheck(); e != nil {
 			return e
 		}
-		m.Boards[b.PublicKey] = b
+		m.Boards[b.PubKey] = b
 		if m.Master && b.Master {
-			m.Masters = append(m.Masters, b.PublicKey)
+			m.Masters = append(m.Masters, b.PubKey)
 		}
 	}
 	if m.Master && len(m.Masters) == 0 {
@@ -77,7 +77,7 @@ func (m *BoardManager) AddConfig(bc *BoardConfig) error {
 	m.Lock()
 	defer m.Unlock()
 
-	pk, e := cipher.PubKeyFromHex(bc.PublicKeyStr)
+	pk, e := cipher.PubKeyFromHex(bc.PubKeyStr)
 	if e != nil {
 		return e
 	}
