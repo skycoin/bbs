@@ -4,75 +4,126 @@ import (
 	"errors"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
+	"github.com/skycoin/skycoin/src/util"
 )
+
+const BoardsConfigFileName = "bbs_boards.json"
+
+// BoardsConfig represents a configuration file for boards.
+type BoardsConfig []*BoardConfig
 
 // BoardManager manages board configurations.
 type BoardManager struct {
 	sync.Mutex
 	Master  bool
-	Configs map[cipher.PubKey]*BoardConfig
+	Masters []cipher.PubKey
+	Boards  map[cipher.PubKey]*BoardConfig
 }
 
 // NewBoardManager creates a new empty BoardManager.
 func NewBoardManager(master bool) *BoardManager {
 	bm := BoardManager{
-		Master:  master,
-		Configs: make(map[cipher.PubKey]*BoardConfig),
+		Master: master,
+		Boards: make(map[cipher.PubKey]*BoardConfig),
 	}
 	return &bm
 }
 
+// Load loads data from config file.
+func (m *BoardManager) Load() error {
+	// Load from file.
+	bc := BoardsConfig{}
+	if e := util.LoadJSON(BoardsConfigFileName, &bc); e != nil {
+		return e
+	}
+	// Check loaded boards. Append to m.Boards appropriately.
+	for _, b := range bc {
+		if e := b.PrepAndCheck(); e != nil {
+			return e
+		}
+		m.Boards[b.PublicKey] = b
+		if m.Master && b.Master {
+			m.Masters = append(m.Masters, b.PublicKey)
+		}
+	}
+	if m.Master && len(m.Masters) == 0 {
+		return errors.New("no masters")
+	}
+	return nil
+}
+
+// Save saves current in-memory config to file.
+func (m *BoardManager) Save() error {
+	bc := make(BoardsConfig, len(m.Boards))
+	i := 0
+	for _, b := range m.Boards {
+		bc[i] = b
+		i++
+	}
+	if e := util.SaveJSON(BoardsConfigFileName, bc, 0600); e != nil {
+		return e
+	}
+	return nil
+}
+
+// Clear clears the in-memory config.
+func (m *BoardManager) Clear() {
+	m.Masters = []cipher.PubKey{}
+	m.Boards = make(map[cipher.PubKey]*BoardConfig)
+}
+
 // AddConfig adds a new BoardConfig.
-func (bm *BoardManager) AddConfig(bc *BoardConfig) error {
-	bm.Lock()
-	defer bm.Unlock()
+func (m *BoardManager) AddConfig(bc *BoardConfig) error {
+	m.Lock()
+	defer m.Unlock()
 
 	pk, e := cipher.PubKeyFromHex(bc.PublicKeyStr)
 	if e != nil {
 		return e
 	}
-	if _, has := bm.Configs[pk]; has == true {
+	if _, has := m.Boards[pk]; has == true {
 		return errors.New("config already exists")
 	}
-	bm.Configs[pk] = bc
+	m.Boards[pk] = bc
+	m.Save()
 	return nil
 }
 
 // RemoveConfig removes a BoardConfig.
-func (bm *BoardManager) RemoveConfig(pk cipher.PubKey) {
-	bm.Lock()
-	defer bm.Unlock()
-
-	delete(bm.Configs, pk)
+func (m *BoardManager) RemoveConfig(pk cipher.PubKey) {
+	m.Lock()
+	defer m.Unlock()
+	delete(m.Boards, pk)
+	m.Save()
 }
 
 // HasConfig checks whether we have specified BoardConfig.
-func (bm *BoardManager) HasConfig(pk cipher.PubKey) bool {
-	bm.Lock()
-	defer bm.Unlock()
+func (m *BoardManager) HasConfig(pk cipher.PubKey) bool {
+	m.Lock()
+	defer m.Unlock()
 
-	_, has := bm.Configs[pk]
+	_, has := m.Boards[pk]
 	return has
 }
 
 // GetList gets a list of BoardConfigs.
-func (bm *BoardManager) GetList() []*BoardConfig {
-	bm.Lock()
-	defer bm.Unlock()
+func (m *BoardManager) GetList() []*BoardConfig {
+	m.Lock()
+	defer m.Unlock()
 
 	list := []*BoardConfig{}
-	for _, bc := range bm.Configs {
+	for _, bc := range m.Boards {
 		list = append(list, bc)
 	}
 	return list
 }
 
 // GetConfig gets a BoardConfig from given Public Key.
-func (bm *BoardManager) GetConfig(pk cipher.PubKey) (*BoardConfig, error) {
-	bm.Lock()
-	defer bm.Unlock()
+func (m *BoardManager) GetConfig(pk cipher.PubKey) (*BoardConfig, error) {
+	m.Lock()
+	defer m.Unlock()
 
-	bc, has := bm.Configs[pk]
+	bc, has := m.Boards[pk]
 	var e error
 	if has == false {
 		e = errors.New("config does not exist")

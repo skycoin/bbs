@@ -56,7 +56,19 @@ func (c *Client) initUsers() {
 	if m.Load() != nil {
 		m.Clear()
 		m.AddNewRandomMaster()
-		m.Save()
+		if e := m.Save(); e != nil {
+			panic(e)
+		}
+	}
+}
+
+func (c *Client) initBoards() {
+	m := c.BoardManager
+	if m.Load() != nil {
+		m.Clear()
+		if e := m.Save(); e != nil {
+			panic(e)
+		}
 	}
 }
 
