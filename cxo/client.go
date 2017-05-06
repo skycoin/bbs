@@ -2,7 +2,7 @@ package cxo
 
 import (
 	"errors"
-	"github.com/evanlinjin/bbs/types"
+	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
@@ -28,8 +28,8 @@ func NewCXOConfig() *CXOConfig {
 type Client struct {
 	*CXOConfig
 	Client       *node.Client
-	UserManager  *types.UserManager
-	BoardManager *types.BoardManager
+	UserManager  *typ.UserManager
+	BoardManager *typ.BoardManager
 }
 
 // NewClient creates a new Client.
@@ -44,8 +44,8 @@ func NewClient(conf *CXOConfig) (*Client, error) {
 	c := Client{
 		CXOConfig:    conf,
 		Client:       client,
-		UserManager:  types.NewUserManager(),
-		BoardManager: types.NewBoardManager(conf.Master),
+		UserManager:  typ.NewUserManager(),
+		BoardManager: typ.NewBoardManager(conf.Master),
 	}
 	c.initUsers()
 	return &c, nil
@@ -67,9 +67,10 @@ func (c *Client) Launch() error {
 	}
 	time.Sleep(5 * time.Second)
 	c.Client.Execute(func(ct *node.Container) error {
-		ct.Register("Board", types.Board{},
-			"Thread", types.Thread{},
-			"Post", types.Post{})
+		ct.Register("Board", typ.Board{},
+			"BoardThreads", typ.BoardThreads{},
+			"Thread", typ.Thread{},
+			"Post", typ.Post{})
 		return nil
 	})
 	return nil
@@ -81,8 +82,8 @@ func (c *Client) Shutdown() error {
 }
 
 // SubscribeToBoard subscribes to a board.
-func (c *Client) SubscribeToBoard(pk cipher.PubKey) (*types.BoardConfig, error) {
-	bc := &types.BoardConfig{
+func (c *Client) SubscribeToBoard(pk cipher.PubKey) (*typ.BoardConfig, error) {
+	bc := &typ.BoardConfig{
 		Master:       false,
 		PublicKeyStr: pk.Hex(),
 	}
@@ -109,7 +110,7 @@ func (c *Client) UnSubscribeFromBoard(pk cipher.PubKey) bool {
 }
 
 // InjectBoard injects a board with specified BoardConfig.
-func (c *Client) InjectBoard(bc *types.BoardConfig) error {
+func (c *Client) InjectBoard(bc *typ.BoardConfig) error {
 	// Check if BoardConfig is master.
 	if bc.Master == false {
 		return errors.New("is not master")
@@ -118,11 +119,13 @@ func (c *Client) InjectBoard(bc *types.BoardConfig) error {
 	if c.BoardManager.HasConfig(bc.PublicKey) == true {
 		return errors.New("config already exists")
 	}
-	// Create Board for cxo.
+	// Create Board and BoardThreads for cxo.
 	c.Client.Execute(func(ct *node.Container) error {
 		root := ct.NewRoot(bc.PublicKey, bc.SecretKey)
-		board := types.NewBoard(bc.Name, bc.URL)
+		board := typ.NewBoard(bc.Name, bc.URL)
+		threads := typ.NewBoardThreads()
 		root.Inject(*board, bc.SecretKey)
+		root.Inject(*threads, bc.SecretKey)
 		return nil
 	})
 	// Subscribe to board in cxo.
@@ -135,55 +138,31 @@ func (c *Client) InjectBoard(bc *types.BoardConfig) error {
 	return e
 }
 
-// ListThreads lists the threads of specified board.
-func (c *Client) ListThreads(pk cipher.PubKey) (*types.BoardView, error) {
-	bc, e := c.BoardManager.GetConfig(pk)
+// InjectThread injects a thread to specified board.
+func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) error {
+	// Get BoardConfig.
+	bc, e := c.BoardManager.GetConfig(bpk)
 	if e != nil {
-		return nil, e
+		return e
 	}
-	return types.NewBoardView(bc, c.Client)
-}
-
-// NewThread creates a new thread under specified board.
-func (c *Client) NewThread(pk cipher.PubKey, title, desc string) (*types.Thread, error) {
-	bc, e := c.BoardManager.GetConfig(pk)
-	if e != nil {
-		return nil, e
-	}
-	// Check if master.
+	// Check if board is master.
 	if bc.Master == false {
-		return nil, errors.New("not master")
+		return errors.New("not master")
 	}
-	// Obtain secret key from config.
-	sk, e := cipher.SecKeyFromHex(bc.SecretKeyStr)
+	// Obtain latest BoardThreads.
+	bts, _, e := typ.ObtainLatestBoardThreads(bpk, c.Client)
 	if e != nil {
-		return nil, e
+		return e
 	}
-	// Create thread and add to cxo.
-	thread := types.NewThread(title, desc)
-	e = c.Client.Execute(func(ct *node.Container) (_ error) {
-		root := ct.Root(pk)
-		root.Inject(thread, sk)
-		return
-	})
-	if e != nil {
-		return nil, e
+	// Add thread to BoardThreads.
+	if e:= bts.AddThread(bpk, c.Client, thread); e != nil {
+		return e
 	}
-	return thread, nil
-}
-
-// ListPosts lists all posts of a specified board and thread.
-func (c *Client) ListPosts(id []byte) (*types.ThreadPage, error) {
-	// Find thread of id.
-
-	e := c.Client.Execute(func(ct *node.Container) error {
-		//ct.
-
+	// Re-Inject BoardThreads to root.
+	e = c.Client.Execute(func(ct *node.Container) error {
+		r := ct.Root(bpk)
+		r.Inject(*bts, bc.SecretKey)
 		return nil
 	})
-	if e != nil {
-		return nil, e
-	}
-
-	return nil, nil
+	return e
 }

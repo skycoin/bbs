@@ -1,4 +1,4 @@
-package types
+package typ
 
 import "github.com/skycoin/cxo/node"
 
@@ -18,7 +18,7 @@ type BoardView struct {
 
 // NewBoardView obtains a BoardView from BoardConfig and cxo client.
 // parameter "withThreads" determines whether or not to list threads in BoardView.
-func NewBoardView(bc *BoardConfig, client *node.Client) (*BoardView, error) {
+func NewBoardView(bc *BoardConfig, client *node.Client, showThreads bool) (*BoardView, error) {
 	// Extract data from BoardConfig.
 	bv := BoardView{
 		Name:      bc.Name,
@@ -35,8 +35,18 @@ func NewBoardView(bc *BoardConfig, client *node.Client) (*BoardView, error) {
 	bv.LastModified = board.LastModified
 	bv.Version = board.Version
 
-	// TODO: ObtainLatestBoardThreads. Obtain threads.
-	bv.ThreadCount = 0
-
+	// Obtain BoardThreads.
+	bts, btsv, e := ObtainLatestBoardThreads(bc.PublicKey, client)
+	if e != nil {
+		return nil, e
+	}
+	bv.ThreadCount = bts.Count
+	if showThreads == true {
+		threads, e := ObtainThreadsFromBoardThreadsValue(btsv)
+		if e != nil {
+			return nil, e
+		}
+		bv.Threads = threads
+	}
 	return &bv, nil
 }

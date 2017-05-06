@@ -1,16 +1,16 @@
 package cxo
 
 import (
-	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/evanlinjin/bbs/types"
 	"fmt"
+	"github.com/evanlinjin/bbs/typ"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 // Reply represents a json reply.
 type Reply struct {
 	Okay   bool        `json:"okay"`
 	Result interface{} `json:"result,omitempty"`
-	Error  interface{} `json:"error,omitempty"`
+	Error  string      `json:"error,omitempty"`
 }
 
 // NewResultReply creates a new result Reply.
@@ -19,7 +19,7 @@ func NewResultReply(v interface{}) *Reply {
 }
 
 // NewErrorReply creates a new error Reply.
-func NewErrorReply(v interface{}) *Reply {
+func NewErrorReply(v string) *Reply {
 	return &Reply{Okay: false, Error: v}
 }
 
@@ -38,17 +38,17 @@ func (g *Gateway) Subscribe(pkStr string) *Reply {
 	// Check public key.
 	pk, e := cipher.PubKeyFromHex(pkStr)
 	if e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	// Subscribe to board.
 	bc, e := g.c.SubscribeToBoard(pk)
 	if e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	// Display result.
-	bv, e := types.NewBoardView(bc, g.c.Client)
+	bv, e := typ.NewBoardView(bc, g.c.Client, false)
 	if e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	return NewResultReply(bv)
 }
@@ -58,7 +58,7 @@ func (g *Gateway) Unsubscribe(pkStr string) *Reply {
 	// Check public key.
 	pk, e := cipher.PubKeyFromHex(pkStr)
 	if e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	// Unsubscribe from board.
 	if g.c.UnSubscribeFromBoard(pk) == false {
@@ -72,17 +72,17 @@ func (g *Gateway) ViewBoard(pkStr string) *Reply {
 	// Check public key.
 	pk, e := cipher.PubKeyFromHex(pkStr)
 	if e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	// Get BoardConfig.
 	bc, e := g.c.BoardManager.GetConfig(pk)
 	if e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	// Display result.
-	bv, e := types.NewBoardView(bc, g.c.Client)
+	bv, e := typ.NewBoardView(bc, g.c.Client, true)
 	if e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	return NewResultReply(bv)
 }
@@ -92,10 +92,10 @@ func (g *Gateway) ViewBoards() *Reply {
 	// Get list of BoardConfigs.
 	bcList := g.c.BoardManager.GetList()
 	// Get list of BoardViews.
-	bvList := make([]*types.BoardView, len(bcList))
+	bvList := make([]*typ.BoardView, len(bcList))
 	for i := 0; i < len(bcList); i++ {
 		var e error
-		bvList[i], e = types.NewBoardView(bcList[i], g.c.Client)
+		bvList[i], e = typ.NewBoardView(bcList[i], g.c.Client, false)
 		if e != nil {
 			return NewErrorReply(fmt.Sprintf("board %s: %v", bcList[i].PublicKey, e))
 		}
@@ -106,15 +106,31 @@ func (g *Gateway) ViewBoards() *Reply {
 // NewBoard creates a new master board with a seed and name.
 func (g *Gateway) NewBoard(name, seed string) *Reply {
 	// Create master BoardConfig.
-	bc := types.NewMasterBoardConfig(name, seed, "")
+	bc := typ.NewMasterBoardConfig(name, seed, "")
 	// Inject board.
 	if e := g.c.InjectBoard(bc); e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	// Display result.
-	bv, e := types.NewBoardView(bc, g.c.Client)
+	bv, e := typ.NewBoardView(bc, g.c.Client, false)
 	if e != nil {
-		return NewErrorReply(e)
+		return NewErrorReply(e.Error())
 	}
 	return NewResultReply(bv)
+}
+
+// NewThread adds a new thread to specified board.
+func (g *Gateway) NewThread(bpkStr, name, desc string) *Reply {
+	// Check public key.
+	bpk, e := cipher.PubKeyFromHex(bpkStr)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	// Create new Thread.
+	thread := typ.NewThread(name, desc)
+	// Inject thread to specified board in cxo.
+	if e := g.c.InjectThread(bpk, thread); e != nil {
+		return NewErrorReply(e.Error())
+	}
+	return NewResultReply(thread)
 }

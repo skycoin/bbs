@@ -1,4 +1,4 @@
-package types
+package typ
 
 import (
 	"github.com/skycoin/skycoin/src/cipher"
