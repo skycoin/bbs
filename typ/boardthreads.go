@@ -57,6 +57,68 @@ func ObtainLatestBoardThreads(bpk cipher.PubKey, client *node.Client) (*BoardThr
 	return &bts, val, e
 }
 
+// Iterate increases the version of BoardThreads.
+func (bt *BoardThreads) Iterate() {
+	bt.Version += 1
+	bt.LastModified = time.Now().UnixNano()
+}
+
+// AddThread adds a thread, and hence, iterates.
+func (bt *BoardThreads) AddThread(bpk cipher.PubKey, client *node.Client, thread *Thread) error {
+	// Save thread to cxo and get reference.
+	tRef := skyobject.Reference{}
+	client.Execute(func(ct *node.Container) error {
+		tRef = ct.Save(thread)
+		return nil
+	})
+	// If reference is in BoardThreads, just return as no modification needed.
+	for _, r := range bt.Threads {
+		if r == tRef {
+			return errors.New("thread already exists")
+		}
+	}
+	// Add ref to BoardThreads and iterate.
+	bt.Threads = append(bt.Threads, tRef)
+	bt.Count = uint64(len(bt.Threads))
+	bt.Iterate()
+	return nil
+}
+
+// ObtainThreadFromBoardThreadsValue obtains thread from value of specified id.
+func ObtainThreadFromBoardThreadsValue(btsv *skyobject.Value, tid cipher.PubKey) (*Thread, error) {
+	tsv, e := btsv.FieldByName("Threads")
+	if e != nil {
+		return nil, e
+	}
+	// Get number of threads.
+	l, e := tsv.Len()
+	if e != nil {
+		return nil, e
+	}
+	// Loop through and find thread.
+	for i := 0; i < l; i++ {
+		tv, e := tsv.Index(i)
+		if e != nil {
+			return nil, e
+		}
+		v, e := tv.Dereference()
+		if e != nil {
+			return nil, e
+		}
+		if v.Schema().Name() != "Thread" {
+			return nil, errors.New("value is not thread")
+		}
+		thread := Thread{}
+		if e := encoder.DeserializeRaw(v.Data(), &thread); e != nil {
+			return nil, e
+		}
+		if thread.ID == tid {
+			return &thread, nil
+		}
+	}
+	return nil, errors.New("thread not found")
+}
+
 // ObtainThreadsFromBoardThreadsValue obtains list of threads from value.
 // TODO: Optimise.
 func ObtainThreadsFromBoardThreadsValue(btsv *skyobject.Value) ([]*Thread, error) {
@@ -90,31 +152,4 @@ func ObtainThreadsFromBoardThreadsValue(btsv *skyobject.Value) ([]*Thread, error
 		threads = append(threads, &thread)
 	}
 	return threads, nil
-}
-
-// Iterate increases the version of BoardThreads.
-func (bt *BoardThreads) Iterate() {
-	bt.Version += 1
-	bt.LastModified = time.Now().UnixNano()
-}
-
-// IterateAddThread adds a thread, and hence, iterates.
-func (bt *BoardThreads) AddThread(bpk cipher.PubKey, client *node.Client, thread *Thread) error {
-	// Save thread to cxo and get reference.
-	tRef := skyobject.Reference{}
-	client.Execute(func(ct *node.Container) error {
-		tRef = ct.Save(thread)
-		return nil
-	})
-	// If reference is in BoardThreads, just return as no modification needed.
-	for _, r := range bt.Threads {
-		if r == tRef {
-			return errors.New("thread already exists")
-		}
-	}
-	// Add ref to BoardThreads and iterate.
-	bt.Threads = append(bt.Threads, tRef)
-	bt.Count = uint64(len(bt.Threads))
-	bt.Iterate()
-	return nil
 }

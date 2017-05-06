@@ -1,6 +1,7 @@
 package cxo
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -103,6 +104,27 @@ func (g *Gateway) ViewBoards() *Reply {
 	return NewResultReply(bvList)
 }
 
+// ViewThread views the specified thread of specified board and thread id.
+// TODO: Implement.
+func (g *Gateway) ViewThread(bpkStr, tidStr string) *Reply {
+	// Check public key.
+	bpk, e := cipher.PubKeyFromHex(bpkStr)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	// Check thread id.
+	tid, e := base64.StdEncoding.DecodeString(tidStr)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	// Get BoardConfig.
+	bc, e := g.c.BoardManager.GetConfig(bpk)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	return NewResultReply(string(tid) + bc.Name)
+}
+
 // NewBoard creates a new master board with a seed and name.
 func (g *Gateway) NewBoard(name, seed string) *Reply {
 	// Create master BoardConfig.
@@ -132,5 +154,31 @@ func (g *Gateway) NewThread(bpkStr, name, desc string) *Reply {
 	if e := g.c.InjectThread(bpk, thread); e != nil {
 		return NewErrorReply(e.Error())
 	}
-	return NewResultReply(thread)
+	// Display result.
+	tv, e := typ.NewThreadView(bpk, thread, g.c.Client, false)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	return NewResultReply(tv)
+}
+
+// NewPost adds a new post to specified board and thread.
+func (g *Gateway) NewPost(bpkStr, tidStr, name, body string) *Reply {
+	// Check public key.
+	bpk, e := cipher.PubKeyFromHex(bpkStr)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	// Check thread id.
+	tid, e := cipher.PubKeyFromHex(tidStr)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	// Make new post.
+	post := typ.NewPost(name, body, cipher.PubKey{})
+	// Inject post.
+	if e := g.c.InjectPost(bpk, tid, post); e != nil {
+		return NewErrorReply(e.Error())
+	}
+	return NewResultReply(post)
 }

@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	QueryBoard = "board"
-	QuerySeed  = "seed"
-	QueryName  = "name"
-	QueryDesc  = "desc"
+	QueryBoard  = "board"
+	QueryThread = "thread"
+	QuerySeed   = "seed"
+	QueryName   = "name"
+	QueryDesc   = "desc"
 )
 
 func RegisterApiHandlers(mux *http.ServeMux, g *cxo.Gateway) {
@@ -84,8 +85,12 @@ func (h *APIHandler) NewThread(w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, reply, http.StatusOK)
 }
 
+// ListPosts lists all the posts of specified thread.
+// Example usage: http://127.0.0.1:6420/api/list_posts?board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b
 func (h *APIHandler) ListPosts(w http.ResponseWriter, r *http.Request) {
-	sendTempResponse(w)
+	q := r.URL.Query()
+	reply := h.g.ViewThread(q.Get(QueryBoard), q.Get(QueryThread))
+	sendResponse(w, reply, http.StatusOK)
 }
 
 func (h *APIHandler) NewPost(w http.ResponseWriter, r *http.Request) {

@@ -3,8 +3,8 @@ package typ
 import (
 	"errors"
 	"github.com/skycoin/skycoin/src/cipher"
-	"sync"
 	"github.com/skycoin/skycoin/src/util"
+	"sync"
 )
 
 const BoardsConfigFileName = "bbs_boards.json"

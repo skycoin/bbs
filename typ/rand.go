@@ -8,10 +8,12 @@ import (
 )
 
 // MakeTimeStampedRandomID makes a timestamped, random ID.
-func MakeTimeStampedRandomID(n int) []byte {
-	id := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
-	id2 := cipher.RandByte(n - len(id))
-	return append(id, id2...)
+func MakeTimeStampedRandomID(n int) cipher.PubKey {
+	s1 := []byte(strconv.FormatInt(time.Now().UnixNano(), 10))
+	s2 := cipher.RandByte(n - len(s1))
+	seed := append(s1, s2...)
+	pk, _ := cipher.GenerateDeterministicKeyPair(seed)
+	return pk
 }
 
 func MakeRandomAlias() string {

@@ -13,7 +13,7 @@ type BoardView struct {
 	Version      uint64 `json:"version"`
 
 	ThreadCount uint64    `json:"thread_count"`
-	Threads     []*Thread `json:"threads,omitempty"`
+	Threads     []*ThreadView `json:"threads,omitempty"`
 }
 
 // NewBoardView obtains a BoardView from BoardConfig and cxo client.
@@ -46,7 +46,15 @@ func NewBoardView(bc *BoardConfig, client *node.Client, showThreads bool) (*Boar
 		if e != nil {
 			return nil, e
 		}
-		bv.Threads = threads
+		tvs := make([]*ThreadView, len(threads))
+		for i, t := range threads {
+			tv, e := NewThreadView(bc.PublicKey, t, client, false)
+			if e != nil {
+				return nil, e
+			}
+			tvs[i] = tv
+		}
+		bv.Threads = tvs
 	}
 	return &bv, nil
 }

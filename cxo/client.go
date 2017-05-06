@@ -70,6 +70,13 @@ func (c *Client) initBoards() {
 			panic(e)
 		}
 	}
+	for _, bc := range c.BoardManager.Boards {
+		if bc.Master && c.Master {
+			c.InjectBoard(bc)
+		} else {
+			c.SubscribeToBoard(bc.PublicKey)
+		}
+	}
 }
 
 // Launch runs the Client.
@@ -78,14 +85,14 @@ func (c *Client) Launch() error {
 		return e
 	}
 	time.Sleep(5 * time.Second)
-	c.Client.Execute(func(ct *node.Container) error {
-		ct.Register("Board", typ.Board{},
-			"BoardThreads", typ.BoardThreads{},
-			"Thread", typ.Thread{},
-			"Post", typ.Post{})
+	return c.Client.Execute(func(ct *node.Container) error {
+		ct.Register("Board", typ.Board{})
+		ct.Register("Thread", typ.Thread{})
+		ct.Register("Post", typ.Post{})
+		ct.Register("BoardThreads", typ.BoardThreads{})
+		ct.Register("ThreadPosts", typ.ThreadPosts{})
 		return nil
 	})
-	return nil
 }
 
 // Shutdown shutdowns the Client.
@@ -167,13 +174,45 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) error {
 		return e
 	}
 	// Add thread to BoardThreads.
-	if e:= bts.AddThread(bpk, c.Client, thread); e != nil {
+	if e := bts.AddThread(bpk, c.Client, thread); e != nil {
 		return e
 	}
 	// Re-Inject BoardThreads to root.
+	// Create ThreadPosts for thread.
 	e = c.Client.Execute(func(ct *node.Container) error {
 		r := ct.Root(bpk)
+		tps := typ.NewThreadPosts(thread.ID)
+		r.Inject(*tps, bc.SecretKey)
 		r.Inject(*bts, bc.SecretKey)
+		return nil
+	})
+	return e
+}
+
+// InjectPost injects a post to specified board and thread.
+func (c *Client) InjectPost(bpk cipher.PubKey, tid cipher.PubKey, post *typ.Post) error {
+	// Get BoardConfig.
+	bc, e := c.BoardManager.GetConfig(bpk)
+	if e != nil {
+		return e
+	}
+	// Check if board is master.
+	if bc.Master == false {
+		return errors.New("not master")
+	}
+	// Obtain latest ThreadPosts.
+	tps, _, e := typ.ObtainLatestThreadPosts(bpk, tid, c.Client)
+	if e != nil {
+		return e
+	}
+	// Add post to ThreadPosts.
+	if e := tps.AddPost(bpk, c.Client, post); e != nil {
+		return e
+	}
+	// Re-Inject ThreadPosts.
+	e = c.Client.Execute(func(ct *node.Container) error {
+		r := ct.Root(bpk)
+		r.Inject(*tps, bc.SecretKey)
 		return nil
 	})
 	return e

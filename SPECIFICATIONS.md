@@ -1,5 +1,20 @@
 # Skycoin BBS Specifications
 
+## Data Structure
+* Root
+  * Board
+  * BoardThreads
+    * Thread 0
+    * Thread 1
+    * Thread 2
+  * ThreadPosts 0
+    * Post 0
+  * ThreadPosts 1
+    * Post 1
+    * Post 2
+  * ThreadPosts 2
+    * Post 3
+
 ## Temporary Specifications
 
 ### Overarching Instructions
