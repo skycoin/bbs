@@ -1,6 +1,7 @@
 package cxo
 
 import (
+	"errors"
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/skycoin/src/cipher"
 )
@@ -33,67 +34,112 @@ func NewGateWay(c *Client) *Gateway {
 }
 
 // Subscribe subscribes to a board.
-func (g *Gateway) Subscribe(pkStr string) *Reply {
+func (g *Gateway) Subscribe(pkStr string) *JsonApiObj {
+	var (
+		reply = NewJsonApiObj()
+		e     error
+		pk    cipher.PubKey
+	)
 	// Check public key.
-	pk, e := cipher.PubKeyFromHex(pkStr)
+	pk, e = GetPubKey(pkStr)
 	if e != nil {
-		return NewErrorReply(e.Error())
+		goto SubscribeResult
 	}
 	// Subscribe to board.
-	bc, e := g.c.Subscribe(pk)
+	_, e = g.c.Subscribe(pk)
 	if e != nil {
-		return NewErrorReply(e.Error())
+		goto SubscribeResult
 	}
-	// Display result.
-	return NewResultReply(bc.PubKey)
+SubscribeResult:
+	// Get list of boards.
+	reply.Boards, _, _ = g.c.ObtainAllBoards()
+	return reply.Prepare(e, "subscribed to "+pkStr)
 }
 
 // Unsubscribe unsubscribes from a board.
-func (g *Gateway) Unsubscribe(pkStr string) *Reply {
+func (g *Gateway) Unsubscribe(pkStr string) *JsonApiObj {
+	var (
+		reply = NewJsonApiObj()
+		e     error
+	)
 	// Check public key.
-	pk, e := cipher.PubKeyFromHex(pkStr)
+	pk, e := GetPubKey(pkStr)
 	if e != nil {
-		return NewErrorReply(e.Error())
+		goto UnsubscribeResult
 	}
 	// Unsubscribe from board.
 	if g.c.Unsubscribe(pk) == false {
-		return NewErrorReply("unable to unsubscribe")
+		e = errors.New("unable to unsubscribe")
+		goto UnsubscribeResult
 	}
-	return NewResultReply("successfully unsubscribed")
+UnsubscribeResult:
+	// Get list of boards.
+	reply.Boards, _, _ = g.c.ObtainAllBoards()
+	return reply.Prepare(e, "unsubscribed to "+pkStr)
 }
 
 // ViewBoard views the specified board of public key.
-func (g *Gateway) ViewBoard(pkStr string) *Reply {
-	return nil
+func (g *Gateway) ViewBoard(pkStr string) *JsonApiObj {
+	var (
+		reply = NewJsonApiObj()
+		e     error
+	)
+	// Check public key.
+	pk, e := GetPubKey(pkStr)
+	if e != nil {
+		goto ViewBoardResults
+	}
+ViewBoardResults:
+	// Get list of boards.
+	reply.Board, _, _ = g.c.ObtainBoard(pk)
+	return reply.Prepare(e, "")
 }
 
 // ViewBoards lists all the boards we are subscribed to.
-func (g *Gateway) ViewBoards() *Reply {
-
-	return nil
+func (g *Gateway) ViewBoards() *JsonApiObj {
+	var (
+		reply = NewJsonApiObj()
+		e     error
+	)
+	// Get list of boards.
+	reply.Boards, _, e = g.c.ObtainAllBoards()
+	return reply.Prepare(e, nil)
 }
 
 // ViewThread views the specified thread of specified board and thread id.
-// TODO: Implement.
-func (g *Gateway) ViewThread(bpkStr, tidStr string) *Reply {
-	return nil
+func (g *Gateway) ViewThread(bpkStr, tidStr string) *JsonApiObj {
+	return NewJsonApiObj()
 }
 
 // NewBoard creates a new master board with a name, description and seed.
-func (g *Gateway) NewBoard(name, desc, seed string) *Reply {
-	board := typ.NewBoard(name, desc, "")
-	if e := g.c.InjectBoard(board, seed); e != nil {
-		return NewErrorReply(e.Error())
+func (g *Gateway) NewBoard(board *typ.Board, seed string) *JsonApiObj {
+	var (
+		reply = NewJsonApiObj()
+		e     error
+	)
+	// Check seed.
+	if len(seed) == 0 {
+		e = errors.New("invalid seed")
+		goto NewBoardResults
 	}
-	return NewResultReply(board)
+	// Check board.
+	if e = board.CheckAndPrep(); e != nil {
+		goto NewBoardResults
+	}
+	// Inject board.
+	e = g.c.InjectBoard(typ.NewMasterBoardConfig(board, seed))
+NewBoardResults:
+	// Get list of boards.
+	reply.Boards, _, _ = g.c.ObtainAllBoards()
+	return reply.Prepare(e, "new board successfully created")
 }
 
 // NewThread adds a new thread to specified board.
-func (g *Gateway) NewThread(bpkStr, name, desc string) *Reply {
+func (g *Gateway) NewThread(bpkStr, name, desc string) *JsonApiObj {
 	return nil
 }
 
 // NewPost adds a new post to specified board and thread.
-func (g *Gateway) NewPost(bpkStr, tidStr, name, body string) *Reply {
+func (g *Gateway) NewPost(bpkStr, tidStr, name, body string) *JsonApiObj {
 	return nil
 }

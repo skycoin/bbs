@@ -3,8 +3,8 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"github.com/evanlinjin/bbs/api"
 	"github.com/evanlinjin/bbs/cxo"
-	"github.com/evanlinjin/bbs/gui"
 	"github.com/evanlinjin/bbs/rpc"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
@@ -130,7 +130,7 @@ func Run(c *Config) {
 	// Start web interface.
 	if c.WebInterface {
 		gateway := cxo.NewGateWay(cxoClient)
-		if e := gui.LaunchWebInterface(host, "", gateway); e != nil {
+		if e := api.LaunchWebInterface(host, gateway); e != nil {
 			fmt.Println("[FAILED START]", e)
 			os.Exit(1)
 		}
@@ -150,7 +150,7 @@ func Run(c *Config) {
 	// Wait for Ctrl-C signal.
 	<-quit
 	fmt.Println("Shutting down...")
-	gui.Shutdown()
+	api.Shutdown()
 	if c.Master {
 		rpcServer.Shutdown()
 	}

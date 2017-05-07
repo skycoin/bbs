@@ -6,6 +6,7 @@ import (
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strconv"
 	"time"
 )
@@ -98,8 +99,28 @@ func (c *Client) Launch() error {
 	for _, bc := range c.bManager.Boards {
 		_, e := c.Subscribe(bc.PubKey)
 		if e != nil {
-			fmt.Println("[BOARD CONFIG] Subscription failed:", bc.PubKey, e)
+			fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
+			fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
+			c.bManager.RemoveConfig(bc.PubKey)
 		}
+		//if bc.Master {
+		//	if c.config.Master == false {
+		//		continue
+		//	}
+		//	e := c.InjectBoard(bc)
+		//	if e != nil {
+		//		fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
+		//		fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
+		//		c.bManager.RemoveConfig(bc.PubKey)
+		//	}
+		//} else {
+		//	_, e := c.Subscribe(bc.PubKey)
+		//	if e != nil {
+		//		fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
+		//		fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
+		//		c.bManager.RemoveConfig(bc.PubKey)
+		//	}
+		//}
 	}
 	return e
 }
@@ -131,13 +152,13 @@ func (c *Client) Unsubscribe(pk cipher.PubKey) bool {
 	return c.cxo.Unsubscribe(pk)
 }
 
-// InjectBoard injects a new master board with given seed.
-func (c *Client) InjectBoard(board *typ.Board, seed string) error {
+// InjectBoard injects a new master board with given BoardConfig.
+func (c *Client) InjectBoard(bc *typ.BoardConfig) error {
 	if c.config.Master == false {
 		return errors.New("action not allowed; node is not master")
 	}
-	// Make BoardConfig.
-	bc := typ.NewMasterBoardConfig(board, seed)
+	// Make Board from BoardConfig.
+	board := typ.NewBoardFromConfig(bc)
 	// Check if BoardConfig exists.
 	if c.bManager.HasConfig(bc.PubKey) == true {
 		return errors.New("board already exists")
@@ -153,9 +174,70 @@ func (c *Client) InjectBoard(board *typ.Board, seed string) error {
 	if e != nil {
 		return e
 	}
+	// Subscribe to board.
+	if c.cxo.Subscribe(bc.PubKey) == false {
+		return errors.New("failed to subscribe to board in cxo")
+	}
 	// Add config to BoardManager.
 	return c.bManager.AddConfig(bc)
 }
 
-// ObtainBoard obtains the latest board from cxo.
-//func (c *Client) ObtainBoard
+// ObtainBoard obtains a board of specified PubKey from cxo.
+// Also obtains the BoardContainer.
+// Assumes public key provided is valid.
+func (c *Client) ObtainBoard(bpk cipher.PubKey) (
+	b *typ.Board, bCont *typ.BoardContainer, e error,
+) {
+	bCont = new(typ.BoardContainer)
+	b = new(typ.Board)
+
+	e = c.cxo.Execute(func(ct *node.Container) error {
+		r := ct.Root(bpk)
+		if r == nil {
+			c.bManager.RemoveConfig(bpk)
+			return errors.New("nil root, removed from config")
+		}
+		values, e := r.Values()
+		if e != nil {
+			return e
+		}
+		if len(values) != 1 {
+			return errors.New("invalid root")
+		}
+		// Get BoardContainer.
+		if e := encoder.DeserializeRaw(values[0].Data(), bCont); e != nil {
+			return e
+		}
+		// Get Board.
+		bValue, e := ct.GetObject("Board", bCont.Board)
+		if e != nil {
+			return e
+		}
+		if e := encoder.DeserializeRaw(bValue.Data(), b); e != nil {
+			return e
+		}
+		return nil
+	})
+	return
+}
+
+// ObtainAllBoards obtains all the boards that we are subscribed to.
+func (c *Client) ObtainAllBoards() (
+	bList []*typ.Board, bContList []*typ.BoardContainer, e error,
+) {
+	// Get board configs.
+	bConfList := c.bManager.GetList()
+	// Prepare outputs.
+	bList = make([]*typ.Board, len(bConfList))
+	bContList = make([]*typ.BoardContainer, len(bConfList))
+	// Loop.
+	for i := 0; i < len(bConfList); i++ {
+		b, bCont, err := c.ObtainBoard(bConfList[i].PubKey)
+		if err != nil {
+			e = err
+			return
+		}
+		bList[i], bContList[i] = b, bCont
+	}
+	return
+}

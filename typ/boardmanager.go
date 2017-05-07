@@ -18,6 +18,7 @@ type BoardManager struct {
 	Master  bool
 	Masters []cipher.PubKey
 	Boards  map[cipher.PubKey]*BoardConfig
+	Loaded  map[cipher.PubKey]bool
 }
 
 // NewBoardManager creates a new empty BoardManager.
@@ -25,6 +26,7 @@ func NewBoardManager(master bool) *BoardManager {
 	bm := BoardManager{
 		Master: master,
 		Boards: make(map[cipher.PubKey]*BoardConfig),
+		Loaded: make(map[cipher.PubKey]bool),
 	}
 	return &bm
 }
@@ -106,6 +108,19 @@ func (m *BoardManager) HasConfig(pk cipher.PubKey) bool {
 	return has
 }
 
+// GetConfig gets a BoardConfig from given Public Key.
+func (m *BoardManager) GetConfig(pk cipher.PubKey) (*BoardConfig, error) {
+	m.Lock()
+	defer m.Unlock()
+
+	bc, has := m.Boards[pk]
+	var e error
+	if has == false {
+		e = errors.New("config does not exist")
+	}
+	return bc, e
+}
+
 // GetList gets a list of BoardConfigs.
 func (m *BoardManager) GetList() []*BoardConfig {
 	m.Lock()
@@ -118,15 +133,10 @@ func (m *BoardManager) GetList() []*BoardConfig {
 	return list
 }
 
-// GetConfig gets a BoardConfig from given Public Key.
-func (m *BoardManager) GetConfig(pk cipher.PubKey) (*BoardConfig, error) {
+// GetCount gets the number of Boards.
+func (m *BoardManager) GetCount() int {
 	m.Lock()
 	defer m.Unlock()
 
-	bc, has := m.Boards[pk]
-	var e error
-	if has == false {
-		e = errors.New("config does not exist")
-	}
-	return bc, e
+	return len(m.Boards)
 }

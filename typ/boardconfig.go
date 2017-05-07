@@ -36,7 +36,7 @@ func NewMasterBoardConfig(board *Board, seed string) *BoardConfig {
 	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
 	bc := BoardConfig{
 		Name:      board.Name,
-		Desc: board.Desc,
+		Desc:      board.Desc,
 		Master:    true,
 		URL:       board.URL,
 		PubKey:    pk,

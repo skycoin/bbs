@@ -1,4 +1,4 @@
-package gui
+package api
 
 import (
 	"github.com/evanlinjin/bbs/cxo"
@@ -17,17 +17,13 @@ const (
 	indexPage   = "index.html"
 )
 
-func LaunchWebInterface(host, staticDir string, g *cxo.Gateway) (e error) {
+func LaunchWebInterface(host string, g *cxo.Gateway) (e error) {
 	quit = make(chan struct{})
-	//appLoc, e := util.DetermineResourcePath(staticDir, resourceDir, devDir)
-	//if e != nil {
-	//	return e
-	//}
 	listener, e = net.Listen("tcp", host)
 	if e != nil {
 		return
 	}
-	serve(listener, NewJsonMux(g), quit)
+	serve(listener, NewServeMux(g), quit)
 	return
 }
 
@@ -56,9 +52,14 @@ func Shutdown() {
 	}
 }
 
-// NewJsonMux creates a http.ServeMux with handlers registered.
-func NewJsonMux(g *cxo.Gateway) *http.ServeMux {
+// NewServeMux creates a http.ServeMux with handlers registered.
+func NewServeMux(g *cxo.Gateway) *http.ServeMux {
+	// Register objects.
+	jsonAPI := NewJsonAPI(g)
+
+	// Prepare mux.
 	mux := http.NewServeMux()
-	RegisterApiHandlers(mux, g)
+	mux.HandleFunc("/api/boards", jsonAPI.BoardsHandler)
+
 	return mux
 }
