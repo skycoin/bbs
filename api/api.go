@@ -57,7 +57,7 @@ package api
 //// ListBoards lists all boards currently subscribed.
 //// Example usage: http://127.0.0.1:6420/api/list_boards
 //func (h *APIHandler) ListBoards(w http.ResponseWriter, r *http.Request) {
-//	reply := h.g.ViewBoards()
+//	reply := h.g.ListBoards()
 //	sendResponse(w, reply, http.StatusOK)
 //}
 //

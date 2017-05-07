@@ -4,7 +4,8 @@ Information regarding development progress.
 * **DONE** shows what has been implemented (split into days).
 
 ## TODO
-* Implement adding posts.
+* Finish JSON API structure according to [specifications](https://paper.dropbox.com/doc/JSON-API-Specifications-S6BHC351LStxlgySl55M2).
+* Fix bug where bbs server is unable to access Roots after restart (queried Konstantin and awaiting reply).
 
 ## DONE
 

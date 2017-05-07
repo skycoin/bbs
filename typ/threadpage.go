@@ -7,3 +7,9 @@ type ThreadPage struct {
 	Thread skyobject.Reference  `skyobject:"schema=Thread"`
 	Posts  skyobject.References `skyobject:"schema=Post"`
 }
+
+func NewThreadPage(tRef skyobject.Reference) *ThreadPage {
+	return &ThreadPage{
+		Thread: tRef,
+	}
+}

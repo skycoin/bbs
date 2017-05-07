@@ -34,9 +34,9 @@ func NewGateWay(c *Client) *Gateway {
 }
 
 // Subscribe subscribes to a board.
-func (g *Gateway) Subscribe(pkStr string) *JsonApiObj {
+func (g *Gateway) Subscribe(pkStr string) *RepReq {
 	var (
-		reply = NewJsonApiObj()
+		reply = NewRepReq()
 		e     error
 		pk    cipher.PubKey
 	)
@@ -57,9 +57,9 @@ SubscribeResult:
 }
 
 // Unsubscribe unsubscribes from a board.
-func (g *Gateway) Unsubscribe(pkStr string) *JsonApiObj {
+func (g *Gateway) Unsubscribe(pkStr string) *RepReq {
 	var (
-		reply = NewJsonApiObj()
+		reply = NewRepReq()
 		e     error
 	)
 	// Check public key.
@@ -78,27 +78,10 @@ UnsubscribeResult:
 	return reply.Prepare(e, "unsubscribed to "+pkStr)
 }
 
-// ViewBoard views the specified board of public key.
-func (g *Gateway) ViewBoard(pkStr string) *JsonApiObj {
+// ListBoards lists all the boards we are subscribed to.
+func (g *Gateway) ListBoards() *RepReq {
 	var (
-		reply = NewJsonApiObj()
-		e     error
-	)
-	// Check public key.
-	pk, e := GetPubKey(pkStr)
-	if e != nil {
-		goto ViewBoardResults
-	}
-ViewBoardResults:
-	// Get list of boards.
-	reply.Board, _, _ = g.c.ObtainBoard(pk)
-	return reply.Prepare(e, "")
-}
-
-// ViewBoards lists all the boards we are subscribed to.
-func (g *Gateway) ViewBoards() *JsonApiObj {
-	var (
-		reply = NewJsonApiObj()
+		reply = NewRepReq()
 		e     error
 	)
 	// Get list of boards.
@@ -106,15 +89,32 @@ func (g *Gateway) ViewBoards() *JsonApiObj {
 	return reply.Prepare(e, nil)
 }
 
+// ViewBoard views the specified board of public key.
+func (g *Gateway) ViewBoard(pkStr string) *RepReq {
+	var (
+		reply = NewRepReq()
+		e     error
+	)
+	// Check public key.
+	pk, e := GetPubKey(pkStr)
+	if e != nil {
+		goto ViewBoardResults
+	}
+	// Obtain board information.
+	reply.Board, _, reply.Threads, e = g.c.ObtainThreads(pk)
+ViewBoardResults:
+	return reply.Prepare(e, "")
+}
+
 // ViewThread views the specified thread of specified board and thread id.
-func (g *Gateway) ViewThread(bpkStr, tidStr string) *JsonApiObj {
-	return NewJsonApiObj()
+func (g *Gateway) ViewThread(bpkStr, tidStr string) *RepReq {
+	return NewRepReq()
 }
 
 // NewBoard creates a new master board with a name, description and seed.
-func (g *Gateway) NewBoard(board *typ.Board, seed string) *JsonApiObj {
+func (g *Gateway) NewBoard(board *typ.Board, seed string) *RepReq {
 	var (
-		reply = NewJsonApiObj()
+		reply = NewRepReq()
 		e     error
 	)
 	// Check seed.
@@ -127,7 +127,7 @@ func (g *Gateway) NewBoard(board *typ.Board, seed string) *JsonApiObj {
 		goto NewBoardResults
 	}
 	// Inject board.
-	e = g.c.InjectBoard(typ.NewMasterBoardConfig(board, seed))
+	_, _, e = g.c.InjectBoard(typ.NewMasterBoardConfig(board, seed))
 NewBoardResults:
 	// Get list of boards.
 	reply.Boards, _, _ = g.c.ObtainAllBoards()
@@ -135,11 +135,24 @@ NewBoardResults:
 }
 
 // NewThread adds a new thread to specified board.
-func (g *Gateway) NewThread(bpkStr, name, desc string) *JsonApiObj {
-	return nil
+func (g *Gateway) NewThread(bpkStr string, thread *typ.Thread) *RepReq {
+	var (
+		reply = NewRepReq()
+		e     error
+		pk    cipher.PubKey
+	)
+	// Check public key.
+	pk, e = GetPubKey(bpkStr)
+	if e != nil {
+		goto NewThreadResult
+	}
+	// Inject thread and obtain info.
+	reply.Board, _, reply.Threads, e = g.c.InjectThread(pk, thread)
+NewThreadResult:
+	return reply.Prepare(e, "thread successfully created")
 }
 
 // NewPost adds a new post to specified board and thread.
-func (g *Gateway) NewPost(bpkStr, tidStr, name, body string) *JsonApiObj {
+func (g *Gateway) NewPost(bpkStr, tidStr, name, body string) *RepReq {
 	return nil
 }

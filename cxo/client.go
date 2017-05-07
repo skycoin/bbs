@@ -97,30 +97,35 @@ func (c *Client) Launch() error {
 	}
 	// Load boards from BoardManager.
 	for _, bc := range c.bManager.Boards {
-		_, e := c.Subscribe(bc.PubKey)
-		if e != nil {
-			fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
-			fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-			c.bManager.RemoveConfig(bc.PubKey)
-		}
-		//if bc.Master {
-		//	if c.config.Master == false {
-		//		continue
-		//	}
-		//	e := c.InjectBoard(bc)
-		//	if e != nil {
-		//		fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
-		//		fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-		//		c.bManager.RemoveConfig(bc.PubKey)
-		//	}
-		//} else {
-		//	_, e := c.Subscribe(bc.PubKey)
-		//	if e != nil {
-		//		fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
-		//		fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-		//		c.bManager.RemoveConfig(bc.PubKey)
-		//	}
+
+		// [USE THIS PART WHEN KONSTANTIN GIVES ME FIX]
+		//_, e := c.Subscribe(bc.PubKey)
+		//if e != nil {
+		//	fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
+		//	fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
+		//	c.bManager.RemoveConfig(bc.PubKey)
 		//}
+
+		// [TEMPORARY WORKAROUND]
+		if bc.Master {
+			if c.config.Master == false {
+				continue
+			}
+			c.bManager.RemoveConfig(bc.PubKey)
+			_, _, e := c.InjectBoard(bc)
+			if e != nil {
+				fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
+				fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
+				c.bManager.RemoveConfig(bc.PubKey)
+			}
+		} else {
+			_, e := c.Subscribe(bc.PubKey)
+			if e != nil {
+				fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
+				fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
+				c.bManager.RemoveConfig(bc.PubKey)
+			}
+		}
 	}
 	return e
 }
@@ -153,33 +158,39 @@ func (c *Client) Unsubscribe(pk cipher.PubKey) bool {
 }
 
 // InjectBoard injects a new master board with given BoardConfig.
-func (c *Client) InjectBoard(bc *typ.BoardConfig) error {
+func (c *Client) InjectBoard(bc *typ.BoardConfig) (
+	b *typ.Board, bCont *typ.BoardContainer, e error,
+) {
 	if c.config.Master == false {
-		return errors.New("action not allowed; node is not master")
+		e = errors.New("action not allowed; node is not master")
+		return
 	}
 	// Make Board from BoardConfig.
-	board := typ.NewBoardFromConfig(bc)
+	b = typ.NewBoardFromConfig(bc)
 	// Check if BoardConfig exists.
 	if c.bManager.HasConfig(bc.PubKey) == true {
-		return errors.New("board already exists")
+		e = errors.New("board already exists")
+		return
 	}
 	// Add to cxo.
-	e := c.cxo.Execute(func(ct *node.Container) error {
+	e = c.cxo.Execute(func(ct *node.Container) error {
 		r := ct.NewRoot(bc.PubKey, bc.SecKey)
-		boardRef := ct.Save(*board)
-		boardContainer := typ.BoardContainer{Board: boardRef}
-		r.Inject(boardContainer, bc.SecKey)
+		boardRef := ct.Save(*b)
+		bCont = typ.NewBoardContainer(boardRef)
+		r.Inject(*bCont, bc.SecKey)
 		return nil
 	})
 	if e != nil {
-		return e
+		return
 	}
 	// Subscribe to board.
 	if c.cxo.Subscribe(bc.PubKey) == false {
-		return errors.New("failed to subscribe to board in cxo")
+		e = errors.New("failed to subscribe to board in cxo")
+		return
 	}
 	// Add config to BoardManager.
-	return c.bManager.AddConfig(bc)
+	e = c.bManager.AddConfig(bc)
+	return
 }
 
 // ObtainBoard obtains a board of specified PubKey from cxo.
@@ -201,12 +212,19 @@ func (c *Client) ObtainBoard(bpk cipher.PubKey) (
 		if e != nil {
 			return e
 		}
-		if len(values) != 1 {
-			return errors.New("invalid root")
-		}
-		// Get BoardContainer.
-		if e := encoder.DeserializeRaw(values[0].Data(), bCont); e != nil {
-			return e
+		//if len(values) != 1 {
+		//	return errors.New("invalid root")
+		//}
+		// Loop through and get latest BoardContainer.
+		for _, v := range values {
+			bContTemp := &typ.BoardContainer{}
+			// Get BoardContainer.
+			if e := encoder.DeserializeRaw(v.Data(), bContTemp); e != nil {
+				return e
+			}
+			if bContTemp.Seq >= bCont.Seq {
+				bCont = bContTemp
+			}
 		}
 		// Get Board.
 		bValue, e := ct.GetObject("Board", bCont.Board)
@@ -216,6 +234,7 @@ func (c *Client) ObtainBoard(bpk cipher.PubKey) (
 		if e := encoder.DeserializeRaw(bValue.Data(), b); e != nil {
 			return e
 		}
+		b.PubKey = bpk.Hex()
 		return nil
 	})
 	return
@@ -239,5 +258,101 @@ func (c *Client) ObtainAllBoards() (
 		}
 		bList[i], bContList[i] = b, bCont
 	}
+	return
+}
+
+// InjectThread injects a thread in specified board.
+func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
+	b *typ.Board, bCont *typ.BoardContainer, tList []*typ.Thread, e error,
+) {
+	if c.config.Master == false {
+		e = errors.New("action not allowed; node is not master")
+		return
+	}
+	// Check thread.
+	if e = thread.CheckAndPrep(); e != nil {
+		return
+	}
+	// Obtain board configuration.
+	bc, e := c.bManager.GetConfig(bpk)
+	if e != nil {
+		return
+	}
+	// See if we are master of the board.
+	if bc.Master == false {
+		e = errors.New("not master")
+		return
+	}
+	// Obtain board and board container.
+	b, bCont, e = c.ObtainBoard(bpk)
+	if e != nil {
+		return
+	}
+	e = c.cxo.Execute(func(ct *node.Container) error {
+		// Obtain root.
+		r := ct.Root(bpk)
+		if r == nil {
+			return errors.New("nil root")
+		}
+		// Save thread in container.
+		tRef := ct.Save(*thread)
+		// Add thread to BoardContainer if not exist.
+		if e := bCont.AddThread(tRef); e != nil {
+			return e
+		}
+		// Add empty ThreadPage to BoardContainer.
+		tp := typ.NewThreadPage(tRef)
+		tpRef := ct.Save(*tp)
+		if e := bCont.AddThreadPage(tpRef); e != nil {
+			return e
+		}
+		// Increment sequence of BoardContainer.
+		bCont.Touch()
+		// Inject in root.
+		r.Inject(*bCont, bc.SecKey)
+
+		// Obtain all threads in board.
+		tList = make([]*typ.Thread, len(bCont.Threads))
+		for i, tRef := range bCont.Threads {
+			t := &typ.Thread{}
+			v, e := ct.GetObject("Thread", tRef)
+			if e != nil {
+				return e
+			}
+			if e := encoder.DeserializeRaw(v.Data(), t); e != nil {
+				return e
+			}
+			tList[i] = t
+		}
+		return nil
+	})
+	return
+}
+
+// ObtainThreads obtains threads of a specified board.
+func (c *Client) ObtainThreads(bpk cipher.PubKey) (
+	b *typ.Board, bCont *typ.BoardContainer, tList []*typ.Thread, e error,
+) {
+	// Obtain board and board container.
+	b, bCont, e = c.ObtainBoard(bpk)
+	if e != nil {
+		return
+	}
+	e = c.cxo.Execute(func(ct *node.Container) error {
+		// Obtain all threads in board.
+		tList = make([]*typ.Thread, len(bCont.Threads))
+		for i, tRef := range bCont.Threads {
+			t := &typ.Thread{}
+			v, e := ct.GetObject("Thread", tRef)
+			if e != nil {
+				return e
+			}
+			if e := encoder.DeserializeRaw(v.Data(), t); e != nil {
+				return e
+			}
+			tList[i] = t
+		}
+		return nil
+	})
 	return
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/evanlinjin/bbs/cxo"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 // JsonAPI wraps cxo.Gateway.
@@ -17,11 +18,11 @@ func NewJsonAPI(g *cxo.Gateway) *JsonAPI {
 	return &JsonAPI{g}
 }
 
-// BoardHandler for /api/boards.
-func (a *JsonAPI) BoardsHandler(w http.ResponseWriter, r *http.Request) {
+// BoardListHandler for /api/boards.
+func (a *JsonAPI) BoardListHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		reply := a.g.ViewBoards()
+		reply := a.g.ListBoards()
 		sendResponse(w, reply, http.StatusOK)
 		return
 	case "PUT":
@@ -31,6 +32,29 @@ func (a *JsonAPI) BoardsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		reply := a.g.NewBoard(req.Board, req.Seed)
+		sendResponse(w, reply, http.StatusOK)
+		return
+	}
+	sendResponse(w, nil, http.StatusNotFound)
+	return
+}
+
+// BoardHandler for /api/boards/BOARD_PUBLIC_KEY.
+func (a *JsonAPI) BoardHandler(w http.ResponseWriter, r *http.Request) {
+	// Obtain public key.
+	pkStr := strings.Split(r.URL.EscapedPath(), "/")[3]
+	switch r.Method {
+	case "GET":
+		reply := a.g.ViewBoard(pkStr)
+		sendResponse(w, reply, http.StatusOK)
+		return
+	case "PUT":
+		req, e := readRequestBody(r)
+		if e != nil || req.Thread == nil {
+			sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+			return
+		}
+		reply := a.g.NewThread(pkStr, req.Thread)
 		sendResponse(w, reply, http.StatusOK)
 		return
 	}
@@ -50,12 +74,12 @@ func sendResponse(w http.ResponseWriter, v interface{}, httpStatus int) error {
 	return nil
 }
 
-func readRequestBody(r *http.Request) (*cxo.JsonApiObj, error) {
+func readRequestBody(r *http.Request) (*cxo.RepReq, error) {
 	d, e := ioutil.ReadAll(r.Body)
 	if e != nil {
 		return nil, e
 	}
-	obj := cxo.NewJsonApiObj()
+	obj := cxo.NewRepReq()
 	e = json.Unmarshal(d, obj)
 	return obj, e
 }

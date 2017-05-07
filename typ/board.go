@@ -10,6 +10,7 @@ import (
 type Board struct {
 	Name    string `json:"name"`
 	Desc    string `json:"description"`
+	PubKey  string `json:"public_key" enc:"-"`
 	URL     string `json:"-"`
 	Created int64  `json:"created"`
 }
@@ -30,13 +31,10 @@ func NewBoardFromConfig(bc *BoardConfig) *Board {
 	return &Board{
 		Name:    bc.Name,
 		Desc:    bc.Desc,
+		PubKey:  bc.PubKeyStr,
 		URL:     bc.URL,
 		Created: time.Now().UnixNano(),
 	}
-}
-
-func (b *Board) Touch() {
-	b.Created = time.Now().UnixNano()
 }
 
 func (b *Board) CheckAndPrep() error {

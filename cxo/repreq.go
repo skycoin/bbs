@@ -7,8 +7,8 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
-// JsonApiObj represents a json reply object.
-type JsonApiObj struct {
+// RepReq represents a json reply object.
+type RepReq struct {
 	Board   *typ.Board    `json:"board,omitempty"`
 	Boards  []*typ.Board  `json:"boards,omitempty"`
 	Thread  *typ.Thread   `json:"thread,omitempty"`
@@ -20,11 +20,11 @@ type JsonApiObj struct {
 	Seed string `json:"seed,omitempty"`
 }
 
-func NewJsonApiObj() *JsonApiObj {
-	return &JsonApiObj{}
+func NewRepReq() *RepReq {
+	return &RepReq{}
 }
 
-func (ro *JsonApiObj) Prepare(e error, s interface{}) *JsonApiObj {
+func (ro *RepReq) Prepare(e error, s interface{}) *RepReq {
 	if e == nil {
 		ro.Req = &ReqObj{true, nil, s}
 	} else {
@@ -33,7 +33,7 @@ func (ro *JsonApiObj) Prepare(e error, s interface{}) *JsonApiObj {
 	return ro
 }
 
-// PutRequestObj represents a sub-branch of JsonApiObj.
+// PutRequestObj represents a sub-branch of RepReq.
 type ReqObj struct {
 	Okay    bool        `json:"okay"`
 	Error   interface{} `json:"error,omitempty"`

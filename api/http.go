@@ -59,7 +59,7 @@ func NewServeMux(g *cxo.Gateway) *http.ServeMux {
 
 	// Prepare mux.
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/boards", jsonAPI.BoardsHandler)
-
+	mux.HandleFunc("/api/boards", jsonAPI.BoardListHandler)
+	mux.HandleFunc("/api/boards/", jsonAPI.BoardHandler)
 	return mux
 }
