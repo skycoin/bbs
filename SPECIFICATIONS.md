@@ -16,7 +16,12 @@
     * Post 3
 
 ## For JSON API
-Refer to [JSON API Specifications on Dropbox Paper](https://paper.dropbox.com/doc/JSON-API-Specifications-S6BHC351LStxlgySl55M2).
+Refer to [JSON API Specifications on Dropbox Paper](https://paper.dropbox.com/doc/JSON-API-Specifications-S6BHC351LStxlgySl55M2) and access the [Postman Collection](https://www.getpostman.com/collections/39a4168cf9be0c746f47).
+
+P.S. Command line arguments for making bbs server master (So you can create boards).
+```
+--master=true --launch-browser=false
+```
 
 ## Temporary Specifications
 
