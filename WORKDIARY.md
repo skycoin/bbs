@@ -5,9 +5,11 @@ Information regarding development progress.
 
 ## TODO
 * Finish JSON API structure according to [specifications](https://paper.dropbox.com/doc/JSON-API-Specifications-S6BHC351LStxlgySl55M2).
-* Fix bug where bbs server is unable to access Roots after restart (queried Konstantin and awaiting reply).
 
 ## DONE
+
+### 2017 May 7
+ * Add Thread to board and view board with threads implemented according to specifications. This includes access via JSON API.
 
 ### 2017 May 6
 * Implement loading/saving `BoardConfig` from/into JSON file.
