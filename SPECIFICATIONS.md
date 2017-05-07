@@ -15,6 +15,9 @@
   * ThreadPosts 2
     * Post 3
 
+## For JSON API
+Refer to [JSON API Specifications on Dropbox Paper](https://paper.dropbox.com/doc/JSON-API-Specifications-S6BHC351LStxlgySl55M2).
+
 ## Temporary Specifications
 
 ### Overarching Instructions

@@ -1,5 +1,10 @@
 package cxo
 
+import (
+	"github.com/evanlinjin/bbs/typ"
+	"github.com/skycoin/skycoin/src/cipher"
+)
+
 // Reply represents a json reply.
 type Reply struct {
 	Okay   bool        `json:"okay"`
@@ -29,12 +34,32 @@ func NewGateWay(c *Client) *Gateway {
 
 // Subscribe subscribes to a board.
 func (g *Gateway) Subscribe(pkStr string) *Reply {
-	return nil
+	// Check public key.
+	pk, e := cipher.PubKeyFromHex(pkStr)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	// Subscribe to board.
+	bc, e := g.c.Subscribe(pk)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	// Display result.
+	return NewResultReply(bc.PubKey)
 }
 
 // Unsubscribe unsubscribes from a board.
 func (g *Gateway) Unsubscribe(pkStr string) *Reply {
-	return nil
+	// Check public key.
+	pk, e := cipher.PubKeyFromHex(pkStr)
+	if e != nil {
+		return NewErrorReply(e.Error())
+	}
+	// Unsubscribe from board.
+	if g.c.Unsubscribe(pk) == false {
+		return NewErrorReply("unable to unsubscribe")
+	}
+	return NewResultReply("successfully unsubscribed")
 }
 
 // ViewBoard views the specified board of public key.
@@ -44,6 +69,7 @@ func (g *Gateway) ViewBoard(pkStr string) *Reply {
 
 // ViewBoards lists all the boards we are subscribed to.
 func (g *Gateway) ViewBoards() *Reply {
+
 	return nil
 }
 
@@ -53,9 +79,13 @@ func (g *Gateway) ViewThread(bpkStr, tidStr string) *Reply {
 	return nil
 }
 
-// NewBoard creates a new master board with a seed and name.
-func (g *Gateway) NewBoard(name, seed string) *Reply {
-	return nil
+// NewBoard creates a new master board with a name, description and seed.
+func (g *Gateway) NewBoard(name, desc, seed string) *Reply {
+	board := typ.NewBoard(name, desc, "")
+	if e := g.c.InjectBoard(board, seed); e != nil {
+		return NewErrorReply(e.Error())
+	}
+	return NewResultReply(board)
 }
 
 // NewThread adds a new thread to specified board.

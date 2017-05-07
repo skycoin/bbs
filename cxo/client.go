@@ -1,8 +1,11 @@
 package cxo
 
 import (
+	"errors"
+	"fmt"
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
 	"time"
 )
@@ -93,10 +96,9 @@ func (c *Client) Launch() error {
 	}
 	// Load boards from BoardManager.
 	for _, bc := range c.bManager.Boards {
-		if bc.Master && c.config.Master {
-			//c.InjectBoard(bc)
-		} else {
-			//c.SubscribeToBoard(bc.PublicKey)
+		_, e := c.Subscribe(bc.PubKey)
+		if e != nil {
+			fmt.Println("[BOARD CONFIG] Subscription failed:", bc.PubKey, e)
 		}
 	}
 	return e
@@ -106,3 +108,54 @@ func (c *Client) Launch() error {
 func (c *Client) Shutdown() error {
 	return c.cxo.Close()
 }
+
+// Subscribe subscribes to a board.
+func (c *Client) Subscribe(pk cipher.PubKey) (*typ.BoardConfig, error) {
+	// Check if we already have the config, if not make one.
+	bc, e := c.bManager.GetConfig(pk)
+	if e != nil {
+		bc, _ = typ.NewBoardConfig(pk, "")
+	}
+	// Attempt subscribe in cxo.
+	if c.cxo.Subscribe(pk) == false {
+		return nil, errors.New("subscription failed")
+	}
+	// Add to BoardManager.
+	c.bManager.AddConfig(bc)
+	return bc, nil
+}
+
+// Unsubscribe unsubscribes from a board.
+func (c *Client) Unsubscribe(pk cipher.PubKey) bool {
+	c.bManager.RemoveConfig(pk)
+	return c.cxo.Unsubscribe(pk)
+}
+
+// InjectBoard injects a new master board with given seed.
+func (c *Client) InjectBoard(board *typ.Board, seed string) error {
+	if c.config.Master == false {
+		return errors.New("action not allowed; node is not master")
+	}
+	// Make BoardConfig.
+	bc := typ.NewMasterBoardConfig(board, seed)
+	// Check if BoardConfig exists.
+	if c.bManager.HasConfig(bc.PubKey) == true {
+		return errors.New("board already exists")
+	}
+	// Add to cxo.
+	e := c.cxo.Execute(func(ct *node.Container) error {
+		r := ct.NewRoot(bc.PubKey, bc.SecKey)
+		boardRef := ct.Save(*board)
+		boardContainer := typ.BoardContainer{Board: boardRef}
+		r.Inject(boardContainer, bc.SecKey)
+		return nil
+	})
+	if e != nil {
+		return e
+	}
+	// Add config to BoardManager.
+	return c.bManager.AddConfig(bc)
+}
+
+// ObtainBoard obtains the latest board from cxo.
+//func (c *Client) ObtainBoard

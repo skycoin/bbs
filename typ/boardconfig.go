@@ -8,6 +8,7 @@ import (
 // BoardConfig represents a board configuration on disk and in memory.
 type BoardConfig struct {
 	Name      string        `json:"name,omitempty"`
+	Desc      string        `json:"description,omitempty"`
 	Master    bool          `json:"master"`
 	URL       string        `json:"url"`
 	PubKey    cipher.PubKey `json:"-"`
@@ -31,12 +32,13 @@ func NewBoardConfig(pk cipher.PubKey, url string) (*BoardConfig, error) {
 }
 
 // NewMasterBoardConfig creates a new master BoardConfig from a seed.
-func NewMasterBoardConfig(name, seed, url string) *BoardConfig {
+func NewMasterBoardConfig(board *Board, seed string) *BoardConfig {
 	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
 	bc := BoardConfig{
-		Name:      name,
+		Name:      board.Name,
+		Desc: board.Desc,
 		Master:    true,
-		URL:       url,
+		URL:       board.URL,
 		PubKey:    pk,
 		SecKey:    sk,
 		PubKeyStr: pk.Hex(),
