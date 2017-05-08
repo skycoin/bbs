@@ -24,12 +24,10 @@ func (p *Post) CheckContent() (e error) {
 		return errors.New("nil post")
 	}
 	// Check title and body of post.
-	p.Title = strings.TrimSpace(p.Title)
-	p.Body = strings.TrimSpace(p.Title)
-	if len(p.Title) == 0 {
+	if len(strings.TrimSpace(p.Title)) == 0 {
 		return errors.New("invalid post title")
 	}
-	if len(p.Body) == 0 {
+	if len(strings.TrimSpace(p.Title)) == 0 {
 		return errors.New("invalid post body")
 	}
 	return
@@ -49,7 +47,6 @@ func (p *Post) CheckCreator() (e error) {
 
 // Sign signs the post before putting in cxo.
 func (p *Post) Sign(sk cipher.SecKey) cipher.Sig {
-	p.Created = 0
 	hash := cipher.SumSHA256(encoder.Serialize(*p))
 	p.Signature = cipher.SignHash(hash, sk)
 	return p.Signature
@@ -57,7 +54,6 @@ func (p *Post) Sign(sk cipher.SecKey) cipher.Sig {
 
 // CheckSig checks the signature of the post.
 func (p Post) CheckSig() error {
-	p.Created = 0
 	// Extract signature.
 	sig := p.Signature
 	p.Signature = cipher.Sig{}

@@ -4,11 +4,12 @@ Information regarding development progress.
 * **DONE** shows what has been implemented (split into days).
 
 ## TODO
-* Fix bug where we are unable to post to thread.
+
 
 ## DONE
 
 ### 2017 May 8
+* Fix bug where we are unable to post to thread.
 * Posts need to be signed before posting.
 * Finish JSON API structure according to [specifications](https://paper.dropbox.com/doc/JSON-API-Specifications-S6BHC351LStxlgySl55M2).
 

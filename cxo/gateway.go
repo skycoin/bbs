@@ -182,6 +182,7 @@ func (g *Gateway) NewPost(bpkStr, tHashStr string, post *typ.Post) *RepReq {
 	}
 	post.Creator = u.PublicKey
 	post.CreatorStr = u.PublicKeyStr
+	post.Touch()
 	post.Sign(u.SecretKey)
 NewPostResultCanDisplay:
 	if e2 != nil {

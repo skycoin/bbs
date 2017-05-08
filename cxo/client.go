@@ -333,6 +333,30 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
 	return
 }
 
+// ObtainThread obtains a single thread.
+func (c *Client) ObtainThread(bpk cipher.PubKey, tRef skyobject.Reference) (
+	b *typ.Board, bCont *typ.BoardContainer, t *typ.Thread, e error,
+) {
+	// Obtain board and board container.
+	b, bCont, e = c.ObtainBoard(bpk)
+	if e != nil {
+		return
+	}
+	e = c.cxo.Execute(func(ct *node.Container) error {
+		// Find thread.
+		t := &typ.Thread{}
+		tVal, e2 := ct.GetObject("Thread", tRef)
+		if e2 != nil {
+			return e2
+		}
+		if e2 = encoder.DeserializeRaw(tVal.Data(), t); e2 != nil {
+			return e2
+		}
+		return nil
+	})
+	return
+}
+
 // ObtainThreads obtains threads of a specified board.
 func (c *Client) ObtainThreads(bpk cipher.PubKey) (
 	b *typ.Board, bCont *typ.BoardContainer, tList []*typ.Thread, e error,
@@ -365,8 +389,8 @@ func (c *Client) ObtainPosts(bpk cipher.PubKey, tRef skyobject.Reference) (
 	b *typ.Board, bCont *typ.BoardContainer, t *typ.Thread, tPage *typ.ThreadPage, pList []*typ.Post,
 	tpRef skyobject.Reference, e error,
 ) {
-	// Obtain board and board container.
-	b, bCont, e = c.ObtainBoard(bpk)
+	// Obtain board, board container and thread.
+	b, bCont, t, e = c.ObtainThread(bpk, tRef)
 	if e != nil {
 		return
 	}
@@ -397,9 +421,11 @@ func (c *Client) ObtainPosts(bpk cipher.PubKey, tRef skyobject.Reference) (
 			if e2 != nil {
 				return e2
 			}
+			pList[i] = &typ.Post{}
 			if e2 := encoder.DeserializeRaw(pVal.Data(), pList[i]); e2 != nil {
 				return e2
 			}
+			pList[i].CheckCreator()
 		}
 		return nil
 	})
@@ -460,6 +486,9 @@ func (c *Client) InjectPost(bpk cipher.PubKey, tRef skyobject.Reference, post *t
 		// Inject new board container in root.
 		r := ct.Root(bpk)
 		r.Inject(bCont, bc.SecKey)
+
+		// Add post to output post list.
+		pList = append(pList, post)
 		return nil
 	})
 	return
