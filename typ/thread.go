@@ -2,22 +2,21 @@ package typ
 
 import (
 	"errors"
+	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
 	"strings"
-	"time"
 )
 
 // Thread represents a thread stored in cxo.
 type Thread struct {
-	Name    string `json:"name"`
-	Desc    string `json:"description"`
-	Created int64  `json:"created"`
+	Name string `json:"name"`
+	Desc string `json:"description"`
+	Hash string `json:"hash" enc:"-"`
 }
 
-func NewThread(name, desc string) *Thread {
+func InitThread(tRef skyobject.Reference) *Thread {
 	return &Thread{
-		Name:    name,
-		Desc:    desc,
-		Created: time.Now().UnixNano(),
+		Hash: cipher.SHA256(tRef).Hex(),
 	}
 }
 
@@ -27,7 +26,6 @@ func (t *Thread) CheckAndPrep() error {
 	}
 	t.Name = strings.TrimSpace(t.Name)
 	t.Desc = strings.TrimSpace(t.Desc)
-	t.Created = time.Now().UnixNano()
 	if len(t.Name) == 0 {
 		return errors.New("invalid thread name")
 	}

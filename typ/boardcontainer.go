@@ -43,3 +43,13 @@ func (c *BoardContainer) AddThreadPage(ref skyobject.Reference) error {
 func (c *BoardContainer) Touch() {
 	c.Seq++
 }
+
+func (c *BoardContainer) ReplaceThreadPage(oldTpRef, newTpRef skyobject.Reference) error {
+	for i, tpRef := range c.ThreadPages {
+		if tpRef == oldTpRef {
+			c.ThreadPages[i] = newTpRef
+			return nil
+		}
+	}
+	return errors.New("thread page not found")
+}

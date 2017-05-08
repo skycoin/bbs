@@ -4,9 +4,13 @@ Information regarding development progress.
 * **DONE** shows what has been implemented (split into days).
 
 ## TODO
-* Finish JSON API structure according to [specifications](https://paper.dropbox.com/doc/JSON-API-Specifications-S6BHC351LStxlgySl55M2).
+* Fix bug where we are unable to post to thread.
 
 ## DONE
+
+### 2017 May 8
+* Posts need to be signed before posting.
+* Finish JSON API structure according to [specifications](https://paper.dropbox.com/doc/JSON-API-Specifications-S6BHC351LStxlgySl55M2).
 
 ### 2017 May 7
  * Add Thread to board and view board with threads implemented according to specifications. This includes access via JSON API.

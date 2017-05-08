@@ -41,22 +41,48 @@ func (a *JsonAPI) BoardListHandler(w http.ResponseWriter, r *http.Request) {
 
 // BoardHandler for /api/boards/BOARD_PUBLIC_KEY.
 func (a *JsonAPI) BoardHandler(w http.ResponseWriter, r *http.Request) {
+	// Obtain path.
+	path := strings.Split(r.URL.EscapedPath(), "/")
 	// Obtain public key.
-	pkStr := strings.Split(r.URL.EscapedPath(), "/")[3]
-	switch r.Method {
-	case "GET":
-		reply := a.g.ViewBoard(pkStr)
-		sendResponse(w, reply, http.StatusOK)
-		return
-	case "PUT":
-		req, e := readRequestBody(r)
-		if e != nil || req.Thread == nil {
-			sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+	pkStr := path[3]
+	// If it's view board, or view thread.
+	switch len(path) {
+	case 4:
+		// View Board.
+		switch r.Method {
+		case "GET":
+			reply := a.g.ViewBoard(pkStr)
+			sendResponse(w, reply, http.StatusOK)
+			return
+		case "PUT":
+			req, e := readRequestBody(r)
+			if e != nil || req.Thread == nil {
+				sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+				return
+			}
+			reply := a.g.NewThread(pkStr, req.Thread)
+			sendResponse(w, reply, http.StatusOK)
 			return
 		}
-		reply := a.g.NewThread(pkStr, req.Thread)
-		sendResponse(w, reply, http.StatusOK)
-		return
+	case 5:
+		// View Thread.
+		tHashStr := path[4]
+		switch r.Method {
+		case "GET":
+			reply := a.g.ViewThread(pkStr, tHashStr)
+			sendResponse(w, reply, http.StatusOK)
+			return
+		case "PUT":
+			req, e := readRequestBody(r)
+			if e != nil || req.Post == nil {
+				sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+				return
+			}
+			reply := a.g.NewPost(pkStr, tHashStr, req.Post)
+			sendResponse(w, reply, http.StatusOK)
+			return
+		}
+		//sendResponse(w, tHashStr, http.StatusNotImplemented)
 	}
 	sendResponse(w, nil, http.StatusNotFound)
 	return

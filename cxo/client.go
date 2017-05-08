@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strconv"
@@ -289,6 +290,11 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
 		return
 	}
 	e = c.cxo.Execute(func(ct *node.Container) error {
+		var (
+			e     error
+			tp    *typ.ThreadPage
+			tpRef skyobject.Reference
+		)
 		// Obtain root.
 		r := ct.Root(bpk)
 		if r == nil {
@@ -297,34 +303,32 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
 		// Save thread in container.
 		tRef := ct.Save(*thread)
 		// Add thread to BoardContainer if not exist.
-		if e := bCont.AddThread(tRef); e != nil {
-			return e
+		if e = bCont.AddThread(tRef); e != nil {
+			goto InjectThreadListThreads
 		}
 		// Add empty ThreadPage to BoardContainer.
-		tp := typ.NewThreadPage(tRef)
-		tpRef := ct.Save(*tp)
-		if e := bCont.AddThreadPage(tpRef); e != nil {
-			return e
-		}
+		tp = typ.NewThreadPage(tRef)
+		tpRef = ct.Save(*tp)
+		bCont.AddThreadPage(tpRef)
 		// Increment sequence of BoardContainer.
 		bCont.Touch()
 		// Inject in root.
 		r.Inject(*bCont, bc.SecKey)
 
+	InjectThreadListThreads:
 		// Obtain all threads in board.
 		tList = make([]*typ.Thread, len(bCont.Threads))
 		for i, tRef := range bCont.Threads {
-			t := &typ.Thread{}
-			v, e := ct.GetObject("Thread", tRef)
-			if e != nil {
-				return e
+			tList[i] = typ.InitThread(tRef)
+			v, e2 := ct.GetObject("Thread", tRef)
+			if e2 != nil {
+				return e2
 			}
-			if e := encoder.DeserializeRaw(v.Data(), t); e != nil {
-				return e
+			if e2 := encoder.DeserializeRaw(v.Data(), tList[i]); e2 != nil {
+				return e2
 			}
-			tList[i] = t
 		}
-		return nil
+		return e
 	})
 	return
 }
@@ -342,16 +346,120 @@ func (c *Client) ObtainThreads(bpk cipher.PubKey) (
 		// Obtain all threads in board.
 		tList = make([]*typ.Thread, len(bCont.Threads))
 		for i, tRef := range bCont.Threads {
-			t := &typ.Thread{}
+			tList[i] = typ.InitThread(tRef)
 			v, e := ct.GetObject("Thread", tRef)
 			if e != nil {
 				return e
 			}
-			if e := encoder.DeserializeRaw(v.Data(), t); e != nil {
+			if e := encoder.DeserializeRaw(v.Data(), tList[i]); e != nil {
 				return e
 			}
-			tList[i] = t
 		}
+		return nil
+	})
+	return
+}
+
+// ObtainPosts obtains the posts of specified board and thread.
+func (c *Client) ObtainPosts(bpk cipher.PubKey, tRef skyobject.Reference) (
+	b *typ.Board, bCont *typ.BoardContainer, t *typ.Thread, tPage *typ.ThreadPage, pList []*typ.Post,
+	tpRef skyobject.Reference, e error,
+) {
+	// Obtain board and board container.
+	b, bCont, e = c.ObtainBoard(bpk)
+	if e != nil {
+		return
+	}
+	e = c.cxo.Execute(func(ct *node.Container) error {
+		// Find thread page.
+		tpFound := false
+		tPage = &typ.ThreadPage{}
+		for _, tpRef = range bCont.ThreadPages {
+			tpVal, e2 := ct.GetObject("ThreadPage", tpRef)
+			if e2 != nil {
+				return e2
+			}
+			if e2 := encoder.DeserializeRaw(tpVal.Data(), tPage); e2 != nil {
+				return e2
+			}
+			if tPage.Thread == tRef {
+				tpFound = true
+				break
+			}
+		}
+		if tpFound == false {
+			return errors.New("thread page not found")
+		}
+		// Obtain posts from thread page.
+		pList = make([]*typ.Post, len(tPage.Posts))
+		for i, pRef := range tPage.Posts {
+			pVal, e2 := ct.GetObject("Post", pRef)
+			if e2 != nil {
+				return e2
+			}
+			if e2 := encoder.DeserializeRaw(pVal.Data(), pList[i]); e2 != nil {
+				return e2
+			}
+		}
+		return nil
+	})
+	return
+}
+
+// InjectPost injects a post in specified Board and Thread.
+// Note that post needs to be signed properly.
+func (c *Client) InjectPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) (
+	b *typ.Board, bCont *typ.BoardContainer,
+	t *typ.Thread, tPage *typ.ThreadPage, pList []*typ.Post, e error,
+) {
+	// Obtain posts and whatnot.
+	oldTpRef := skyobject.Reference{}
+	b, bCont, t, tPage, pList, oldTpRef, e = c.ObtainPosts(bpk, tRef)
+	if e != nil {
+		return
+	}
+	// Obtain board configuration.
+	bc, e := c.bManager.GetConfig(bpk)
+	if e != nil {
+		return
+	}
+	// See if we are master of the board.
+	if bc.Master == false {
+		e = errors.New("not master")
+		return
+	}
+	// Check post to inject.
+	if e = post.CheckContent(); e != nil {
+		return
+	}
+	if e = post.CheckCreator(); e != nil {
+		return
+	}
+	if e = post.CheckSig(); e != nil {
+		return
+	}
+	// Touch post.
+	post.Touch()
+
+	e = c.cxo.Execute(func(ct *node.Container) error {
+		// Save post in cxo container and obtain it's reference.
+		pRef := ct.Save(*post)
+
+		// Add post to thread page and save new thread page in cxo container.
+		// Hence, obtain the new thread page's reference.
+		tPage.AddPost(pRef)
+		newTpRef := ct.Save(tPage)
+
+		// Replace thread page reference in board container.
+		// Hence, increment sequence of ThreadContainer.
+		if e2 := bCont.ReplaceThreadPage(oldTpRef, newTpRef); e2 != nil {
+			return e2
+		}
+		bCont.Touch()
+
+		// Inject new board container in root.
+		r := ct.Root(bpk)
+		r.Inject(bCont, bc.SecKey)
 		return nil
 	})
 	return

@@ -3,25 +3,9 @@ package cxo
 import (
 	"errors"
 	"github.com/evanlinjin/bbs/typ"
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )
-
-// Reply represents a json reply.
-type Reply struct {
-	Okay   bool        `json:"okay"`
-	Result interface{} `json:"result,omitempty"`
-	Error  string      `json:"error,omitempty"`
-}
-
-// NewResultReply creates a new result Reply.
-func NewResultReply(v interface{}) *Reply {
-	return &Reply{Okay: true, Result: v}
-}
-
-// NewErrorReply creates a new error Reply.
-func NewErrorReply(v string) *Reply {
-	return &Reply{Okay: false, Error: v}
-}
 
 // Gateway is what's exposed to the GUI.
 type Gateway struct {
@@ -41,7 +25,7 @@ func (g *Gateway) Subscribe(pkStr string) *RepReq {
 		pk    cipher.PubKey
 	)
 	// Check public key.
-	pk, e = GetPubKey(pkStr)
+	pk, e = typ.GetPubKey(pkStr)
 	if e != nil {
 		goto SubscribeResult
 	}
@@ -63,7 +47,7 @@ func (g *Gateway) Unsubscribe(pkStr string) *RepReq {
 		e     error
 	)
 	// Check public key.
-	pk, e := GetPubKey(pkStr)
+	pk, e := typ.GetPubKey(pkStr)
 	if e != nil {
 		goto UnsubscribeResult
 	}
@@ -96,19 +80,39 @@ func (g *Gateway) ViewBoard(pkStr string) *RepReq {
 		e     error
 	)
 	// Check public key.
-	pk, e := GetPubKey(pkStr)
+	pk, e := typ.GetPubKey(pkStr)
 	if e != nil {
 		goto ViewBoardResults
 	}
 	// Obtain board information.
 	reply.Board, _, reply.Threads, e = g.c.ObtainThreads(pk)
 ViewBoardResults:
-	return reply.Prepare(e, "")
+	return reply.Prepare(e, nil)
 }
 
 // ViewThread views the specified thread of specified board and thread id.
-func (g *Gateway) ViewThread(bpkStr, tidStr string) *RepReq {
-	return NewRepReq()
+func (g *Gateway) ViewThread(bpkStr, tHashStr string) *RepReq {
+	var (
+		reply = NewRepReq()
+		e     error
+		pk    cipher.PubKey
+		hash  cipher.SHA256
+	)
+	// Check public key.
+	pk, e = typ.GetPubKey(bpkStr)
+	if e != nil {
+		goto ViewThreadResult
+	}
+	// Check hash.
+	hash, e = cipher.SHA256FromHex(tHashStr)
+	if e != nil {
+		goto ViewThreadResult
+	}
+	// Prepare results.
+	reply.Board, _, reply.Thread, _, reply.Posts, _, e =
+		g.c.ObtainPosts(pk, skyobject.Reference(hash))
+ViewThreadResult:
+	return reply.Prepare(e, nil)
 }
 
 // NewBoard creates a new master board with a name, description and seed.
@@ -142,7 +146,7 @@ func (g *Gateway) NewThread(bpkStr string, thread *typ.Thread) *RepReq {
 		pk    cipher.PubKey
 	)
 	// Check public key.
-	pk, e = GetPubKey(bpkStr)
+	pk, e = typ.GetPubKey(bpkStr)
 	if e != nil {
 		goto NewThreadResult
 	}
@@ -153,6 +157,45 @@ NewThreadResult:
 }
 
 // NewPost adds a new post to specified board and thread.
-func (g *Gateway) NewPost(bpkStr, tidStr, name, body string) *RepReq {
-	return nil
+func (g *Gateway) NewPost(bpkStr, tHashStr string, post *typ.Post) *RepReq {
+	var (
+		reply = NewRepReq()
+		e, e2 error
+		pk    cipher.PubKey
+		hash  cipher.SHA256
+		u     *typ.User
+	)
+	// Check public key.
+	pk, e = typ.GetPubKey(bpkStr)
+	if e != nil {
+		goto NewPostResult
+	}
+	// Check hash.
+	hash, e = cipher.SHA256FromHex(tHashStr)
+	if e != nil {
+		goto NewPostResult
+	}
+	// Authorise post.
+	u, e2 = g.c.uManager.GetMaster()
+	if e2 != nil {
+		goto NewPostResultCanDisplay
+	}
+	post.Creator = u.PublicKey
+	post.CreatorStr = u.PublicKeyStr
+	post.Sign(u.SecretKey)
+NewPostResultCanDisplay:
+	if e2 != nil {
+		// Because of authorisation error, unable to inject post.
+		reply.Board, _, reply.Thread, _, reply.Posts, _, e =
+			g.c.ObtainPosts(pk, skyobject.Reference(hash))
+		if e != nil {
+			return reply.Prepare(e, nil)
+		}
+		return reply.Prepare(e2, nil)
+	}
+	// Inject post.
+	reply.Board, _, reply.Thread, _, reply.Posts, e =
+		g.c.InjectPost(pk, skyobject.Reference(hash), post)
+NewPostResult:
+	return reply.Prepare(e, "post successfully created")
 }

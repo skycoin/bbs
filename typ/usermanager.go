@@ -78,3 +78,14 @@ func (m *UserManager) AddNewRandomMaster() error {
 	m.Masters = append(m.Masters, pk)
 	return nil
 }
+
+func (m *UserManager) GetMaster() (*User, error) {
+	if len(m.Masters) == 0 {
+		return nil, errors.New("no master user")
+	}
+	u, has := m.Users[m.Masters[0]]
+	if has == false {
+		return nil, errors.New("missing user config")
+	}
+	return u, nil
+}
