@@ -16,6 +16,7 @@ import (
 type CXOConfig struct {
 	Master bool
 	Port   int
+	RPCAddr string
 }
 
 // NewCXOConfig creates a new CXOConfig.
@@ -23,16 +24,17 @@ func NewCXOConfig() *CXOConfig {
 	c := CXOConfig{
 		Master: false,
 		Port:   8998,
+		RPCAddr: "127.0.0.1:6421",
 	}
 	return &c
 }
 
 // Client acts as a client for cxo.
 type Client struct {
-	config   *CXOConfig
-	cxo      *node.Client
-	uManager *typ.UserManager
-	bManager *typ.BoardManager
+	config *CXOConfig
+	cxo    *node.Client
+	U      *typ.UserManager
+	B      *typ.BoardManager
 }
 
 // NewClient creates a new Client.
@@ -45,10 +47,10 @@ func NewClient(conf *CXOConfig) (*Client, error) {
 		return nil, e
 	}
 	c := Client{
-		config:   conf,
-		cxo:      client,
-		uManager: typ.NewUserManager(),
-		bManager: typ.NewBoardManager(conf.Master),
+		config: conf,
+		cxo:    client,
+		U:      typ.NewUserManager(),
+		B:      typ.NewBoardManager(conf.Master, conf.RPCAddr),
 	}
 	c.initUsers()
 	c.initBoards()
@@ -56,7 +58,7 @@ func NewClient(conf *CXOConfig) (*Client, error) {
 }
 
 func (c *Client) initUsers() {
-	m := c.uManager
+	m := c.U
 	if m.Load() != nil {
 		m.Clear()
 		m.AddNewRandomMaster()
@@ -67,7 +69,7 @@ func (c *Client) initUsers() {
 }
 
 func (c *Client) initBoards() {
-	m := c.bManager
+	m := c.B
 	if m.Load() != nil {
 		m.Clear()
 		if e := m.Save(); e != nil {
@@ -97,14 +99,14 @@ func (c *Client) Launch() error {
 		return e
 	}
 	// Load boards from BoardManager.
-	for _, bc := range c.bManager.Boards {
+	for _, bc := range c.B.Boards {
 
 		// [USE THIS PART WHEN KONSTANTIN GIVES ME FIX]
 		//_, e := c.Subscribe(bc.PubKey)
 		//if e != nil {
 		//	fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
 		//	fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-		//	c.bManager.RemoveConfig(bc.PubKey)
+		//	c.B.RemoveConfig(bc.PubKey)
 		//}
 
 		// [TEMPORARY WORKAROUND]
@@ -112,19 +114,19 @@ func (c *Client) Launch() error {
 			if c.config.Master == false {
 				continue
 			}
-			c.bManager.RemoveConfig(bc.PubKey)
+			c.B.RemoveConfig(bc.PubKey)
 			_, _, e := c.InjectBoard(bc)
 			if e != nil {
 				fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
 				fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-				c.bManager.RemoveConfig(bc.PubKey)
+				c.B.RemoveConfig(bc.PubKey)
 			}
 		} else {
 			_, e := c.Subscribe(bc.PubKey)
 			if e != nil {
 				fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
 				fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-				c.bManager.RemoveConfig(bc.PubKey)
+				c.B.RemoveConfig(bc.PubKey)
 			}
 		}
 	}
@@ -139,7 +141,7 @@ func (c *Client) Shutdown() error {
 // Subscribe subscribes to a board.
 func (c *Client) Subscribe(pk cipher.PubKey) (*typ.BoardConfig, error) {
 	// Check if we already have the config, if not make one.
-	bc, e := c.bManager.GetConfig(pk)
+	bc, e := c.B.GetConfig(pk)
 	if e != nil {
 		bc, _ = typ.NewBoardConfig(pk, "")
 	}
@@ -148,13 +150,13 @@ func (c *Client) Subscribe(pk cipher.PubKey) (*typ.BoardConfig, error) {
 		return nil, errors.New("subscription failed")
 	}
 	// Add to BoardManager.
-	c.bManager.AddConfig(bc)
+	c.B.AddConfig(bc)
 	return bc, nil
 }
 
 // Unsubscribe unsubscribes from a board.
 func (c *Client) Unsubscribe(pk cipher.PubKey) bool {
-	c.bManager.RemoveConfig(pk)
+	c.B.RemoveConfig(pk)
 	return c.cxo.Unsubscribe(pk)
 }
 
@@ -169,7 +171,7 @@ func (c *Client) InjectBoard(bc *typ.BoardConfig) (
 	// Make Board from BoardConfig.
 	b = typ.NewBoardFromConfig(bc)
 	// Check if BoardConfig exists.
-	if c.bManager.HasConfig(bc.PubKey) == true {
+	if c.B.HasConfig(bc.PubKey) == true {
 		e = errors.New("board already exists")
 		return
 	}
@@ -190,7 +192,7 @@ func (c *Client) InjectBoard(bc *typ.BoardConfig) (
 		return
 	}
 	// Add config to BoardManager.
-	e = c.bManager.AddConfig(bc)
+	e = c.B.AddConfig(bc)
 	return
 }
 
@@ -206,7 +208,7 @@ func (c *Client) ObtainBoard(bpk cipher.PubKey) (
 	e = c.cxo.Execute(func(ct *node.Container) error {
 		r := ct.Root(bpk)
 		if r == nil {
-			c.bManager.RemoveConfig(bpk)
+			c.B.RemoveConfig(bpk)
 			return errors.New("nil root, removed from config")
 		}
 		values, e := r.Values()
@@ -246,7 +248,7 @@ func (c *Client) ObtainAllBoards() (
 	bList []*typ.Board, bContList []*typ.BoardContainer, e error,
 ) {
 	// Get board configs.
-	bConfList := c.bManager.GetList()
+	bConfList := c.B.GetList()
 	// Prepare outputs.
 	bList = make([]*typ.Board, len(bConfList))
 	bContList = make([]*typ.BoardContainer, len(bConfList))
@@ -275,7 +277,7 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
 		return
 	}
 	// Obtain board configuration.
-	bc, e := c.bManager.GetConfig(bpk)
+	bc, e := c.B.GetConfig(bpk)
 	if e != nil {
 		return
 	}
@@ -445,7 +447,7 @@ func (c *Client) InjectPost(bpk cipher.PubKey, tRef skyobject.Reference, post *t
 		return
 	}
 	// Obtain board configuration.
-	bc, e := c.bManager.GetConfig(bpk)
+	bc, e := c.B.GetConfig(bpk)
 	if e != nil {
 		return
 	}

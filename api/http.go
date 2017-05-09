@@ -1,7 +1,6 @@
 package api
 
 import (
-	"github.com/evanlinjin/bbs/cxo"
 	"net"
 	"net/http"
 )
@@ -17,7 +16,7 @@ const (
 	indexPage   = "index.html"
 )
 
-func LaunchWebInterface(host string, g *cxo.Gateway) (e error) {
+func LaunchWebInterface(host string, g *Gateway) (e error) {
 	quit = make(chan struct{})
 	listener, e = net.Listen("tcp", host)
 	if e != nil {
@@ -53,7 +52,7 @@ func Shutdown() {
 }
 
 // NewServeMux creates a http.ServeMux with handlers registered.
-func NewServeMux(g *cxo.Gateway) *http.ServeMux {
+func NewServeMux(g *Gateway) *http.ServeMux {
 	// Register objects.
 	jsonAPI := NewJsonAPI(g)
 
