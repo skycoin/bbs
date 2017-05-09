@@ -4,9 +4,12 @@ Information regarding development progress.
 * **DONE** shows what has been implemented (split into days).
 
 ## TODO
-
+* Test RPC functionality.
 
 ## DONE
+
+### 2017 May 9
+* Implemented adding new posts and threads via RPC. However this is not tested.
 
 ### 2017 May 8
 * Fix bug where we are unable to post to thread.
