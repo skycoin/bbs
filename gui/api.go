@@ -1,4 +1,4 @@
-package api
+package gui
 
 import (
 	json "encoding/json"
@@ -8,18 +8,18 @@ import (
 	"strings"
 )
 
-// JsonAPI wraps cxo.Gateway.
-type JsonAPI struct {
+// API wraps cxo.Gateway.
+type API struct {
 	g *Gateway
 }
 
-// New JsonAPI creates a new JsonAPI.
-func NewJsonAPI(g *Gateway) *JsonAPI {
-	return &JsonAPI{g}
+// NewAPI creates a new API.
+func NewAPI(g *Gateway) *API {
+	return &API{g}
 }
 
-// BoardListHandler for /api/boards.
-func (a *JsonAPI) BoardListHandler(w http.ResponseWriter, r *http.Request) {
+// BoardListHandler for /gui/boards.
+func (a *API) BoardListHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		reply := a.g.ListBoards()
@@ -39,8 +39,8 @@ func (a *JsonAPI) BoardListHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// BoardHandler for /api/boards/BOARD_PUBLIC_KEY.
-func (a *JsonAPI) BoardHandler(w http.ResponseWriter, r *http.Request) {
+// BoardHandler for /gui/boards/BOARD_PUBLIC_KEY.
+func (a *API) BoardHandler(w http.ResponseWriter, r *http.Request) {
 	// Obtain path.
 	path := strings.Split(r.URL.EscapedPath(), "/")
 	// Obtain public key.
