@@ -31,6 +31,7 @@ func NewCXOConfig() *CXOConfig {
 type Client struct {
 	config   *CXOConfig
 	cxo      *node.Client
+	c        *node.Container
 	uManager *typ.UserManager
 	bManager *typ.BoardManager
 }
@@ -39,14 +40,22 @@ type Client struct {
 func NewClient(conf *CXOConfig) (*Client, error) {
 
 	// Setup cxo client.
-	clientConfig := node.NewClientConfig()
-	client, e := node.NewClient(clientConfig)
+	r := skyobject.NewRegistry()
+	r.Register("Board", typ.Board{})
+	r.Register("Thread", typ.Thread{})
+	r.Register("Post", typ.Post{})
+	r.Register("ThreadPage", typ.ThreadPage{})
+	r.Register("BoardContainer", typ.BoardContainer{})
+	r.Done()
+
+	client, e := node.NewClient(node.NewClientConfig(), skyobject.NewContainer(r))
 	if e != nil {
 		return nil, e
 	}
 	c := Client{
 		config:   conf,
 		cxo:      client,
+		c:        client.Container(),
 		uManager: typ.NewUserManager(),
 		bManager: typ.NewBoardManager(conf.Master),
 	}
@@ -84,51 +93,18 @@ func (c *Client) Launch() error {
 	}
 	// Wait for safety.
 	time.Sleep(5 * time.Second)
-	// Register schemas for cxo.
-	e := c.cxo.Execute(func(ct *node.Container) error {
-		ct.Register("Board", typ.Board{})
-		ct.Register("Thread", typ.Thread{})
-		ct.Register("Post", typ.Post{})
-		ct.Register("ThreadPage", typ.ThreadPage{})
-		ct.Register("BoardContainer", typ.BoardContainer{})
-		return nil
-	})
-	if e != nil {
-		return e
-	}
 	// Load boards from BoardManager.
 	for _, bc := range c.bManager.Boards {
 
 		// [USE THIS PART WHEN KONSTANTIN GIVES ME FIX]
-		//_, e := c.Subscribe(bc.PubKey)
-		//if e != nil {
-		//	fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
-		//	fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-		//	c.bManager.RemoveConfig(bc.PubKey)
-		//}
-
-		// [TEMPORARY WORKAROUND]
-		if bc.Master {
-			if c.config.Master == false {
-				continue
-			}
+		_, e := c.Subscribe(bc.PubKey)
+		if e != nil {
+			fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
+			fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
 			c.bManager.RemoveConfig(bc.PubKey)
-			_, _, e := c.InjectBoard(bc)
-			if e != nil {
-				fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
-				fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-				c.bManager.RemoveConfig(bc.PubKey)
-			}
-		} else {
-			_, e := c.Subscribe(bc.PubKey)
-			if e != nil {
-				fmt.Println("[BOARD CONFIG]", bc.PubKey.Hex(), e)
-				fmt.Println("[BOARD CONFIG] Removing", bc.PubKey.Hex())
-				c.bManager.RemoveConfig(bc.PubKey)
-			}
 		}
 	}
-	return e
+	return nil
 }
 
 // Shutdown shutdowns the Client.
@@ -144,9 +120,8 @@ func (c *Client) Subscribe(pk cipher.PubKey) (*typ.BoardConfig, error) {
 		bc, _ = typ.NewBoardConfig(pk, "")
 	}
 	// Attempt subscribe in cxo.
-	if c.cxo.Subscribe(pk) == false {
-		return nil, errors.New("subscription failed")
-	}
+	c.cxo.Subscribe(pk)
+
 	// Add to BoardManager.
 	c.bManager.AddConfig(bc)
 	return bc, nil
@@ -174,21 +149,16 @@ func (c *Client) InjectBoard(bc *typ.BoardConfig) (
 		return
 	}
 	// Add to cxo.
-	e = c.cxo.Execute(func(ct *node.Container) error {
-		r := ct.NewRoot(bc.PubKey, bc.SecKey)
-		boardRef := ct.Save(*b)
+	{
+		r := c.c.NewRoot(bc.PubKey, bc.SecKey)
+		boardRef := r.Save(*b)
 		bCont = typ.NewBoardContainer(boardRef)
-		r.Inject(*bCont, bc.SecKey)
-		return nil
-	})
-	if e != nil {
-		return
+		r.Inject(*bCont)
 	}
+
 	// Subscribe to board.
-	if c.cxo.Subscribe(bc.PubKey) == false {
-		e = errors.New("failed to subscribe to board in cxo")
-		return
-	}
+	c.cxo.Subscribe(bc.PubKey)
+
 	// Add config to BoardManager.
 	e = c.bManager.AddConfig(bc)
 	return
@@ -203,41 +173,42 @@ func (c *Client) ObtainBoard(bpk cipher.PubKey) (
 	bCont = new(typ.BoardContainer)
 	b = new(typ.Board)
 
-	e = c.cxo.Execute(func(ct *node.Container) error {
-		r := ct.Root(bpk)
-		if r == nil {
-			c.bManager.RemoveConfig(bpk)
-			return errors.New("nil root, removed from config")
+	// Obtain root.
+	r := c.c.LastRoot(bpk)
+	if r == nil {
+		c.bManager.RemoveConfig(bpk)
+		e = errors.New("nil root, removed from config")
+		return
+	}
+	// Obtain root values.
+	var values []*skyobject.Value
+	values, e = r.Values()
+	if e != nil {
+		return
+	}
+	// Loop through and get latest BoardContainer.
+	for _, v := range values {
+		bContTemp := &typ.BoardContainer{}
+		// Get BoardContainer.
+		if e = encoder.DeserializeRaw(v.Data(), bContTemp); e != nil {
+			return
 		}
-		values, e := r.Values()
-		if e != nil {
-			return e
+		if bContTemp.Seq >= bCont.Seq {
+			bCont = bContTemp
 		}
-		//if len(values) != 1 {
-		//	return errors.New("invalid root")
-		//}
-		// Loop through and get latest BoardContainer.
-		for _, v := range values {
-			bContTemp := &typ.BoardContainer{}
-			// Get BoardContainer.
-			if e := encoder.DeserializeRaw(v.Data(), bContTemp); e != nil {
-				return e
-			}
-			if bContTemp.Seq >= bCont.Seq {
-				bCont = bContTemp
-			}
-		}
-		// Get Board.
-		bValue, e := ct.GetObject("Board", bCont.Board)
-		if e != nil {
-			return e
-		}
-		if e := encoder.DeserializeRaw(bValue.Data(), b); e != nil {
-			return e
-		}
-		b.PubKey = bpk.Hex()
-		return nil
-	})
+	}
+	// Get Board.
+	var bData []byte
+	var has bool
+	bData, has = r.Get(bCont.Board)
+	if has == false {
+		e = errors.New("unable to obtain board")
+		return
+	}
+	if e = encoder.DeserializeRaw(bData, b); e != nil {
+		return
+	}
+	b.PubKey = bpk.Hex()
 	return
 }
 
@@ -289,47 +260,46 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
 	if e != nil {
 		return
 	}
-	e = c.cxo.Execute(func(ct *node.Container) error {
+	{
 		var (
-			e     error
 			tp    *typ.ThreadPage
 			tpRef skyobject.Reference
 		)
 		// Obtain root.
-		r := ct.Root(bpk)
+		r := c.c.NewRoot(bc.PubKey, bc.SecKey)
 		if r == nil {
-			return errors.New("nil root")
+			e = errors.New("nil root")
+			return
 		}
-		// Save thread in container.
-		tRef := ct.Save(*thread)
+		// Save thread.
+		tRef := r.Save(*thread)
 		// Add thread to BoardContainer if not exist.
 		if e = bCont.AddThread(tRef); e != nil {
 			goto InjectThreadListThreads
 		}
 		// Add empty ThreadPage to BoardContainer.
 		tp = typ.NewThreadPage(tRef)
-		tpRef = ct.Save(*tp)
+		tpRef = r.Save(*tp)
 		bCont.AddThreadPage(tpRef)
 		// Increment sequence of BoardContainer.
 		bCont.Touch()
-		// Inject in root.
-		r.Inject(*bCont, bc.SecKey)
+		r.Inject(*bCont)
 
 	InjectThreadListThreads:
 		// Obtain all threads in board.
 		tList = make([]*typ.Thread, len(bCont.Threads))
 		for i, tRef := range bCont.Threads {
 			tList[i] = typ.InitThread(tRef)
-			v, e2 := ct.GetObject("Thread", tRef)
-			if e2 != nil {
-				return e2
+			tData, has := r.Get(tRef)
+			if has == false {
+				e = errors.New("unable to retrieve thread")
+				return
 			}
-			if e2 := encoder.DeserializeRaw(v.Data(), tList[i]); e2 != nil {
-				return e2
+			if e = encoder.DeserializeRaw(tData, tList[i]); e != nil {
+				return
 			}
 		}
-		return e
-	})
+	}
 	return
 }
 
@@ -342,18 +312,15 @@ func (c *Client) ObtainThread(bpk cipher.PubKey, tRef skyobject.Reference) (
 	if e != nil {
 		return
 	}
-	e = c.cxo.Execute(func(ct *node.Container) error {
-		// Find thread.
-		t := &typ.Thread{}
-		tVal, e2 := ct.GetObject("Thread", tRef)
-		if e2 != nil {
-			return e2
-		}
-		if e2 = encoder.DeserializeRaw(tVal.Data(), t); e2 != nil {
-			return e2
-		}
-		return nil
-	})
+
+	// Find thread.
+	t = &typ.Thread{}
+	tData, has := c.c.Get(tRef)
+	if has == false {
+		e = errors.New("unable to find thread")
+		return
+	}
+	e = encoder.DeserializeRaw(tData, t)
 	return
 }
 
@@ -366,21 +333,20 @@ func (c *Client) ObtainThreads(bpk cipher.PubKey) (
 	if e != nil {
 		return
 	}
-	e = c.cxo.Execute(func(ct *node.Container) error {
-		// Obtain all threads in board.
-		tList = make([]*typ.Thread, len(bCont.Threads))
-		for i, tRef := range bCont.Threads {
-			tList[i] = typ.InitThread(tRef)
-			v, e := ct.GetObject("Thread", tRef)
-			if e != nil {
-				return e
-			}
-			if e := encoder.DeserializeRaw(v.Data(), tList[i]); e != nil {
-				return e
-			}
+
+	// Obtain all threads in board.
+	tList = make([]*typ.Thread, len(bCont.Threads))
+	for i, tRef := range bCont.Threads {
+		tList[i] = typ.InitThread(tRef)
+		tData, has := c.c.Get(tRef)
+		if has == false {
+			e = errors.New("unable to find thread")
+			return
 		}
-		return nil
-	})
+		if e = encoder.DeserializeRaw(tData, tList[i]); e != nil {
+			return
+		}
+	}
 	return
 }
 
@@ -394,41 +360,44 @@ func (c *Client) ObtainPosts(bpk cipher.PubKey, tRef skyobject.Reference) (
 	if e != nil {
 		return
 	}
-	e = c.cxo.Execute(func(ct *node.Container) error {
-		// Find thread page.
-		tpFound := false
-		tPage = &typ.ThreadPage{}
-		for _, tpRef = range bCont.ThreadPages {
-			tpVal, e2 := ct.GetObject("ThreadPage", tpRef)
-			if e2 != nil {
-				return e2
-			}
-			if e2 := encoder.DeserializeRaw(tpVal.Data(), tPage); e2 != nil {
-				return e2
-			}
-			if tPage.Thread == tRef {
-				tpFound = true
-				break
-			}
+
+	// Find thread page.
+	tpFound := false
+	tPage = &typ.ThreadPage{}
+	for _, tpRef = range bCont.ThreadPages {
+		tpData, has := c.c.Get(tpRef)
+		if has == false {
+			e = errors.New("unable to find thread")
+			return
 		}
-		if tpFound == false {
-			return errors.New("thread page not found")
+		if e = encoder.DeserializeRaw(tpData, tPage); e != nil {
+			return
 		}
-		// Obtain posts from thread page.
-		pList = make([]*typ.Post, len(tPage.Posts))
-		for i, pRef := range tPage.Posts {
-			pVal, e2 := ct.GetObject("Post", pRef)
-			if e2 != nil {
-				return e2
-			}
-			pList[i] = &typ.Post{}
-			if e2 := encoder.DeserializeRaw(pVal.Data(), pList[i]); e2 != nil {
-				return e2
-			}
-			pList[i].CheckCreator()
+		if tPage.Thread == tRef {
+			tpFound = true
+			break
 		}
-		return nil
-	})
+	}
+	if tpFound == false {
+		e = errors.New("thread page not found")
+		return
+	}
+	// Obtain posts from thread page.
+	pList = make([]*typ.Post, len(tPage.Posts))
+	for i, pRef := range tPage.Posts {
+		pData, has := c.c.Get(pRef)
+		if has == false {
+			e = errors.New("post not found")
+			return
+		}
+		pList[i] = &typ.Post{}
+		if e = encoder.DeserializeRaw(pData, pList[i]); e != nil {
+			return
+		}
+		if e = pList[i].CheckCreator(); e != nil {
+			return
+		}
+	}
 	return
 }
 
@@ -467,29 +436,26 @@ func (c *Client) InjectPost(bpk cipher.PubKey, tRef skyobject.Reference, post *t
 	// Touch post.
 	post.Touch()
 
-	e = c.cxo.Execute(func(ct *node.Container) error {
-		// Save post in cxo container and obtain it's reference.
-		pRef := ct.Save(*post)
+	// Save post in cxo container and obtain it's reference.
+	pRef := c.c.Save(*post)
 
-		// Add post to thread page and save new thread page in cxo container.
-		// Hence, obtain the new thread page's reference.
-		tPage.AddPost(pRef)
-		newTpRef := ct.Save(tPage)
+	// Add post to thread page and save new thread page in cxo container.
+	// Hence, obtain the new thread page's reference.
+	tPage.AddPost(pRef)
+	newTpRef := c.c.Save(tPage)
 
-		// Replace thread page reference in board container.
-		// Hence, increment sequence of ThreadContainer.
-		if e2 := bCont.ReplaceThreadPage(oldTpRef, newTpRef); e2 != nil {
-			return e2
-		}
-		bCont.Touch()
+	// Replace thread page reference in board container.
+	// Hence, increment sequence of ThreadContainer.
+	if e = bCont.ReplaceThreadPage(oldTpRef, newTpRef); e != nil {
+		return
+	}
+	bCont.Touch()
 
-		// Inject new board container in root.
-		r := ct.Root(bpk)
-		r.Inject(bCont, bc.SecKey)
+	// Inject new board container in root.
+	r := c.c.NewRoot(bc.PubKey, bc.SecKey)
+	r.Inject(bCont)
 
-		// Add post to output post list.
-		pList = append(pList, post)
-		return nil
-	})
+	// Add post to output post list.
+	pList = append(pList, post)
 	return
 }
