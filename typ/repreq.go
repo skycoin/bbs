@@ -1,18 +1,14 @@
-package cxo
-
-import (
-	"github.com/evanlinjin/bbs/typ"
-)
+package typ
 
 // RepReq represents a json reply object.
 type RepReq struct {
-	Board   *typ.Board    `json:"board,omitempty"`
-	Boards  []*typ.Board  `json:"boards,omitempty"`
-	Thread  *typ.Thread   `json:"thread,omitempty"`
-	Threads []*typ.Thread `json:"threads,omitempty"`
-	Post    *typ.Post     `json:"post,omitempty"`
-	Posts   []*typ.Post   `json:"posts,omitempty"`
-	Req     *ReqObj       `json:"request,omitempty"`
+	Board   *Board    `json:"board,omitempty"`
+	Boards  []*Board  `json:"boards,omitempty"`
+	Thread  *Thread   `json:"thread,omitempty"`
+	Threads []*Thread `json:"threads,omitempty"`
+	Post    *Post     `json:"post,omitempty"`
+	Posts   []*Post   `json:"posts,omitempty"`
+	Req     *ReqObj   `json:"request,omitempty"`
 
 	// Request stuff
 	Seed string `json:"seed,omitempty"`

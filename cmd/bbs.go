@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"time"
 )
 
 const (
@@ -25,27 +24,25 @@ type Config struct {
 	// ConfigDir determines the directory where user and board configuration are to be stored.
 	ConfigDir string
 	// RPC.
-	RPCPort int
+	RPCPort          int
+	RPCRemoteAddress string
 	// Port of CXO Daemon.
 	CXOPort int
 	// Localhost web interface.
 	WebInterface     bool
 	WebInterfacePort int
-	// Launch System Default Browser after client startup
-	LaunchBrowser bool
 }
 
 // NewConfig makes a default configuration.
 func NewConfig() *Config {
-	//pk, sc := cipher.GenerateKeyPair()
 	return &Config{
 		Master:           false,
 		ConfigDir:        ".",
 		RPCPort:          6421,
+		RPCRemoteAddress: "127.0.0.1:6421",
 		CXOPort:          8998,
 		WebInterface:     true,
 		WebInterfacePort: 6420,
-		LaunchBrowser:    true,
 	}
 }
 
@@ -56,13 +53,12 @@ func (c *Config) register() {
 	flag.StringVar(&c.ConfigDir, "config-dir", c.ConfigDir, "directory for configuration files")
 	// RPC Port (Only enabled if Master mode).
 	flag.IntVar(&c.RPCPort, "rpc-port", c.RPCPort, "port number for RPC")
+	flag.StringVar(&c.RPCRemoteAddress, "rpc-remote-address", c.RPCRemoteAddress, "remote rpc address")
 	// CXO Address.
 	flag.IntVar(&c.CXOPort, "cxo-port", c.CXOPort, "port of cxo daemon to connect to")
 	// Web Interface.
 	flag.BoolVar(&c.WebInterface, "web-interface", c.WebInterface, "enable the web interface")
 	flag.IntVar(&c.WebInterfacePort, "web-interface-port", c.WebInterfacePort, "port to serve web interface on")
-	// Launch Browser.
-	flag.BoolVar(&c.LaunchBrowser, "launch-browser", c.LaunchBrowser, "launch system default webbrowser at client startup")
 }
 
 func (c *Config) postProcess() {
@@ -87,6 +83,7 @@ func configureCXO(c *Config) *cxo.CXOConfig {
 	dc := cxo.NewCXOConfig()
 	dc.Master = c.Master
 	dc.Port = c.CXOPort
+	dc.RPCAddr = c.RPCRemoteAddress
 	return dc
 }
 
@@ -129,21 +126,10 @@ func Run(c *Config) {
 
 	// Start web interface.
 	if c.WebInterface {
-		gateway := cxo.NewGateWay(cxoClient)
+		gateway := api.NewGateWay(cxoClient)
 		if e := api.LaunchWebInterface(host, gateway); e != nil {
 			fmt.Println("[FAILED START]", e)
 			os.Exit(1)
-		}
-	}
-
-	// Launch browser.
-	if c.LaunchBrowser {
-		// Wait a moment just to make sure the http interface is up
-		time.Sleep(time.Millisecond * 100)
-
-		fmt.Println("[BROWSER LAUNCH] Address:", fullAddress)
-		if e := util.OpenBrowser(fullAddress); e != nil {
-			fmt.Println("[BROWSER LAUNCH] Error:", e)
 		}
 	}
 

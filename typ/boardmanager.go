@@ -19,14 +19,16 @@ type BoardManager struct {
 	Masters []cipher.PubKey
 	Boards  map[cipher.PubKey]*BoardConfig
 	Loaded  map[cipher.PubKey]bool
+	RPCAddr string
 }
 
 // NewBoardManager creates a new empty BoardManager.
-func NewBoardManager(master bool) *BoardManager {
+func NewBoardManager(master bool, rpcAddr string) *BoardManager {
 	bm := BoardManager{
 		Master: master,
 		Boards: make(map[cipher.PubKey]*BoardConfig),
 		Loaded: make(map[cipher.PubKey]bool),
+		RPCAddr: rpcAddr,
 	}
 	return &bm
 }
@@ -45,6 +47,7 @@ func (m *BoardManager) Load() error {
 		}
 		m.Boards[b.PubKey] = b
 		if m.Master && b.Master {
+			b.URL = m.RPCAddr
 			m.Masters = append(m.Masters, b.PubKey)
 		}
 	}

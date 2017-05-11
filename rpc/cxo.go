@@ -1,6 +1,9 @@
 package rpc
 
-import "github.com/evanlinjin/bbs/cxo"
+import (
+	"github.com/evanlinjin/bbs/cxo"
+	"github.com/evanlinjin/bbs/typ"
+)
 
 // CXO represents what's exposed over rpc.
 type CXO struct {
@@ -16,14 +19,16 @@ func NewCXO(c *cxo.Client) *CXO {
 
 // NewPost injects a new post to specified board and thread.
 // TODO: Implement.
-func (c *CXO) NewPost(req *NewPostReq, ok *bool) error {
-	*ok = true
-	return nil
+func (c *CXO) NewPost(req *NewPostReq, rep *typ.RepReq) (e error) {
+	rep.Board, _, rep.Thread, _, rep.Posts, e =
+		c.c.InjectPost(req.PK, req.Hash, req.Post)
+	return
 }
 
 // NewThread injects a new thread to specified board.
 // TODO: Implement.
-func (c *CXO) NewThread(req *NewThreadReq, ok *bool) error {
-	*ok = true
-	return nil
+func (c *CXO) NewThread(req *NewThreadReq, rep *typ.RepReq) (e error) {
+	rep.Board, _, rep.Threads, e =
+		c.c.InjectThread(req.PK, req.Thread)
+	return
 }

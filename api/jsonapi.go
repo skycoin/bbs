@@ -2,7 +2,7 @@ package api
 
 import (
 	json "encoding/json"
-	"github.com/evanlinjin/bbs/cxo"
+	"github.com/evanlinjin/bbs/typ"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -10,11 +10,11 @@ import (
 
 // JsonAPI wraps cxo.Gateway.
 type JsonAPI struct {
-	g *cxo.Gateway
+	g *Gateway
 }
 
 // New JsonAPI creates a new JsonAPI.
-func NewJsonAPI(g *cxo.Gateway) *JsonAPI {
+func NewJsonAPI(g *Gateway) *JsonAPI {
 	return &JsonAPI{g}
 }
 
@@ -100,12 +100,12 @@ func sendResponse(w http.ResponseWriter, v interface{}, httpStatus int) error {
 	return nil
 }
 
-func readRequestBody(r *http.Request) (*cxo.RepReq, error) {
+func readRequestBody(r *http.Request) (*typ.RepReq, error) {
 	d, e := ioutil.ReadAll(r.Body)
 	if e != nil {
 		return nil, e
 	}
-	obj := cxo.NewRepReq()
+	obj := typ.NewRepReq()
 	e = json.Unmarshal(d, obj)
 	return obj, e
 }

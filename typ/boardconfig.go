@@ -32,13 +32,13 @@ func NewBoardConfig(pk cipher.PubKey, url string) (*BoardConfig, error) {
 }
 
 // NewMasterBoardConfig creates a new master BoardConfig from a seed.
-func NewMasterBoardConfig(board *Board, seed string) *BoardConfig {
+func NewMasterBoardConfig(board *Board, url, seed string) *BoardConfig {
 	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
 	bc := BoardConfig{
 		Name:      board.Name,
 		Desc:      board.Desc,
 		Master:    true,
-		URL:       board.URL,
+		URL:       url,
 		PubKey:    pk,
 		SecKey:    sk,
 		PubKeyStr: pk.Hex(),

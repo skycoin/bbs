@@ -1,6 +1,11 @@
 package rpc
 
-import "net/rpc"
+import (
+	"github.com/evanlinjin/bbs/typ"
+	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
+	"net/rpc"
+)
 
 // Client represents a RPC Client.
 type Client struct {
@@ -17,14 +22,22 @@ func NewClient(address string) (*Client, error) {
 }
 
 // NewPost injects a new post to specified board and thread.
-func (c *Client) NewPost(req *NewPostReq) (ok bool, e error) {
-	e = c.rpc.Call("rpc.NewPost", req, &ok)
+func (c *Client) NewPost(bpk cipher.PubKey, tHash skyobject.Reference, post *typ.Post) (
+	rep *typ.RepReq, e error,
+) {
+	rep = typ.NewRepReq()
+	req := &NewPostReq{bpk, tHash, post}
+	e = c.rpc.Call("rpc.NewPost", req, &rep)
 	return
 }
 
 // NewThread injects a new thread to specified board.
-func (c *Client) NewThread(req *NewThreadReq) (ok bool, e error) {
-	e = c.rpc.Call("rpc.NewThread", req, &ok)
+func (c *Client) NewThread(bpk cipher.PubKey, thread *typ.Thread) (
+	rep *typ.RepReq, e error,
+) {
+	rep = typ.NewRepReq()
+	req := NewThreadReq{bpk, thread}
+	e = c.rpc.Call("rpc.NewThread", req, &rep)
 	return
 }
 

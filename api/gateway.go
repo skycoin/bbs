@@ -1,7 +1,9 @@
-package cxo
+package api
 
 import (
 	"errors"
+	"github.com/evanlinjin/bbs/cxo"
+	"github.com/evanlinjin/bbs/rpc"
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -9,18 +11,18 @@ import (
 
 // Gateway is what's exposed to the GUI.
 type Gateway struct {
-	c *Client
+	c *cxo.Client
 }
 
 // NewGateWay creates a new Gateway with specified Client.
-func NewGateWay(c *Client) *Gateway {
+func NewGateWay(c *cxo.Client) *Gateway {
 	return &Gateway{c}
 }
 
 // Subscribe subscribes to a board.
-func (g *Gateway) Subscribe(pkStr string) *RepReq {
+func (g *Gateway) Subscribe(pkStr string) *typ.RepReq {
 	var (
-		reply = NewRepReq()
+		reply = typ.NewRepReq()
 		e     error
 		pk    cipher.PubKey
 	)
@@ -41,9 +43,9 @@ SubscribeResult:
 }
 
 // Unsubscribe unsubscribes from a board.
-func (g *Gateway) Unsubscribe(pkStr string) *RepReq {
+func (g *Gateway) Unsubscribe(pkStr string) *typ.RepReq {
 	var (
-		reply = NewRepReq()
+		reply = typ.NewRepReq()
 		e     error
 	)
 	// Check public key.
@@ -63,9 +65,9 @@ UnsubscribeResult:
 }
 
 // ListBoards lists all the boards we are subscribed to.
-func (g *Gateway) ListBoards() *RepReq {
+func (g *Gateway) ListBoards() *typ.RepReq {
 	var (
-		reply = NewRepReq()
+		reply = typ.NewRepReq()
 		e     error
 	)
 	// Get list of boards.
@@ -74,9 +76,9 @@ func (g *Gateway) ListBoards() *RepReq {
 }
 
 // ViewBoard views the specified board of public key.
-func (g *Gateway) ViewBoard(pkStr string) *RepReq {
+func (g *Gateway) ViewBoard(pkStr string) *typ.RepReq {
 	var (
-		reply = NewRepReq()
+		reply = typ.NewRepReq()
 		e     error
 	)
 	// Check public key.
@@ -91,9 +93,9 @@ ViewBoardResults:
 }
 
 // ViewThread views the specified thread of specified board and thread id.
-func (g *Gateway) ViewThread(bpkStr, tHashStr string) *RepReq {
+func (g *Gateway) ViewThread(bpkStr, tHashStr string) *typ.RepReq {
 	var (
-		reply = NewRepReq()
+		reply = typ.NewRepReq()
 		e     error
 		pk    cipher.PubKey
 		hash  cipher.SHA256
@@ -116,9 +118,9 @@ ViewThreadResult:
 }
 
 // NewBoard creates a new master board with a name, description and seed.
-func (g *Gateway) NewBoard(board *typ.Board, seed string) *RepReq {
+func (g *Gateway) NewBoard(board *typ.Board, seed string) *typ.RepReq {
 	var (
-		reply = NewRepReq()
+		reply = typ.NewRepReq()
 		e     error
 	)
 	// Check seed.
@@ -131,7 +133,7 @@ func (g *Gateway) NewBoard(board *typ.Board, seed string) *RepReq {
 		goto NewBoardResults
 	}
 	// Inject board.
-	_, _, e = g.c.InjectBoard(typ.NewMasterBoardConfig(board, seed))
+	_, _, e = g.c.InjectBoard(typ.NewMasterBoardConfig(board, g.c.B.RPCAddr, seed))
 NewBoardResults:
 	// Get list of boards.
 	reply.Boards, _, _ = g.c.ObtainAllBoards()
@@ -139,31 +141,55 @@ NewBoardResults:
 }
 
 // NewThread adds a new thread to specified board.
-func (g *Gateway) NewThread(bpkStr string, thread *typ.Thread) *RepReq {
+func (g *Gateway) NewThread(bpkStr string, thread *typ.Thread) *typ.RepReq {
 	var (
-		reply = NewRepReq()
-		e     error
+		reply = typ.NewRepReq()
+		e, e2 error
 		pk    cipher.PubKey
+		bc    *typ.BoardConfig
+		rpcc  *rpc.Client
 	)
 	// Check public key.
 	pk, e = typ.GetPubKey(bpkStr)
 	if e != nil {
 		goto NewThreadResult
 	}
-	// Inject thread and obtain info.
+	// See if we own the board.
+	bc, e = g.c.B.GetConfig(pk)
+	if e != nil {
+		e = errors.New("not subscribed to this board")
+		goto NewThreadResult
+	}
+	if bc.Master == false {
+		// We don't own the board, hence inject board and obtain info via rpc.
+		reply.Board, _, _ = g.c.ObtainBoard(pk)
+		rpcc, e2 = rpc.NewClient(reply.Board.URL)
+		if e2 != nil {
+			goto NewThreadResult
+		}
+		reply, e = rpcc.NewThread(pk, thread)
+		goto NewThreadResult
+	}
+	// We own the board, inject to board directly and obtain info.
 	reply.Board, _, reply.Threads, e = g.c.InjectThread(pk, thread)
 NewThreadResult:
+	if e2 != nil {
+		reply.Board, _, reply.Threads, e = g.c.ObtainThreads(pk)
+		e = e2
+	}
 	return reply.Prepare(e, "thread successfully created")
 }
 
 // NewPost adds a new post to specified board and thread.
-func (g *Gateway) NewPost(bpkStr, tHashStr string, post *typ.Post) *RepReq {
+func (g *Gateway) NewPost(bpkStr, tHashStr string, post *typ.Post) *typ.RepReq {
 	var (
-		reply = NewRepReq()
+		reply = typ.NewRepReq()
 		e, e2 error
 		pk    cipher.PubKey
 		hash  cipher.SHA256
+		bc    *typ.BoardConfig
 		u     *typ.User
+		rpcc  *rpc.Client
 	)
 	// Check public key.
 	pk, e = typ.GetPubKey(bpkStr)
@@ -175,8 +201,26 @@ func (g *Gateway) NewPost(bpkStr, tHashStr string, post *typ.Post) *RepReq {
 	if e != nil {
 		goto NewPostResult
 	}
+	// See if we own the board.
+	bc, e = g.c.B.GetConfig(pk)
+	if e != nil {
+		e = errors.New("not subscribed to this board")
+		goto NewPostResult
+	}
+	if bc.Master == false {
+		// We don't own the board, hence inject post to thread via rpc.
+		// TODO: RPC part.
+		reply.Board, _, reply.Thread, e = g.c.ObtainThread(pk, skyobject.Reference(hash))
+		rpcc, e = rpc.NewClient(reply.Board.URL)
+		if e != nil {
+			goto NewPostResultCanDisplay
+		}
+		reply, e = rpcc.NewPost(pk, skyobject.Reference(hash), post)
+		goto NewPostResult
+	}
+	// We own the board, inject to board directly and obtain info.
 	// Authorise post.
-	u, e2 = g.c.uManager.GetMaster()
+	u, e2 = g.c.U.GetMaster()
 	if e2 != nil {
 		goto NewPostResultCanDisplay
 	}
