@@ -1,0 +1,10 @@
+[
+    {
+        "name": "Board of life",
+        "description": "All about life.",
+        "master": true,
+        "url": "",
+        "public_key": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+        "secret_key": "b4f56cab07ea360c16c22ac241738e923b232138b69089fe0134f81a432ffaff"
+    }
+]
