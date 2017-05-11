@@ -3,10 +3,6 @@ package gui
 import (
 	"net"
 	"net/http"
-	"path/filepath"
-	wh "github.com/skycoin/skycoin/src/util/http" //http,json helpers
-	"fmt"
-	"io/ioutil"
 	"github.com/skycoin/skycoin/src/util"
 )
 
@@ -19,7 +15,7 @@ const (
 	guiDir = "./gui/static"
 	resourceDir = "app/"
 	devDir = "dev/"
-	indexPage   = "index.html"
+	//indexPage   = "index.html"
 )
 
 func LaunchWebInterface(host string, g *Gateway) (e error) {
@@ -71,32 +67,9 @@ func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 	// Prepare mux.
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", newIndexHandler(appLoc))
-
-	fileInfos, _ := ioutil.ReadDir(appLoc)
-	for _, fileInfo := range fileInfos {
-		route := fmt.Sprintf("/%s", fileInfo.Name())
-		if fileInfo.IsDir() {
-			route = route + "/"
-		}
-		mux.Handle(route, http.FileServer(http.Dir(appLoc)))
-	}
+	mux.Handle("/", http.FileServer(http.Dir(appLoc)))
 
 	mux.HandleFunc("/gui/boards", jsonAPI.BoardListHandler)
 	mux.HandleFunc("/gui/boards/", jsonAPI.BoardHandler)
 	return mux
-}
-
-// Returns a http.HandlerFunc for index.html, where index.html is in appLoc
-func newIndexHandler(appLoc string) http.HandlerFunc {
-	// Serves the main page
-	return func(w http.ResponseWriter, r *http.Request) {
-		page := filepath.Join(appLoc, indexPage)
-		fmt.Printf("Serving index page: %s\n", page)
-		if r.URL.Path == "/" {
-			http.ServeFile(w, r, page)
-		} else {
-			wh.Error404(w)
-		}
-	}
 }
