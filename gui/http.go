@@ -69,7 +69,7 @@ func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 
 	mux.Handle("/", http.FileServer(http.Dir(appLoc)))
 
-	mux.HandleFunc("/gui/boards", jsonAPI.BoardListHandler)
-	mux.HandleFunc("/gui/boards/", jsonAPI.BoardHandler)
+	mux.HandleFunc("/api/boards", jsonAPI.BoardListHandler)
+	mux.HandleFunc("/api/boards/", jsonAPI.BoardHandler)
 	return mux
 }
