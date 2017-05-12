@@ -151,10 +151,12 @@ func (c *Client) InjectBoard(bc *typ.BoardConfig) (
 	}
 	// Add to cxo.
 	{
-		r := c.c.NewRoot(bc.PubKey, bc.SecKey)
+		var r *node.Root
+		r, e = c.c.NewRoot(bc.PubKey, bc.SecKey)
+
 		boardRef := r.Save(*b)
 		bCont = typ.NewBoardContainer(boardRef)
-		r.Inject(*bCont)
+		r.Inject("BoardContainer", *bCont)
 	}
 
 	// Subscribe to board.
@@ -267,9 +269,9 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
 			tpRef skyobject.Reference
 		)
 		// Obtain root.
-		r := c.c.NewRoot(bc.PubKey, bc.SecKey)
-		if r == nil {
-			e = errors.New("nil root")
+		var r *node.Root
+		r, e = c.c.NewRoot(bc.PubKey, bc.SecKey)
+		if e != nil {
 			return
 		}
 		// Save thread.
@@ -284,7 +286,7 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
 		bCont.AddThreadPage(tpRef)
 		// Increment sequence of BoardContainer.
 		bCont.Touch()
-		r.Inject(*bCont)
+		r.Inject("BoardContainer", *bCont)
 
 	InjectThreadListThreads:
 		// Obtain all threads in board.
@@ -437,13 +439,20 @@ func (c *Client) InjectPost(bpk cipher.PubKey, tRef skyobject.Reference, post *t
 	// Touch post.
 	post.Touch()
 
+	// Obtain Root.
+	var r *node.Root
+	r, e = c.c.NewRoot(bc.PubKey, bc.SecKey)
+	if e != nil {
+		return
+	}
+
 	// Save post in cxo container and obtain it's reference.
-	pRef := c.c.Save(*post)
+	pRef := r.Save(*post)
 
 	// Add post to thread page and save new thread page in cxo container.
 	// Hence, obtain the new thread page's reference.
 	tPage.AddPost(pRef)
-	newTpRef := c.c.Save(tPage)
+	newTpRef := r.Save(tPage)
 
 	// Replace thread page reference in board container.
 	// Hence, increment sequence of ThreadContainer.
@@ -453,8 +462,10 @@ func (c *Client) InjectPost(bpk cipher.PubKey, tRef skyobject.Reference, post *t
 	bCont.Touch()
 
 	// Inject new board container in root.
-	r := c.c.NewRoot(bc.PubKey, bc.SecKey)
-	r.Inject(bCont)
+	_, _, e = r.Inject("BoardContainer", bCont)
+	if e != nil {
+		return
+	}
 
 	// Add post to output post list.
 	pList = append(pList, post)
