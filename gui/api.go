@@ -31,6 +31,77 @@ func (a *API) Stat(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Subscriptions handles the "subscriptions" endpoint.
+// It subscribes/unsubscribes to/from a board.
+func (a *API) Subscriptions(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST": // Subscribe >>>
+		req, e := readRequestBody(r)
+		if e != nil || req.Board == nil {
+			sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+			return
+		}
+		reply := a.g.Subscribe(req.Board.PubKey)
+		sendResponse(w, reply, http.StatusOK)
+		return
+
+	case "DELETE": // Unsubscribe >>>
+		req, e := readRequestBody(r)
+		if e != nil || req.Board == nil {
+			sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+			return
+		}
+		reply := a.g.Unsubscribe(req.Board.PubKey)
+		sendResponse(w, reply, http.StatusOK)
+		return
+	}
+	sendResponse(w, nil, http.StatusNotFound)
+	return
+}
+
+func (a *API) Boards(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		// LIST BOARDS //
+		reply := a.g.ListBoards()
+		sendResponse(w, reply, http.StatusOK)
+		return
+
+	case "POST":
+		// NEW BOARD //
+		req, e := readRequestBody(r)
+		if e != nil || req.Board == nil {
+			sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+			return
+		}
+		reply := a.g.NewBoard(req.Board, req.Seed)
+		sendResponse(w, reply, http.StatusOK)
+		return
+
+	case "DELETE":
+		// REMOVE BOARD //
+		sendResponse(w, nil, http.StatusNotImplemented)
+		return
+	}
+	sendResponse(w, nil, http.StatusNotFound)
+	return
+}
+
+func (a *API) Threads(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		// LIST THREADS //
+
+	case "POST":
+		// NEW THREAD //
+
+	case "DELETE":
+		// REMOVE THREAD //
+	}
+	sendResponse(w, nil, http.StatusNotFound)
+	return
+}
+
 // Subscribe handles the "subscribe" endpoint.
 // It subscribes to a board.
 func (a *API) Subscribe(w http.ResponseWriter, r *http.Request) {

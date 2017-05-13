@@ -154,14 +154,11 @@ func (c *Client) InjectBoard(bc *typ.BoardConfig) (
 		return
 	}
 	// Add to cxo.
-	{
-		var r *node.Root
-		r, e = c.c.NewRoot(bc.PubKey, bc.SecKey)
-
-		boardRef := r.Save(*b)
-		bCont = typ.NewBoardContainer(boardRef)
-		r.Inject("BoardContainer", *bCont)
-	}
+	var r *node.Root
+	r, e = c.c.NewRoot(bc.PubKey, bc.SecKey)
+	boardRef := r.Save(*b)
+	bCont = typ.NewBoardContainer(boardRef)
+	r.Inject("BoardContainer", *bCont)
 
 	// Subscribe to board.
 	c.cxo.Subscribe(bc.PubKey)
@@ -187,32 +184,13 @@ func (c *Client) ObtainBoard(bpk cipher.PubKey) (
 		e = errors.New("nil root, removed from config")
 		return
 	}
-	// Obtain root values.
-	var values []*skyobject.Value
-	values, e = r.Values()
-	if e != nil {
+
+	// Walk through.
+	w := r.Walker()
+	if e = w.AdvanceFromRoot(bCont, FindBoardContainer); e != nil {
 		return
 	}
-	// Loop through and get latest BoardContainer.
-	for _, v := range values {
-		bContTemp := &typ.BoardContainer{}
-		// Get BoardContainer.
-		if e = encoder.DeserializeRaw(v.Data(), bContTemp); e != nil {
-			return
-		}
-		if bContTemp.Seq >= bCont.Seq {
-			bCont = bContTemp
-		}
-	}
-	// Get Board.
-	var bData []byte
-	var has bool
-	bData, has = r.Get(bCont.Board)
-	if has == false {
-		e = errors.New("unable to obtain board")
-		return
-	}
-	if e = encoder.DeserializeRaw(bData, b); e != nil {
+	if e = w.AdvanceFromRefField("Board", b); e != nil {
 		return
 	}
 	b.PubKey = bpk.Hex()
@@ -262,51 +240,57 @@ func (c *Client) InjectThread(bpk cipher.PubKey, thread *typ.Thread) (
 		e = errors.New("not master")
 		return
 	}
-	// Obtain board and board container.
-	b, bCont, e = c.ObtainBoard(bpk)
+
+	// Obtain root.
+	r := c.c.LastRoot(bc.PubKey)
+	if r == nil {
+		e = errors.New("nil root")
+		return
+	}
+
+	// Begin walk through object tree.
+	w := r.Walker()
+
+	// Walk to and obtain BoardContainer.
+	bCont = new(typ.BoardContainer)
+	if e = w.AdvanceFromRoot(bCont, FindBoardContainer); e != nil {
+		return
+	}
+
+	// Walk to and obtain Board.
+	b = new(typ.Board)
+	if e = w.AdvanceFromRefField("Board", b); e != nil {
+		return
+	}
+
+	// Retreat back to BoardContainer.
+	w.Retreat()
+
+	// Walk to thread to check if thread already exists.
+	tThread := new(typ.Thread)
+	e = w.AdvanceFromRefsField("Threads", tThread, MakeFindThread(thread))
+	switch e {
+	case nil:
+		e = errors.New("thread already exists")
+		return
+	case node.ErrObjNotFound:
+		e = nil
+		break
+	default:
+		return
+	}
+	e = nil
+
+	// Append to Threads.
+	var tRef skyobject.Reference
+	tRef, e = w.AppendToRefsField("Threads", *thread)
 	if e != nil {
 		return
 	}
-	{
-		var (
-			tp    *typ.ThreadPage
-			tpRef skyobject.Reference
-		)
-		// Obtain root.
-		var r *node.Root
-		r, e = c.c.NewRoot(bc.PubKey, bc.SecKey)
-		if e != nil {
-			return
-		}
-		// Save thread.
-		tRef := r.Save(*thread)
-		// Add thread to BoardContainer if not exist.
-		if e = bCont.AddThread(tRef); e != nil {
-			goto InjectThreadListThreads
-		}
-		// Add empty ThreadPage to BoardContainer.
-		tp = typ.NewThreadPage(tRef)
-		tpRef = r.Save(*tp)
-		bCont.AddThreadPage(tpRef)
-		// Increment sequence of BoardContainer.
-		bCont.Touch()
-		r.Inject("BoardContainer", *bCont)
 
-	InjectThreadListThreads:
-		// Obtain all threads in board.
-		tList = make([]*typ.Thread, len(bCont.Threads))
-		for i, tRef := range bCont.Threads {
-			tList[i] = typ.InitThread(tRef)
-			tData, has := r.Get(tRef)
-			if has == false {
-				e = errors.New("unable to retrieve thread")
-				return
-			}
-			if e = encoder.DeserializeRaw(tData, tList[i]); e != nil {
-				return
-			}
-		}
-	}
+	// Append to ThreadPages.
+	var tp = typ.NewThreadPage(tRef)
+	_, e = w.AppendToRefsField("ThreadPages", tp)
 	return
 }
 

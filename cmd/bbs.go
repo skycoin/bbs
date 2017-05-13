@@ -134,7 +134,7 @@ func Run(c *Config) {
 		}
 		go func() {
 			time.Sleep(time.Millisecond * 100)
-			util.OpenBrowser(fullAddress)
+			//util.OpenBrowser(fullAddress)
 		}()
 	}
 
