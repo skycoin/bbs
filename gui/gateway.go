@@ -7,20 +7,34 @@ import (
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"sync"
 )
 
 // Gateway is what's exposed to the GUI.
 type Gateway struct {
+	sync.Mutex
 	c *cxo.Client
 }
 
 // NewGateWay creates a new Gateway with specified Client.
 func NewGateWay(c *cxo.Client) *Gateway {
-	return &Gateway{c}
+	return &Gateway{c: c}
+}
+
+func (g *Gateway) Stat() *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
+	var reply = typ.NewRepReq()
+	*reply.CXO = g.c.Connected()
+	return reply.Prepare(nil, nil)
 }
 
 // Subscribe subscribes to a board.
-func (g *Gateway) Subscribe(pkStr string) *typ.RepReq {
+func (g *Gateway) Subscribe(pkStr string) *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
 	var (
 		reply = typ.NewRepReq()
 		e     error
@@ -43,7 +57,10 @@ SubscribeResult:
 }
 
 // Unsubscribe unsubscribes from a board.
-func (g *Gateway) Unsubscribe(pkStr string) *typ.RepReq {
+func (g *Gateway) Unsubscribe(pkStr string) *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
 	var (
 		reply = typ.NewRepReq()
 		e     error
@@ -65,7 +82,10 @@ UnsubscribeResult:
 }
 
 // ListBoards lists all the boards we are subscribed to.
-func (g *Gateway) ListBoards() *typ.RepReq {
+func (g *Gateway) ListBoards() *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
 	var (
 		reply = typ.NewRepReq()
 		e     error
@@ -76,7 +96,10 @@ func (g *Gateway) ListBoards() *typ.RepReq {
 }
 
 // ViewBoard views the specified board of public key.
-func (g *Gateway) ViewBoard(pkStr string) *typ.RepReq {
+func (g *Gateway) ViewBoard(pkStr string) *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
 	var (
 		reply = typ.NewRepReq()
 		e     error
@@ -93,7 +116,10 @@ ViewBoardResults:
 }
 
 // ViewThread views the specified thread of specified board and thread id.
-func (g *Gateway) ViewThread(bpkStr, tHashStr string) *typ.RepReq {
+func (g *Gateway) ViewThread(bpkStr, tHashStr string) *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
 	var (
 		reply = typ.NewRepReq()
 		e     error
@@ -118,7 +144,10 @@ ViewThreadResult:
 }
 
 // NewBoard creates a new master board with a name, description and seed.
-func (g *Gateway) NewBoard(board *typ.Board, seed string) *typ.RepReq {
+func (g *Gateway) NewBoard(board *typ.Board, seed string) *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
 	var (
 		reply = typ.NewRepReq()
 		e     error
@@ -141,7 +170,10 @@ NewBoardResults:
 }
 
 // NewThread adds a new thread to specified board.
-func (g *Gateway) NewThread(bpkStr string, thread *typ.Thread) *typ.RepReq {
+func (g *Gateway) NewThread(bpkStr string, thread *typ.Thread) *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
 	var (
 		reply = typ.NewRepReq()
 		e, e2 error
@@ -181,7 +213,10 @@ NewThreadResult:
 }
 
 // NewPost adds a new post to specified board and thread.
-func (g *Gateway) NewPost(bpkStr, tHashStr string, post *typ.Post) *typ.RepReq {
+func (g *Gateway) NewPost(bpkStr, tHashStr string, post *typ.Post) *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
 	var (
 		reply = typ.NewRepReq()
 		e, e2 error

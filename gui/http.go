@@ -1,9 +1,9 @@
 package gui
 
 import (
+	"github.com/skycoin/skycoin/src/util"
 	"net"
 	"net/http"
-	"github.com/skycoin/skycoin/src/util"
 )
 
 var (
@@ -12,9 +12,9 @@ var (
 )
 
 const (
-	guiDir = "./gui/static"
+	guiDir      = "./gui/static"
 	resourceDir = "app/"
-	devDir = "dev/"
+	devDir      = "dev/"
 	//indexPage   = "index.html"
 )
 
@@ -62,14 +62,26 @@ func Shutdown() {
 // NewServeMux creates a http.ServeMux with handlers registered.
 func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 	// Register objects.
-	jsonAPI := NewAPI(g)
+	api := NewAPI(g)
 
 	// Prepare mux.
 	mux := http.NewServeMux()
 
 	mux.Handle("/", http.FileServer(http.Dir(appLoc)))
 
-	mux.HandleFunc("/api/boards", jsonAPI.BoardListHandler)
-	mux.HandleFunc("/api/boards/", jsonAPI.BoardHandler)
+	mux.HandleFunc("/api/stat", api.Stat)
+	mux.HandleFunc("/api/subscribe", api.Subscribe)
+	mux.HandleFunc("/api/unsubscribe", api.Unsubscribe)
+	mux.HandleFunc("/api/list_boards", api.ListBoards)
+	mux.HandleFunc("/api/new_board", api.NewBoard)
+	mux.HandleFunc("/api/list_threads", api.ListThreads)
+	mux.HandleFunc("/api/new_thread", api.NewThread)
+	mux.HandleFunc("/api/list_posts", api.ListPosts)
+	mux.HandleFunc("/api/new_post", api.NewPost)
+
+	// Deprecated.
+	mux.HandleFunc("/api/boards", api.BoardListHandler)
+	mux.HandleFunc("/api/boards/", api.BoardHandler)
+
 	return mux
 }

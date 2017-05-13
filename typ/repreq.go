@@ -1,34 +1,36 @@
 package typ
 
-// RepReq represents a json reply object.
-type RepReq struct {
-	Board   *Board    `json:"board,omitempty"`
-	Boards  []*Board  `json:"boards,omitempty"`
-	Thread  *Thread   `json:"thread,omitempty"`
-	Threads []*Thread `json:"threads,omitempty"`
-	Post    *Post     `json:"post,omitempty"`
-	Posts   []*Post   `json:"posts,omitempty"`
-	Req     *ReqObj   `json:"request,omitempty"`
+// ReqRep represents a json reply object.
+type ReqRep struct {
+	// Boards, Threads and Posts.
+	Board   *Board     `json:"board,omitempty"`
+	Boards  []*Board   `json:"boards,omitempty"`
+	Thread  *Thread    `json:"thread,omitempty"`
+	Threads []*Thread  `json:"threads,omitempty"`
+	Post    *Post      `json:"post,omitempty"`
+	Posts   []*Post    `json:"posts,omitempty"`
+	Req     *SubReqRep `json:"request,omitempty"`
 
-	// Request stuff
+	// Additional request stuff.
 	Seed string `json:"seed,omitempty"`
+	CXO  *bool  `json:"cxo,omitempty"`
 }
 
-func NewRepReq() *RepReq {
-	return &RepReq{}
+func NewRepReq() *ReqRep {
+	return &ReqRep{}
 }
 
-func (ro *RepReq) Prepare(e error, s interface{}) *RepReq {
+func (ro *ReqRep) Prepare(e error, s interface{}) *ReqRep {
 	if e == nil {
-		ro.Req = &ReqObj{true, nil, s}
+		ro.Req = &SubReqRep{true, nil, s}
 	} else {
-		ro.Req = &ReqObj{false, e.Error(), nil}
+		ro.Req = &SubReqRep{false, e.Error(), nil}
 	}
 	return ro
 }
 
-// PutRequestObj represents a sub-branch of RepReq.
-type ReqObj struct {
+// SubReqRep represents a sub-branch of ReqRep.
+type SubReqRep struct {
 	Okay    bool        `json:"okay"`
 	Error   interface{} `json:"error,omitempty"`
 	Message interface{} `json:"message,omitempty"`

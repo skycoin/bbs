@@ -25,9 +25,9 @@ type BoardManager struct {
 // NewBoardManager creates a new empty BoardManager.
 func NewBoardManager(master bool, rpcAddr string) *BoardManager {
 	bm := BoardManager{
-		Master: master,
-		Boards: make(map[cipher.PubKey]*BoardConfig),
-		Loaded: make(map[cipher.PubKey]bool),
+		Master:  master,
+		Boards:  make(map[cipher.PubKey]*BoardConfig),
+		Loaded:  make(map[cipher.PubKey]bool),
 		RPCAddr: rpcAddr,
 	}
 	return &bm

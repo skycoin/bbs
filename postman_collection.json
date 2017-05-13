@@ -1,0 +1,171 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Skycoin BBS",
+		"_postman_id": "266c276f-5952-efa4-e253-94ff04ec566c",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Subscribe",
+			"request": {
+				"url": "http://127.0.0.1:6420/api/subscribe",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"board\": {\n\t\t\"public_key\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\"\n\t}\n}"
+				},
+				"description": "Subscribes to a board via it's public key."
+			},
+			"response": []
+		},
+		{
+			"name": "Unsubscribe",
+			"request": {
+				"url": "http://127.0.0.1:6420/api/unsubscribe",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"board\": {\n\t\t\"public_key\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\"\n\t}\n}"
+				},
+				"description": "Unsubscribes to a board via it's public key."
+			},
+			"response": []
+		},
+		{
+			"name": "List Boards",
+			"request": {
+				"url": "http://127.0.0.1:6420/api/list_boards",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "Get list of board subscriptions."
+			},
+			"response": []
+		},
+		{
+			"name": "New Board",
+			"request": {
+				"url": "http://127.0.0.1:6420/api/new_board",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"board\": {\n\t\t\"name\": \"Life\",\n\t\t\"description\": \"All about life.\"\n\t},\n\t\"seed\": \"a\"\n}"
+				},
+				"description": "Creates a new board if BBS Server is master."
+			},
+			"response": []
+		},
+		{
+			"name": "List Threads",
+			"request": {
+				"url": "http://127.0.0.1:6420/api/list_threads",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"board\": {\n\t\t\"public_key\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\"\n\t}\n}"
+				},
+				"description": "Lists threads of a specified board (via public key)."
+			},
+			"response": []
+		},
+		{
+			"name": "New Thread",
+			"request": {
+				"url": "http://127.0.0.1:6420/api/new_thread",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"board\": {\n\t\t\"public_key\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\"\n\t},\n\t\"thread\": {\n\t\t\"name\": \"Bruce Lee\",\n\t\t\"description\": \"Lee Jun-fan, known professionally as Bruce Lee, was a Hong Kong and American martial artist, actor, philosopher, filmmaker, and founder of the martial art Jeet Kune Do.\"\n\t}\n}"
+				},
+				"description": "Creates a new thread in specified board (via public key)."
+			},
+			"response": []
+		},
+		{
+			"name": "Lists Posts",
+			"request": {
+				"url": "http://127.0.0.1:6420/api/list_posts",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"board\": {\n\t\t\"public_key\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\"\n\t},\n\t\"thread\": {\n\t\t\"hash\": \"f4d4ebfa1d291bb6013a7ad984eb6582e92c8bf48ade166a5b43d892dbaae2bf\"\n\t}\n}"
+				},
+				"description": "Lists posts of specified board (via public key) and thread (via hash)."
+			},
+			"response": []
+		},
+		{
+			"name": "New Post",
+			"request": {
+				"url": "http://127.0.0.1:6420/api/new_post",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"board\": {\n\t\t\"public_key\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\"\n\t},\n\t\"thread\": {\n\t\t\"hash\": \"f4d4ebfa1d291bb6013a7ad984eb6582e92c8bf48ade166a5b43d892dbaae2bf\"\n\t},\n\t\"post\": {\n\t\t\"title\": \"Bruce the man?\",\n\t\t\"body\": \"Yeah, so true.\"\n\t}\n}"
+				},
+				"description": "Creates a new post in specified board (via public key) and thread (via hash)."
+			},
+			"response": []
+		}
+	]
+}

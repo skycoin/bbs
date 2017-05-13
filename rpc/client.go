@@ -23,7 +23,7 @@ func NewClient(address string) (*Client, error) {
 
 // NewPost injects a new post to specified board and thread.
 func (c *Client) NewPost(bpk cipher.PubKey, tHash skyobject.Reference, post *typ.Post) (
-	rep *typ.RepReq, e error,
+	rep *typ.ReqRep, e error,
 ) {
 	rep = typ.NewRepReq()
 	req := &NewPostReq{bpk, tHash, post}
@@ -33,7 +33,7 @@ func (c *Client) NewPost(bpk cipher.PubKey, tHash skyobject.Reference, post *typ
 
 // NewThread injects a new thread to specified board.
 func (c *Client) NewThread(bpk cipher.PubKey, thread *typ.Thread) (
-	rep *typ.RepReq, e error,
+	rep *typ.ReqRep, e error,
 ) {
 	rep = typ.NewRepReq()
 	req := NewThreadReq{bpk, thread}

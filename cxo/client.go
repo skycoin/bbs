@@ -14,8 +14,8 @@ import (
 
 // CXOConfig represents a configuration for CXO Client.
 type CXOConfig struct {
-	Master bool
-	Port   int
+	Master  bool
+	Port    int
 	RPCAddr string
 }
 
@@ -126,6 +126,10 @@ func (c *Client) Subscribe(pk cipher.PubKey) (*typ.BoardConfig, error) {
 	// Add to BoardManager.
 	c.B.AddConfig(bc)
 	return bc, nil
+}
+
+func (c *Client) Connected() bool {
+	return c.cxo.IsConnected()
 }
 
 // Unsubscribe unsubscribes from a board.

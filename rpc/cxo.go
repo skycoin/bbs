@@ -19,7 +19,7 @@ func NewCXO(c *cxo.Client) *CXO {
 
 // NewPost injects a new post to specified board and thread.
 // TODO: Implement.
-func (c *CXO) NewPost(req *NewPostReq, rep *typ.RepReq) (e error) {
+func (c *CXO) NewPost(req *NewPostReq, rep *typ.ReqRep) (e error) {
 	rep.Board, _, rep.Thread, _, rep.Posts, e =
 		c.c.InjectPost(req.PK, req.Hash, req.Post)
 	return
@@ -27,7 +27,7 @@ func (c *CXO) NewPost(req *NewPostReq, rep *typ.RepReq) (e error) {
 
 // NewThread injects a new thread to specified board.
 // TODO: Implement.
-func (c *CXO) NewThread(req *NewThreadReq, rep *typ.RepReq) (e error) {
+func (c *CXO) NewThread(req *NewThreadReq, rep *typ.ReqRep) (e error) {
 	rep.Board, _, rep.Threads, e =
 		c.c.InjectThread(req.PK, req.Thread)
 	return

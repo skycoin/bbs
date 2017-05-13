@@ -4,9 +4,14 @@ Information regarding development progress.
 * **DONE** shows what has been implemented (split into days).
 
 ## TODO
+* Make use of RootWalker functionality.
 * Test RPC functionality.
 
 ## DONE
+
+### 2017 May 13
+* Updated JSON API.
+* Made it work with the new CXO.
 
 ### 2017 May 9
 * Implemented adding new posts and threads via RPC. However this is not tested.
