@@ -1,27 +1,41 @@
 # JSON API Specifications
 Version 3 candidate (Not even implemented)
 
+## Subscriptions
+
+#### List subscriptions
+
+`GET /api/subscriptions`
+
+#### Subscribe to board
+
+`POST /api/subscriptions/[:board_id]`
+
+#### Unsubscribe to board
+
+`DELETE /api/subscriptions/[:board_id]`
+
+#### Check subscription
+
+`GET /api/subscriptions/[:board_id]`
+
 ## Boards
 
 #### Subscribe to a board
-Request:
 
 `POST /api/boards/[:board_id]/subscribe`
 
 #### Unsubscribe from a board
-Request:
 
 `POST /api/boards/[:board_id]/unsubscribe`
 
 #### List all boards
-Request:
 
 `GET /api/boards`
 
 #### Create a new board (master only)
-Request:
 
-`POST /api/boards/new`
+`POST /api/boards`
 
 ```json
 {
@@ -34,26 +48,22 @@ Request:
 ```
 
 #### Remove a board (master only)
-Request:
 
-`DELETE /api/boards/remove?board=[:board_id]`
+`DELETE /api/boards/[:board_id]`
 
 ## Threads
 
 #### List all threads of all subscribed boards
-Request:
 
 `GET /api/threads`
 
 #### List all threads of a board
-Request:
 
 `GET /api/boards/[:board_id]/threads`
 
 #### Create a new thread in a board
-Request:
 
-`POST /api/boards/[:board_id]/threads/new`
+`POST /api/boards/[:board_id]/threads`
 
 ```json
 {
@@ -65,26 +75,22 @@ Request:
 ```
 
 #### Remove a thread from a board (master only)
-Request:
 
-`REMOVE /api/boards/[:board_id]/threads/remove?thread=[:thread_id]`
+`REMOVE /api/boards/[:board_id]/threads/[:thread_id]`
 
 ## Posts
 
 #### List all posts
-Request:
 
 `GET /api/posts`
 
 #### List all posts of specified thread
-Request:
 
 `GET /api/threads/[:thread_id]/posts`
 
 #### Create a new post in specified thread
-Request:
 
-`POST /api/threads/[:thread_id]/posts/new`
+`POST /api/threads/[:thread_id]/posts`
 
 ```json
 {

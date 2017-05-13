@@ -1,8 +1,8 @@
 package cxo
 
 import (
-	"github.com/skycoin/cxo/skyobject"
 	"github.com/evanlinjin/bbs/typ"
+	"github.com/skycoin/cxo/skyobject"
 )
 
 // FindBoardContainer finds a board container.
