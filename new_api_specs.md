@@ -21,14 +21,6 @@ Version 3 candidate (Not even implemented)
 
 ## Boards
 
-#### Subscribe to a board
-
-`POST /api/boards/[:board_id]/subscribe`
-
-#### Unsubscribe from a board
-
-`POST /api/boards/[:board_id]/unsubscribe`
-
 #### List all boards
 
 `GET /api/boards`

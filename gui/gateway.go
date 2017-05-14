@@ -30,6 +30,32 @@ func (g *Gateway) Stat() *typ.ReqRep {
 	return reply.Prepare(nil, nil)
 }
 
+func (g *Gateway) CheckSubscription(pkStr string) bool {
+	g.Lock()
+	defer g.Unlock()
+
+	// Check public key.
+	pk, e := typ.GetPubKey(pkStr)
+	if e != nil {
+		return false
+	}
+	return g.c.CheckSubscription(pk)
+}
+
+func (g *Gateway) ListSubscriptions() *typ.ReqRep {
+	g.Lock()
+	defer g.Unlock()
+
+	var reply = typ.NewRepReq()
+
+	subs := g.c.ObtainSubscriptions()
+	reply.Subscriptions = make([]string, len(subs))
+	for i, s := range subs {
+		reply.Subscriptions[i] = s.Hex()
+	}
+	return reply.Prepare(nil, nil)
+}
+
 // Subscribe subscribes to a board.
 func (g *Gateway) Subscribe(pkStr string) *typ.ReqRep {
 	g.Lock()

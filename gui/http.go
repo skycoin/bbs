@@ -69,19 +69,28 @@ func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 
 	mux.Handle("/", http.FileServer(http.Dir(appLoc)))
 
-	mux.HandleFunc("/api/stat", api.Stat)
-	mux.HandleFunc("/api/subscribe", api.Subscribe)
-	mux.HandleFunc("/api/unsubscribe", api.Unsubscribe)
-	mux.HandleFunc("/api/list_boards", api.ListBoards)
-	mux.HandleFunc("/api/new_board", api.NewBoard)
-	mux.HandleFunc("/api/list_threads", api.ListThreads)
-	mux.HandleFunc("/api/new_thread", api.NewThread)
-	mux.HandleFunc("/api/list_posts", api.ListPosts)
-	mux.HandleFunc("/api/new_post", api.NewPost)
+	// Current (v3).
+	mux.HandleFunc("/api/subscriptions", api.Subscriptions)
+	mux.HandleFunc("/api/subscriptions/", api.Subscriptions)
+	mux.HandleFunc("/api/boards", api.Boards)
+	mux.HandleFunc("/api/boards/", api.Boards)
+	mux.HandleFunc("/api/threads", api.Threads)
+	mux.HandleFunc("/api/threads/", api.Threads)
 
-	// Deprecated.
-	mux.HandleFunc("/api/boards", api.BoardListHandler)
-	mux.HandleFunc("/api/boards/", api.BoardHandler)
+	// Deprecated (v2).
+	mux.HandleFunc("/api_v2/stat", api.Stat)
+	mux.HandleFunc("/api_v2/subscribe", api.Subscribe)
+	mux.HandleFunc("/api_v2/unsubscribe", api.Unsubscribe)
+	mux.HandleFunc("/api_v2/list_boards", api.ListBoards)
+	mux.HandleFunc("/api_v2/new_board", api.NewBoard)
+	mux.HandleFunc("/api_v2/list_threads", api.ListThreads)
+	mux.HandleFunc("/api_v2/new_thread", api.NewThread)
+	mux.HandleFunc("/api_v2/list_posts", api.ListPosts)
+	mux.HandleFunc("/api_v2/new_post", api.NewPost)
+
+	// Deprecated (v1).
+	mux.HandleFunc("/api_v1/boards", api.BoardListHandler)
+	mux.HandleFunc("/api_v1/boards/", api.BoardHandler)
 
 	return mux
 }

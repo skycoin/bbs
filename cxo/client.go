@@ -113,6 +113,26 @@ func (c *Client) Shutdown() error {
 	return c.cxo.Close()
 }
 
+// Connected checks whether connection to CXO Daemon is established.
+func (c *Client) Connected() bool {
+	return c.cxo.IsConnected()
+}
+
+// ObtainSubscriptions obtains a list of all subscriptions.
+func (c *Client) ObtainSubscriptions() []cipher.PubKey {
+	return c.c.Feeds()
+}
+
+// CheckSubscription checks a subscription.
+func (c *Client) CheckSubscription(pk cipher.PubKey) bool {
+	for _, f := range c.c.Feeds() {
+		if f == pk {
+			return true
+		}
+	}
+	return false
+}
+
 // Subscribe subscribes to a board.
 func (c *Client) Subscribe(pk cipher.PubKey) (*typ.BoardConfig, error) {
 	// Check if we already have the config, if not make one.
@@ -126,10 +146,6 @@ func (c *Client) Subscribe(pk cipher.PubKey) (*typ.BoardConfig, error) {
 	// Add to BoardManager.
 	c.B.AddConfig(bc)
 	return bc, nil
-}
-
-func (c *Client) Connected() bool {
-	return c.cxo.IsConnected()
 }
 
 // Unsubscribe unsubscribes from a board.

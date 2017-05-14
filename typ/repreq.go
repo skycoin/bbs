@@ -2,6 +2,9 @@ package typ
 
 // ReqRep represents a json reply object.
 type ReqRep struct {
+	// Subscriptions.
+	Subscriptions []string `json:"subscriptions,omitempty"`
+
 	// Boards, Threads and Posts.
 	Board   *Board     `json:"board,omitempty"`
 	Boards  []*Board   `json:"boards,omitempty"`

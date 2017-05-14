@@ -32,73 +32,155 @@ func (a *API) Stat(w http.ResponseWriter, r *http.Request) {
 }
 
 // Subscriptions handles the "subscriptions" endpoint.
-// It subscribes/unsubscribes to/from a board.
+// Functions include: list subscriptions, subscribe to board, unsubscribe from board,
+// check if subscribed to a board.
 func (a *API) Subscriptions(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "POST": // Subscribe >>>
-		req, e := readRequestBody(r)
-		if e != nil || req.Board == nil {
-			sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+	path := strings.Split(r.URL.EscapedPath(), "/")
+	switch len(path) {
+	case 3:
+		// "/api/subscriptions" >>>
+		switch r.Method {
+		case "GET":
+			// List subscriptions >>>
+			reply := a.g.ListSubscriptions()
+			sendResponse(w, reply, http.StatusOK)
 			return
 		}
-		reply := a.g.Subscribe(req.Board.PubKey)
-		sendResponse(w, reply, http.StatusOK)
-		return
-
-	case "DELETE": // Unsubscribe >>>
-		req, e := readRequestBody(r)
-		if e != nil || req.Board == nil {
-			sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+	case 4:
+		// "/api/subscriptions/:id" >>>
+		pk := path[3]
+		switch r.Method {
+		case "GET":
+			// Check subscription >>>
+			switch a.g.CheckSubscription(pk) {
+			case true:
+				sendResponse(w, nil, http.StatusOK)
+				return
+			case false:
+				sendResponse(w, nil, http.StatusNotFound)
+				return
+			}
+		case "POST":
+			// Subscribe >>>
+			reply := a.g.Subscribe(pk)
+			sendResponse(w, reply, http.StatusOK)
+			return
+		case "DELETE":
+			// Unsubscribe >>>
+			reply := a.g.Unsubscribe(pk)
+			sendResponse(w, reply, http.StatusOK)
 			return
 		}
-		reply := a.g.Unsubscribe(req.Board.PubKey)
-		sendResponse(w, reply, http.StatusOK)
-		return
 	}
-	sendResponse(w, nil, http.StatusNotFound)
+	sendResponse(w, nil, http.StatusBadRequest)
 	return
 }
 
+// Boards handles the "boards" endpoint.
+// Functions include: list all boards, create a board, remove a board, list all threads of a board,
+// create new a new thread on a board, remove a thread from a board.
 func (a *API) Boards(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		// LIST BOARDS //
-		reply := a.g.ListBoards()
-		sendResponse(w, reply, http.StatusOK)
-		return
-
-	case "POST":
-		// NEW BOARD //
-		req, e := readRequestBody(r)
-		if e != nil || req.Board == nil {
-			sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+	path := strings.Split(r.URL.EscapedPath(), "/")
+	switch len(path) {
+	case 3:
+		// "/api/boards" >>>
+		switch r.Method {
+		case "GET":
+			// List all boards >>>
+			reply := a.g.ListBoards()
+			sendResponse(w, reply, http.StatusOK)
+			return
+		case "POST":
+			// Create a new board >>>
+			req, e := readRequestBody(r)
+			if e != nil || req.Board == nil {
+				sendResponse(w, "invalid request body", http.StatusNotAcceptable)
+				return
+			}
+			reply := a.g.NewBoard(req.Board, req.Seed)
+			sendResponse(w, reply, http.StatusOK)
+			return
+		case "DELETE":
+			// Delete a board >>>
+			sendResponse(w, nil, http.StatusNotImplemented)
 			return
 		}
-		reply := a.g.NewBoard(req.Board, req.Seed)
-		sendResponse(w, reply, http.StatusOK)
-		return
-
-	case "DELETE":
-		// REMOVE BOARD //
-		sendResponse(w, nil, http.StatusNotImplemented)
-		return
+	case 4:
+		// "/api/boards/:board_id" >>>
+		//pk := path[3]
+		switch r.Method {
+		case "DELETE":
+			// Remove board >>>
+			sendResponse(w, nil, http.StatusNotImplemented)
+			return
+		}
+	case 5:
+		// "/api/boards/:board_id/[...]" >>>
+		pk := path[3]
+		switch path[4] {
+		case "threads":
+			// "/api/boards/:board_id/threads" >>>
+			switch r.Method {
+			case "GET":
+				// List all threads of specified board >>>
+				reply := a.g.ViewBoard(pk)
+				sendResponse(w, reply, http.StatusOK)
+				return
+			case "POST":
+				// Add a thread to specified board >>>
+				req, e := readRequestBody(r)
+				if e != nil || req.Thread == nil {
+					sendResponse(w,
+						"invalid request body, no thread specified",
+						http.StatusNotAcceptable)
+					return
+				}
+				reply := a.g.NewThread(pk, req.Thread)
+				sendResponse(w, reply, http.StatusOK)
+				return
+			}
+		}
+	case 6:
+		// "/api/boards/[...]/[...]/[...]" >>>
+		switch path[4] {
+		case "threads":
+			// "/api/boards/:board_id/threads/:thread_id" >>>
+			switch r.Method {
+			case "DELETE":
+				// Remove thread from board >>>
+				sendResponse(w, nil, http.StatusNotImplemented)
+				return
+			}
+		}
 	}
-	sendResponse(w, nil, http.StatusNotFound)
+	sendResponse(w, nil, http.StatusBadRequest)
 	return
 }
 
+// Threads handles the "threads" endpoint.
+// Functions include: listing posts of a thread, creating a new post in specified thread.
 func (a *API) Threads(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		// LIST THREADS //
+	path := strings.Split(r.URL.EscapedPath(), "/")
+	switch len(path) {
+	case 5:
+		// "/api/threads/[...]/[...]" >>
+		switch {
+		case path[2] == "threads" && path[4] == "posts":
+			// "/api/threads/[:thread_id]/posts" >>>
+			switch r.Method {
+			case "GET":
+				// List all posts of specified thread >>>
+				sendResponse(w, nil, http.StatusNotImplemented)
+				return
+			case "POST":
+				// Create a new post on specified thread >>>
+				sendResponse(w, nil, http.StatusNotImplemented)
+				return
+			}
 
-	case "POST":
-		// NEW THREAD //
-
-	case "DELETE":
-		// REMOVE THREAD //
+		}
 	}
-	sendResponse(w, nil, http.StatusNotFound)
+	sendResponse(w, nil, http.StatusBadRequest)
 	return
 }
 
