@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/evanlinjin/bbs/extern"
-	"io/ioutil"
-	"net/http"
 	"github.com/evanlinjin/bbs/misc"
+	"net/http"
 	//"log"
+	"github.com/evanlinjin/bbs/typ"
 )
 
 // API wraps cxo.Gateway.
@@ -32,18 +32,14 @@ func (a *API) GetSubscription(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(
-			w,
-			fmt.Sprintln("invalid board public key provided:", e),
-			http.StatusBadRequest,
-		)
+		sendResponse(w, fmt.Sprintln(e), http.StatusBadRequest)
 		return
 	}
 	bi, has := a.g.GetSubscription(bpk)
 	if has {
 		sendResponse(w, bi, http.StatusOK)
 	} else {
-		sendResponse(w, bi, http.StatusNotFound)
+		sendResponse(w, nil, http.StatusNotFound)
 	}
 }
 
@@ -51,11 +47,7 @@ func (a *API) Subscribe(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(
-			w,
-			fmt.Sprintln("invalid board public key provided:", e),
-			http.StatusBadRequest,
-		)
+		sendResponse(w, fmt.Sprintln(e), http.StatusBadRequest)
 		return
 	}
 	a.g.Subscribe(bpk)
@@ -66,11 +58,7 @@ func (a *API) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(
-			w,
-			fmt.Sprintln("invalid board public key provided:", e),
-			http.StatusBadRequest,
-		)
+		sendResponse(w, fmt.Sprintln(e), http.StatusBadRequest)
 		return
 	}
 	a.g.Unsubscribe(bpk)
@@ -85,12 +73,27 @@ func (a *API) NewBoard(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	desc := r.FormValue("description")
 	seed := r.FormValue("seed")
-	bi, e := a.g.NewBoard(name, desc, seed)
+	board := &typ.Board{Name: name, Desc: desc}
+	bi, e := a.g.NewBoard(board, seed)
 	if e != nil {
 		sendResponse(w, e, http.StatusBadRequest)
 	} else {
 		sendResponse(w, bi, http.StatusOK)
 	}
+}
+
+func (a *API) GetThreads(w http.ResponseWriter, r *http.Request) {
+	bpkStr := r.FormValue("board")
+	if bpkStr == "" {
+		sendResponse(w, a.g.GetThreads(), http.StatusOK)
+		return
+	}
+	bpk, e := misc.GetPubKey(bpkStr)
+	if e != nil {
+		sendResponse(w, fmt.Sprintln(e), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, a.g.GetThreads(bpk), http.StatusOK)
 }
 
 /*
@@ -106,14 +109,4 @@ func sendResponse(w http.ResponseWriter, v interface{}, httpStatus int) error {
 	w.WriteHeader(httpStatus)
 	w.Write(respData)
 	return nil
-}
-
-func readRequestBody(r *http.Request) (*extern.ReqRes, error) {
-	d, e := ioutil.ReadAll(r.Body)
-	if e != nil {
-		return nil, e
-	}
-	obj := extern.NewRepRes()
-	e = json.Unmarshal(d, obj)
-	return obj, e
 }

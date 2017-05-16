@@ -2,4 +2,23 @@ package store
 
 import "github.com/skycoin/cxo/skyobject"
 
-func findBoardContainer(v *skyobject.Value) bool { return true }
+
+func makeBcFinder() func(v *skyobject.Value) bool {
+	return func(v *skyobject.Value) bool {
+		return v.Schema().Name() == "BoardContainer"
+	}
+}
+
+func makeTpFinder(tRef skyobject.Reference) func(v *skyobject.Value) bool {
+	return func(v *skyobject.Value) bool {
+		tVal, e := v.FieldByName("Thread")
+		if e != nil {
+			return false
+		}
+		ref, e := tVal.Static()
+		if e != nil {
+			return false
+		}
+		return ref == tRef
+	}
+}

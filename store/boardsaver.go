@@ -18,9 +18,10 @@ type BoardsConfigFile struct {
 
 // BoardConfig represents the config of a board.
 type BoardConfig struct {
-	Master bool
-	PubKey string `json:"public_key"`
-	SecKey string `json:"secret_key"`
+	Master       bool
+	PubKey       string   `json:"public_key"`
+	SecKey       string   `json:"secret_key,omitempty"`
+	Dependencies []string `json:"dependencies,omitempty"`
 }
 
 // Check checks the validity of the BoardConfig.
