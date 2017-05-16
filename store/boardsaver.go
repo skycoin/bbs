@@ -64,10 +64,9 @@ func NewBoardSaver(config *cmd.Config, container *Container) (*BoardSaver, error
 		c:      container,
 		store:  make(map[cipher.PubKey]*BoardInfo),
 	}
-	if e := bs.load(); e != nil {
-		if e := bs.save(); e != nil {
-			return nil, e
-		}
+	bs.load()
+	if e := bs.save(); e != nil {
+		return nil, e
 	}
 	return &bs, nil
 }

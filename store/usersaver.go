@@ -63,11 +63,11 @@ func NewUserSaver(config *cmd.Config, container *Container) (*UserSaver, error) 
 		store:   make(map[cipher.PubKey]*UserConfig),
 		masters: make(map[cipher.PubKey]*UserConfig),
 	}
-	if e := us.load(); e != nil {
-		if e := us.save(); e != nil {
-			return nil, e
-		}
+	us.load()
+	if e := us.save(); e != nil {
+		return nil, e
 	}
+
 	return &us, nil
 }
 
@@ -94,7 +94,7 @@ func (us *UserSaver) load() error {
 	}
 	// Load current user.
 	upk, e := misc.GetPubKey(ucf.Current)
-	if e != nil {
+	if e != nil || upk == (cipher.PubKey{}) {
 		log.Println("[USERSAVER] Current user invalid. Auto setting...")
 		// Find one.
 		if e := us.autoSetCurrent(); e != nil {
