@@ -6,6 +6,7 @@ import (
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/skycoin/src/cipher"
 	"errors"
+	"github.com/skycoin/cxo/skyobject"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.
@@ -112,6 +113,7 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 	if has == false {
 		return errors.New("not subscribed to board")
 	}
+	// Check if this BBS Node owns the board.
 	if bi.BoardConfig.Master == true {
 		// Via Container.
 		if e := g.container.NewThread(bpk, thread); e != nil {
@@ -119,6 +121,36 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 		}
 	} else {
 		// Via RPC Client.
+		// TODO: Implement.
+		return errors.New("not implemented")
+	}
+	return nil
+}
+
+// GetPosts obtains posts of specified board and thread.
+// TODO: In the future, as a single thread can exist across different boards, we will only need to specify the thread.
+func (g *Gateway) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.Post, error) {
+	_, has := g.boardSaver.Get(bpk)
+	if has == false {
+		return nil, errors.New("not subscribed to board")
+	}
+	return g.container.GetPosts(bpk, tRef)
+}
+
+// NewPost creates a new post in specified board and thread.
+// TODO: In the future, as a single thread can exist across different boards, we will only need to specify the thread.
+func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) error {
+	bi, has := g.boardSaver.Get(bpk)
+	if has == false {
+		return errors.New("not subscribed to board")
+	}
+	// Check if this BBS Node owns the board.
+	if bi.BoardConfig.Master == true {
+		// Via Container.
+		return g.container.NewPost(bpk, tRef, post)
+	} else {
+		// Via RPC Client.
+		// TODO: Implement.
 		return errors.New("not implemented")
 	}
 	return nil
