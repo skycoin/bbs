@@ -1,12 +1,12 @@
 package extern
 
 import (
+	"errors"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/store"
 	"github.com/evanlinjin/bbs/typ"
-	"github.com/skycoin/skycoin/src/cipher"
-	"errors"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.
@@ -15,6 +15,7 @@ type Gateway struct {
 	config     *cmd.Config
 	container  *store.Container
 	boardSaver *store.BoardSaver
+	userSaver  *store.UserSaver
 }
 
 // NewGateway creates a new Gateway.
@@ -22,11 +23,13 @@ func NewGateway(
 	config *cmd.Config,
 	container *store.Container,
 	boardSaver *store.BoardSaver,
+	userSaver *store.UserSaver,
 ) *Gateway {
 	return &Gateway{
 		config:     config,
 		container:  container,
 		boardSaver: boardSaver,
+		userSaver:  userSaver,
 	}
 }
 

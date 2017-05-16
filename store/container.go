@@ -5,10 +5,10 @@ import (
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/aether/encoder"
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
 	"time"
-	"github.com/skycoin/skycoin/src/aether/encoder"
 )
 
 type Container struct {

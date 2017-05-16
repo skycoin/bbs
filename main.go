@@ -24,7 +24,10 @@ func main() {
 	boardSaver, e := store.NewBoardSaver(config, container)
 	cmd.CatchError(e, "unable to create board saver")
 
-	gateway := extern.NewGateway(config, container, boardSaver)
+	userSaver, e := store.NewUserSaver(config, container)
+	cmd.CatchError(e, "unable to create user saver")
+
+	gateway := extern.NewGateway(config, container, boardSaver, userSaver)
 
 	if config.WebGUIEnable() {
 		host := fmt.Sprintf("%s:%d", LocalhostAddress, config.WebGUIPort())

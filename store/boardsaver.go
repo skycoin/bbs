@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
@@ -26,12 +27,12 @@ type BoardConfig struct {
 
 // Check checks the validity of the BoardConfig.
 func (bc *BoardConfig) Check() (cipher.PubKey, error) {
-	pk, e := cipher.PubKeyFromHex(bc.PubKey)
+	pk, e := misc.GetPubKey(bc.PubKey)
 	if e != nil {
 		return pk, e
 	}
 	if bc.Master {
-		sk, e := cipher.SecKeyFromHex(bc.SecKey)
+		sk, e := misc.GetSecKey(bc.SecKey)
 		if e != nil {
 			return pk, e
 		}
@@ -81,7 +82,7 @@ func (bs *BoardSaver) load() error {
 	}
 	// Check loaded boards and store in memory.
 	for _, bc := range bcf.Boards {
-		log.Printf("\t%v", *bc)
+		log.Printf("\t- %v (master: %v)", bc.PubKey, bc.Master)
 		bpk, e := bc.Check()
 		if e != nil {
 			log.Println("\t\t config file check:", e)

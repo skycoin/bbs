@@ -2,7 +2,6 @@ package store
 
 import "github.com/skycoin/cxo/skyobject"
 
-
 func makeBcFinder() func(v *skyobject.Value) bool {
 	return func(v *skyobject.Value) bool {
 		return v.Schema().Name() == "BoardContainer"

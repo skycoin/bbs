@@ -14,3 +14,12 @@ func GetPubKey(s string) (cipher.PubKey, error) {
 	}
 	return cipher.NewPubKey(b), nil
 }
+
+// GetSecKey obtains a secret key from string, avoiding panics.
+func GetSecKey(s string) (cipher.SecKey, error) {
+	b, e := hex.DecodeString(s)
+	if e != nil || len(b) != len(cipher.SecKey{}) {
+		return cipher.SecKey{}, errors.New("invalid secret key")
+	}
+	return cipher.NewSecKey(b), nil
+}
