@@ -3,7 +3,7 @@ package store
 import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
-	"github.com/evanlinjin/bbs/store/misc"
+	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 	"log"

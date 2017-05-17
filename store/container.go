@@ -5,7 +5,7 @@ import (
 	"github.com/evanlinjin/bbs/store/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/skycoin/src/aether/encoder"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
 	"time"
@@ -39,6 +39,9 @@ func NewContainer(config *cmd.Config) (c *Container, e error) {
 	if e = c.client.Start("[::]:" + strconv.Itoa(c.config.CXOPort())); e != nil {
 		return
 	}
+
+	// Set Container.
+	c.Container = c.client.Container()
 
 	// Wait.
 	time.Sleep(5 * time.Second)
@@ -142,6 +145,7 @@ func (c *Container) NewThread(bpk cipher.PubKey, thread *typ.Thread) (e error) {
 		return e
 	}
 	_, e = w.AppendToRefsField("ThreadPages", typ.ThreadPage{Thread: tRef})
+	thread.Hash = cipher.SHA256(tRef).Hex()
 	return
 }
 
@@ -181,6 +185,6 @@ func (c *Container) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *t
 	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeTpFinder(tRef)); e != nil {
 		return e
 	}
-	_, e := w.AppendToRefsField("Boards", *post)
+	_, e := w.AppendToRefsField("Posts", *post)
 	return e
 }

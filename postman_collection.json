@@ -1,0 +1,396 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Skycoin BBS",
+		"_postman_id": "1b216e10-2695-d3ee-8b0e-c1cc78ff6d7c",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Boards, Theads & Posts",
+			"description": "",
+			"item": [
+				{
+					"name": "Get Boards",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/get_boards",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "New Board",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/new_board",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Board of Life",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "description",
+									"value": "All about life.",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "seed",
+									"value": "a",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Threads",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/get_threads",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "New Thread",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/new_thread",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "name",
+									"value": "Food",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "description",
+									"value": "All about stuff you can chew on.",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Posts",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/get_posts",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "thread",
+									"value": "0d8a68a6fa8748c7574badd347cc40937fc11f9e2c3694074429ccc6f04347fc",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "New Post",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/new_post",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "thread",
+									"value": "0d8a68a6fa8748c7574badd347cc40937fc11f9e2c3694074429ccc6f04347fc",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "title",
+									"value": "Banana",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "body",
+									"value": "It's a very healthy fruit!",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscriptions",
+			"description": "",
+			"item": [
+				{
+					"name": "Get Subscriptions",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/get_subscriptions",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Subscription",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/get_subscription",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Subscribe",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/subscribe",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Unsubscribe",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/unsubscribe",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"description": "",
+			"item": [
+				{
+					"name": "Get Current",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/users/get_current",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Set Current",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/users/set_current",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "user",
+									"value": "030e40dda21c27126d829b6ae57816e1440dcb2cc73e37e860af26eff1ec55ed73",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Masters",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/users/get_masters",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "New Master",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/users/new_master",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "alias",
+									"value": "evanlinjin",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "seed",
+									"value": "random_seed",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get All",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/users/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "New",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/users/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "user",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "alias",
+									"value": "not_master",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Remove",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/users/remove",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "user",
+									"value": "0369f1cf2abf86d21414913eecdcd0c45450f97f8af9a9deeaea26af4cf16bab14",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

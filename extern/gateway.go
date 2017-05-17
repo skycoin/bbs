@@ -7,6 +7,7 @@ import (
 	"github.com/evanlinjin/bbs/store/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"fmt"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.
@@ -218,7 +219,10 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 	// Check if this BBS Node owns the board.
 	if bi.BoardConfig.Master == true {
 		// Via Container.
-		return g.container.NewPost(bpk, tRef, post)
+		if e := g.container.NewPost(bpk, tRef, post); e != nil {
+			fmt.Println(e)
+			return e
+		}
 	} else {
 		// Via RPC Client.
 		return g.queueSaver.AddNewPostReq(bpk, tRef, post)

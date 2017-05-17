@@ -3,7 +3,7 @@ package store
 import (
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/extern/rpc"
-	"github.com/evanlinjin/bbs/store/misc"
+	"github.com/evanlinjin/bbs/misc"
 	"github.com/evanlinjin/bbs/store/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"

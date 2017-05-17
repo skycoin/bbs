@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/evanlinjin/bbs/extern"
-	"github.com/evanlinjin/bbs/store/misc"
+	"github.com/evanlinjin/bbs/misc"
 	"net/http"
 	//"log"
 	"github.com/evanlinjin/bbs/store/typ"
