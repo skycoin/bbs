@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/extern"
-	"github.com/evanlinjin/bbs/gui"
-	"github.com/evanlinjin/bbs/rpc"
+	"github.com/evanlinjin/bbs/extern/gui"
 	"github.com/evanlinjin/bbs/store"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
@@ -34,10 +33,10 @@ func main() {
 	cmd.CatchError(e, "unable to create queue saver")
 	defer queueSaver.Close()
 
-	var rpcServer *rpc.Server
+	var rpcServer *extern.RPCServer
 	if config.Master() {
 		rpcGateway := extern.NewRPCGateway(config, container, boardSaver, userSaver)
-		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCServerPort())
+		rpcServer, e = extern.NewRPCServer(rpcGateway, config.RPCServerPort())
 		cmd.CatchError(e, "unable to start rpc server")
 		defer rpcServer.Close()
 	}
@@ -46,7 +45,7 @@ func main() {
 		host := fmt.Sprintf("%s:%d", LocalhostAddress, config.WebGUIPort())
 		fullAddress := fmt.Sprintf("%s://%s", "http", host)
 
-		gateway := extern.NewGateway(config, container, boardSaver, userSaver)
+		gateway := extern.NewGateway(config, container, boardSaver, userSaver, queueSaver)
 		e := gui.OpenWebInterface(host, gateway)
 		cmd.CatchError(e, "unable to start web server")
 		defer gui.Close()

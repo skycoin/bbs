@@ -3,6 +3,7 @@ package extern
 import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/extern/rpc"
 	"github.com/evanlinjin/bbs/store"
 )
 
@@ -27,7 +28,7 @@ func NewRPCGateway(
 	}
 }
 
-func (g *RPCGateway) NewPost(req *store.ReqNewPost, ok *bool) (e error) {
+func (g *RPCGateway) NewPost(req *rpc.ReqNewPost, ok *bool) (e error) {
 	if req == nil || req.Post == nil || ok == nil {
 		return errors.New("nil error")
 	}
@@ -51,7 +52,7 @@ func (g *RPCGateway) NewPost(req *store.ReqNewPost, ok *bool) (e error) {
 	return g.container.NewPost(req.BoardPubKey, req.ThreadRef, req.Post)
 }
 
-func (g *RPCGateway) NewThread(req *store.ReqNewThread, ok *bool) (e error) {
+func (g *RPCGateway) NewThread(req *rpc.ReqNewThread, ok *bool) (e error) {
 	if req == nil || req.Thread == nil || ok == nil {
 		return errors.New("nil error")
 	}

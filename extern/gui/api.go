@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/evanlinjin/bbs/extern"
-	"github.com/evanlinjin/bbs/misc"
+	"github.com/evanlinjin/bbs/store/misc"
 	"net/http"
 	//"log"
-	"github.com/evanlinjin/bbs/typ"
+	"github.com/evanlinjin/bbs/store/typ"
 )
 
 // API wraps cxo.Gateway.

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/store"
-	"github.com/evanlinjin/bbs/typ"
+	"github.com/evanlinjin/bbs/store/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )
@@ -16,6 +16,7 @@ type Gateway struct {
 	container  *store.Container
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
+	queueSaver *store.QueueSaver
 }
 
 // NewGateway creates a new Gateway.
@@ -24,12 +25,14 @@ func NewGateway(
 	container *store.Container,
 	boardSaver *store.BoardSaver,
 	userSaver *store.UserSaver,
+	queueSaver *store.QueueSaver,
 ) *Gateway {
 	return &Gateway{
 		config:     config,
 		container:  container,
 		boardSaver: boardSaver,
 		userSaver:  userSaver,
+		queueSaver: queueSaver,
 	}
 }
 
@@ -183,8 +186,8 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 		}
 	} else {
 		// Via RPC Client.
-		// TODO: Implement.
-		return errors.New("not implemented")
+		uc := g.userSaver.GetCurrent()
+		return g.queueSaver.AddNewThreadReq(bpk, uc.GetPK(), uc.GetSK(), thread)
 	}
 	return nil
 }
@@ -218,8 +221,7 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 		return g.container.NewPost(bpk, tRef, post)
 	} else {
 		// Via RPC Client.
-		// TODO: Implement.
-		return errors.New("not implemented")
+		return g.queueSaver.AddNewPostReq(bpk, tRef, post)
 	}
 	return nil
 }

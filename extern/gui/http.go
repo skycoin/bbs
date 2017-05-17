@@ -13,7 +13,7 @@ var (
 )
 
 const (
-	guiDir      = "./gui/static"
+	guiDir      = "./extern/gui/static"
 	resourceDir = "app/"
 	devDir      = "dev/"
 )

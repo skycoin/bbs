@@ -1,22 +1,21 @@
-package rpc
+package extern
 
 import (
-	"github.com/evanlinjin/bbs/extern"
 	"net"
 	"net/rpc"
 	"strconv"
 	"sync"
 )
 
-type Server struct {
+type RPCServer struct {
 	l      net.Listener
 	rpc    *rpc.Server
-	g      *extern.RPCGateway
+	g      *RPCGateway
 	waiter sync.WaitGroup
 }
 
-func NewServer(g *extern.RPCGateway, port int) (*Server, error) {
-	s := &Server{
+func NewRPCServer(g *RPCGateway, port int) (*RPCServer, error) {
+	s := &RPCServer{
 		rpc: rpc.NewServer(),
 		g:   g,
 	}
@@ -26,7 +25,7 @@ func NewServer(g *extern.RPCGateway, port int) (*Server, error) {
 	return s, nil
 }
 
-func (s *Server) open(address string) error {
+func (s *RPCServer) open(address string) error {
 	var e error
 	if e = s.rpc.RegisterName("bbs", s.g); e != nil {
 		return e
@@ -43,7 +42,7 @@ func (s *Server) open(address string) error {
 }
 
 // Close closes the rpc server.
-func (s *Server) Close() error {
+func (s *RPCServer) Close() error {
 	if s == nil {
 		return nil
 	}
@@ -56,7 +55,7 @@ func (s *Server) Close() error {
 }
 
 // Address prints the rpc server's address.
-func (s *Server) Address() string {
+func (s *RPCServer) Address() string {
 	if s.l != nil {
 		return s.l.Addr().String()
 	}

@@ -2,7 +2,7 @@ package store
 
 import (
 	"github.com/evanlinjin/bbs/cmd"
-	"github.com/evanlinjin/bbs/typ"
+	"github.com/evanlinjin/bbs/store/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/aether/encoder"
