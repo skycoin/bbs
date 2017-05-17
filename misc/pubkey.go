@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/cxo/skyobject"
 )
 
 // GetPubKey obtains a public key from string, avoiding panics.
@@ -22,4 +23,10 @@ func GetSecKey(s string) (cipher.SecKey, error) {
 		return cipher.SecKey{}, errors.New("invalid secret key")
 	}
 	return cipher.NewSecKey(b), nil
+}
+
+// GetReference obtains a skyobject reference from hex string.
+func GetReference(s string) (skyobject.Reference, error) {
+	h, e := cipher.SHA256FromHex(s)
+	return skyobject.Reference(h), e
 }

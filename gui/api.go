@@ -20,9 +20,9 @@ func NewAPI(g *extern.Gateway) *API {
 	return &API{g}
 }
 
-func (a *API) HelloWorld(w http.ResponseWriter, r *http.Request) {
-	sendResponse(w, "Hello, world!", http.StatusOK)
-}
+/*
+	<<< FOR SUBSCRIPTIONS >>>
+*/
 
 func (a *API) GetSubscriptions(w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, a.g.GetSubscriptions(), http.StatusOK)
@@ -47,7 +47,7 @@ func (a *API) Subscribe(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, fmt.Sprintln(e), http.StatusBadRequest)
+		sendResponse(w, e, http.StatusBadRequest)
 		return
 	}
 	a.g.Subscribe(bpk)
@@ -58,12 +58,23 @@ func (a *API) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, fmt.Sprintln(e), http.StatusBadRequest)
+		sendResponse(w, e, http.StatusBadRequest)
 		return
 	}
 	a.g.Unsubscribe(bpk)
 	sendResponse(w, true, http.StatusOK)
 }
+
+/*
+	<<< FOR USERS >>>
+*/
+
+
+
+
+/*
+	<<< FOR BOARDS, THREADS & POSTS >>>
+*/
 
 func (a *API) GetBoards(w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, a.g.GetBoards(), http.StatusOK)
@@ -90,14 +101,82 @@ func (a *API) GetThreads(w http.ResponseWriter, r *http.Request) {
 	}
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, fmt.Sprintln(e), http.StatusBadRequest)
+		sendResponse(w, e, http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, a.g.GetThreads(bpk), http.StatusOK)
 }
 
+func (a *API) NewThread(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpkStr := r.FormValue("board")
+	bpk, e := misc.GetPubKey(bpkStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	// Get thread values.
+	name := r.FormValue("name")
+	desc := r.FormValue("description")
+	thread := &typ.Thread{Name: name, Desc: desc, MasterBoard: bpk.Hex()}
+	if e := a.g.NewThread(bpk, thread); e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, thread, http.StatusOK)
+}
+
+func (a *API) GetPosts(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpkStr := r.FormValue("board")
+	bpk, e := misc.GetPubKey(bpkStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRefStr := r.FormValue("thread")
+	tRef, e := misc.GetReference(tRefStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	posts, e := a.g.GetPosts(bpk, tRef)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, posts, http.StatusOK)
+}
+
+func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpkStr := r.FormValue("board")
+	bpk, e := misc.GetPubKey(bpkStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRefStr := r.FormValue("thread")
+	tRef, e := misc.GetReference(tRefStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	// Get post values.
+	title := r.FormValue("title")
+	body := r.FormValue("body")
+	post := &typ.Post{Title: title, Body: body}
+	if e := a.g.NewPost(bpk, tRef, post); e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, post, http.StatusOK)
+}
+
 /*
-	Helper Functions.
+	<<< HELPER FUNCTIONS >>>
 */
 
 func sendResponse(w http.ResponseWriter, v interface{}, httpStatus int) error {

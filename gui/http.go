@@ -67,14 +67,17 @@ func NewServeMux(g *extern.Gateway, appLoc string) *http.ServeMux {
 
 	mux.Handle("/", http.FileServer(http.Dir(appLoc)))
 
-	mux.HandleFunc("/api/hello", api.HelloWorld)
 	mux.HandleFunc("/api/get_subscription", api.GetSubscription)
 	mux.HandleFunc("/api/get_subscriptions", api.GetSubscriptions)
 	mux.HandleFunc("/api/subscribe", api.Subscribe)
 	mux.HandleFunc("/api/unsubscribe", api.Unsubscribe)
 
-	mux.HandleFunc("/api/new_board", api.NewBoard)
 	mux.HandleFunc("/api/get_boards", api.GetBoards)
+	mux.HandleFunc("/api/new_board", api.NewBoard)
+	mux.HandleFunc("/api/get_threads", api.GetThreads)
+	mux.HandleFunc("/api/new_thread", api.NewThread)
+	mux.HandleFunc("/api/get_posts", api.GetPosts)
+	mux.HandleFunc("/api/new_post", api.NewPost)
 
 	return mux
 }

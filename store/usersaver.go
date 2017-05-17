@@ -27,6 +27,16 @@ type UserConfig struct {
 	SecKey string `json:"secret_key,omitempty"`
 }
 
+func (uc *UserConfig) GetPK() cipher.PubKey {
+	pk, _ := misc.GetPubKey(uc.PubKey)
+	return pk
+}
+
+func (uc *UserConfig) GetSK() cipher.SecKey {
+	sk, _ := misc.GetSecKey(uc.SecKey)
+	return sk
+}
+
 // Check checks the validity of the UserConfig.
 func (uc *UserConfig) Check() (cipher.PubKey, error) {
 	pk, e := misc.GetPubKey(uc.PubKey)
@@ -130,7 +140,7 @@ func (us *UserSaver) save() error {
 }
 
 func (us *UserSaver) autoSetCurrent() error {
-	for pk, _ := range us.masters {
+	for pk := range us.masters {
 		us.current = pk
 		log.Println("[USERSAVER] Current user:", us.current.Hex())
 		return nil
@@ -162,8 +172,66 @@ func (us *UserSaver) ListMasters() []UserConfig {
 	return list
 }
 
+// Get gets a user configuration.
+func (us *UserSaver) Get(upk cipher.PubKey) (UserConfig, bool) {
+	us.Lock()
+	defer us.Unlock()
+	uc, has := us.store[upk]
+	if has == false {
+		return UserConfig{}, has
+	}
+	return *uc, has
+}
+
+// Get current returns the config of current user.
+func (us *UserSaver) GetCurrent() UserConfig {
+	us.Lock()
+	defer us.Unlock()
+	return *us.masters[us.current]
+}
+
+// Set Current sets the current user.
+func (us *UserSaver) SetCurrent(upk cipher.PubKey) error {
+	us.Lock()
+	defer us.Unlock()
+	if _, has := us.masters[upk]; has == false {
+		return errors.New("not a master user")
+	}
+	us.current = upk
+	return nil
+}
+
+// Add adds a user to configuration.
+func (us *UserSaver) Add(alias string, upk cipher.PubKey) {
+	us.Lock()
+	defer us.Unlock()
+	uc := UserConfig{Alias: alias, Master: false, PubKey: upk.Hex()}
+	us.store[upk] = &uc
+	us.save()
+}
+
+// MasterAdd adds a board to configuration as master.
+func (us *UserSaver) MasterAdd(alias string, upk cipher.PubKey, usk cipher.SecKey) {
+	us.Lock()
+	defer us.Unlock()
+	uc := UserConfig{Alias: alias, Master: true, PubKey: upk.Hex(), SecKey: usk.Hex()}
+	us.store[upk] = &uc
+	us.masters[upk] = &uc
+	us.save()
+}
+
 // Remove removes a user from configuration.
-// TODO: Implement.
 func (us *UserSaver) Remove(upk cipher.PubKey) error {
+	us.Lock()
+	defer us.Unlock()
+	if _, has := us.masters[upk]; len(us.masters) == 1 && has == true {
+		return errors.New("cannot remove only master user")
+	}
+	delete(us.store, upk)
+	delete(us.masters, upk)
+	if us.current == upk {
+		us.autoSetCurrent()
+	}
+	us.save()
 	return nil
 }

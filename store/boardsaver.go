@@ -146,12 +146,15 @@ func (bs *BoardSaver) ListKeys() []cipher.PubKey {
 	return keys
 }
 
-// Remove removes a board from configuration.
-func (bs *BoardSaver) Remove(bpk cipher.PubKey) {
+// Get gets a subscription of specified board.
+func (bs *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
 	bs.Lock()
 	defer bs.Unlock()
-	delete(bs.store, bpk)
-	bs.save()
+	bi, has := bs.store[bpk]
+	if has == false {
+		return BoardInfo{}, has
+	}
+	return *bi, has
 }
 
 // Add adds a board to configuration.
@@ -184,13 +187,10 @@ func (bs *BoardSaver) MasterAdd(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	return nil
 }
 
-// Get gets a subscription of specified board.
-func (bs *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
+// Remove removes a board from configuration.
+func (bs *BoardSaver) Remove(bpk cipher.PubKey) {
 	bs.Lock()
 	defer bs.Unlock()
-	bi, has := bs.store[bpk]
-	if has == false {
-		return BoardInfo{}, has
-	}
-	return *bi, has
+	delete(bs.store, bpk)
+	bs.save()
 }

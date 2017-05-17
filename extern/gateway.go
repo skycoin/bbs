@@ -33,6 +33,10 @@ func NewGateway(
 	}
 }
 
+/*
+	<<< FOR SUBSCRIPTIONS >>>
+*/
+
 // GetSubscriptions lists all subscriptions.
 func (g *Gateway) GetSubscriptions() []store.BoardInfo {
 	return g.boardSaver.List()
@@ -52,6 +56,56 @@ func (g *Gateway) Subscribe(bpk cipher.PubKey) {
 func (g *Gateway) Unsubscribe(bpk cipher.PubKey) {
 	g.boardSaver.Remove(bpk)
 }
+
+/*
+	<<< FOR USERS >>>
+*/
+
+// GetCurrentUser returns the currently active user.
+func (g *Gateway) GetCurrentUser() store.UserConfig {
+	return g.userSaver.GetCurrent()
+}
+
+// SetCurrent sets the currently active user.
+func (g *Gateway) SetCurrent(upk cipher.PubKey) error {
+	return g.userSaver.SetCurrent(upk)
+}
+
+// NewMasterUser creates a new user configuration of a master user.
+// It will replace if user already exists.
+func (g *Gateway) NewMasterUser(alias, seed string) store.UserConfig {
+	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
+	g.userSaver.MasterAdd(alias, pk, sk)
+	uc, _ := g.userSaver.Get(pk)
+	return uc
+}
+
+// GetMasterUsers lists all users this node is master of.
+func (g *Gateway) GetMasterUsers() []store.UserConfig {
+	return g.userSaver.ListMasters()
+}
+
+// GetUsers lists all users, master or not.
+func (g *Gateway) GetUsers() []store.UserConfig {
+	return g.userSaver.List()
+}
+
+// NewUser creates a new user configuration for a user we are not master of.
+// It will replace if user already exists.
+func (g *Gateway) NewUser(alias string, upk cipher.PubKey) store.UserConfig {
+	g.userSaver.Add(alias, upk)
+	uc, _ := g.userSaver.Get(upk)
+	return uc
+}
+
+// RemoveUser removes a user configuration, master or not.
+func (g *Gateway) RemoveUser(upk cipher.PubKey) error {
+	return g.userSaver.Remove(upk)
+}
+
+/*
+	<<< FOR BOARDS, THREADS & POSTS >>>
+*/
 
 // GetBoards lists all boards.
 func (g *Gateway) GetBoards() []*typ.Board {
@@ -112,6 +166,11 @@ func (g *Gateway) GetThreads(bpks ...cipher.PubKey) []*typ.Thread {
 
 // NewThread creates a new thread and sets the board of public key as it's master.
 func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
+	// Check thread.
+	if e := thread.Check(); e != nil {
+		return e
+	}
+	// Check board.
 	bi, has := g.boardSaver.Get(bpk)
 	if has == false {
 		return errors.New("not subscribed to board")
@@ -143,6 +202,12 @@ func (g *Gateway) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.
 // NewPost creates a new post in specified board and thread.
 // TODO: In the future, as a single thread can exist across different boards, we will only need to specify the thread.
 func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) error {
+	// Check post.
+	uc := g.userSaver.GetCurrent()
+	if e := post.Sign(uc.GetPK(), uc.GetSK()); e != nil {
+		return e
+	}
+	// Check board.
 	bi, has := g.boardSaver.Get(bpk)
 	if has == false {
 		return errors.New("not subscribed to board")
