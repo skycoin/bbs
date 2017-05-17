@@ -128,7 +128,7 @@ func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 		if e := encoder.DeserializeRaw(tData, threads[i]); e != nil {
 			return nil, e
 		}
-		threads[i].Hash = cipher.SHA256(tRef).Hex()
+		threads[i].Ref = cipher.SHA256(tRef).Hex()
 	}
 	return threads, nil
 }
@@ -145,7 +145,7 @@ func (c *Container) NewThread(bpk cipher.PubKey, thread *typ.Thread) (e error) {
 		return e
 	}
 	_, e = w.AppendToRefsField("ThreadPages", typ.ThreadPage{Thread: tRef})
-	thread.Hash = cipher.SHA256(tRef).Hex()
+	thread.Ref = cipher.SHA256(tRef).Hex()
 	return
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"fmt"
+	"math/rand"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.
@@ -143,7 +144,7 @@ func (g *Gateway) GetThreads(bpks ...cipher.PubKey) []*typ.Thread {
 				continue
 			}
 			for _, t := range ts {
-				tMap[t.Hash] = t
+				tMap[t.Ref] = t
 			}
 		}
 	default:
@@ -156,7 +157,7 @@ func (g *Gateway) GetThreads(bpks ...cipher.PubKey) []*typ.Thread {
 				continue
 			}
 			for _, t := range ts {
-				tMap[t.Hash] = t
+				tMap[t.Ref] = t
 			}
 		}
 	}
@@ -226,6 +227,46 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 	} else {
 		// Via RPC Client.
 		return g.queueSaver.AddNewPostReq(bpk, tRef, post)
+	}
+	return nil
+}
+
+/*
+	<<< TESTS >>>
+*/
+
+// TestNewFilledBoard creates a new board with given seed, filled with threads and posts.
+func (g *Gateway) TestNewFilledBoard(seed string, threads, minPosts, maxPosts int) error {
+	if threads < 0 || minPosts < 0 || maxPosts < 0 || maxPosts-minPosts < 0 {
+		return errors.New("invalid inputs")
+	}
+	b := &typ.Board{
+		Name: "Test Board "+ seed,
+		Desc: seed +" with "+string(threads)+" threads.",
+	}
+	bi, e := g.NewBoard(b, seed)
+	if e != nil {
+		return e
+	}
+	bpk := bi.BoardConfig.GetPK()
+	for i := 1; i <= threads; i++ {
+		t := &typ.Thread{
+			Name: "Thread "+string(i)+" on Board "+ seed,
+			Desc: "A test thread on board with seed "+ seed,
+		}
+		if e := g.NewThread(bpk, t); e != nil {
+			return errors.New("on creating thread "+string(i)+"; "+e.Error())
+		}
+		nPosts := rand.Intn(maxPosts-minPosts)+ minPosts
+		for j := 1; j <= nPosts; j++ {
+			p := &typ.Post{
+				Title: "Post "+string(j),
+				Body: "This is post "+string(j)+" on thread "+string(i),
+			}
+			if e := g.NewPost(bpk, t.GetRef(), p); e != nil {
+				return e
+			}
+		}
 	}
 	return nil
 }

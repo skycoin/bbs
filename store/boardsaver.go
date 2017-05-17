@@ -43,6 +43,11 @@ func (bc *BoardConfig) Check() (cipher.PubKey, error) {
 	return pk, nil
 }
 
+func (bc *BoardConfig) GetPK() cipher.PubKey {
+	pk, _ := misc.GetPubKey(bc.PubKey)
+	return pk
+}
+
 // BoardInfo represents the board's information.
 type BoardInfo struct {
 	Synced      bool        `json:"synced"`

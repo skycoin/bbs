@@ -8,6 +8,7 @@ import (
 	"net/http"
 	//"log"
 	"github.com/evanlinjin/bbs/store/typ"
+	"strconv"
 )
 
 // API wraps cxo.Gateway.
@@ -235,6 +236,41 @@ func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendResponse(w, post, http.StatusOK)
+}
+
+/*
+	<<< TESTS >>>
+*/
+
+func (a *API) TestNewFilledBoard(w http.ResponseWriter, r *http.Request) {
+	seed := r.FormValue("seed")
+
+	threadsStr := r.FormValue("threads")
+	threads, e := strconv.Atoi(threadsStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+
+	minPostsStr := r.FormValue("min_posts")
+	minPosts, e := strconv.Atoi(minPostsStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+
+	maxPostsStr := r.FormValue("max_posts")
+	maxPosts, e := strconv.Atoi(maxPostsStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+
+	if e := a.g.TestNewFilledBoard(seed, threads, minPosts, maxPosts); e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
 }
 
 /*

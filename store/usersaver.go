@@ -86,7 +86,7 @@ func (us *UserSaver) load() error {
 	// Load users from file.
 	ucf := UsersConfigFile{}
 	if e := util.LoadJSON(UsersConfigFileName, &ucf); e != nil {
-		return e
+		log.Println("[USERSAVER]", e)
 	}
 	// Check loaded users and store in memory.
 	for _, uc := range ucf.Users {

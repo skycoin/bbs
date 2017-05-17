@@ -87,5 +87,7 @@ func NewServeMux(g *extern.Gateway, appLoc string) *http.ServeMux {
 	mux.HandleFunc("/api/get_posts", api.GetPosts)
 	mux.HandleFunc("/api/new_post", api.NewPost)
 
+	mux.HandleFunc("/api/tests/new_filled_board", api.TestNewFilledBoard)
+
 	return mux
 }

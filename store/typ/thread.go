@@ -5,6 +5,8 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strings"
+	"github.com/skycoin/cxo/skyobject"
+	"github.com/evanlinjin/bbs/misc"
 )
 
 // Thread represents a thread stored in cxo.
@@ -12,7 +14,7 @@ type Thread struct {
 	Name        string `json:"name"`
 	Desc        string `json:"description"`
 	MasterBoard string `json:"master_board"`
-	Hash        string `json:"hash" enc:"-"`
+	Ref         string `json:"hash" enc:"-"`
 }
 
 func (t *Thread) Check() error {
@@ -28,6 +30,7 @@ func (t *Thread) Check() error {
 }
 
 func (t Thread) Sign(sk cipher.SecKey) cipher.Sig {
+	t.Ref = ""
 	return cipher.SignHash(
 		cipher.SumSHA256(encoder.Serialize(t)), sk)
 }
@@ -36,6 +39,12 @@ func (t Thread) Verify(pk cipher.PubKey, sig cipher.Sig) error {
 	if e := t.Check(); e != nil {
 		return e
 	}
+	t.Ref = ""
 	return cipher.VerifySignature(
 		pk, sig, cipher.SumSHA256(encoder.Serialize(t)))
+}
+
+func (t Thread) GetRef() skyobject.Reference {
+	ref, _ := misc.GetReference(t.Ref)
+	return ref
 }
