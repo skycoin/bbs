@@ -45,7 +45,7 @@ func NewContainer(config *cmd.Config) (c *Container, e error) {
 	return
 }
 
-func (c *Container) Stop() error                       { return c.client.Close() }
+func (c *Container) Close() error                      { return c.client.Close() }
 func (c *Container) Connected() bool                   { return c.client.IsConnected() }
 func (c *Container) Feeds() []cipher.PubKey            { return c.client.Feeds() }
 func (c *Container) Subscribe(pk cipher.PubKey) bool   { return c.client.Subscribe(pk) }

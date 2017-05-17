@@ -18,7 +18,7 @@ const (
 	devDir      = "dev/"
 )
 
-func LaunchWebInterface(host string, g *extern.Gateway) (e error) {
+func OpenWebInterface(host string, g *extern.Gateway) (e error) {
 	quit = make(chan struct{})
 
 	appLoc, e := util.DetermineResourcePath(guiDir, resourceDir, devDir)
@@ -47,8 +47,8 @@ func serve(listener net.Listener, mux *http.ServeMux, q chan struct{}) {
 	}
 }
 
-// Shutdown closes the http service.
-func Shutdown() {
+// Close closes the http service.
+func Close() {
 	if quit != nil {
 		// must close quit first
 		close(quit)

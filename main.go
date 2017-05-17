@@ -5,6 +5,7 @@ import (
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/extern"
 	"github.com/evanlinjin/bbs/gui"
+	"github.com/evanlinjin/bbs/rpc"
 	"github.com/evanlinjin/bbs/store"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
@@ -27,13 +28,19 @@ func main() {
 	userSaver, e := store.NewUserSaver(config, container)
 	cmd.CatchError(e, "unable to create user saver")
 
-	gateway := extern.NewGateway(config, container, boardSaver, userSaver)
+	var rpcServer *rpc.Server
+	if config.Master() {
+		rpcGateway := extern.NewRPCGateway(config, container, boardSaver, userSaver)
+		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCServerPort())
+		cmd.CatchError(e, "unable to start rpc server")
+	}
 
 	if config.WebGUIEnable() {
 		host := fmt.Sprintf("%s:%d", LocalhostAddress, config.WebGUIPort())
 		fullAddress := fmt.Sprintf("%s://%s", "http", host)
 
-		e := gui.LaunchWebInterface(host, gateway)
+		gateway := extern.NewGateway(config, container, boardSaver, userSaver)
+		e := gui.OpenWebInterface(host, gateway)
 		cmd.CatchError(e, "unable to start web server")
 
 		if config.WebGUIOpenBrowser() {
@@ -47,7 +54,8 @@ func main() {
 
 	<-quit
 	log.Println("Shutting down...")
-	gui.Shutdown()
-	container.Stop()
+	gui.Close()
+	rpcServer.Close()
+	container.Close()
 	log.Println("Goodbye.")
 }

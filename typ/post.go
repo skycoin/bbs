@@ -55,9 +55,7 @@ func (p *Post) Sign(pk cipher.PubKey, sk cipher.SecKey) error {
 	p.Created = time.Now().UnixNano()
 	p.Signature = cipher.Sig{}
 	p.Signature = cipher.SignHash(
-		cipher.SumSHA256(encoder.Serialize(*p)),
-		sk,
-	)
+		cipher.SumSHA256(encoder.Serialize(*p)), sk)
 	return nil
 }
 
@@ -80,8 +78,6 @@ func (p Post) Verify() error {
 	p.Signature = cipher.Sig{}
 
 	return cipher.VerifySignature(
-		authorPK,
-		sig,
-		cipher.SumSHA256(encoder.Serialize(p)),
-	)
+		authorPK, sig,
+		cipher.SumSHA256(encoder.Serialize(p)))
 }

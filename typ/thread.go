@@ -2,6 +2,8 @@ package typ
 
 import (
 	"errors"
+	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strings"
 )
 
@@ -23,4 +25,17 @@ func (t *Thread) Check() error {
 		return errors.New("thread content too short")
 	}
 	return nil
+}
+
+func (t Thread) Sign(sk cipher.SecKey) cipher.Sig {
+	return cipher.SignHash(
+		cipher.SumSHA256(encoder.Serialize(t)), sk)
+}
+
+func (t Thread) Verify(pk cipher.PubKey, sig cipher.Sig) error {
+	if e := t.Check(); e != nil {
+		return e
+	}
+	return cipher.VerifySignature(
+		pk, sig, cipher.SumSHA256(encoder.Serialize(t)))
 }
