@@ -4,23 +4,7 @@ import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/store"
-	"github.com/evanlinjin/bbs/typ"
-	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/skycoin/src/cipher"
 )
-
-type ReqNewPost struct {
-	BoardPubKey cipher.PubKey
-	ThreadRef   skyobject.Reference
-	Post        *typ.Post
-}
-
-type ReqNewThread struct {
-	BoardPubKey cipher.PubKey
-	Creator     cipher.PubKey
-	Signature   cipher.Sig
-	Thread      *typ.Thread
-}
 
 type RPCGateway struct {
 	config     *cmd.Config
@@ -43,7 +27,7 @@ func NewRPCGateway(
 	}
 }
 
-func (g *RPCGateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
+func (g *RPCGateway) NewPost(req *store.ReqNewPost, ok *bool) (e error) {
 	if req == nil || req.Post == nil || ok == nil {
 		return errors.New("nil error")
 	}
@@ -67,7 +51,7 @@ func (g *RPCGateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
 	return g.container.NewPost(req.BoardPubKey, req.ThreadRef, req.Post)
 }
 
-func (g *RPCGateway) NewThread(req *ReqNewThread, ok *bool) (e error) {
+func (g *RPCGateway) NewThread(req *store.ReqNewThread, ok *bool) (e error) {
 	if req == nil || req.Thread == nil || ok == nil {
 		return errors.New("nil error")
 	}

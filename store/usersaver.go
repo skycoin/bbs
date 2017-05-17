@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-// UsersConfigFileName represents the layout of a configuration file of users.
+// UsersConfigFileName represents the filename of the users configuration file.
 const UsersConfigFileName = "bbs_users.json"
 
 // UsersConfigFile represents the layout of a configuration file of boards.

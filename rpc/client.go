@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/evanlinjin/bbs/extern"
+	"github.com/evanlinjin/bbs/store"
 	"github.com/evanlinjin/bbs/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -26,7 +26,7 @@ func (c *Client) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.
 	ok *bool, e error,
 ) {
 	ok = new(bool)
-	req := &extern.ReqNewPost{bpk, tRef, post}
+	req := &store.ReqNewPost{bpk, tRef, post}
 	e = c.rpc.Call("bbs.NewPost", req, ok)
 	return
 }
@@ -35,7 +35,7 @@ func (c *Client) NewThread(bpk, upk cipher.PubKey, usk cipher.SecKey, thread *ty
 	ok *bool, e error,
 ) {
 	ok = new(bool)
-	req := &extern.ReqNewThread{
+	req := &store.ReqNewThread{
 		bpk, upk,
 		thread.Sign(usk), thread,
 	}

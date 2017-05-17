@@ -18,9 +18,11 @@ func main() {
 	quit := cmd.CatchInterrupt()
 	config := cmd.NewConfig().Parse()
 	util.InitDataDir(config.ConfigDir())
+	defer log.Println("Goodbye.")
 
 	container, e := store.NewContainer(config)
 	cmd.CatchError(e, "unable to create cxo container")
+	defer container.Close()
 
 	boardSaver, e := store.NewBoardSaver(config, container)
 	cmd.CatchError(e, "unable to create board saver")
@@ -28,11 +30,16 @@ func main() {
 	userSaver, e := store.NewUserSaver(config, container)
 	cmd.CatchError(e, "unable to create user saver")
 
+	queueSaver, e := store.NewQueueSaver(config, container)
+	cmd.CatchError(e, "unable to create queue saver")
+	defer queueSaver.Close()
+
 	var rpcServer *rpc.Server
 	if config.Master() {
 		rpcGateway := extern.NewRPCGateway(config, container, boardSaver, userSaver)
 		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCServerPort())
 		cmd.CatchError(e, "unable to start rpc server")
+		defer rpcServer.Close()
 	}
 
 	if config.WebGUIEnable() {
@@ -42,6 +49,7 @@ func main() {
 		gateway := extern.NewGateway(config, container, boardSaver, userSaver)
 		e := gui.OpenWebInterface(host, gateway)
 		cmd.CatchError(e, "unable to start web server")
+		defer gui.Close()
 
 		if config.WebGUIOpenBrowser() {
 			go func() {
@@ -52,10 +60,6 @@ func main() {
 		}
 	}
 
+	defer log.Println("Shutting down...")
 	<-quit
-	log.Println("Shutting down...")
-	gui.Close()
-	rpcServer.Close()
-	container.Close()
-	log.Println("Goodbye.")
 }
