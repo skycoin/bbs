@@ -69,8 +69,70 @@ func (a *API) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	<<< FOR USERS >>>
 */
 
+func (a *API) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	sendResponse(w, a.g.GetCurrentUser(), http.StatusOK)
+}
 
+func (a *API) SetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	// Get user public key.
+	upkStr := r.FormValue("user")
+	upk, e := misc.GetPubKey(upkStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	// Set current user.
+	if e := a.g.SetCurrentUser(upk); e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, a.g.GetCurrentUser(), http.StatusOK)
+}
 
+func (a *API) GetMasterUsers(w http.ResponseWriter, r *http.Request) {
+	sendResponse(w, a.g.GetMasterUsers(), http.StatusOK)
+}
+
+func (a *API) NewMasterUser(w http.ResponseWriter, r *http.Request) {
+	// Get alias and seed.
+	alias := r.FormValue("alias")
+	seed := r.FormValue("seed")
+	uc := a.g.NewMasterUser(alias, seed)
+	sendResponse(w, uc, http.StatusOK)
+}
+
+func (a *API) GetUsers(w http.ResponseWriter, r *http.Request) {
+	sendResponse(w, a.g.GetUsers(), http.StatusOK)
+}
+
+func (a *API) NewUser(w http.ResponseWriter, r *http.Request) {
+	// Get user public key.
+	upkStr := r.FormValue("user")
+	upk, e := misc.GetPubKey(upkStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	// Get alias.
+	alias := r.FormValue("alias")
+	uc := a.g.NewUser(alias, upk)
+	sendResponse(w, uc, http.StatusOK)
+}
+
+func (a *API) RemoveUser(w http.ResponseWriter, r *http.Request) {
+	// Get user public key.
+	upkStr := r.FormValue("user")
+	upk, e := misc.GetPubKey(upkStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	if e := a.g.RemoveUser(upk); e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
+}
 
 /*
 	<<< FOR BOARDS, THREADS & POSTS >>>

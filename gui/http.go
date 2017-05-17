@@ -72,6 +72,14 @@ func NewServeMux(g *extern.Gateway, appLoc string) *http.ServeMux {
 	mux.HandleFunc("/api/subscribe", api.Subscribe)
 	mux.HandleFunc("/api/unsubscribe", api.Unsubscribe)
 
+	mux.HandleFunc("/api/users/get_current", api.GetCurrentUser)
+	mux.HandleFunc("/api/users/set_current", api.SetCurrentUser)
+	mux.HandleFunc("/api/users/get_masters", api.GetMasterUsers)
+	mux.HandleFunc("/api/users/new_master", api.NewMasterUser)
+	mux.HandleFunc("/api/users/get_all", api.GetUsers)
+	mux.HandleFunc("/api/users/new", api.NewUser)
+	mux.HandleFunc("/api/users/remove", api.RemoveUser)
+
 	mux.HandleFunc("/api/get_boards", api.GetBoards)
 	mux.HandleFunc("/api/new_board", api.NewBoard)
 	mux.HandleFunc("/api/get_threads", api.GetThreads)

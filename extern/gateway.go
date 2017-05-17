@@ -66,9 +66,14 @@ func (g *Gateway) GetCurrentUser() store.UserConfig {
 	return g.userSaver.GetCurrent()
 }
 
-// SetCurrent sets the currently active user.
-func (g *Gateway) SetCurrent(upk cipher.PubKey) error {
+// SetCurrentUser sets the currently active user.
+func (g *Gateway) SetCurrentUser(upk cipher.PubKey) error {
 	return g.userSaver.SetCurrent(upk)
+}
+
+// GetMasterUsers lists all users this node is master of.
+func (g *Gateway) GetMasterUsers() []store.UserConfig {
+	return g.userSaver.ListMasters()
 }
 
 // NewMasterUser creates a new user configuration of a master user.
@@ -78,11 +83,6 @@ func (g *Gateway) NewMasterUser(alias, seed string) store.UserConfig {
 	g.userSaver.MasterAdd(alias, pk, sk)
 	uc, _ := g.userSaver.Get(pk)
 	return uc
-}
-
-// GetMasterUsers lists all users this node is master of.
-func (g *Gateway) GetMasterUsers() []store.UserConfig {
-	return g.userSaver.ListMasters()
 }
 
 // GetUsers lists all users, master or not.
