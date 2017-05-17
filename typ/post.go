@@ -1,20 +1,20 @@
 package typ
 
 import (
-	"github.com/skycoin/skycoin/src/cipher"
-	"strings"
-	"time"
 	"errors"
+	"github.com/evanlinjin/bbs/misc"
+	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"math"
-	"github.com/evanlinjin/bbs/misc"
+	"strings"
+	"time"
 )
 
 // Post represents a post as stored in cxo.
 type Post struct {
 	Title     string     `json:"title"`
 	Body      string     `json:"body"`
-	Author   string     `json:"author"`
+	Author    string     `json:"author"`
 	Created   int64      `json:"created"`
 	Signature cipher.Sig `json:"-"`
 }

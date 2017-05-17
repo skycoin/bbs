@@ -1,8 +1,8 @@
 package typ
 
 import (
-	"strings"
 	"errors"
+	"strings"
 )
 
 // Thread represents a thread stored in cxo.

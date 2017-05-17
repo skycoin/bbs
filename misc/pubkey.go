@@ -3,8 +3,8 @@ package misc
 import (
 	"encoding/hex"
 	"errors"
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 // GetPubKey obtains a public key from string, avoiding panics.
