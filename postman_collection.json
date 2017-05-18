@@ -110,6 +110,33 @@
 					"response": []
 				},
 				{
+					"name": "Get ThreadPage",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/get_threadpage",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "thread",
+									"value": "10864517e610006b30cf334d8d6784e2cdc4a66c3a5e8c84ef093c5084156cef",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
 					"name": "Get Posts",
 					"request": {
 						"url": "http://127.0.0.1:6420/api/get_posts",
@@ -126,7 +153,7 @@
 								},
 								{
 									"key": "thread",
-									"value": "ab0a47cbea25b24505bac04e5a09f167cbe7cf27727975df6d8ce924bfe96c00",
+									"value": "10864517e610006b30cf334d8d6784e2cdc4a66c3a5e8c84ef093c5084156cef",
 									"type": "text",
 									"enabled": true
 								}

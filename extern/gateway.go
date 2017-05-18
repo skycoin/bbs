@@ -119,11 +119,11 @@ func (g *Gateway) GetBoards() []*typ.Board {
 
 // NewBoard creates a new board.
 func (g *Gateway) NewBoard(board *typ.Board, seed string) (bi store.BoardInfo, e error) {
-	bpk, bsk, e := g.container.NewBoard(board, seed)
-	if e != nil {
+	bpk, bsk := board.TouchWithSeed([]byte(seed))
+	if e = g.boardSaver.MasterAdd(bpk, bsk); e != nil {
 		return
 	}
-	if e = g.boardSaver.MasterAdd(bpk, bsk); e != nil {
+	if e = g.container.NewBoard(board, bpk, bsk); e != nil {
 		return
 	}
 	bi, _ = g.boardSaver.Get(bpk)
@@ -192,6 +192,20 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 		return g.queueSaver.AddNewThreadReq(bpk, uc.GetPK(), uc.GetSK(), thread)
 	}
 	return nil
+}
+
+type ThreadPageView struct {
+	Thread *typ.Thread `json:"thread"`
+	Posts []*typ.Post `json:"posts"`
+}
+
+func (g *Gateway) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*ThreadPageView, error) {
+	_, has := g.boardSaver.Get(bpk)
+	if has == false {
+		return nil, errors.New("not subscribed to board")
+	}
+	thread, posts, e := g.container.GetThreadPage(bpk, tRef)
+	return &ThreadPageView{thread, posts}, e
 }
 
 // GetPosts obtains posts of specified board and thread.

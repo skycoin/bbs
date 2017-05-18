@@ -189,6 +189,30 @@ func (a *API) NewThread(w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, thread, http.StatusOK)
 }
 
+func (a *API) GetThreadPage(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpkStr := r.FormValue("board")
+	bpk, e := misc.GetPubKey(bpkStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRefStr := r.FormValue("thread")
+	tRef, e := misc.GetReference(tRefStr)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	// Get thread page.
+	threadPage, e := a.g.GetThreadPage(bpk, tRef)
+	if e != nil {
+		sendResponse(w, e, http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, threadPage, http.StatusOK)
+}
+
 func (a *API) GetPosts(w http.ResponseWriter, r *http.Request) {
 	// Get board public key.
 	bpkStr := r.FormValue("board")

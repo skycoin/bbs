@@ -9,10 +9,11 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
 	"time"
+	"errors"
 )
 
 type Container struct {
-	*node.Container
+	c *node.Container
 	client *node.Client
 	config *cmd.Config
 }
@@ -41,7 +42,7 @@ func NewContainer(config *cmd.Config) (c *Container, e error) {
 	}
 
 	// Set Container.
-	c.Container = c.client.Container()
+	c.c = c.client.Container()
 
 	// Wait.
 	time.Sleep(5 * time.Second)
@@ -56,7 +57,7 @@ func (c *Container) Unsubscribe(pk cipher.PubKey) bool { return c.client.Unsubsc
 
 // ChangeBoardURL changes the board's URL of given public key.
 func (c *Container) ChangeBoardURL(bpk cipher.PubKey, url string) error {
-	w := c.LastRoot(bpk).Walker()
+	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
 		return e
@@ -73,7 +74,7 @@ func (c *Container) ChangeBoardURL(bpk cipher.PubKey, url string) error {
 
 // GetBoard attempts to obtain the board of a given public key.
 func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
-	w := c.LastRoot(bpk).Walker()
+	w := c.c.LastFullRoot(bpk).Walker()
 	bc := typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(&bc, makeBcFinder()); e != nil {
 		return nil, e
@@ -87,7 +88,7 @@ func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
 func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 	boards := make([]*typ.Board, len(bpks))
 	for i, bpk := range bpks {
-		w := c.LastRoot(bpk).Walker()
+		w := c.c.LastFullRoot(bpk).Walker()
 		bc, b := typ.BoardContainer{}, typ.Board{}
 		if e := w.AdvanceFromRoot(&bc, makeBcFinder()); e != nil {
 			continue
@@ -99,28 +100,27 @@ func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 }
 
 // NewBoard attempts to create a new board from a given board and seed.
-func (c *Container) NewBoard(board *typ.Board, seed string) (cipher.PubKey, cipher.SecKey, error) {
-	bpk, bsk := board.TouchWithSeed([]byte(seed))
-	r, e := c.NewRoot(bpk, bsk)
+func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKey) error {
+	r, e := c.c.NewRoot(pk, sk)
 	if e != nil {
-		return bpk, bsk, e
+		return e
 	}
 	bRef := r.Save(*board)
 	bCont := typ.BoardContainer{Board: bRef}
 	_, _, e = r.Inject("BoardContainer", bCont)
-	return bpk, bsk, e
+	return e
 }
 
 // GetThreads attempts to obtain a list of threads from a board of public key.
 func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
-	w := c.LastRoot(bpk).Walker()
+	w := c.c.LastFullRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
 		return nil, e
 	}
 	threads := make([]*typ.Thread, len(bc.Threads))
 	for i, tRef := range bc.Threads {
-		tData, has := c.Get(tRef)
+		tData, has := c.c.Get(tRef)
 		if has == false {
 			continue
 		}
@@ -135,11 +135,12 @@ func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 
 // NewThread attempts to create a new thread from a board of given public key.
 func (c *Container) NewThread(bpk cipher.PubKey, thread *typ.Thread) (e error) {
-	w := c.LastRoot(bpk).Walker()
+	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e = w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
 		return e
 	}
+	thread.MasterBoard = bpk.Hex()
 	var tRef skyobject.Reference
 	if tRef, e = w.AppendToRefsField("Threads", *thread); e != nil {
 		return e
@@ -149,9 +150,44 @@ func (c *Container) NewThread(bpk cipher.PubKey, thread *typ.Thread) (e error) {
 	return
 }
 
+func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*typ.Thread, []*typ.Post, error) {
+	w := c.c.LastFullRoot(bpk).Walker()
+	bc := &typ.BoardContainer{}
+	if e := w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
+		return nil, nil, e
+	}
+	// Get thread.
+	tData, has := c.c.Get(tRef)
+	if has == false {
+		return nil, nil, errors.New("unable to obtain thread")
+	}
+	thread := new(typ.Thread)
+	if e := encoder.DeserializeRaw(tData, thread); e != nil {
+		return nil, nil, e
+	}
+	thread.Ref = cipher.SHA256(tRef).Hex()
+	// Get posts.
+	tp := &typ.ThreadPage{}
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeTpFinder(tRef)); e != nil {
+		return nil, nil, e
+	}
+	posts := make([]*typ.Post, len(tp.Posts))
+	for i, pRef := range tp.Posts {
+		pData, has := c.c.Get(pRef)
+		if has == false {
+			continue
+		}
+		posts[i] = new(typ.Post)
+		if e := encoder.DeserializeRaw(pData, posts[i]); e != nil {
+			return nil, nil, e
+		}
+	}
+	return thread, posts, nil
+}
+
 // GetPosts attempts to obtain posts from a specified board and thread.
 func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.Post, error) {
-	w := c.LastRoot(bpk).Walker()
+	w := c.c.LastFullRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
 		return nil, e
@@ -162,7 +198,7 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 	}
 	posts := make([]*typ.Post, len(tp.Posts))
 	for i, pRef := range tp.Posts {
-		pData, has := c.Get(pRef)
+		pData, has := c.c.Get(pRef)
 		if has == false {
 			continue
 		}
@@ -176,7 +212,7 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 
 // NewPost attempts to create a new post in a given board and thread.
 func (c *Container) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) error {
-	w := c.LastRoot(bpk).Walker()
+	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
 		return e
