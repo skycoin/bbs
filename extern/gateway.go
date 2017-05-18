@@ -241,8 +241,8 @@ func (g *Gateway) TestNewFilledBoard(seed string, threads, minPosts, maxPosts in
 		return errors.New("invalid inputs")
 	}
 	b := &typ.Board{
-		Name: "Test Board "+ seed,
-		Desc: seed +" with "+string(threads)+" threads.",
+		Name: fmt.Sprintf("Test Board '%s'", seed),
+		Desc: fmt.Sprintf("A board with '%s' as seed and %d threads.", seed, threads),
 	}
 	bi, e := g.NewBoard(b, seed)
 	if e != nil {
@@ -251,17 +251,18 @@ func (g *Gateway) TestNewFilledBoard(seed string, threads, minPosts, maxPosts in
 	bpk := bi.BoardConfig.GetPK()
 	for i := 1; i <= threads; i++ {
 		t := &typ.Thread{
-			Name: "Thread "+string(i)+" on Board "+ seed,
-			Desc: "A test thread on board with seed "+ seed,
+			Name: fmt.Sprintf("Thread %d", i),
+			Desc: fmt.Sprintf("A test thread on board with seed '%s'.", seed),
 		}
 		if e := g.NewThread(bpk, t); e != nil {
 			return errors.New("on creating thread "+string(i)+"; "+e.Error())
 		}
 		nPosts := rand.Intn(maxPosts-minPosts)+ minPosts
 		for j := 1; j <= nPosts; j++ {
+
 			p := &typ.Post{
-				Title: "Post "+string(j),
-				Body: "This is post "+string(j)+" on thread "+string(i),
+				Title: fmt.Sprintf("Post %d", j),
+				Body: fmt.Sprintf("This is post %d on thread %d.", j, i),
 			}
 			if e := g.NewPost(bpk, t.GetRef(), p); e != nil {
 				return e
