@@ -62,3 +62,9 @@ fabric.properties
 
 # Config files.
 *.bak
+/tests/bbs_b/cli
+/tests/bbs_b/cxod
+/tests/bbs_b/main
+/tests/bbs_a/cli
+/tests/bbs_a/cxod
+/tests/bbs_a/main
