@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
@@ -58,12 +59,12 @@ type BoardInfo struct {
 type BoardSaver struct {
 	sync.Mutex
 	config *cmd.Config
-	c      *Container
+	c      *cxo.Container
 	store  map[cipher.PubKey]*BoardInfo
 }
 
 // NewBoardSaver creates a new BoardSaver.
-func NewBoardSaver(config *cmd.Config, container *Container) (*BoardSaver, error) {
+func NewBoardSaver(config *cmd.Config, container *cxo.Container) (*BoardSaver, error) {
 	bs := BoardSaver{
 		config: config,
 		c:      container,
@@ -84,7 +85,7 @@ func (bs *BoardSaver) load() error {
 	if e := util.LoadJSON(BoardsConfigFileName, &bcf); e != nil {
 		return e
 	}
-	// Check loaded boards and store in memory.
+	// Check loaded boards and intern in memory.
 	for _, bc := range bcf.Boards {
 		log.Printf("\t- %v (master: %v)", bc.PubKey, bc.Master)
 		bpk, e := bc.Check()

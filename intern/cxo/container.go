@@ -1,19 +1,19 @@
-package store
+package cxo
 
 import (
+	"errors"
 	"github.com/evanlinjin/bbs/cmd"
-	"github.com/evanlinjin/bbs/store/typ"
+	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strconv"
 	"time"
-	"errors"
 )
 
 type Container struct {
-	c *node.Container
+	c      *node.Container
 	client *node.Client
 	config *cmd.Config
 }

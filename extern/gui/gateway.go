@@ -1,13 +1,15 @@
-package extern
+package gui
 
 import (
 	"errors"
+	"fmt"
 	"github.com/evanlinjin/bbs/cmd"
-	"github.com/evanlinjin/bbs/store"
-	"github.com/evanlinjin/bbs/store/typ"
+	"github.com/evanlinjin/bbs/intern/cxo"
+	"github.com/evanlinjin/bbs/intern/store"
+	"github.com/evanlinjin/bbs/intern/store/msg"
+	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"fmt"
 	"math/rand"
 )
 
@@ -15,19 +17,19 @@ import (
 // It can be seen as a security layer.
 type Gateway struct {
 	config     *cmd.Config
-	container  *store.Container
+	container  *cxo.Container
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
-	queueSaver *store.QueueSaver
+	queueSaver *msg.QueueSaver
 }
 
 // NewGateway creates a new Gateway.
 func NewGateway(
 	config *cmd.Config,
-	container *store.Container,
+	container *cxo.Container,
 	boardSaver *store.BoardSaver,
 	userSaver *store.UserSaver,
-	queueSaver *store.QueueSaver,
+	queueSaver *msg.QueueSaver,
 ) *Gateway {
 	return &Gateway{
 		config:     config,
@@ -196,7 +198,7 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 
 type ThreadPageView struct {
 	Thread *typ.Thread `json:"thread"`
-	Posts []*typ.Post `json:"posts"`
+	Posts  []*typ.Post `json:"posts"`
 }
 
 func (g *Gateway) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*ThreadPageView, error) {
@@ -269,14 +271,14 @@ func (g *Gateway) TestNewFilledBoard(seed string, threads, minPosts, maxPosts in
 			Desc: fmt.Sprintf("A test thread on board with seed '%s'.", seed),
 		}
 		if e := g.NewThread(bpk, t); e != nil {
-			return errors.New("on creating thread "+string(i)+"; "+e.Error())
+			return errors.New("on creating thread " + string(i) + "; " + e.Error())
 		}
-		nPosts := rand.Intn(maxPosts-minPosts)+ minPosts
+		nPosts := rand.Intn(maxPosts-minPosts) + minPosts
 		for j := 1; j <= nPosts; j++ {
 
 			p := &typ.Post{
 				Title: fmt.Sprintf("Post %d", j),
-				Body: fmt.Sprintf("This is post %d on thread %d.", j, i),
+				Body:  fmt.Sprintf("This is post %d on thread %d.", j, i),
 			}
 			if e := g.NewPost(bpk, t.GetRef(), p); e != nil {
 				return e

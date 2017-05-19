@@ -1,33 +1,37 @@
-package extern
+package rpc
 
 import (
 	"net"
+	"net/http"
 	"net/rpc"
 	"strconv"
 	"sync"
 )
 
-type RPCServer struct {
+type Server struct {
 	l      net.Listener
 	rpc    *rpc.Server
-	g      *RPCGateway
+	g      *Gateway
 	waiter sync.WaitGroup
 }
 
-func NewRPCServer(g *RPCGateway, port int) (*RPCServer, error) {
-	s := &RPCServer{
+func NewServer(g *Gateway, port int) (*Server, error) {
+	s := &Server{
 		rpc: rpc.NewServer(),
 		g:   g,
 	}
-	if e := s.open("[::]:" + strconv.Itoa(port)); e != nil {
+	if e := s.open(":" + strconv.Itoa(port)); e != nil {
 		return nil, e
 	}
 	return s, nil
 }
 
-func (s *RPCServer) open(address string) error {
+func (s *Server) open(address string) error {
 	var e error
-	if e = s.rpc.RegisterName("bbs", s.g); e != nil {
+	//if e = s.rpc.RegisterName("bbs", s.g); e != nil {
+	//	return e
+	//}
+	if e = s.rpc.Register(s.g); e != nil {
 		return e
 	}
 	if s.l, e = net.Listen("tcp", address); e != nil {
@@ -36,13 +40,13 @@ func (s *RPCServer) open(address string) error {
 	s.waiter.Add(1)
 	go func(l net.Listener) {
 		defer s.waiter.Done()
-		s.rpc.Accept(l)
+		http.Serve(s.l, nil)
 	}(s.l)
 	return nil
 }
 
 // Close closes the rpc server.
-func (s *RPCServer) Close() error {
+func (s *Server) Close() error {
 	if s == nil {
 		return nil
 	}
@@ -55,7 +59,7 @@ func (s *RPCServer) Close() error {
 }
 
 // Address prints the rpc server's address.
-func (s *RPCServer) Address() string {
+func (s *Server) Address() string {
 	if s.l != nil {
 		return s.l.Addr().String()
 	}

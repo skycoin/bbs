@@ -1,4 +1,4 @@
-package store
+package cxo
 
 import "github.com/skycoin/cxo/skyobject"
 

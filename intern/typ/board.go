@@ -16,7 +16,7 @@ type Board struct {
 	Name    string `json:"name"`
 	Desc    string `json:"description"`
 	PubKey  string `json:"public_key"`
-	URL     string `json:"-"`
+	URL     string `json:"url"`
 	Created int64  `json:"created"`
 }
 

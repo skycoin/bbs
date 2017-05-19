@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/evanlinjin/bbs/cmd"
-	"github.com/evanlinjin/bbs/extern"
 	"github.com/evanlinjin/bbs/extern/gui"
-	"github.com/evanlinjin/bbs/store"
+	"github.com/evanlinjin/bbs/extern/rpc"
+	"github.com/evanlinjin/bbs/intern/cxo"
+	"github.com/evanlinjin/bbs/intern/store"
+	"github.com/evanlinjin/bbs/intern/store/msg"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"time"
@@ -17,9 +19,11 @@ func main() {
 	quit := cmd.CatchInterrupt()
 	config := cmd.NewConfig().Parse()
 	util.InitDataDir(config.ConfigDir())
+	log.Println("[CONFIG] Master mode:", config.Master())
 	defer log.Println("Goodbye.")
 
-	container, e := store.NewContainer(config)
+	log.Println("[CONFIG] Connecting to cxo on port", config.CXOPort())
+	container, e := cxo.NewContainer(config)
 	cmd.CatchError(e, "unable to create cxo container")
 	defer container.Close()
 
@@ -29,14 +33,14 @@ func main() {
 	userSaver, e := store.NewUserSaver(config, container)
 	cmd.CatchError(e, "unable to create user saver")
 
-	queueSaver, e := store.NewQueueSaver(config, container)
+	queueSaver, e := msg.NewQueueSaver(config, container)
 	cmd.CatchError(e, "unable to create queue saver")
 	defer queueSaver.Close()
 
-	var rpcServer *extern.RPCServer
+	var rpcServer *rpc.Server
 	if config.Master() {
-		rpcGateway := extern.NewRPCGateway(config, container, boardSaver, userSaver)
-		rpcServer, e = extern.NewRPCServer(rpcGateway, config.RPCServerPort())
+		rpcGateway := rpc.NewGateway(config, container, boardSaver, userSaver)
+		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCServerPort())
 		cmd.CatchError(e, "unable to start rpc server")
 		defer rpcServer.Close()
 	}
@@ -45,7 +49,7 @@ func main() {
 		host := fmt.Sprintf("%s:%d", LocalhostAddress, config.WebGUIPort())
 		fullAddress := fmt.Sprintf("%s://%s", "http", host)
 
-		gateway := extern.NewGateway(config, container, boardSaver, userSaver, queueSaver)
+		gateway := gui.NewGateway(config, container, boardSaver, userSaver, queueSaver)
 		e := gui.OpenWebInterface(host, gateway)
 		cmd.CatchError(e, "unable to start web server")
 		defer gui.Close()

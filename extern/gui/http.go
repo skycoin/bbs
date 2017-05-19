@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"github.com/evanlinjin/bbs/extern"
 	"github.com/skycoin/skycoin/src/util"
 	"net"
 	"net/http"
@@ -18,7 +17,7 @@ const (
 	devDir      = "dev/"
 )
 
-func OpenWebInterface(host string, g *extern.Gateway) (e error) {
+func OpenWebInterface(host string, g *Gateway) (e error) {
 	quit = make(chan struct{})
 
 	appLoc, e := util.DetermineResourcePath(guiDir, resourceDir, devDir)
@@ -58,7 +57,7 @@ func Close() {
 }
 
 // NewServeMux creates a http.ServeMux with handlers registered.
-func NewServeMux(g *extern.Gateway, appLoc string) *http.ServeMux {
+func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 	// Register objects.
 	api := NewAPI(g)
 

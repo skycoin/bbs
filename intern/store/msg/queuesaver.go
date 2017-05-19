@@ -1,10 +1,11 @@
-package store
+package msg
 
 import (
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/extern/rpc"
+	"github.com/evanlinjin/bbs/intern/cxo"
+	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/evanlinjin/bbs/misc"
-	"github.com/evanlinjin/bbs/store/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
@@ -45,13 +46,13 @@ func (qi *QueueItem) SetThread(req *rpc.ReqNewThread) *QueueItem {
 type QueueSaver struct {
 	sync.Mutex
 	config *cmd.Config
-	c      *Container
+	c      *cxo.Container
 	queue  []*QueueItem
 	done   []*QueueItem
 	quit   chan struct{}
 }
 
-func NewQueueSaver(config *cmd.Config, container *Container) (*QueueSaver, error) {
+func NewQueueSaver(config *cmd.Config, container *cxo.Container) (*QueueSaver, error) {
 	qs := QueueSaver{
 		config: config,
 		c:      container,

@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/evanlinjin/bbs/store/typ"
+	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )

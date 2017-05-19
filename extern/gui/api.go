@@ -3,21 +3,19 @@ package gui
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/evanlinjin/bbs/extern"
+	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/evanlinjin/bbs/misc"
 	"net/http"
-	//"log"
-	"github.com/evanlinjin/bbs/store/typ"
 	"strconv"
 )
 
 // API wraps cxo.Gateway.
 type API struct {
-	g *extern.Gateway
+	g *Gateway
 }
 
 // NewAPI creates a new API.
-func NewAPI(g *extern.Gateway) *API {
+func NewAPI(g *Gateway) *API {
 	return &API{g}
 }
 

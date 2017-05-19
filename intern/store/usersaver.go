@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
@@ -59,14 +60,14 @@ func (uc *UserConfig) Check() (cipher.PubKey, error) {
 type UserSaver struct {
 	sync.Mutex
 	config  *cmd.Config
-	c       *Container
+	c       *cxo.Container
 	store   map[cipher.PubKey]*UserConfig // All UserConfigs.
 	masters map[cipher.PubKey]*UserConfig // UserConfigs of users we own.
 	current cipher.PubKey                 // Currently active user.
 }
 
 // NewUserSaver creates a new UserSaver.
-func NewUserSaver(config *cmd.Config, container *Container) (*UserSaver, error) {
+func NewUserSaver(config *cmd.Config, container *cxo.Container) (*UserSaver, error) {
 	us := UserSaver{
 		config:  config,
 		c:       container,
@@ -88,7 +89,7 @@ func (us *UserSaver) load() error {
 	if e := util.LoadJSON(UsersConfigFileName, &ucf); e != nil {
 		log.Println("[USERSAVER]", e)
 	}
-	// Check loaded users and store in memory.
+	// Check loaded users and intern in memory.
 	for _, uc := range ucf.Users {
 		log.Printf("\t- %v (master: %v)", uc.PubKey, uc.Master)
 		upk, e := uc.Check()
