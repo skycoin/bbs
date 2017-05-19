@@ -125,6 +125,7 @@ func (g *Gateway) NewBoard(board *typ.Board, seed string) (bi store.BoardInfo, e
 	if e = g.boardSaver.MasterAdd(bpk, bsk); e != nil {
 		return
 	}
+	board.URL = g.config.RPCServerRemAdr()
 	if e = g.container.NewBoard(board, bpk, bsk); e != nil {
 		return
 	}

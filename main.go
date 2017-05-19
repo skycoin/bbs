@@ -43,6 +43,8 @@ func main() {
 		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCServerPort())
 		cmd.CatchError(e, "unable to start rpc server")
 		defer rpcServer.Close()
+
+		log.Println("[RPC SERVER] Serving on address:", rpcServer.Address())
 	}
 
 	if config.WebGUIEnable() {

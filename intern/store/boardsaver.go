@@ -98,7 +98,24 @@ func (bs *BoardSaver) load() error {
 		log.Println("\t\t loaded in memory")
 	}
 	bs.checkSynced()
+	if bs.config.Master() {
+		bs.checkURLs()
+	}
 	return nil
+}
+
+func (bs *BoardSaver) checkURLs() {
+	for bpk, bi := range bs.store {
+		if bi.BoardConfig.Master {
+			b, e := bs.c.GetBoard(bpk)
+			if e != nil {
+				continue
+			}
+			if b.URL != bs.config.RPCServerRemAdr() {
+				bs.c.ChangeBoardURL(bpk, bs.config.RPCServerRemAdr())
+			}
+		}
+	}
 }
 
 // Helper function. Saves boards into configuration file.
