@@ -168,18 +168,26 @@ func (qs *QueueSaver) AddNewPostReq(bpk cipher.PubKey, tRef skyobject.Reference,
 func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey, thread *typ.Thread) error {
 	qs.Lock()
 	defer qs.Unlock()
+	log.Println("[QUEUESAVER] New Thread Request.")
 	req := &rpc.ReqNewThread{bpk, upk, thread.Sign(usk), thread}
 	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
+		log.Println("\t-", e)
 		return e
 	}
+	log.Println("\t- Obtained Board.")
 	rpcClient, e := rpc.NewClient(b.URL)
 	if e != nil {
 		// Add to queue.
+		log.Println("\t-", e)
 		qs.queue = append(qs.queue, NewQueueItem().SetThread(req))
 		qs.save()
-		return nil
+		return e
 	}
 	_, e = rpcClient.NewThread(req)
+	if e != nil {
+		log.Println("\t-", e)
+		return e
+	}
 	return e
 }

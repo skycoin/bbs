@@ -65,6 +65,7 @@ func main() {
 		}
 	}
 
+	log.Println("!!! EVERYTHING UP AND RUNNING !!!")
 	defer log.Println("Shutting down...")
 	<-quit
 }

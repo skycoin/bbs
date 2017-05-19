@@ -6,6 +6,7 @@ import (
 	"net/rpc"
 	"strconv"
 	"sync"
+	"log"
 )
 
 type Server struct {
@@ -41,6 +42,7 @@ func (s *Server) open(address string) error {
 	go func(l net.Listener) {
 		defer s.waiter.Done()
 		http.Serve(s.l, nil)
+		log.Println("[RPCSERVER] Closed.")
 	}(s.l)
 	return nil
 }
