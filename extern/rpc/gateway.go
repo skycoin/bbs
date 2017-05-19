@@ -5,6 +5,7 @@ import (
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/intern/store"
+	"log"
 )
 
 type Gateway struct {
@@ -53,6 +54,7 @@ func (g *Gateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
 }
 
 func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) (e error) {
+	log.Println("[RPCGATEWAY] Recieved NewThread Request.")
 	if req == nil || req.Thread == nil || ok == nil {
 		return errors.New("nil error")
 	}

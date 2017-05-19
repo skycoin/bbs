@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"net"
-	"net/http"
 	"net/rpc"
 	"strconv"
 	"sync"
@@ -29,9 +28,6 @@ func NewServer(g *Gateway, port int) (*Server, error) {
 
 func (s *Server) open(address string) error {
 	var e error
-	//if e = s.rpc.RegisterName("bbs", s.g); e != nil {
-	//	return e
-	//}
 	if e = s.rpc.Register(s.g); e != nil {
 		return e
 	}
@@ -41,7 +37,7 @@ func (s *Server) open(address string) error {
 	s.waiter.Add(1)
 	go func(l net.Listener) {
 		defer s.waiter.Done()
-		http.Serve(s.l, nil)
+		s.rpc.Accept(l)
 		log.Println("[RPCSERVER] Closed.")
 	}(s.l)
 	return nil
