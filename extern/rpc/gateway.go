@@ -53,7 +53,7 @@ func (g *Gateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
 	return g.container.NewPost(req.BoardPubKey, bi.BoardConfig.GetSK(), req.ThreadRef, req.Post)
 }
 
-func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) (e error) {
+func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) (error) {
 	log.Println("[RPCGATEWAY] Recieved NewThread Request.")
 	if req == nil || req.Thread == nil || ok == nil {
 		return errors.New("nil error")
@@ -74,7 +74,11 @@ func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) (e error) {
 		*ok = false
 		return errors.New("not master of board")
 	}
+	// Create new thread.
+	if e := g.container.NewThread(req.BoardPubKey, bi.BoardConfig.GetSK(), req.Thread); e != nil {
+		return e
+	}
 	// Modify thread.
 	req.Thread.MasterBoard = req.BoardPubKey.Hex()
-	return g.container.NewThread(req.BoardPubKey, bi.BoardConfig.GetSK(), req.Thread)
+	return nil
 }
