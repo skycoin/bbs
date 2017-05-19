@@ -56,8 +56,8 @@ func (c *Container) Subscribe(pk cipher.PubKey) bool   { return c.client.Subscri
 func (c *Container) Unsubscribe(pk cipher.PubKey) bool { return c.client.Unsubscribe(pk) }
 
 // ChangeBoardURL changes the board's URL of given public key.
-func (c *Container) ChangeBoardURL(bpk cipher.PubKey, url string) error {
-	w := c.c.LastRoot(bpk).Walker()
+func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url string) error {
+	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
 		return e
@@ -134,8 +134,8 @@ func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 }
 
 // NewThread attempts to create a new thread from a board of given public key.
-func (c *Container) NewThread(bpk cipher.PubKey, thread *typ.Thread) (e error) {
-	w := c.c.LastRoot(bpk).Walker()
+func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.Thread) (e error) {
+	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e = w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
 		return e
@@ -211,8 +211,8 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 }
 
 // NewPost attempts to create a new post in a given board and thread.
-func (c *Container) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) error {
-	w := c.c.LastRoot(bpk).Walker()
+func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, post *typ.Post) error {
+	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBcFinder()); e != nil {
 		return e

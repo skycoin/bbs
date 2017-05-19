@@ -49,6 +49,11 @@ func (bc *BoardConfig) GetPK() cipher.PubKey {
 	return pk
 }
 
+func (bc *BoardConfig) GetSK() cipher.SecKey {
+	sk, _ := misc.GetSecKey(bc.SecKey)
+	return sk
+}
+
 // BoardInfo represents the board's information.
 type BoardInfo struct {
 	Synced      bool        `json:"synced"`
@@ -112,7 +117,7 @@ func (bs *BoardSaver) checkURLs() {
 				continue
 			}
 			if b.URL != bs.config.RPCServerRemAdr() {
-				bs.c.ChangeBoardURL(bpk, bs.config.RPCServerRemAdr())
+				bs.c.ChangeBoardURL(bpk, bi.BoardConfig.GetSK(), bs.config.RPCServerRemAdr())
 			}
 		}
 	}

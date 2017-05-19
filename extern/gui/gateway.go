@@ -186,7 +186,7 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 	// Check if this BBS Node owns the board.
 	if bi.BoardConfig.Master == true {
 		// Via Container.
-		if e := g.container.NewThread(bpk, thread); e != nil {
+		if e := g.container.NewThread(bpk, bi.BoardConfig.GetSK(), thread); e != nil {
 			return e
 		}
 	} else {
@@ -237,7 +237,7 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 	// Check if this BBS Node owns the board.
 	if bi.BoardConfig.Master == true {
 		// Via Container.
-		if e := g.container.NewPost(bpk, tRef, post); e != nil {
+		if e := g.container.NewPost(bpk, bi.BoardConfig.GetSK(), tRef, post); e != nil {
 			fmt.Println(e)
 			return e
 		}

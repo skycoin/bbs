@@ -50,7 +50,7 @@ func (g *Gateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
 		return errors.New("not master of board")
 	}
 	*ok = true
-	return g.container.NewPost(req.BoardPubKey, req.ThreadRef, req.Post)
+	return g.container.NewPost(req.BoardPubKey, bi.BoardConfig.GetSK(), req.ThreadRef, req.Post)
 }
 
 func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) (e error) {
@@ -80,5 +80,5 @@ func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) (e error) {
 	}
 	// Modify thread.
 	req.Thread.MasterBoard = req.BoardPubKey.Hex()
-	return g.container.NewThread(req.BoardPubKey, req.Thread)
+	return g.container.NewThread(req.BoardPubKey, bi.BoardConfig.GetSK(), req.Thread)
 }
