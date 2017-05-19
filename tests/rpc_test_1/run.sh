@@ -37,9 +37,3 @@ curl \
     http://127.0.0.1:$b_bbsgui/api/get_threads \
     | ydump
 sleep 1
-
-# Cleanup.
-
-wait
-echo "[ CLEANING UP ]"
-rm cli cxod main *.bak *.json

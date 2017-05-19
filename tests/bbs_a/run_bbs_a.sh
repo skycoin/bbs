@@ -37,7 +37,8 @@ echo "> BBS SERVER ..."
     --cxo-port=$a_cxod \
     --rpc-server-port=$a_bbsrpc \
     --rpc-server-remote-address=127.0.0.1:$a_bbsrpc \
-    --web-gui-port=$a_bbsgui
+    --web-gui-port=$a_bbsgui \
+    --web-gui-open-browser=false
 
 # Cleanup.
 

@@ -2,7 +2,6 @@ package gui
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/evanlinjin/bbs/misc"
 	"net/http"
@@ -31,7 +30,7 @@ func (a *API) GetSubscription(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, fmt.Sprintln(e), http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	bi, has := a.g.GetSubscription(bpk)
@@ -46,7 +45,7 @@ func (a *API) Subscribe(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	a.g.Subscribe(bpk)
@@ -57,7 +56,7 @@ func (a *API) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	a.g.Unsubscribe(bpk)
@@ -77,12 +76,12 @@ func (a *API) SetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	upkStr := r.FormValue("user")
 	upk, e := misc.GetPubKey(upkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Set current user.
 	if e := a.g.SetCurrentUser(upk); e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, a.g.GetCurrentUser(), http.StatusOK)
@@ -109,7 +108,7 @@ func (a *API) NewUser(w http.ResponseWriter, r *http.Request) {
 	upkStr := r.FormValue("user")
 	upk, e := misc.GetPubKey(upkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get alias.
@@ -123,11 +122,11 @@ func (a *API) RemoveUser(w http.ResponseWriter, r *http.Request) {
 	upkStr := r.FormValue("user")
 	upk, e := misc.GetPubKey(upkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	if e := a.g.RemoveUser(upk); e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, true, http.StatusOK)
@@ -148,7 +147,7 @@ func (a *API) NewBoard(w http.ResponseWriter, r *http.Request) {
 	board := &typ.Board{Name: name, Desc: desc}
 	bi, e := a.g.NewBoard(board, seed)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 	} else {
 		sendResponse(w, bi, http.StatusOK)
 	}
@@ -162,7 +161,7 @@ func (a *API) GetThreads(w http.ResponseWriter, r *http.Request) {
 	}
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, a.g.GetThreads(bpk), http.StatusOK)
@@ -173,7 +172,7 @@ func (a *API) NewThread(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread values.
@@ -181,7 +180,7 @@ func (a *API) NewThread(w http.ResponseWriter, r *http.Request) {
 	desc := r.FormValue("description")
 	thread := &typ.Thread{Name: name, Desc: desc, MasterBoard: bpk.Hex()}
 	if e := a.g.NewThread(bpk, thread); e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, thread, http.StatusOK)
@@ -192,20 +191,20 @@ func (a *API) GetThreadPage(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread reference.
 	tRefStr := r.FormValue("thread")
 	tRef, e := misc.GetReference(tRefStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread page.
 	threadPage, e := a.g.GetThreadPage(bpk, tRef)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, threadPage, http.StatusOK)
@@ -216,19 +215,19 @@ func (a *API) GetPosts(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread reference.
 	tRefStr := r.FormValue("thread")
 	tRef, e := misc.GetReference(tRefStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	posts, e := a.g.GetPosts(bpk, tRef)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, posts, http.StatusOK)
@@ -239,14 +238,14 @@ func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	bpk, e := misc.GetPubKey(bpkStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread reference.
 	tRefStr := r.FormValue("thread")
 	tRef, e := misc.GetReference(tRefStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get post values.
@@ -254,7 +253,7 @@ func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
 	body := r.FormValue("body")
 	post := &typ.Post{Title: title, Body: body}
 	if e := a.g.NewPost(bpk, tRef, post); e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, post, http.StatusOK)
@@ -270,26 +269,26 @@ func (a *API) TestNewFilledBoard(w http.ResponseWriter, r *http.Request) {
 	threadsStr := r.FormValue("threads")
 	threads, e := strconv.Atoi(threadsStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
 	minPostsStr := r.FormValue("min_posts")
 	minPosts, e := strconv.Atoi(minPostsStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
 	maxPostsStr := r.FormValue("max_posts")
 	maxPosts, e := strconv.Atoi(maxPostsStr)
 	if e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if e := a.g.TestNewFilledBoard(seed, threads, minPosts, maxPosts); e != nil {
-		sendResponse(w, e, http.StatusBadRequest)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, true, http.StatusOK)
