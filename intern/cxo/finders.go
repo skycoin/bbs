@@ -2,13 +2,13 @@ package cxo
 
 import "github.com/skycoin/cxo/skyobject"
 
-func makeBcFinder() func(v *skyobject.Value) bool {
+func makeBoardContainerFinder() func(v *skyobject.Value) bool {
 	return func(v *skyobject.Value) bool {
 		return v.Schema().Name() == "BoardContainer"
 	}
 }
 
-func makeTpFinder(tRef skyobject.Reference) func(v *skyobject.Value) bool {
+func makeThreadPageFinder(tRef skyobject.Reference) func(v *skyobject.Value) bool {
 	return func(v *skyobject.Value) bool {
 		tVal, e := v.FieldByName("Thread")
 		if e != nil {
@@ -19,5 +19,14 @@ func makeTpFinder(tRef skyobject.Reference) func(v *skyobject.Value) bool {
 			return false
 		}
 		return ref == tRef
+	}
+}
+
+func makeThreadFinder(tRef skyobject.Reference) func(v *skyobject.Value) bool {
+	return func(v *skyobject.Value) bool {
+		if r, _ := v.Static(); r == tRef {
+			return true
+		}
+		return false
 	}
 }
