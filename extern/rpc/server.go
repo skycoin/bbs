@@ -1,11 +1,11 @@
 package rpc
 
 import (
+	"log"
 	"net"
 	"net/rpc"
 	"strconv"
 	"sync"
-	"log"
 )
 
 type Server struct {

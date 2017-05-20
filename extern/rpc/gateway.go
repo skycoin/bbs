@@ -53,7 +53,7 @@ func (g *Gateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
 	return g.container.NewPost(req.BoardPubKey, bi.BoardConfig.GetSK(), req.ThreadRef, req.Post)
 }
 
-func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) (error) {
+func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) error {
 	log.Println("[RPCGATEWAY] Recieved NewThread Request.")
 	if req == nil || req.Thread == nil || ok == nil {
 		return errors.New("nil error")

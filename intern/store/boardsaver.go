@@ -24,6 +24,7 @@ type BoardConfig struct {
 	PubKey       string   `json:"public_key"`
 	SecKey       string   `json:"secret_key,omitempty"`
 	Dependencies []string `json:"dependencies,omitempty"`
+	Dependents   []string `json:"dependents,omitempty"`
 }
 
 // Check checks the validity of the BoardConfig.
@@ -52,6 +53,44 @@ func (bc *BoardConfig) GetPK() cipher.PubKey {
 func (bc *BoardConfig) GetSK() cipher.SecKey {
 	sk, _ := misc.GetSecKey(bc.SecKey)
 	return sk
+}
+
+func (bc *BoardConfig) AddDependency(pk cipher.PubKey) {
+	pkStr := pk.Hex()
+	for _, d := range bc.Dependencies {
+		if d == pkStr {
+			return
+		}
+	}
+	bc.Dependencies = append(bc.Dependencies, pkStr)
+}
+
+func (bc *BoardConfig) RemoveDependency(pk cipher.PubKey) {
+	pkStr := pk.Hex()
+	for i := len(bc.Dependencies)-1; i >= 0; i-- {
+		if bc.Dependencies[i] == pkStr {
+			bc.Dependencies = append(bc.Dependencies[:i], bc.Dependencies[i+1:]...)
+		}
+	}
+}
+
+func (bc *BoardConfig) AddDependent(pk cipher.PubKey) {
+	pkStr := pk.Hex()
+	for _, d := range bc.Dependents {
+		if d == pkStr {
+			return
+		}
+	}
+	bc.Dependents = append(bc.Dependents, pkStr)
+}
+
+func (bc *BoardConfig) RemoveDependent(pk cipher.PubKey) {
+	pkStr := pk.Hex()
+	for i := len(bc.Dependents)-1; i >= 0; i-- {
+		if bc.Dependents[i] == pkStr {
+			bc.Dependents = append(bc.Dependents[:i], bc.Dependents[i+1:]...)
+		}
+	}
 }
 
 // BoardInfo represents the board's information.
