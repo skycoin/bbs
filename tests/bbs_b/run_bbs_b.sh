@@ -2,6 +2,7 @@
 
 b_cxod=8988
 b_cxorpc=8987
+b_cxodir=bbs_b_server
 b_bbsrpc=6481
 b_bbsgui=6480
 
@@ -22,6 +23,8 @@ echo "> CXO DAEMON ..."
 ./cxod \
     --address=[::]:$b_cxod \
     --rpc-address=[::]:$b_cxorpc \
+    --mem-db=true \
+    --data-dir=$b_cxodir \
     &
 sleep 5
 echo "> ADDING FEEDS ..."
