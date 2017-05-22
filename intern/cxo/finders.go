@@ -1,8 +1,8 @@
 package cxo
 
 import (
-	"github.com/skycoin/cxo/skyobject"
 	"fmt"
+	"github.com/skycoin/cxo/skyobject"
 )
 
 func makeBoardContainerFinder() func(v *skyobject.Value) bool {

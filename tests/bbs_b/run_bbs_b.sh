@@ -39,6 +39,8 @@ echo "> BBS SERVER ..."
 ./main \
     --master=true \
     --cxo-port=$b_cxod \
+    --cxo-use-memory=true \
+    --cxo-dir=bbs_b \
     --rpc-server-port=$b_bbsrpc \
     --rpc-server-remote-address=127.0.0.1:$b_bbsrpc \
     --web-gui-port=$b_bbsgui \

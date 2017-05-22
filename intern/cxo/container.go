@@ -2,6 +2,7 @@ package cxo
 
 import (
 	"errors"
+	"fmt"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/skycoin/cxo/node"
@@ -30,8 +31,13 @@ func NewContainer(config *cmd.Config) (c *Container, e error) {
 	r.Register("BoardContainer", typ.BoardContainer{})
 	r.Done()
 
+	// Setup cxo config.
+	cc := node.NewClientConfig()
+	cc.InMemoryDB = config.CXOUseMemory()
+	cc.DataDir = config.CXODir()
+
 	// Setup cxo client.
-	c.client, e = node.NewClient(node.NewClientConfig(), r)
+	c.client, e = node.NewClient(cc, r)
 	if e != nil {
 		return
 	}
@@ -104,11 +110,15 @@ func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKey) error {
 	r, e := c.c.NewRoot(pk, sk)
 	if e != nil {
+		fmt.Println("[Container.NewBoard] [113] Error:", e)
 		return e
 	}
 	bRef := r.Save(*board)
 	bCont := typ.BoardContainer{Board: bRef}
 	_, _, e = r.Inject("BoardContainer", bCont)
+	if e != nil {
+		fmt.Println("[Container.NewBoard] [120] Error:", e)
+	}
 	return e
 }
 
@@ -230,7 +240,7 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 // If already imported, it replaces.
 func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tRef skyobject.Reference) error {
 	// Get from 'from' Board.
-	w := c.c.LastRoot(fromBpk).Walker()
+	w := c.c.LastFullRoot(fromBpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
 		return e

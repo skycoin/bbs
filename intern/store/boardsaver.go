@@ -4,11 +4,13 @@ import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/intern/cxo"
+	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"sync"
+	"time"
 )
 
 const BoardSaverFileName = "bbs_boards.json"
@@ -30,6 +32,7 @@ type BoardSaver struct {
 	config *cmd.Config
 	c      *cxo.Container
 	store  map[cipher.PubKey]*BoardInfo
+	quit   chan struct{}
 }
 
 // NewBoardSaver creates a new BoardSaver.
@@ -38,12 +41,23 @@ func NewBoardSaver(config *cmd.Config, container *cxo.Container) (*BoardSaver, e
 		config: config,
 		c:      container,
 		store:  make(map[cipher.PubKey]*BoardInfo),
+		quit:   make(chan struct{}),
 	}
 	bs.load()
 	if e := bs.save(); e != nil {
 		return nil, e
 	}
 	return &bs, nil
+}
+
+func (bs *BoardSaver) Close() {
+	for {
+		select {
+		case bs.quit<- struct{}{}:
+		default:
+			return
+		}
+	}
 }
 
 // Helper function. Loads and checks boards' configuration file to memory.
@@ -69,10 +83,29 @@ func (bs *BoardSaver) load() error {
 	bs.checkSynced()
 	if bs.config.Master() {
 		bs.checkURLs()
+		bs.checkDeps()
+		go bs.service()
 	}
 	return nil
 }
 
+// Keeps imported threads synced.
+func (bs *BoardSaver) service() {
+	ticker := time.NewTicker(30 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			bs.Lock()
+			bs.checkDeps()
+			bs.Unlock()
+
+		case <-bs.quit:
+			return
+		}
+	}
+}
+
+// Helper function. Check's the URL's of the boards which this node is master over.
 func (bs *BoardSaver) checkURLs() {
 	for bpk, bi := range bs.store {
 		if bi.Config.Master {
@@ -106,10 +139,31 @@ func (bs *BoardSaver) checkSynced() {
 // TODO: Implement.
 func (bs *BoardSaver) checkDeps() {
 	for _, bi := range bs.store {
-		for _, dep := range bi.Config.Deps {
-			b := dep.Board
+		for j, dep := range bi.Config.Deps {
+			fromBpk, e := misc.GetPubKey(dep.Board)
+			if e != nil {
+				log.Println("[BOARDSAVER] 'checkDeps()' error:", e)
+				log.Println("[BOARDSAVER] removing all dependencies of board with public key:", dep.Board)
+				bi.Config.Deps = append(bi.Config.Deps[:j], bi.Config.Deps[j+1:]...)
+				return
+			}
 			for _, t := range dep.Threads {
-				log.Println(b, t)
+				tRef, e := misc.GetReference(t)
+				if e != nil {
+					log.Println("[BOARDSAVER] 'checkDeps()' error:", e)
+					log.Println("[BOARDSAVER] removing thread dependency of reference:", t)
+					bi.Config.RemoveDep(fromBpk, tRef)
+					return
+				}
+				// Sync.
+				e = bs.c.ImportThread(fromBpk, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
+				if e != nil {
+					log.Println("[BOARDSAVER] 'checkDeps()' error:", e)
+					log.Println("[BOARDSAVER] sync failed for thread of reference:", t)
+					log.Println("[BOARDSAVER] removing thread dependency of reference:", t)
+					bi.Config.RemoveDep(fromBpk, tRef)
+					return
+				}
 			}
 		}
 	}
