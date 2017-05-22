@@ -4,11 +4,11 @@ import (
 	"errors"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/intern/cxo"
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"sync"
-	"github.com/skycoin/cxo/skyobject"
 )
 
 const BoardSaverFileName = "bbs_boards.json"
@@ -124,8 +124,6 @@ func (bs *BoardSaver) save() error {
 	}
 	return util.SaveJSON(BoardSaverFileName, bcf, 0600)
 }
-
-
 
 // List returns a list of boards that are in configuration.
 func (bs *BoardSaver) List() []BoardInfo {

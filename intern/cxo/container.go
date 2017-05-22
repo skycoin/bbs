@@ -31,7 +31,7 @@ func NewContainer(config *cmd.Config) (c *Container, e error) {
 	r.Done()
 
 	// Setup cxo client.
-	c.client, e = node.NewClient(node.NewClientConfig(), skyobject.NewContainer(r))
+	c.client, e = node.NewClient(node.NewClientConfig(), r)
 	if e != nil {
 		return
 	}
@@ -57,7 +57,8 @@ func (c *Container) Unsubscribe(pk cipher.PubKey) bool { return c.client.Unsubsc
 
 // ChangeBoardURL changes the board's URL of given public key.
 func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url string) error {
-	w := c.c.LastRootSk(bpk, bsk).Walker()
+	r := c.c.LastRootSk(bpk, bsk)
+	w := r.Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
 		return e

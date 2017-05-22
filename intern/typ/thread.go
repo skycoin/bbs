@@ -1,6 +1,7 @@
 package typ
 
 import (
+	"encoding/hex"
 	"errors"
 	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/cxo/skyobject"
@@ -47,4 +48,9 @@ func (t Thread) Verify(pk cipher.PubKey, sig cipher.Sig) error {
 func (t Thread) GetRef() skyobject.Reference {
 	ref, _ := misc.GetReference(t.Ref)
 	return ref
+}
+
+func (t Thread) SerializeToHex() string {
+	t.Ref = ""
+	return hex.EncodeToString(encoder.Serialize(t))
 }

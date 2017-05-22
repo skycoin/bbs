@@ -173,8 +173,8 @@ func (a *API) NewThread(w http.ResponseWriter, r *http.Request) {
 	}
 	// Get thread values.
 	thread := &typ.Thread{
-		Name: r.FormValue("name"),
-		Desc: r.FormValue("description"),
+		Name:        r.FormValue("name"),
+		Desc:        r.FormValue("description"),
 		MasterBoard: bpk.Hex(),
 	}
 	if e := a.g.NewThread(bpk, thread); e != nil {
@@ -243,7 +243,7 @@ func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
 	// Get post values.
 	post := &typ.Post{
 		Title: r.FormValue("title"),
-		Body: r.FormValue("body"),
+		Body:  r.FormValue("body"),
 	}
 	if e := a.g.NewPost(bpk, tRef, post); e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
@@ -277,6 +277,48 @@ func (a *API) ImportThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendResponse(w, true, http.StatusOK)
+}
+
+/*
+	<<< HEX >>>
+*/
+
+func (a *API) GetThreadPageAsHex(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRef, e := misc.GetReference(r.FormValue("thread"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread page as hex.
+	tph, e := a.g.GetThreadPageAsHex(bpk, tRef)
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, *tph, http.StatusOK)
+}
+
+func (a *API) GetThreadPageWithTpRefAsHex(w http.ResponseWriter, r *http.Request) {
+	// Get thread page reference.
+	tpRef, e := misc.GetReference(r.FormValue("threadpage"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread page as hex.
+	tph, e := a.g.GetThreadPageWithTpRefAsHex(tpRef)
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, *tph, http.StatusOK)
 }
 
 /*

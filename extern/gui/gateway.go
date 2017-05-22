@@ -264,6 +264,18 @@ func (g *Gateway) ImportThread(fromBpk, toBpk cipher.PubKey, tRef skyobject.Refe
 }
 
 /*
+	<<< HEX >>>
+*/
+
+func (g *Gateway) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Reference) (*cxo.ThreadPageHex, error) {
+	return g.container.GetThreadPageAsHex(bpk, tRef)
+}
+
+func (g *Gateway) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (*cxo.ThreadPageHex, error) {
+	return g.container.GetThreadPageWithTpRefAsHex(tpRef)
+}
+
+/*
 	<<< TESTS >>>
 */
 
