@@ -30,3 +30,7 @@ func GetReference(s string) (skyobject.Reference, error) {
 	h, e := cipher.SHA256FromHex(s)
 	return skyobject.Reference(h), e
 }
+
+func GetBytes(s string) ([]byte, error) {
+	return hex.DecodeString(s)
+}

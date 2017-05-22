@@ -246,7 +246,7 @@ func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecK
 		return e
 	}
 
-	// Obtain thread and threadpage.
+	// Obtain thread and thread page.
 	tp := &typ.ThreadPage{}
 	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
 		return e
@@ -262,9 +262,9 @@ func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecK
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
 		return e
 	}
-	if e := w.ReplaceInRefsField("Threads", *tp, makeThreadFinder(tRef)); e != nil {
+	if e := w.ReplaceInRefsField("ThreadPages", *tp, makeThreadPageFinder(tRef)); e != nil {
 		/* THREAD DOES NOT EXIST */
-		// Append thread and threadpage.
+		// Append thread and thread page.
 		if _, e := w.AppendToRefsField("Threads", *t); e != nil {
 			return e
 		}

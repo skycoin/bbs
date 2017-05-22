@@ -81,3 +81,7 @@ func (p Post) Verify() error {
 		authorPK, sig,
 		cipher.SumSHA256(encoder.Serialize(p)))
 }
+
+func (p *Post) Deserialize(data []byte) error {
+	return encoder.DeserializeRaw(data, p)
+}

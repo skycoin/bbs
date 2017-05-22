@@ -54,3 +54,8 @@ func (t Thread) SerializeToHex() string {
 	t.Ref = ""
 	return hex.EncodeToString(encoder.Serialize(t))
 }
+
+func (t *Thread) Deserialize(data []byte) error {
+	t.Ref = ""
+	return encoder.DeserializeRaw(data, t)
+}

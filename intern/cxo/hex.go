@@ -8,17 +8,20 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
+// HexObj represents an object stored in cxo as hex.
 type HexObj struct {
 	Ref  string `json:"ref"`
 	Data string `json:"data"`
 }
 
+// ThreadPageHex represents a ThreadPage with data as hex.
 type ThreadPageHex struct {
 	ThreadPage HexObj   `json:"thread_page"`
 	Thread     HexObj   `json:"thread"`
 	Posts      []HexObj `json:"posts"`
 }
 
+// GetThreadPageAsHex retrieves a ThreadPage with data as hex.
 func (c *Container) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Reference) (tph *ThreadPageHex, e error) {
 	tph = new(ThreadPageHex)
 	w := c.c.LastRoot(bpk).Walker()
@@ -60,6 +63,8 @@ func (c *Container) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Referen
 	return
 }
 
+// GetThreadPageWithTpRefAsHex retrieves a ThreadPage with data as hex.
+// This function uses the reference of a ThreadPage.
 func (c *Container) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (tph *ThreadPageHex, e error) {
 	tph = new(ThreadPageHex)
 
@@ -93,7 +98,47 @@ func (c *Container) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (tph 
 	return
 }
 
-// NewThreadPageWithHex adds a new thread page to a board using hex data.
-func (c *Container) NewThreadPageWithHex(bpk cipher.PubKey, tph *ThreadPageHex) error {
-	return nil
+// NewThreadWithHex attempts to creates a new thread in a board with hex data of thread.
+func (c *Container) NewThreadWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tData []byte) (e error) {
+	// Obtain thread.
+	t := &typ.Thread{}
+	if e = t.Deserialize(tData); e != nil {
+		return
+	}
+	t.MasterBoard = bpk.Hex()
+	// Save to board.
+	w := c.c.LastRootSk(bpk, bsk).Walker()
+	bc := &typ.BoardContainer{}
+	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+		return
+	}
+	var tRef skyobject.Reference
+	if tRef, e = w.AppendToRefsField("Threads", *t); e != nil {
+		return e
+	}
+	_, e = w.AppendToRefsField("ThreadPages", typ.ThreadPage{Thread: tRef})
+	//t.Ref = cipher.SHA256(tRef).Hex()
+	return
+}
+
+// NewPostWithHex attempts to create a new post in a given board and thread with hex data of post.
+// The post better be properly signed otherwise other nodes will not accept it.
+func (c *Container) NewPostWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, pData []byte) error {
+	// Obtain post.
+	p := &typ.Post{}
+	if e := p.Deserialize(pData); e != nil {
+		return e
+	}
+	// Save.
+	w := c.c.LastRootSk(bpk, bsk).Walker()
+	bc := &typ.BoardContainer{}
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+		return e
+	}
+	tp := &typ.ThreadPage{}
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
+		return e
+	}
+	_, e := w.AppendToRefsField("Posts", *p)
+	return e
 }

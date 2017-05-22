@@ -321,6 +321,54 @@ func (a *API) GetThreadPageWithTpRefAsHex(w http.ResponseWriter, r *http.Request
 	sendResponse(w, *tph, http.StatusOK)
 }
 
+func (a *API) NewThreadWithHex(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread data.
+	tData, e := misc.GetBytes(r.FormValue("raw_thread"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Inject.
+	if e := a.g.NewThreadWithHex(bpk, tData); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
+}
+
+func (a *API) NewPostWithHex(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRef, e := misc.GetReference(r.FormValue("thread"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get post data.
+	pData, e := misc.GetBytes(r.FormValue("raw_post"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Inject.
+	if e := a.g.NewPostWithHex(bpk, tRef, pData); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
+}
+
 /*
 	<<< TESTS >>>
 */

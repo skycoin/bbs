@@ -275,6 +275,28 @@ func (g *Gateway) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (*cxo.T
 	return g.container.GetThreadPageWithTpRefAsHex(tpRef)
 }
 
+func (g *Gateway) NewThreadWithHex(bpk cipher.PubKey, tData []byte) error {
+	bi, has := g.boardSaver.Get(bpk)
+	if !has {
+		return errors.New("not subscribed to board")
+	}
+	if !bi.Config.Master {
+		return errors.New("not master of board")
+	}
+	return g.container.NewThreadWithHex(bpk, bi.Config.GetSK(), tData)
+}
+
+func (g *Gateway) NewPostWithHex(bpk cipher.PubKey, tRef skyobject.Reference, pData []byte) error {
+	bi, has := g.boardSaver.Get(bpk)
+	if !has {
+		return errors.New("not subscribed to board")
+	}
+	if !bi.Config.Master {
+		return errors.New("not master of board")
+	}
+	return g.container.NewPostWithHex(bpk, bi.Config.GetSK(), tRef, pData)
+}
+
 /*
 	<<< TESTS >>>
 */
