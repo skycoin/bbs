@@ -81,7 +81,7 @@ func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url str
 
 // GetBoard attempts to obtain the board of a given public key.
 func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
-	w := c.c.LastFullRoot(bpk).Walker()
+	w := c.c.LastRoot(bpk).Walker()
 	bc := typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(&bc, makeBoardContainerFinder()); e != nil {
 		return nil, e
@@ -95,7 +95,7 @@ func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
 func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 	boards := make([]*typ.Board, len(bpks))
 	for i, bpk := range bpks {
-		w := c.c.LastFullRoot(bpk).Walker()
+		w := c.c.LastRoot(bpk).Walker()
 		bc, b := typ.BoardContainer{}, typ.Board{}
 		if e := w.AdvanceFromRoot(&bc, makeBoardContainerFinder()); e != nil {
 			continue
@@ -124,7 +124,7 @@ func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKe
 
 // GetThreads attempts to obtain a list of threads from a board of public key.
 func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
-	w := c.c.LastFullRoot(bpk).Walker()
+	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
 		return nil, e
@@ -162,7 +162,7 @@ func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.
 }
 
 func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*typ.Thread, []*typ.Post, error) {
-	w := c.c.LastFullRoot(bpk).Walker()
+	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
 		return nil, nil, e
@@ -198,7 +198,7 @@ func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (
 
 // GetPosts attempts to obtain posts from a specified board and thread.
 func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.Post, error) {
-	w := c.c.LastFullRoot(bpk).Walker()
+	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
 		return nil, e
@@ -240,7 +240,7 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 // If already imported, it replaces.
 func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tRef skyobject.Reference) error {
 	// Get from 'from' Board.
-	w := c.c.LastFullRoot(fromBpk).Walker()
+	w := c.c.LastRoot(fromBpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
 		return e
