@@ -45,12 +45,12 @@ func (g *Gateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
 		return errors.New("not subscribed to board")
 	}
 	// Check if this BBS Node owns the board.
-	if bi.BoardConfig.Master == false {
+	if bi.Config.Master == false {
 		*ok = false
 		return errors.New("not master of board")
 	}
 	*ok = true
-	return g.container.NewPost(req.BoardPubKey, bi.BoardConfig.GetSK(), req.ThreadRef, req.Post)
+	return g.container.NewPost(req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef, req.Post)
 }
 
 func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) error {
@@ -70,12 +70,12 @@ func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) error {
 		return errors.New("not subscribed to board")
 	}
 	// Check if this BBS Node owns the board.
-	if bi.BoardConfig.Master == false {
+	if bi.Config.Master == false {
 		*ok = false
 		return errors.New("not master of board")
 	}
 	// Create new thread.
-	if e := g.container.NewThread(req.BoardPubKey, bi.BoardConfig.GetSK(), req.Thread); e != nil {
+	if e := g.container.NewThread(req.BoardPubKey, bi.Config.GetSK(), req.Thread); e != nil {
 		return e
 	}
 	// Modify thread.

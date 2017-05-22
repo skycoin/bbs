@@ -226,6 +226,7 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 }
 
 // ImportThread imports a thread from a board to another board (which this node owns).
+// If already imported, it replaces.
 func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tRef skyobject.Reference) error {
 	// Get from 'from' Board.
 	w := c.c.LastRoot(fromBpk).Walker()
@@ -250,17 +251,16 @@ func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecK
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
 		return e
 	}
-	tTemp := &typ.Thread{}
-	if _, e := w.GetFromRefsField("Threads", tTemp, makeThreadFinder(tRef)); e == nil {
-		// Unexpectedly obtained a thread.
-		return errors.New("thread already imported")
-	}
-	// Append thread and threadpage.
-	if _, e := w.AppendToRefsField("Threads", *t); e != nil {
-		return e
-	}
-	if _, e := w.AppendToRefsField("ThreadPages", *tp); e != nil {
-		return e
+	if e := w.ReplaceInRefsField("Threads", *tp, makeThreadFinder(tRef)); e != nil {
+		/* THREAD DOES NOT EXIST */
+		// Append thread and threadpage.
+		if _, e := w.AppendToRefsField("Threads", *t); e != nil {
+			return e
+		}
+		if _, e := w.AppendToRefsField("ThreadPages", *tp); e != nil {
+			return e
+		}
+		return nil
 	}
 	return nil
 }

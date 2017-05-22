@@ -27,8 +27,7 @@ func (a *API) GetSubscriptions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) GetSubscription(w http.ResponseWriter, r *http.Request) {
-	bpkStr := r.FormValue("board")
-	bpk, e := misc.GetPubKey(bpkStr)
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -42,8 +41,7 @@ func (a *API) GetSubscription(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) Subscribe(w http.ResponseWriter, r *http.Request) {
-	bpkStr := r.FormValue("board")
-	bpk, e := misc.GetPubKey(bpkStr)
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -53,8 +51,7 @@ func (a *API) Subscribe(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) Unsubscribe(w http.ResponseWriter, r *http.Request) {
-	bpkStr := r.FormValue("board")
-	bpk, e := misc.GetPubKey(bpkStr)
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -73,8 +70,7 @@ func (a *API) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) SetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	// Get user public key.
-	upkStr := r.FormValue("user")
-	upk, e := misc.GetPubKey(upkStr)
+	upk, e := misc.GetPubKey(r.FormValue("user"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -93,9 +89,10 @@ func (a *API) GetMasterUsers(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) NewMasterUser(w http.ResponseWriter, r *http.Request) {
 	// Get alias and seed.
-	alias := r.FormValue("alias")
-	seed := r.FormValue("seed")
-	uc := a.g.NewMasterUser(alias, seed)
+	uc := a.g.NewMasterUser(
+		r.FormValue("alias"),
+		r.FormValue("seed"),
+	)
 	sendResponse(w, uc, http.StatusOK)
 }
 
@@ -105,8 +102,7 @@ func (a *API) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) NewUser(w http.ResponseWriter, r *http.Request) {
 	// Get user public key.
-	upkStr := r.FormValue("user")
-	upk, e := misc.GetPubKey(upkStr)
+	upk, e := misc.GetPubKey(r.FormValue("user"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -119,8 +115,7 @@ func (a *API) NewUser(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) RemoveUser(w http.ResponseWriter, r *http.Request) {
 	// Get user public key.
-	upkStr := r.FormValue("user")
-	upk, e := misc.GetPubKey(upkStr)
+	upk, e := misc.GetPubKey(r.FormValue("user"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -141,11 +136,13 @@ func (a *API) GetBoards(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) NewBoard(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
-	desc := r.FormValue("description")
-	seed := r.FormValue("seed")
-	board := &typ.Board{Name: name, Desc: desc}
-	bi, e := a.g.NewBoard(board, seed)
+	bi, e := a.g.NewBoard(
+		&typ.Board{
+			Name: r.FormValue("name"),
+			Desc: r.FormValue("description"),
+		},
+		r.FormValue("seed"),
+	)
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 	} else {
@@ -169,16 +166,17 @@ func (a *API) GetThreads(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) NewThread(w http.ResponseWriter, r *http.Request) {
 	// Get board public key.
-	bpkStr := r.FormValue("board")
-	bpk, e := misc.GetPubKey(bpkStr)
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread values.
-	name := r.FormValue("name")
-	desc := r.FormValue("description")
-	thread := &typ.Thread{Name: name, Desc: desc, MasterBoard: bpk.Hex()}
+	thread := &typ.Thread{
+		Name: r.FormValue("name"),
+		Desc: r.FormValue("description"),
+		MasterBoard: bpk.Hex(),
+	}
 	if e := a.g.NewThread(bpk, thread); e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -188,15 +186,13 @@ func (a *API) NewThread(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) GetThreadPage(w http.ResponseWriter, r *http.Request) {
 	// Get board public key.
-	bpkStr := r.FormValue("board")
-	bpk, e := misc.GetPubKey(bpkStr)
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread reference.
-	tRefStr := r.FormValue("thread")
-	tRef, e := misc.GetReference(tRefStr)
+	tRef, e := misc.GetReference(r.FormValue("thread"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -212,15 +208,13 @@ func (a *API) GetThreadPage(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) GetPosts(w http.ResponseWriter, r *http.Request) {
 	// Get board public key.
-	bpkStr := r.FormValue("board")
-	bpk, e := misc.GetPubKey(bpkStr)
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread reference.
-	tRefStr := r.FormValue("thread")
-	tRef, e := misc.GetReference(tRefStr)
+	tRef, e := misc.GetReference(r.FormValue("thread"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -235,28 +229,54 @@ func (a *API) GetPosts(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
 	// Get board public key.
-	bpkStr := r.FormValue("board")
-	bpk, e := misc.GetPubKey(bpkStr)
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get thread reference.
-	tRefStr := r.FormValue("thread")
-	tRef, e := misc.GetReference(tRefStr)
+	tRef, e := misc.GetReference(r.FormValue("thread"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	// Get post values.
-	title := r.FormValue("title")
-	body := r.FormValue("body")
-	post := &typ.Post{Title: title, Body: body}
+	post := &typ.Post{
+		Title: r.FormValue("title"),
+		Body: r.FormValue("body"),
+	}
 	if e := a.g.NewPost(bpk, tRef, post); e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 	sendResponse(w, post, http.StatusOK)
+}
+
+func (a *API) ImportThread(w http.ResponseWriter, r *http.Request) {
+	// Get "from" board's public key.
+	fromBpk, e := misc.GetPubKey(r.FormValue("from_board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread's reference.
+	tRef, e := misc.GetReference(r.FormValue("thread"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get "to" board's public key.
+	toBpk, e := misc.GetPubKey(r.FormValue("to_board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Import thread.
+	if e := a.g.ImportThread(fromBpk, toBpk, tRef); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
 }
 
 /*
@@ -266,22 +286,19 @@ func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
 func (a *API) TestNewFilledBoard(w http.ResponseWriter, r *http.Request) {
 	seed := r.FormValue("seed")
 
-	threadsStr := r.FormValue("threads")
-	threads, e := strconv.Atoi(threadsStr)
+	threads, e := strconv.Atoi(r.FormValue("threads"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
-	minPostsStr := r.FormValue("min_posts")
-	minPosts, e := strconv.Atoi(minPostsStr)
+	minPosts, e := strconv.Atoi(r.FormValue("min_posts"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
-	maxPostsStr := r.FormValue("max_posts")
-	maxPosts, e := strconv.Atoi(maxPostsStr)
+	maxPosts, e := strconv.Atoi(r.FormValue("max_posts"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return

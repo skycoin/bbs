@@ -1,6 +1,7 @@
 package misc
 
 import (
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"math/rand"
 	"strconv"
@@ -42,4 +43,14 @@ func MakeRandomAlias() string {
 	rand.Seed(time.Now().UnixNano())
 	i := rand.Intn(len(animals) - 1)
 	return out + animals[i]
+}
+
+func MakeDeterministicRef(seed byte) skyobject.Reference {
+	shaOut := cipher.SHA256{}
+	shaBytes := make([]byte, 32)
+	for i := 0; i < len(shaBytes); i++ {
+		shaBytes[i] = seed
+	}
+	shaOut.Set(shaBytes)
+	return skyobject.Reference(shaOut)
 }

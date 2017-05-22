@@ -184,9 +184,9 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 		return errors.New("not subscribed to board")
 	}
 	// Check if this BBS Node owns the board.
-	if bi.BoardConfig.Master == true {
+	if bi.Config.Master == true {
 		// Via Container.
-		if e := g.container.NewThread(bpk, bi.BoardConfig.GetSK(), thread); e != nil {
+		if e := g.container.NewThread(bpk, bi.Config.GetSK(), thread); e != nil {
 			return e
 		}
 	} else {
@@ -235,9 +235,9 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 		return errors.New("not subscribed to board")
 	}
 	// Check if this BBS Node owns the board.
-	if bi.BoardConfig.Master == true {
+	if bi.Config.Master == true {
 		// Via Container.
-		if e := g.container.NewPost(bpk, bi.BoardConfig.GetSK(), tRef, post); e != nil {
+		if e := g.container.NewPost(bpk, bi.Config.GetSK(), tRef, post); e != nil {
 			fmt.Println(e)
 			return e
 		}
@@ -246,6 +246,21 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 		return g.queueSaver.AddNewPostReq(bpk, tRef, post)
 	}
 	return nil
+}
+
+// ImportThread imports a thread from one board to a board which this node is master of.
+func (g *Gateway) ImportThread(fromBpk, toBpk cipher.PubKey, tRef skyobject.Reference) error {
+	// Check "to" board.
+	bi, has := g.boardSaver.Get(toBpk)
+	if !has {
+		return errors.New("not subscribed to board")
+	}
+	// Add Dependency to BoardSaver.
+	if e := g.boardSaver.AddBoardDep(toBpk, fromBpk, tRef); e != nil {
+		return e
+	}
+	// Import thread.
+	return g.container.ImportThread(fromBpk, toBpk, bi.Config.GetSK(), tRef)
 }
 
 /*
@@ -265,7 +280,7 @@ func (g *Gateway) TestNewFilledBoard(seed string, threads, minPosts, maxPosts in
 	if e != nil {
 		return e
 	}
-	bpk := bi.BoardConfig.GetPK()
+	bpk := bi.Config.GetPK()
 	for i := 1; i <= threads; i++ {
 		t := &typ.Thread{
 			Name: fmt.Sprintf("Thread %d", i),
