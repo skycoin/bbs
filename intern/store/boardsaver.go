@@ -102,7 +102,6 @@ func (bs *BoardSaver) service() {
 
 		case <-bs.quit:
 			return
-		default:
 		}
 	}
 }
