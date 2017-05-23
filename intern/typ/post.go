@@ -3,6 +3,7 @@ package typ
 import (
 	"errors"
 	"github.com/evanlinjin/bbs/misc"
+	// "github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"math"
@@ -17,6 +18,7 @@ type Post struct {
 	Author    string     `json:"author"`
 	Created   int64      `json:"created"`
 	Signature cipher.Sig `json:"-"`
+	// Ref       skyobject.Reference `json:"ref"` // adding this breaks everything
 }
 
 func (p *Post) checkContent() error {
@@ -54,8 +56,7 @@ func (p *Post) Sign(pk cipher.PubKey, sk cipher.SecKey) error {
 	p.Author = pk.Hex()
 	p.Created = time.Now().UnixNano()
 	p.Signature = cipher.Sig{}
-	p.Signature = cipher.SignHash(
-		cipher.SumSHA256(encoder.Serialize(*p)), sk)
+	p.Signature = cipher.SignHash(cipher.SumSHA256(encoder.Serialize(*p)), sk)
 	return nil
 }
 

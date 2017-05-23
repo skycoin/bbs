@@ -150,6 +150,21 @@ func (a *API) NewBoard(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *API) RemoveBoard(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	e = a.g.RemoveBoard(bpk)
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+	} else {
+		sendResponse(w, true, http.StatusOK)
+	}
+}
+
 func (a *API) GetThreads(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	if bpkStr == "" {
@@ -182,6 +197,26 @@ func (a *API) NewThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendResponse(w, thread, http.StatusOK)
+}
+
+func (a *API) RemoveThread(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRef, e := misc.GetReference(r.FormValue("thread"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	if e := a.g.RemoveThread(bpk, tRef); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
 }
 
 func (a *API) GetThreadPage(w http.ResponseWriter, r *http.Request) {
@@ -250,6 +285,33 @@ func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendResponse(w, post, http.StatusOK)
+}
+
+func (a *API) RemovePost(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRef, e := misc.GetReference(r.FormValue("thread"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// // Get post reference.
+	pRef, e := misc.GetReference(r.FormValue("post"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if e := a.g.RemovePost(bpk, tRef, pRef); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
 }
 
 func (a *API) ImportThread(w http.ResponseWriter, r *http.Request) {

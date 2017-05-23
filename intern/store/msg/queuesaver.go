@@ -18,10 +18,11 @@ import (
 const QueueConfigFileName = "bbs_queue.json"
 
 type QueueItem struct {
-	ID           string            `json:"id"`
-	Submitted    int64             `json:"submitted"`
-	ReqNewPost   *rpc.ReqNewPost   `json:"new_post_request,omitempty"`
-	ReqNewThread *rpc.ReqNewThread `json:"new_thread_request,omitempty"`
+	ID              string               `json:"id"`
+	Submitted       int64                `json:"submitted"`
+	ReqNewPost      *rpc.ReqNewPost      `json:"new_post_request,omitempty"`
+	ReqNewThread    *rpc.ReqNewThread    `json:"new_thread_request,omitempty"`
+	ReqRemoveThread *rpc.ReqRemoveThread `json:"remove_thread_request,omitempty"`
 }
 
 func NewQueueItem() *QueueItem {
@@ -33,13 +34,22 @@ func NewQueueItem() *QueueItem {
 
 func (qi *QueueItem) SetPost(req *rpc.ReqNewPost) *QueueItem {
 	qi.ReqNewThread = nil
+	qi.ReqRemoveThread = nil
 	qi.ReqNewPost = req
 	return qi
 }
 
 func (qi *QueueItem) SetThread(req *rpc.ReqNewThread) *QueueItem {
 	qi.ReqNewPost = nil
+	qi.ReqRemoveThread = nil
 	qi.ReqNewThread = req
+	return qi
+}
+
+func (qi *QueueItem) SetRemoveThread(req *rpc.ReqRemoveThread) *QueueItem {
+	qi.ReqNewPost = nil
+	qi.ReqRemoveThread = req
+	qi.ReqNewThread = nil
 	return qi
 }
 
@@ -98,6 +108,7 @@ func (qs *QueueSaver) Close() {
 }
 
 func (qs *QueueSaver) Process() {
+	//TODO: screams for refactoring
 	qs.Lock()
 	defer qs.Unlock()
 	if len(qs.queue) == 0 {
@@ -136,6 +147,20 @@ func (qs *QueueSaver) Process() {
 			}
 			rpcClient.NewThread(req)
 			toRemoveList = append(toRemoveList, i)
+
+		case qi.ReqRemoveThread != nil:
+			req := qi.ReqRemoveThread
+			b, e := qs.c.GetBoard(req.BoardPubKey)
+			if e != nil {
+				toRemoveList = append(toRemoveList, i)
+				break
+			}
+			rpcClient, e := rpc.NewClient(b.URL)
+			if e != nil {
+				break
+			}
+			rpcClient.RemoveThread(req)
+			toRemoveList = append(toRemoveList, i)
 		}
 	}
 	for _, i := range toRemoveList {
@@ -149,6 +174,7 @@ func (qs *QueueSaver) Process() {
 func (qs *QueueSaver) AddNewPostReq(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) error {
 	qs.Lock()
 	defer qs.Unlock()
+	log.Println("[QUEUESAVER] New Post Request.")
 	req := &rpc.ReqNewPost{bpk, tRef, post}
 	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
@@ -172,21 +198,48 @@ func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey,
 	req := &rpc.ReqNewThread{bpk, upk, thread.Sign(usk), thread}
 	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
-		log.Println("\t-", e)
+		log.Println("[QUEUESAVER]", e)
 		return e
 	}
-	log.Println("\t- Obtained Board.")
+	log.Println("[QUEUESAVER] Got Board.")
 	rpcClient, e := rpc.NewClient(b.URL)
 	if e != nil {
 		// Add to queue.
-		log.Println("\t-", e)
+		log.Println("[QUEUESAVER]", e)
 		qs.queue = append(qs.queue, NewQueueItem().SetThread(req))
 		qs.save()
 		return e
 	}
 	_, e = rpcClient.NewThread(req)
 	if e != nil {
-		log.Println("\t-", e)
+		log.Println("[QUEUESAVER]", e)
+		return e
+	}
+	return e
+}
+
+func (qs *QueueSaver) AddRemoveThreadReq(bpk cipher.PubKey, tRef skyobject.Reference) error {
+	qs.Lock()
+	defer qs.Unlock()
+	log.Println("[QUEUESAVER] Remove Thread Request.")
+	req := &rpc.ReqRemoveThread{bpk, tRef}
+	b, e := qs.c.GetBoard(bpk)
+	if e != nil {
+		log.Println("[QUEUESAVER]", e)
+		return e
+	}
+	log.Println("[QUEUESAVER] Got Board.")
+	rpcClient, e := rpc.NewClient(b.URL)
+	if e != nil {
+		// Add to queue.
+		log.Println("[QUEUESAVER]", e)
+		qs.queue = append(qs.queue, NewQueueItem().SetRemoveThread(req))
+		qs.save()
+		return e
+	}
+	_, e = rpcClient.RemoveThread(req)
+	if e != nil {
+		log.Println("[QUEUESAVER]", e)
 		return e
 	}
 	return e

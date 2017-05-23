@@ -18,3 +18,18 @@ type ReqNewThread struct {
 	Signature   cipher.Sig    `json:"signature,string"`
 	Thread      *typ.Thread   `json:"thread"`
 }
+
+type ReqRemoveBoard struct {
+	BoardPubKey cipher.PubKey `json:"board_public_key,string"`
+}
+
+type ReqRemoveThread struct {
+	BoardPubKey cipher.PubKey       `json:"board_public_key,string"`
+	ThreadRef   skyobject.Reference `json:"thread_reference,string"`
+}
+
+type ReqRemovePost struct {
+	BoardPubKey cipher.PubKey       `json:"board_public_key,string"`
+	ThreadRef   skyobject.Reference `json:"thread_reference,string"`
+	PostRef     skyobject.Reference `json:"post_reference,string"`
+}

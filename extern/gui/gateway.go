@@ -10,6 +10,7 @@ import (
 	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"log"
 	"math/rand"
 )
 
@@ -133,6 +134,28 @@ func (g *Gateway) NewBoard(board *typ.Board, seed string) (bi store.BoardInfo, e
 	return
 }
 
+// RemoveBoard removes a board
+func (g *Gateway) RemoveBoard(bpk cipher.PubKey) error {
+	// Check board.
+	bi, has := g.boardSaver.Get(bpk)
+	if has == false {
+		return errors.New("not subscribed to the board")
+	}
+	// Check if this BBS Node owns the board.
+	if bi.Config.Master == true {
+		// Via Container.
+		log.Println("[GUI GW] Master, remove board!")
+		if e := g.container.RemoveBoard(bpk, bi.Config.GetSK()); e != nil {
+			return e
+		}
+	} else {
+		// Via RPC Client.
+		log.Println("[GUI GW] Client, remove board!")
+		// return g.queueSaver.AddRemoveBoardReq(bpk)
+	}
+	return nil
+}
+
 // GetThreads obtains threads of boards we are subscribed to.
 // Input `bpks` acts as a filter.
 // If no `bpks` are specified, threads of all boards will be obtained.
@@ -181,7 +204,7 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 	// Check board.
 	bi, has := g.boardSaver.Get(bpk)
 	if has == false {
-		return errors.New("not subscribed to board")
+		return errors.New("not subscribed to the board")
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
@@ -193,6 +216,28 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 		// Via RPC Client.
 		uc := g.userSaver.GetCurrent()
 		return g.queueSaver.AddNewThreadReq(bpk, uc.GetPK(), uc.GetSK(), thread)
+	}
+	return nil
+}
+
+// RemoveThread removes a thread
+func (g *Gateway) RemoveThread(bpk cipher.PubKey, tRef skyobject.Reference) error {
+	// Check board.
+	bi, has := g.boardSaver.Get(bpk)
+	if has == false {
+		return errors.New("not subscribed to board")
+	}
+	// Check if this BBS Node owns the board.
+	if bi.Config.Master == true {
+		// Via Container.
+		log.Println("[GUI GW] Master, remove thread!")
+		if e := g.container.RemoveThread(bpk, bi.Config.GetSK(), tRef); e != nil {
+			return e
+		}
+	} else {
+		// Via RPC Client.
+		log.Println("[GUI GW] Client, remove thread!")
+		return g.queueSaver.AddRemoveThreadReq(bpk, tRef)
 	}
 	return nil
 }
@@ -244,6 +289,29 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 	}
 	// Via RPC Client.
 	return g.queueSaver.AddNewPostReq(bpk, tRef, post)
+}
+
+// RemovePost removes a post in specified board and thread.
+func (g *Gateway) RemovePost(bpk cipher.PubKey, tRef, pRef skyobject.Reference) (e error) {
+	// Check board.
+	bi, has := g.boardSaver.Get(bpk)
+	if has == false {
+		return errors.New("not subscribed to board")
+	}
+	// Check if this BBS Node owns the board.
+	if bi.Config.Master == true {
+		// Via Container.
+		log.Println("[GUI GW] Master, remove thread!")
+		if e = g.container.RemovePost(bpk, bi.Config.GetSK(), tRef, pRef); e != nil {
+			fmt.Println(e)
+			return e
+		}
+	} else {
+		// Via RPC Client.
+		log.Println("[GUI GW] Client, remove thread!")
+		// return g.queueSaver.AddRemovePostReq(bpk, tRef, pRef)
+	}
+	return nil
 }
 
 // ImportThread imports a thread from one board to a board which this node is master of.

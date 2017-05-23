@@ -122,6 +122,18 @@ func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKe
 	return e
 }
 
+// RemoveBoard attempts to remove a board by a given public key.
+func (c *Container) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
+	w := c.c.LastRootSk(bpk, bsk).Walker()
+	fmt.Println("Removing board:", bpk.Hex())
+	bc := &typ.BoardContainer{}
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+		return e
+	}
+
+	return w.RemoveCurrent()
+}
+
 // GetThreads attempts to obtain a list of threads from a board of public key.
 func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 	w := c.c.LastRoot(bpk).Walker()
@@ -161,6 +173,30 @@ func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.
 	return
 }
 
+// RemoveThread attempts to remove a thread from a board of given public key.
+func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) (e error) {
+	w := c.c.LastRootSk(bpk, bsk).Walker()
+	bc := &typ.BoardContainer{}
+	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+		return e
+	}
+
+	fmt.Println("Removing thread:", tRef.String())
+	e = w.RemoveInRefsByRef("Threads", tRef)
+	if e != nil {
+		return errors.New("remove thread from threads failed: " + e.Error())
+	}
+
+	fmt.Println("Removing from thread pages")
+	e = w.RemoveInRefsField("ThreadPages", makeThreadPageFinder(tRef))
+	if e != nil {
+		return errors.New("remove thread from threadpages failed: " + e.Error())
+	}
+
+	return nil
+}
+
+// GetThreadPage requests a page from a thread
 func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*typ.Thread, []*typ.Post, error) {
 	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
@@ -243,8 +279,31 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 	return e
 }
 
-// ImportThread imports a thread from a board to another board (which this node owns).
-// If already imported, it replaces.
+// RemovePost attempts to remove a post in a given board and thread.
+func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef skyobject.Reference) error {
+	w := c.c.LastRootSk(bpk, bsk).Walker()
+	bc := &typ.BoardContainer{}
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+		return e
+	}
+	tp := &typ.ThreadPage{}
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
+		return e
+	}
+	t := &typ.Thread{}
+	if _, e := w.GetFromRefField("Thread", t); e != nil {
+		return e
+	}
+	if t.MasterBoard != bpk.Hex() {
+		return errors.New("this board is not master of this thread")
+	}
+	if e := w.RemoveInRefsByRef("Posts", pRef); e != nil {
+		return errors.New("remove post from posts failed: " + e.Error())
+	}
+	return nil
+}
+
+// ImportThread imports a thread from a board to another board (which this node owns). If already imported replaces it.
 func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tRef skyobject.Reference) error {
 	// Get from 'from' Board.
 	w := c.c.LastRoot(fromBpk).Walker()
