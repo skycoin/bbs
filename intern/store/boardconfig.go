@@ -16,7 +16,7 @@ type BoardDep struct {
 
 // BoardConfig represents the config of a board.
 type BoardConfig struct {
-	Master bool
+	Master bool        `json:"master"`
 	PubKey string      `json:"public_key"`
 	SecKey string      `json:"secret_key,omitempty"`
 	Deps   []*BoardDep `json:"dependencies,omitempty"`
@@ -99,6 +99,19 @@ func (bc *BoardConfig) RemoveDep(bpk cipher.PubKey, tRef skyobject.Reference) er
 		}
 	}
 	return nil
+}
+
+// GetBoardOfThreadDep returns the master board of thread dependency.
+func (bc *BoardConfig) GetBoardOfThreadDep(tRef skyobject.Reference) (cipher.PubKey, bool) {
+	for _, dep := range bc.Deps {
+		for _, t := range dep.Threads {
+			if t == tRef.String() {
+				pk, _ := misc.GetPubKey(dep.Board)
+				return pk, true
+			}
+		}
+	}
+	return cipher.PubKey{}, false
 }
 
 func (bc BoardConfig) String(indent bool) string {

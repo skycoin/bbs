@@ -53,7 +53,7 @@ func NewBoardSaver(config *cmd.Config, container *cxo.Container) (*BoardSaver, e
 func (bs *BoardSaver) Close() {
 	for {
 		select {
-		case bs.quit<- struct{}{}:
+		case bs.quit <- struct{}{}:
 		default:
 			return
 		}
@@ -147,6 +147,9 @@ func (bs *BoardSaver) checkDeps() {
 				bi.Config.Deps = append(bi.Config.Deps[:j], bi.Config.Deps[j+1:]...)
 				return
 			}
+			// Subscribe internally.
+			bs.c.Subscribe(fromBpk)
+
 			for _, t := range dep.Threads {
 				tRef, e := misc.GetReference(t)
 				if e != nil {

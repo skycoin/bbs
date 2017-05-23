@@ -232,6 +232,13 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
 		return e
 	}
+	t := &typ.Thread{}
+	if _, e := w.GetFromRefField("Thread", t); e != nil {
+		return e
+	}
+	if t.MasterBoard != bpk.Hex() {
+		return errors.New("this board is not master of this thread")
+	}
 	_, e := w.AppendToRefsField("Posts", *post)
 	return e
 }

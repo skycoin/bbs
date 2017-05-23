@@ -223,11 +223,11 @@ func (g *Gateway) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.
 
 // NewPost creates a new post in specified board and thread.
 // TODO: In the future, as a single thread can exist across different boards, we will only need to specify the thread.
-func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) error {
+func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) (e error) {
 	// Check post.
 	uc := g.userSaver.GetCurrent()
-	if e := post.Sign(uc.GetPK(), uc.GetSK()); e != nil {
-		return e
+	if e = post.Sign(uc.GetPK(), uc.GetSK()); e != nil {
+		return
 	}
 	// Check board.
 	bi, has := g.boardSaver.Get(bpk)
@@ -237,19 +237,18 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
 		// Via Container.
-		if e := g.container.NewPost(bpk, bi.Config.GetSK(), tRef, post); e != nil {
+		if e = g.container.NewPost(bpk, bi.Config.GetSK(), tRef, post); e != nil {
 			fmt.Println(e)
 			return e
 		}
-	} else {
-		// Via RPC Client.
-		return g.queueSaver.AddNewPostReq(bpk, tRef, post)
 	}
-	return nil
+	// Via RPC Client.
+	return g.queueSaver.AddNewPostReq(bpk, tRef, post)
 }
 
 // ImportThread imports a thread from one board to a board which this node is master of.
 func (g *Gateway) ImportThread(fromBpk, toBpk cipher.PubKey, tRef skyobject.Reference) error {
+	g.container.Subscribe(fromBpk)
 	// Check "to" board.
 	bi, has := g.boardSaver.Get(toBpk)
 	if !has {
