@@ -29,4 +29,4 @@ echo "> BBS SERVER ..."
 
 wait
 echo "[ CLEANING UP ]"
-rm cli cxod main *.bak *.json
+rm cli cxod main *.bak bbs_*.json

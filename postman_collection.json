@@ -242,7 +242,7 @@
 			"description": "",
 			"item": [
 				{
-					"name": "Get ThreadPage",
+					"name": "Get ThreadPage (Hex)",
 					"request": {
 						"url": "http://127.0.0.1:6420/api/hex/get_threadpage",
 						"method": "POST",
