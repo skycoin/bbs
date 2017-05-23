@@ -66,7 +66,7 @@ func (bs *BoardSaver) load() error {
 	// Load boards from file.
 	bcf := BoardSaverFile{}
 	if e := util.LoadJSON(BoardSaverFileName, &bcf); e != nil {
-		return e
+		log.Println("[BOARDSAVER]", e)
 	}
 	// Check loaded boards and intern in memory.
 	for _, bc := range bcf.Boards {
@@ -91,7 +91,8 @@ func (bs *BoardSaver) load() error {
 
 // Keeps imported threads synced.
 func (bs *BoardSaver) service() {
-	ticker := time.NewTicker(30 * time.Second)
+	log.Println("[BOARDSAVER] Sync service started.")
+	ticker := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -101,6 +102,7 @@ func (bs *BoardSaver) service() {
 
 		case <-bs.quit:
 			return
+		default:
 		}
 	}
 }
