@@ -33,7 +33,7 @@ func (p *Post) checkCreated() error {
 	if dif < 0 {
 		return errors.New("invalid timestamp")
 	}
-	if dif < int64(3*math.Pow(10, 11)) {
+	if dif > int64(3*math.Pow(10, 11)) {
 		return errors.New("invalid timestamp")
 	}
 	return nil
