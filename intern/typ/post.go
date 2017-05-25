@@ -5,7 +5,6 @@ import (
 	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
-	"math"
 	"strings"
 	"time"
 )
@@ -28,17 +27,6 @@ func (p *Post) checkContent() error {
 	return nil
 }
 
-func (p *Post) checkCreated() error {
-	dif := time.Now().UnixNano() - p.Created
-	if dif < 0 {
-		return errors.New("invalid timestamp")
-	}
-	if dif > int64(3*math.Pow(10, 11)) {
-		return errors.New("invalid timestamp")
-	}
-	return nil
-}
-
 func (p *Post) checkAuthor() (cipher.PubKey, error) {
 	if p.Author == (cipher.PubKey{}.Hex()) {
 		return cipher.PubKey{}, errors.New("empty author public key")
@@ -52,7 +40,7 @@ func (p *Post) Sign(pk cipher.PubKey, sk cipher.SecKey) error {
 		return e
 	}
 	p.Author = pk.Hex()
-	p.Created = time.Now().UnixNano()
+	p.Created = 0
 	p.Signature = cipher.Sig{}
 	p.Signature = cipher.SignHash(
 		cipher.SumSHA256(encoder.Serialize(*p)), sk)
@@ -69,17 +57,19 @@ func (p Post) Verify() error {
 	if e != nil {
 		return e
 	}
-	// Check creation time.
-	if e := p.checkCreated(); e != nil {
-		return e
-	}
 	// Check signature.
 	sig := p.Signature
 	p.Signature = cipher.Sig{}
+	p.Created = 0
 
 	return cipher.VerifySignature(
 		authorPK, sig,
 		cipher.SumSHA256(encoder.Serialize(p)))
+}
+
+// Touch updates the timestamp of Post.
+func (p *Post) Touch() {
+	p.Created = time.Now().UnixNano()
 }
 
 func (p *Post) Deserialize(data []byte) error {

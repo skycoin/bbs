@@ -38,6 +38,7 @@ func (g *Gateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
 		*ok = false
 		return e
 	}
+	req.Post.Touch()
 	// Check board.
 	bi, has := g.boardSaver.Get(req.BoardPubKey)
 	if has == false {

@@ -229,6 +229,7 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 	if e = post.Sign(uc.GetPK(), uc.GetSK()); e != nil {
 		return
 	}
+	post.Touch()
 	// Check board.
 	bi, has := g.boardSaver.Get(bpk)
 	if has == false {
