@@ -18,8 +18,6 @@ func NewClient(address string) (*Client, error) {
 	return &rpcc, e
 }
 
-//TODO: needs refactoring
-
 func (c *Client) NewPost(req *ReqNewPost) (ok *bool, e error) {
 	ok = new(bool)
 	e = c.rpc.Call("Gateway.NewPost", req, ok)
@@ -29,23 +27,5 @@ func (c *Client) NewPost(req *ReqNewPost) (ok *bool, e error) {
 func (c *Client) NewThread(req *ReqNewThread) (ok *bool, e error) {
 	ok = new(bool)
 	e = c.rpc.Call("Gateway.NewThread", req, ok)
-	return
-}
-
-func (c *Client) RemoveBoard(req *ReqRemoveBoard) (ok *bool, e error) {
-	ok = new(bool)
-	e = c.rpc.Call("Gateway.RemoveBoard", req, ok)
-	return
-}
-
-func (c *Client) RemoveThread(req *ReqRemoveThread) (ok *bool, e error) {
-	ok = new(bool)
-	e = c.rpc.Call("Gateway.RemoveThread", req, ok)
-	return
-}
-
-func (c *Client) RemovePost(req *ReqRemovePost) (ok *bool, e error) {
-	ok = new(bool)
-	e = c.rpc.Call("Gateway.RemovePost", req, ok)
 	return
 }

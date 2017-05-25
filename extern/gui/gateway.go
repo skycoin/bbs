@@ -149,9 +149,8 @@ func (g *Gateway) RemoveBoard(bpk cipher.PubKey) error {
 			return e
 		}
 	} else {
-		// Via RPC Client.
-		log.Println("[GUI GW] Client, remove board!")
-		// return g.queueSaver.AddRemoveBoardReq(bpk)
+		// threads and posts are only to be deleted from master.
+		return errors.New("not owning the board")
 	}
 	return nil
 }
@@ -230,14 +229,14 @@ func (g *Gateway) RemoveThread(bpk cipher.PubKey, tRef skyobject.Reference) erro
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
 		// Via Container.
-		log.Println("[GUI GW] Master, remove thread!")
+		log.Println("[GUI GW] Master, remove the thread!")
 		if e := g.container.RemoveThread(bpk, bi.Config.GetSK(), tRef); e != nil {
 			return e
 		}
+		bi.Config.RemoveDep(bpk, tRef)
 	} else {
-		// Via RPC Client.
-		log.Println("[GUI GW] Client, remove thread!")
-		return g.queueSaver.AddRemoveThreadReq(bpk, tRef)
+		// threads and posts are only to be deleted from master.
+		return errors.New("not owning the board")
 	}
 	return nil
 }
@@ -300,16 +299,14 @@ func (g *Gateway) RemovePost(bpk cipher.PubKey, tRef, pRef skyobject.Reference) 
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
-		// Via Container.
-		log.Println("[GUI GW] Master, remove thread!")
+		log.Println("[GUI GW] Master, remove the post!")
 		if e = g.container.RemovePost(bpk, bi.Config.GetSK(), tRef, pRef); e != nil {
 			fmt.Println(e)
 			return e
 		}
 	} else {
-		// Via RPC Client.
-		log.Println("[GUI GW] Client, remove thread!")
-		// return g.queueSaver.AddRemovePostReq(bpk, tRef, pRef)
+		// threads and posts are only to be deleted from master.
+		return errors.New("not owning the board")
 	}
 	return nil
 }

@@ -228,6 +228,7 @@ func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (
 		if e := encoder.DeserializeRaw(pData, posts[i]); e != nil {
 			return nil, nil, e
 		}
+		posts[i].Ref = cipher.SHA256(pRef).Hex()
 	}
 	return thread, posts, nil
 }
@@ -253,6 +254,7 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 		if e := encoder.DeserializeRaw(pData, posts[i]); e != nil {
 			return nil, e
 		}
+		posts[i].Ref = cipher.SHA256(pRef).Hex()
 	}
 	return posts, nil
 }
@@ -275,8 +277,13 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 	if t.MasterBoard != bpk.Hex() {
 		return errors.New("this board is not master of this thread")
 	}
-	_, e := w.AppendToRefsField("Posts", *post)
-	return e
+	var pRef skyobject.Reference
+	var e error
+	if pRef, e = w.AppendToRefsField("Posts", *post); e != nil {
+		return e
+	}
+	post.Ref = cipher.SHA256(pRef).Hex()
+	return nil
 }
 
 // RemovePost attempts to remove a post in a given board and thread.
@@ -290,13 +297,8 @@ func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef 
 	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
 		return e
 	}
-	t := &typ.Thread{}
-	if _, e := w.GetFromRefField("Thread", t); e != nil {
-		return e
-	}
-	if t.MasterBoard != bpk.Hex() {
-		return errors.New("this board is not master of this thread")
-	}
+
+	fmt.Println("Removing post:", pRef.String())
 	if e := w.RemoveInRefsByRef("Posts", pRef); e != nil {
 		return errors.New("remove post from posts failed: " + e.Error())
 	}
