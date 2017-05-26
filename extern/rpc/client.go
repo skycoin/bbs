@@ -18,14 +18,14 @@ func NewClient(address string) (*Client, error) {
 	return &rpcc, e
 }
 
-func (c *Client) NewPost(req *ReqNewPost) (ok *bool, e error) {
-	ok = new(bool)
-	e = c.rpc.Call("Gateway.NewPost", req, ok)
+func (c *Client) NewPost(req *ReqNewPost) (ref *string, e error) {
+	ref = new(string)
+	e = c.rpc.Call("Gateway.NewPost", req, ref)
 	return
 }
 
-func (c *Client) NewThread(req *ReqNewThread) (ok *bool, e error) {
-	ok = new(bool)
-	e = c.rpc.Call("Gateway.NewThread", req, ok)
+func (c *Client) NewThread(req *ReqNewThread) (ref *string, e error) {
+	ref = new(string)
+	e = c.rpc.Call("Gateway.NewThread", req, ref)
 	return
 }

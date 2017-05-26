@@ -8,11 +8,11 @@ import (
 	"github.com/evanlinjin/bbs/intern/store"
 	"github.com/evanlinjin/bbs/intern/store/msg"
 	"github.com/evanlinjin/bbs/intern/typ"
+	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"math/rand"
-	"github.com/evanlinjin/bbs/misc"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.

@@ -29,58 +29,52 @@ func NewGateway(
 	}
 }
 
-func (g *Gateway) NewPost(req *ReqNewPost, ok *bool) (e error) {
-	if req == nil || req.Post == nil || ok == nil {
+func (g *Gateway) NewPost(req *ReqNewPost, pRefStr *string) (e error) {
+	if req == nil || req.Post == nil {
 		return errors.New("nil error")
 	}
 	// Check post.
 	if e := req.Post.Verify(); e != nil {
-		*ok = false
 		return e
 	}
 	req.Post.Touch()
 	// Check board.
 	bi, has := g.boardSaver.Get(req.BoardPubKey)
 	if has == false {
-		*ok = false
 		return errors.New("not subscribed to board")
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == false {
-		*ok = false
 		return errors.New("not master of board")
 	}
-	*ok = true
+	pRefStr = &req.Post.Ref
 	return g.container.NewPost(req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef, req.Post)
 }
 
-func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) error {
+func (g *Gateway) NewThread(req *ReqNewThread, tRefStr *string) error {
 	log.Println("[RPCGATEWAY] Recieved NewThread Request.")
-	if req == nil || req.Thread == nil || ok == nil {
+	if req == nil || req.Thread == nil {
 		return errors.New("nil error")
 	}
 	// Check thread.
 	if e := req.Thread.Verify(req.Creator, req.Signature); e != nil {
-		*ok = false
 		return e
 	}
 	// Check board.
 	bi, has := g.boardSaver.Get(req.BoardPubKey)
 	if has == false {
-		*ok = false
 		return errors.New("not subscribed to board")
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == false {
-		*ok = false
 		return errors.New("not master of board")
 	}
 	// Create new thread.
 	if e := g.container.NewThread(req.BoardPubKey, bi.Config.GetSK(), req.Thread); e != nil {
-		*ok = false
 		return e
 	}
 	// Modify thread.
 	req.Thread.MasterBoard = req.BoardPubKey.Hex()
+	tRefStr = &req.Thread.Ref
 	return nil
 }
