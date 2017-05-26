@@ -16,6 +16,7 @@ type Post struct {
 	Author    string     `json:"author"`
 	Created   int64      `json:"created"`
 	Signature cipher.Sig `json:"-"`
+	Ref       string     `json:"hash" enc:"-"`
 }
 
 func (p *Post) checkContent() error {
@@ -42,8 +43,7 @@ func (p *Post) Sign(pk cipher.PubKey, sk cipher.SecKey) error {
 	p.Author = pk.Hex()
 	p.Created = 0
 	p.Signature = cipher.Sig{}
-	p.Signature = cipher.SignHash(
-		cipher.SumSHA256(encoder.Serialize(*p)), sk)
+	p.Signature = cipher.SignHash(cipher.SumSHA256(encoder.Serialize(*p)), sk)
 	return nil
 }
 

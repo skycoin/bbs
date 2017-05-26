@@ -98,6 +98,7 @@ func (qs *QueueSaver) Close() {
 }
 
 func (qs *QueueSaver) Process() {
+	//TODO: screams for refactoring
 	qs.Lock()
 	defer qs.Unlock()
 	if len(qs.queue) == 0 {
@@ -149,6 +150,7 @@ func (qs *QueueSaver) Process() {
 func (qs *QueueSaver) AddNewPostReq(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) error {
 	qs.Lock()
 	defer qs.Unlock()
+	log.Println("[QUEUESAVER] New Post Request.")
 	req := &rpc.ReqNewPost{bpk, tRef, post}
 	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
@@ -172,21 +174,21 @@ func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey,
 	req := &rpc.ReqNewThread{bpk, upk, thread.Sign(usk), thread}
 	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
-		log.Println("\t-", e)
+		log.Println("[QUEUESAVER]", e)
 		return e
 	}
-	log.Println("\t- Obtained Board.")
+	log.Println("[QUEUESAVER] Got Board.")
 	rpcClient, e := rpc.NewClient(b.URL)
 	if e != nil {
 		// Add to queue.
-		log.Println("\t-", e)
+		log.Println("[QUEUESAVER]", e)
 		qs.queue = append(qs.queue, NewQueueItem().SetThread(req))
 		qs.save()
 		return e
 	}
 	_, e = rpcClient.NewThread(req)
 	if e != nil {
-		log.Println("\t-", e)
+		log.Println("[QUEUESAVER]", e)
 		return e
 	}
 	return e

@@ -68,3 +68,5 @@ fabric.properties
 /tests/bbs_a/cli
 /tests/bbs_a/cxod
 /tests/bbs_a/main
+.DS_Store
+bbs

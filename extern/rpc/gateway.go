@@ -77,6 +77,7 @@ func (g *Gateway) NewThread(req *ReqNewThread, ok *bool) error {
 	}
 	// Create new thread.
 	if e := g.container.NewThread(req.BoardPubKey, bi.Config.GetSK(), req.Thread); e != nil {
+		*ok = false
 		return e
 	}
 	// Modify thread.
