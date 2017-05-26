@@ -12,6 +12,7 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"math/rand"
+	"github.com/evanlinjin/bbs/misc"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.
@@ -229,11 +230,23 @@ func (g *Gateway) RemoveThread(bpk cipher.PubKey, tRef skyobject.Reference) erro
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
 		// Via Container.
-		log.Println("[GUI GW] Master, remove the thread!")
+
+		// Obtain thread.
+		thread, e := g.container.GetThread(tRef)
+		if e != nil {
+			return e
+		}
+		// Obtain thread master's public key.
+		masterPK, e := misc.GetPubKey(thread.MasterBoard)
+		if e != nil {
+			return e
+		}
+		// Remove dependency (if has).
+		bi.Config.RemoveDep(masterPK, tRef)
+		// Remove thread.
 		if e := g.container.RemoveThread(bpk, bi.Config.GetSK(), tRef); e != nil {
 			return e
 		}
-		bi.Config.RemoveDep(bpk, tRef)
 	} else {
 		// threads and posts are only to be deleted from master.
 		return errors.New("not owning the board")

@@ -134,6 +134,20 @@ func (c *Container) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	return w.RemoveCurrent()
 }
 
+// GetThread obtains a single thread via reference.
+func (c *Container) GetThread(tRef skyobject.Reference) (*typ.Thread, error) {
+	tData, has := c.c.Get(tRef)
+	if !has {
+		return nil, errors.New("thread not found")
+	}
+	thread := &typ.Thread{}
+	if e := encoder.DeserializeRaw(tData, thread); e != nil {
+		return nil, e
+	}
+	thread.Ref = tRef.String()
+	return thread, nil
+}
+
 // GetThreads attempts to obtain a list of threads from a board of public key.
 func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 	w := c.c.LastRoot(bpk).Walker()
