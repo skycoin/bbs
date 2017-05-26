@@ -333,6 +333,9 @@ func (g *Gateway) ImportThread(fromBpk, toBpk cipher.PubKey, tRef skyobject.Refe
 	if !has {
 		return errors.New("not subscribed to board")
 	}
+	if bi.Config.Master == false {
+		return errors.New("to board is not master")
+	}
 	// Add Dependency to BoardSaver.
 	if e := g.boardSaver.AddBoardDep(toBpk, fromBpk, tRef); e != nil {
 		return e
