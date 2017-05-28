@@ -13,8 +13,8 @@ echo "> cxod ..."
 go build $GOPATH/src/github.com/skycoin/cxo/cmd/cxod/cxod.go
 echo "> cli ..."
 go build $GOPATH/src/github.com/skycoin/cxo/cmd/cli/cli.go
-echo "> main ..."
-go build $GOPATH/src/github.com/evanlinjin/bbs/main.go
+echo "> bbsnode ..."
+go build $GOPATH/src/github.com/evanlinjin/bbs/cmd/bbsnode/bbsnode.go
 
 # Start BBS Node 'A'.
 
@@ -35,7 +35,7 @@ echo "> ADDING FEEDS ..."
     --a=[::]:$a_cxorpc \
     --e='add_feed 02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b'
 echo "> BBS SERVER ..."
-./main \
+./bbsnode \
     --master=true \
     --cxo-port=$a_cxod \
     --cxo-use-memory=true \
@@ -49,4 +49,4 @@ echo "> BBS SERVER ..."
 
 wait
 echo "[ CLEANING UP ]"
-rm cli cxod main *.bak *.json
+rm cli cxod bbsnode *.bak *.json

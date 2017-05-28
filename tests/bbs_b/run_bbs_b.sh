@@ -13,8 +13,8 @@ echo "> cxod ..."
 go build $GOPATH/src/github.com/skycoin/cxo/cmd/cxod/cxod.go
 echo "> cli ..."
 go build $GOPATH/src/github.com/skycoin/cxo/cmd/cli/cli.go
-echo "> main ..."
-go build $GOPATH/src/github.com/evanlinjin/bbs/main.go
+echo "> bbsnode ..."
+go build $GOPATH/src/github.com/evanlinjin/bbs/cmd/bbsnode/bbsnode.go
 
 # Start BBS Node 'B'.
 
@@ -39,7 +39,7 @@ echo "> CONNECTING TO DAEMON A ..."
     --a=[::]:$b_cxorpc \
     --e='connect [::]:8998'
 echo "> BBS SERVER ..."
-./main \
+./bbsnode \
     --master=true \
     --cxo-port=$b_cxod \
     --cxo-use-memory=true \
@@ -53,4 +53,4 @@ echo "> BBS SERVER ..."
 
 wait
 echo "[ CLEANING UP ]"
-rm cli cxod main *.bak *.json
+rm cli cxod bbsnode *.bak *.json

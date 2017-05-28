@@ -3,7 +3,7 @@ package gui
 import (
 	"errors"
 	"fmt"
-	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/intern/store"
 	"github.com/evanlinjin/bbs/intern/store/msg"
@@ -18,7 +18,7 @@ import (
 // Gateway represents the intermediate between External calls and internal processing.
 // It can be seen as a security layer.
 type Gateway struct {
-	config     *cmd.Config
+	config     *args.Config
 	container  *cxo.Container
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
@@ -27,7 +27,7 @@ type Gateway struct {
 
 // NewGateway creates a new Gateway.
 func NewGateway(
-	config *cmd.Config,
+	config *args.Config,
 	container *cxo.Container,
 	boardSaver *store.BoardSaver,
 	userSaver *store.UserSaver,

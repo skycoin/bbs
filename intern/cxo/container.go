@@ -2,7 +2,7 @@ package cxo
 
 import (
 	"fmt"
-	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/pkg/errors"
 	"github.com/skycoin/cxo/node"
@@ -16,10 +16,10 @@ import (
 type Container struct {
 	c      *node.Container
 	client *node.Client
-	config *cmd.Config
+	config *args.Config
 }
 
-func NewContainer(config *cmd.Config) (c *Container, e error) {
+func NewContainer(config *args.Config) (c *Container, e error) {
 	c = &Container{config: config}
 
 	// Setup cxo registry.

@@ -2,21 +2,21 @@ package rpc
 
 import (
 	"errors"
-	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/intern/store"
 	"log"
 )
 
 type Gateway struct {
-	config     *cmd.Config
+	config     *args.Config
 	container  *cxo.Container
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
 }
 
 func NewGateway(
-	config *cmd.Config,
+	config *args.Config,
 	container *cxo.Container,
 	boardSaver *store.BoardSaver,
 	userSaver *store.UserSaver,

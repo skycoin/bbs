@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/misc"
 	"github.com/pkg/errors"
@@ -29,14 +29,14 @@ type BoardInfo struct {
 // BoardSaver manages boards.
 type BoardSaver struct {
 	sync.Mutex
-	config *cmd.Config
+	config *args.Config
 	c      *cxo.Container
 	store  map[cipher.PubKey]*BoardInfo
 	quit   chan struct{}
 }
 
 // NewBoardSaver creates a new BoardSaver.
-func NewBoardSaver(config *cmd.Config, container *cxo.Container) (*BoardSaver, error) {
+func NewBoardSaver(config *args.Config, container *cxo.Container) (*BoardSaver, error) {
 	bs := BoardSaver{
 		config: config,
 		c:      container,

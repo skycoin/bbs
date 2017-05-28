@@ -2,7 +2,7 @@ package store
 
 import (
 	"errors"
-	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/misc"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -59,7 +59,7 @@ func (uc *UserConfig) Check() (cipher.PubKey, error) {
 // UserSaver manages users.
 type UserSaver struct {
 	sync.Mutex
-	config  *cmd.Config
+	config  *args.Config
 	c       *cxo.Container
 	store   map[cipher.PubKey]*UserConfig // All UserConfigs.
 	masters map[cipher.PubKey]*UserConfig // UserConfigs of users we own.
@@ -67,7 +67,7 @@ type UserSaver struct {
 }
 
 // NewUserSaver creates a new UserSaver.
-func NewUserSaver(config *cmd.Config, container *cxo.Container) (*UserSaver, error) {
+func NewUserSaver(config *args.Config, container *cxo.Container) (*UserSaver, error) {
 	us := UserSaver{
 		config:  config,
 		c:       container,

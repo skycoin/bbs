@@ -1,7 +1,7 @@
 package msg
 
 import (
-	"github.com/evanlinjin/bbs/cmd"
+	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/extern/rpc"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/intern/typ"
@@ -45,14 +45,14 @@ func (qi *QueueItem) SetThread(req *rpc.ReqNewThread) *QueueItem {
 
 type QueueSaver struct {
 	sync.Mutex
-	config *cmd.Config
+	config *args.Config
 	c      *cxo.Container
 	queue  []*QueueItem
 	done   []*QueueItem
 	quit   chan struct{}
 }
 
-func NewQueueSaver(config *cmd.Config, container *cxo.Container) (*QueueSaver, error) {
+func NewQueueSaver(config *args.Config, container *cxo.Container) (*QueueSaver, error) {
 	qs := QueueSaver{
 		config: config,
 		c:      container,
