@@ -1,9 +1,11 @@
 package gui
 
 import (
-	"github.com/skycoin/skycoin/src/util"
+	"fmt"
+	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"net"
 	"net/http"
+	"path/filepath"
 )
 
 var (
@@ -11,26 +13,22 @@ var (
 	quit     chan struct{}
 )
 
-const (
-	guiDir      = "./extern/gui/static"
-	resourceDir = "app/"
-	devDir      = "dev/"
-)
+func OpenWebInterface(c *args.Config, g *Gateway) (string, error) {
+	// Get host.
+	host := fmt.Sprintf("127.0.0.1:%d", c.WebGUIPort())
 
-func OpenWebInterface(host string, g *Gateway) (e error) {
 	quit = make(chan struct{})
-
-	appLoc, e := util.DetermineResourcePath(guiDir, resourceDir, devDir)
+	appLoc, e := filepath.Abs(c.WebGUIDir())
 	if e != nil {
-		return
+		return "", e
 	}
 
 	listener, e = net.Listen("tcp", host)
 	if e != nil {
-		return
+		return "", e
 	}
 	go serve(listener, NewServeMux(g, appLoc), quit)
-	return
+	return fmt.Sprintf("%s://%s", "http", host), nil
 }
 
 func serve(listener net.Listener, mux *http.ServeMux, q chan struct{}) {
