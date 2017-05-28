@@ -1,10 +1,10 @@
 package store
 
 import (
-	"errors"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/misc"
+	"github.com/pkg/errors"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
@@ -255,17 +255,17 @@ func (bs *BoardSaver) AddBoardDep(bpk, depBpk cipher.PubKey, deptRef skyobject.R
 	defer bs.Unlock()
 	// Check if we are subscribed to board of `depBpk`.
 	if _, has := bs.store[depBpk]; !has {
-		return errors.New("not subscribed to board")
+		return errors.New("failed to add board dependency: not subscribed to board " + depBpk.Hex())
 	}
 	// Retrieve board info for board of `bpk`.
 	var bi *BoardInfo
 	var has bool
 	if bi, has = bs.store[bpk]; !has {
-		return errors.New("not subscribed of board")
+		return errors.New("failed to add board dependency: not subscribed to board " + bpk.Hex())
 	}
 	// Add dependency.
 	if e := bi.Config.AddDep(depBpk, deptRef); e != nil {
-		return e
+		return errors.Wrap(e, "failed to add board dependency")
 	}
 	bs.save()
 	return nil

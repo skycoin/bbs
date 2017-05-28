@@ -2,8 +2,8 @@ package store
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/evanlinjin/bbs/misc"
+	"github.com/pkg/errors"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )
@@ -52,7 +52,7 @@ func (bc *BoardConfig) GetSK() cipher.SecKey {
 
 func (bc *BoardConfig) AddDep(bpk cipher.PubKey, tRef skyobject.Reference) error {
 	if !bc.Master {
-		return errors.New("not master of board")
+		return errors.New("bbs node is not master of board")
 	}
 	bpkStr, tRefStr := bpk.Hex(), tRef.String()
 	for _, bd := range bc.Deps {

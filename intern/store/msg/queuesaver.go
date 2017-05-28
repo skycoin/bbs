@@ -191,5 +191,5 @@ func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey,
 		log.Println("[QUEUESAVER]", e)
 		return e
 	}
-	return e
+	return nil
 }

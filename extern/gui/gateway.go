@@ -209,15 +209,12 @@ func (g *Gateway) NewThread(bpk cipher.PubKey, thread *typ.Thread) error {
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
 		// Via Container.
-		if e := g.container.NewThread(bpk, bi.Config.GetSK(), thread); e != nil {
-			return e
-		}
+		return g.container.NewThread(bpk, bi.Config.GetSK(), thread)
 	} else {
 		// Via RPC Client.
 		uc := g.userSaver.GetCurrent()
 		return g.queueSaver.AddNewThreadReq(bpk, uc.GetPK(), uc.GetSK(), thread)
 	}
-	return nil
 }
 
 // RemoveThread removes a thread
@@ -295,13 +292,11 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
 		// Via Container.
-		if e = g.container.NewPost(bpk, bi.Config.GetSK(), tRef, post); e != nil {
-			fmt.Println(e)
-			return e
-		}
+		return g.container.NewPost(bpk, bi.Config.GetSK(), tRef, post)
+	} else {
+		// Via RPC Client.
+		return g.queueSaver.AddNewPostReq(bpk, tRef, post)
 	}
-	// Via RPC Client.
-	return g.queueSaver.AddNewPostReq(bpk, tRef, post)
 }
 
 // RemovePost removes a post in specified board and thread.
@@ -327,7 +322,6 @@ func (g *Gateway) RemovePost(bpk cipher.PubKey, tRef, pRef skyobject.Reference) 
 
 // ImportThread imports a thread from one board to a board which this node is master of.
 func (g *Gateway) ImportThread(fromBpk, toBpk cipher.PubKey, tRef skyobject.Reference) error {
-	g.container.Subscribe(fromBpk)
 	// Check "to" board.
 	bi, has := g.boardSaver.Get(toBpk)
 	if !has {

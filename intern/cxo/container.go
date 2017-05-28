@@ -1,10 +1,10 @@
 package cxo
 
 import (
-	"errors"
 	"fmt"
 	"github.com/evanlinjin/bbs/cmd"
 	"github.com/evanlinjin/bbs/intern/typ"
+	"github.com/pkg/errors"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -325,24 +325,24 @@ func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecK
 	w := c.c.LastRoot(fromBpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
-		return e
+		return errors.Wrap(e, "import thread failed: AdvanceFromRoot failed for board "+fromBpk.Hex())
 	}
 
 	// Obtain thread and thread page.
 	tp := &typ.ThreadPage{}
 	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
-		return e
+		return errors.Wrap(e, "import thread failed: AdvanceFromRefsField failed for board "+fromBpk.Hex())
 	}
 	t := &typ.Thread{}
 	if _, e := w.GetFromRefField("Thread", t); e != nil {
-		return e
+		return errors.Wrap(e, "import thread failed: GetFromRefField failed for board "+fromBpk.Hex())
 	}
 
 	// Get from 'to' Board.
 	w = c.c.LastRootSk(toBpk, toBsk).Walker()
 	bc = &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
-		return e
+		return errors.Wrap(e, "import thread failed: AdvanceFromRoot failed for board "+toBpk.Hex())
 	}
 	if e := w.ReplaceInRefsField("ThreadPages", *tp, makeThreadPageFinder(tRef)); e != nil {
 		/* THREAD DOES NOT EXIST */
