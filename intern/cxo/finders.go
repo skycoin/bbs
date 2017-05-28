@@ -1,9 +1,9 @@
 package cxo
 
 import (
-	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/cxo/node"
 	"github.com/evanlinjin/bbs/intern/typ"
+	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/cxo/skyobject"
 )
 
 func makeBoardContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) bool {

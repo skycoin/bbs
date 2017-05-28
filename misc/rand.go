@@ -1,6 +1,7 @@
 package misc
 
 import (
+	"github.com/pkg/errors"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"math/rand"
@@ -53,4 +54,11 @@ func MakeDeterministicRef(seed byte) skyobject.Reference {
 	}
 	shaOut.Set(shaBytes)
 	return skyobject.Reference(shaOut)
+}
+
+func MakeIntBetween(min, max int) (int, error) {
+	if min > max {
+		return -1, errors.New("invalid range provided")
+	}
+	return min + rand.Intn(max-min+1), nil
 }

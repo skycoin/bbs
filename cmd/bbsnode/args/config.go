@@ -1,9 +1,20 @@
 package args
 
-import "flag"
+import (
+	"flag"
+	"github.com/pkg/errors"
+)
 
 // Config represents commandline arguments.
 type Config struct {
+	// [TEST MODE] enforces the following behaviours:
+	// - `cxoUseMemory = true` (disables modification to cxo database).
+	// - `configDir = "/tmp"` (disables modification to config files).
+	testMode            bool // Whether to enable test mode.
+	testModeThreads     int  // Number of threads to use for test mode (will create them in test mode).
+	testModeMinInterval int  // Minimum interval between simulated activity (in seconds).
+	testModeMaxInterval int  // Maximum interval between simulated activity (in seconds).
+
 	master            bool   // Whether BBS node can host boards.
 	configDir         string // Configuration directory.
 	rpcServerPort     int    // RPC server port (master node only).
@@ -19,6 +30,11 @@ type Config struct {
 // NewConfig makes Config with default values.
 func NewConfig() *Config {
 	return &Config{
+		testMode:            false,
+		testModeThreads:     3,
+		testModeMinInterval: 1,
+		testModeMaxInterval: 10,
+
 		master:            false,
 		configDir:         ".",
 		rpcServerPort:     6421,
@@ -34,6 +50,30 @@ func NewConfig() *Config {
 
 // Parse fills the Config with commandline argument values.
 func (c *Config) Parse() *Config {
+	/*
+		<<< TEST FLAGS >>>
+	*/
+
+	flag.BoolVar(&c.testMode,
+		"test-mode", c.testMode,
+		"whether to enable test mode")
+
+	flag.IntVar(&c.testModeThreads,
+		"test-mode-threads", c.testModeThreads,
+		"number of threads to use for test mode")
+
+	flag.IntVar(&c.testModeMinInterval,
+		"test-mode-min", c.testModeMinInterval,
+		"minimum interval in seconds between simulated activity")
+
+	flag.IntVar(&c.testModeMaxInterval,
+		"test-mode-max", c.testModeMaxInterval,
+		"maximum interval in seconds between simulated activity")
+
+	/*
+		<<< BBS FLAGS >>>
+	*/
+
 	flag.BoolVar(&c.master,
 		"master", c.master,
 		"whether to enable bbs node to host boards")
@@ -76,6 +116,30 @@ func (c *Config) Parse() *Config {
 
 	flag.Parse()
 	return c
+}
+
+// PostProcess checks the validity and post processes the flags.
+func (c *Config) PostProcess() (*Config, error) {
+	// Action on test mode.
+	if c.testMode {
+		// Check test mode settings.
+		if c.testModeThreads < 0 {
+			return nil, errors.New("invalid number of test mode threads specified")
+		}
+		if c.testModeMinInterval < 1 {
+			return nil, errors.New("invalid test mode minimum interval specified")
+		}
+		if c.testModeMaxInterval < 1 {
+			return nil, errors.New("invalid test mode maximum interval specified")
+		}
+		if c.testModeMinInterval > c.testModeMaxInterval {
+			return nil, errors.New("test mode minimum interval > maximum interval")
+		}
+		// Enforce behaviour.
+		c.cxoUseMemory = true
+		c.configDir = "/tmp"
+	}
+	return c, nil
 }
 
 /*

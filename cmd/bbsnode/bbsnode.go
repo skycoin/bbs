@@ -19,7 +19,10 @@ const LocalhostAddress = "127.0.0.1"
 
 func main() {
 	quit := CatchInterrupt()
-	config := args.NewConfig().Parse()
+	config, e := args.NewConfig().Parse().PostProcess()
+	if e != nil {
+		panic(e)
+	}
 	util.InitDataDir(config.ConfigDir())
 	log.Println("[CONFIG] Master mode:", config.Master())
 	defer log.Println("Goodbye.")
