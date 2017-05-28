@@ -67,6 +67,10 @@ func NewQueueSaver(config *args.Config, container *cxo.Container) (*QueueSaver, 
 }
 
 func (qs *QueueSaver) load() error {
+	// Don't load if specified not to.
+	if !qs.config.SaveConfig() {
+		return nil
+	}
 	if e := util.LoadJSON(QueueConfigFileName, &qs.queue); e != nil {
 		return e
 	}
@@ -74,6 +78,10 @@ func (qs *QueueSaver) load() error {
 }
 
 func (qs *QueueSaver) save() error {
+	// Don't save if specified.
+	if !qs.config.SaveConfig() {
+		return nil
+	}
 	return util.SaveJSON(QueueConfigFileName, &qs.queue, 0600)
 }
 

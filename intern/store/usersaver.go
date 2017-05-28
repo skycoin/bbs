@@ -74,7 +74,7 @@ func NewUserSaver(config *args.Config, container *cxo.Container) (*UserSaver, er
 		store:   make(map[cipher.PubKey]*UserConfig),
 		masters: make(map[cipher.PubKey]*UserConfig),
 	}
-	us.load()
+	us.checkUsers(us.load())
 	if e := us.save(); e != nil {
 		return nil, e
 	}
@@ -82,13 +82,22 @@ func NewUserSaver(config *args.Config, container *cxo.Container) (*UserSaver, er
 	return &us, nil
 }
 
-func (us *UserSaver) load() error {
+func (us *UserSaver) load() *UsersConfigFile {
+	ucf := &UsersConfigFile{}
+	// Don't load if specified not to.
+	if !us.config.SaveConfig() {
+		return ucf
+	}
 	log.Println("[USERSAVER] Loading configuration file...")
 	// Load users from file.
-	ucf := UsersConfigFile{}
-	if e := util.LoadJSON(UsersConfigFileName, &ucf); e != nil {
+	if e := util.LoadJSON(UsersConfigFileName, ucf); e != nil {
 		log.Println("[USERSAVER]", e)
 	}
+	return ucf
+}
+
+// Checks if config is okay. Creates a random master user if not set.
+func (us *UserSaver) checkUsers(ucf *UsersConfigFile) {
 	// Check loaded users and intern in memory.
 	for _, uc := range ucf.Users {
 		log.Printf("\t- %v (master: %v)", uc.PubKey, uc.Master)
@@ -103,7 +112,7 @@ func (us *UserSaver) load() error {
 		}
 		log.Println("\t\t loaded in memory")
 	}
-	// Load current user.
+	// Check current user.
 	upk, e := misc.GetPubKey(ucf.Current)
 	if e != nil || upk == (cipher.PubKey{}) {
 		log.Println("[USERSAVER] Current user invalid. Auto setting...")
@@ -122,16 +131,20 @@ func (us *UserSaver) load() error {
 			us.masters[upk] = &uc
 			us.current = upk
 			log.Println("[USERSAVER] Current user:", us.current.Hex())
-			return nil
+			return
 		}
-		return nil
+		return
 	}
 	us.current = upk
 	log.Println("[USERSAVER] Current user:", us.current.Hex())
-	return nil
+	return
 }
 
 func (us *UserSaver) save() error {
+	// Don't save if specified.
+	if !us.config.SaveConfig() {
+		return nil
+	}
 	ucf := UsersConfigFile{}
 	ucf.Current = us.current.Hex()
 	for _, uc := range us.store {

@@ -9,8 +9,8 @@ import (
 type Config struct {
 
 	// [TEST MODE] enforces the following behaviours:
-	// - `cxoUseMemory = true` (disables modification to cxo database).
-	// - `configDir = "/tmp"` (disables modification to config files).
+	// - `cxoMemoryMode = true` (disables modification to cxo database).
+	// - `saveConfig = false` (disables modification to config files).
 
 	testMode            bool // Whether to enable test mode.
 	testModeThreads     int  // Number of threads to use for test mode (will create them in test mode).
@@ -18,11 +18,12 @@ type Config struct {
 	testModeMaxInterval int  // Maximum interval between simulated activity (in seconds).
 
 	master            bool   // Whether BBS node can host boards.
+	saveConfig        bool   // Whether to save and use BBS configuration files.
 	configDir         string // Configuration directory.
 	rpcServerPort     int    // RPC server port (master node only).
 	rpcServerRemAdr   string // RPC remote address (master node only).
 	cxoPort           int    // Port of CXO Daemon.
-	cxoUseMemory      bool   // Whether to use in-memory database for CXO.
+	cxoMemoryMode     bool   // Whether to use in-memory database for CXO.
 	cxoDir            string // Folder name to store db.
 	webGUIEnable      bool   // Whether to enable web GUI.
 	webGUIPort        int    // Port of web GUI.
@@ -39,11 +40,12 @@ func NewConfig() *Config {
 		testModeMaxInterval: 10,
 
 		master:            false,
+		saveConfig:        true,
 		configDir:         ".",
 		rpcServerPort:     6421,
 		rpcServerRemAdr:   "127.0.0.1:6421",
 		cxoPort:           8998,
-		cxoUseMemory:      false,
+		cxoMemoryMode:     false,
 		cxoDir:            "bbs",
 		webGUIEnable:      true,
 		webGUIPort:        6420,
@@ -82,6 +84,10 @@ func (c *Config) Parse() *Config {
 		"master", c.master,
 		"whether to enable bbs node to host boards")
 
+	flag.BoolVar(&c.saveConfig,
+		"save-config", c.saveConfig,
+		"whether to save and use configuration files")
+
 	flag.StringVar(&c.configDir,
 		"config-dir", c.configDir,
 		"configuration directory")
@@ -98,8 +104,8 @@ func (c *Config) Parse() *Config {
 		"cxo-port", c.cxoPort,
 		"port of cxo daemon to connect to")
 
-	flag.BoolVar(&c.cxoUseMemory,
-		"cxo-use-memory", c.cxoUseMemory,
+	flag.BoolVar(&c.cxoMemoryMode,
+		"cxo-memory-mode", c.cxoMemoryMode,
 		"whether to use in-memory database")
 
 	flag.StringVar(&c.cxoDir,
@@ -144,8 +150,8 @@ func (c *Config) PostProcess() (*Config, error) {
 			return nil, errors.New("test mode minimum interval > maximum interval")
 		}
 		// Enforce behaviour.
-		c.cxoUseMemory = true
-		c.configDir = "/tmp"
+		c.cxoMemoryMode = true
+		c.saveConfig = false
 	}
 	return c, nil
 }
@@ -160,11 +166,12 @@ func (c *Config) TestModeMinInterval() int { return c.testModeMinInterval }
 func (c *Config) TestModeMaxInterval() int { return c.testModeMaxInterval }
 
 func (c *Config) Master() bool            { return c.master }
+func (c *Config) SaveConfig() bool        { return c.saveConfig }
 func (c *Config) ConfigDir() string       { return c.configDir }
 func (c *Config) RPCServerPort() int      { return c.rpcServerPort }
 func (c *Config) RPCServerRemAdr() string { return c.rpcServerRemAdr }
 func (c *Config) CXOPort() int            { return c.cxoPort }
-func (c *Config) CXOUseMemory() bool      { return c.cxoUseMemory }
+func (c *Config) CXOUseMemory() bool      { return c.cxoMemoryMode }
 func (c *Config) CXODir() string          { return c.cxoDir }
 func (c *Config) WebGUIEnable() bool      { return c.webGUIEnable }
 func (c *Config) WebGUIPort() int         { return c.webGUIPort }

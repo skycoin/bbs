@@ -41,8 +41,9 @@ echo "> CONNECTING TO DAEMON A ..."
 echo "> BBS SERVER ..."
 ./bbsnode \
     --master=true \
+    --save-config=false \
     --cxo-port=$b_cxod \
-    --cxo-use-memory=true \
+    --cxo-memory-mode=true \
     --cxo-dir=bbs_b \
     --rpc-server-port=$b_bbsrpc \
     --rpc-server-remote-address=127.0.0.1:$b_bbsrpc \
@@ -53,4 +54,5 @@ echo "> BBS SERVER ..."
 
 wait
 echo "[ CLEANING UP ]"
-rm cli cxod bbsnode *.bak *.json
+rm cli cxod bbsnode
+echo "Goodbye!"

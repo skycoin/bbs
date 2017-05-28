@@ -62,6 +62,10 @@ func (bs *BoardSaver) Close() {
 
 // Helper function. Loads and checks boards' configuration file to memory.
 func (bs *BoardSaver) load() error {
+	// Don't load if specified not to.
+	if !bs.config.SaveConfig() {
+		return nil
+	}
 	log.Println("[BOARDSAVER] Loading configuration file...")
 	// Load boards from file.
 	bcf := BoardSaverFile{}
@@ -175,6 +179,10 @@ func (bs *BoardSaver) checkDeps() {
 
 // Helper function. Saves boards into configuration file.
 func (bs *BoardSaver) save() error {
+	// Don't save if specified.
+	if !bs.config.SaveConfig() {
+		return nil
+	}
 	// Load from memory.
 	bcf := BoardSaverFile{}
 	for _, bi := range bs.store {
