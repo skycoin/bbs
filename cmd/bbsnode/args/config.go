@@ -7,9 +7,11 @@ import (
 
 // Config represents commandline arguments.
 type Config struct {
+
 	// [TEST MODE] enforces the following behaviours:
 	// - `cxoUseMemory = true` (disables modification to cxo database).
 	// - `configDir = "/tmp"` (disables modification to config files).
+
 	testMode            bool // Whether to enable test mode.
 	testModeThreads     int  // Number of threads to use for test mode (will create them in test mode).
 	testModeMinInterval int  // Minimum interval between simulated activity (in seconds).
@@ -24,6 +26,7 @@ type Config struct {
 	cxoDir            string // Folder name to store db.
 	webGUIEnable      bool   // Whether to enable web GUI.
 	webGUIPort        int    // Port of web GUI.
+	webGUIDir         string // Root directory that has the index.html file.
 	webGUIOpenBrowser bool   // Whether to open browser on web GUI start.
 }
 
@@ -44,6 +47,7 @@ func NewConfig() *Config {
 		cxoDir:            "bbs",
 		webGUIEnable:      true,
 		webGUIPort:        6420,
+		webGUIDir:         "./extern/gui/static",
 		webGUIOpenBrowser: true,
 	}
 }
@@ -110,6 +114,10 @@ func (c *Config) Parse() *Config {
 		"web-gui-port", c.webGUIPort,
 		"local port to serve web gui on")
 
+	flag.StringVar(&c.webGUIDir,
+		"web-gui-dir", c.webGUIDir,
+		"root directory of index.html file")
+
 	flag.BoolVar(&c.webGUIOpenBrowser,
 		"web-gui-open-browser", c.webGUIOpenBrowser,
 		"whether to open browser after web gui is ready")
@@ -146,6 +154,11 @@ func (c *Config) PostProcess() (*Config, error) {
 	These functions ensure that configuration values are not accidentally modified.
 */
 
+func (c *Config) TestMode() bool           { return c.testMode }
+func (c *Config) TestModeThreads() int     { return c.testModeThreads }
+func (c *Config) TestModeMinInterval() int { return c.testModeMinInterval }
+func (c *Config) TestModeMaxInterval() int { return c.testModeMaxInterval }
+
 func (c *Config) Master() bool            { return c.master }
 func (c *Config) ConfigDir() string       { return c.configDir }
 func (c *Config) RPCServerPort() int      { return c.rpcServerPort }
@@ -155,4 +168,5 @@ func (c *Config) CXOUseMemory() bool      { return c.cxoUseMemory }
 func (c *Config) CXODir() string          { return c.cxoDir }
 func (c *Config) WebGUIEnable() bool      { return c.webGUIEnable }
 func (c *Config) WebGUIPort() int         { return c.webGUIPort }
+func (c *Config) WebGUIDir() string       { return c.webGUIDir }
 func (c *Config) WebGUIOpenBrowser() bool { return c.webGUIOpenBrowser }

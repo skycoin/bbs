@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/extern/gui"
 	"github.com/evanlinjin/bbs/extern/rpc"
@@ -14,8 +13,6 @@ import (
 	"os/signal"
 	"time"
 )
-
-const LocalhostAddress = "127.0.0.1"
 
 func main() {
 	quit := CatchInterrupt()
@@ -50,23 +47,22 @@ func main() {
 		CatchError(e, "unable to start rpc server")
 		defer rpcServer.Close()
 
-		log.Println("[RPC SERVER] Serving on address:", rpcServer.Address())
+		log.Println("[RPCSERVER] Serving on address:", rpcServer.Address())
 	}
 
 	if config.WebGUIEnable() {
-		host := fmt.Sprintf("%s:%d", LocalhostAddress, config.WebGUIPort())
-		fullAddress := fmt.Sprintf("%s://%s", "http", host)
-
 		gateway := gui.NewGateway(config, container, boardSaver, userSaver, queueSaver)
-		e := gui.OpenWebInterface(host, gateway)
+		serveAddr, e := gui.OpenWebInterface(config, gateway)
 		CatchError(e, "unable to start web server")
 		defer gui.Close()
+
+		log.Println("[WEBGUI] Serving on:", serveAddr)
 
 		if config.WebGUIOpenBrowser() {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
 				log.Println("Opening web browser...")
-				util.OpenBrowser(fullAddress)
+				util.OpenBrowser(serveAddr)
 			}()
 		}
 	}

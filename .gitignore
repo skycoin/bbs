@@ -70,3 +70,4 @@ fabric.properties
 /tests/bbs_a/main
 .DS_Store
 bbs
+/extern/gui/static/node_modules/
