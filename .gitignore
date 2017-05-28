@@ -22,7 +22,7 @@ fabric.properties
 /tests/bbs_a/cxod
 /tests/bbs_a/main
 .DS_Store
-/extern/gui/static/node_modules
+#/extern/gui/static/node_modules
 bbsnode
 cli
 cxod
