@@ -66,7 +66,7 @@ func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url str
 	r := c.c.LastRootSk(bpk, bsk)
 	w := r.Walker()
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(r)); e != nil {
 		return e
 	}
 	b := &typ.Board{}
@@ -83,7 +83,7 @@ func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url str
 func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
 	w := c.c.LastRoot(bpk).Walker()
 	bc := typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(&bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(&bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return nil, e
 	}
 	b := &typ.Board{}
@@ -97,7 +97,7 @@ func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 	for i, bpk := range bpks {
 		w := c.c.LastRoot(bpk).Walker()
 		bc, b := typ.BoardContainer{}, typ.Board{}
-		if e := w.AdvanceFromRoot(&bc, makeBoardContainerFinder()); e != nil {
+		if e := w.AdvanceFromRoot(&bc, makeBoardContainerFinder(w.Root())); e != nil {
 			continue
 		}
 		w.AdvanceFromRefField("Board", &b)
@@ -127,7 +127,7 @@ func (c *Container) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	fmt.Println("Removing board:", bpk.Hex())
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
 
@@ -152,7 +152,7 @@ func (c *Container) GetThread(tRef skyobject.Reference) (*typ.Thread, error) {
 func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return nil, e
 	}
 	threads := make([]*typ.Thread, len(bc.Threads))
@@ -174,7 +174,7 @@ func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.Thread) (e error) {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
-	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
 	thread.MasterBoard = bpk.Hex()
@@ -191,7 +191,7 @@ func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.
 func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) (e error) {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
-	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
 
@@ -202,7 +202,7 @@ func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyo
 	}
 
 	fmt.Println("Removing from thread pages")
-	e = w.RemoveInRefsField("ThreadPages", makeThreadPageFinder(tRef))
+	e = w.RemoveInRefsField("ThreadPages", makeThreadPageFinder(w, tRef))
 	if e != nil {
 		return errors.New("remove thread from threadpages failed: " + e.Error())
 	}
@@ -214,7 +214,7 @@ func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyo
 func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*typ.Thread, []*typ.Post, error) {
 	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return nil, nil, e
 	}
 	// Get thread.
@@ -229,7 +229,7 @@ func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (
 	thread.Ref = cipher.SHA256(tRef).Hex()
 	// Get posts.
 	tp := &typ.ThreadPage{}
-	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(w, tRef)); e != nil {
 		return nil, nil, e
 	}
 	posts := make([]*typ.Post, len(tp.Posts))
@@ -251,11 +251,11 @@ func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (
 func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.Post, error) {
 	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return nil, e
 	}
 	tp := &typ.ThreadPage{}
-	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(w, tRef)); e != nil {
 		return nil, e
 	}
 	posts := make([]*typ.Post, len(tp.Posts))
@@ -277,15 +277,15 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, post *typ.Post) error {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
 	tp := &typ.ThreadPage{}
-	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(w, tRef)); e != nil {
 		return e
 	}
 	t := &typ.Thread{}
-	if _, e := w.GetFromRefField("Thread", t); e != nil {
+	if e := w.GetFromRefField("Thread", t); e != nil {
 		return e
 	}
 	if t.MasterBoard != bpk.Hex() {
@@ -304,11 +304,11 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef skyobject.Reference) error {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
 	tp := &typ.ThreadPage{}
-	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(w, tRef)); e != nil {
 		return e
 	}
 
@@ -324,27 +324,27 @@ func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecK
 	// Get from 'from' Board.
 	w := c.c.LastRoot(fromBpk).Walker()
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return errors.Wrap(e, "import thread failed: AdvanceFromRoot failed for board "+fromBpk.Hex())
 	}
 
 	// Obtain thread and thread page.
 	tp := &typ.ThreadPage{}
-	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(w, tRef)); e != nil {
 		return errors.Wrap(e, "import thread failed: AdvanceFromRefsField failed for board "+fromBpk.Hex())
 	}
 	t := &typ.Thread{}
-	if _, e := w.GetFromRefField("Thread", t); e != nil {
+	if e := w.GetFromRefField("Thread", t); e != nil {
 		return errors.Wrap(e, "import thread failed: GetFromRefField failed for board "+fromBpk.Hex())
 	}
 
 	// Get from 'to' Board.
 	w = c.c.LastRootSk(toBpk, toBsk).Walker()
 	bc = &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return errors.Wrap(e, "import thread failed: AdvanceFromRoot failed for board "+toBpk.Hex())
 	}
-	if e := w.ReplaceInRefsField("ThreadPages", *tp, makeThreadPageFinder(tRef)); e != nil {
+	if e := w.ReplaceInRefsField("ThreadPages", *tp, makeThreadPageFinder(w, tRef)); e != nil {
 		/* THREAD DOES NOT EXIST */
 		// Append thread and thread page.
 		if _, e := w.AppendToRefsField("Threads", *t); e != nil {

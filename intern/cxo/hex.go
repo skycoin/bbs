@@ -27,7 +27,7 @@ func (c *Container) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Referen
 	w := c.c.LastRoot(bpk).Walker()
 
 	bc := &typ.BoardContainer{}
-	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return
 	}
 
@@ -109,7 +109,7 @@ func (c *Container) NewThreadWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tData
 	// Save to board.
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
-	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return
 	}
 	var tRef skyobject.Reference
@@ -132,11 +132,11 @@ func (c *Container) NewPostWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tRef sk
 	// Save.
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
-	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder()); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
 	tp := &typ.ThreadPage{}
-	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(tRef)); e != nil {
+	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(w, tRef)); e != nil {
 		return e
 	}
 	_, e := w.AppendToRefsField("Posts", *p)

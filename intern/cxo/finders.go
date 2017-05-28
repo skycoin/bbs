@@ -1,27 +1,26 @@
 package cxo
 
 import (
-	"fmt"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/cxo/node"
+	"github.com/evanlinjin/bbs/intern/typ"
 )
 
-func makeBoardContainerFinder() func(v *skyobject.Value) bool {
-	return func(v *skyobject.Value) bool {
-		return v.Schema().Name() == "BoardContainer"
+func makeBoardContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) bool {
+	return func(i int, dRef skyobject.Dynamic) bool {
+		schema, e := r.SchemaByReference(dRef.Schema)
+		if e != nil {
+			return false
+		}
+		return schema.Name() == "BoardContainer"
 	}
 }
 
-func makeThreadPageFinder(tRef skyobject.Reference) func(v *skyobject.Value) bool {
-	return func(v *skyobject.Value) bool {
-		tVal, e := v.FieldByName("Thread")
-		if e != nil {
-			return false
-		}
-		ref, e := tVal.Static()
-		if e != nil {
-			return false
-		}
-		return ref == tRef
+func makeThreadPageFinder(w *node.RootWalker, tRef skyobject.Reference) func(i int, ref skyobject.Reference) bool {
+	return func(_ int, ref skyobject.Reference) bool {
+		threadPage := &typ.ThreadPage{}
+		w.DeserializeFromRef(ref, threadPage)
+		return threadPage.Thread == tRef
 	}
 }
 
@@ -39,23 +38,10 @@ type ThreadPageCatcher struct {
 	Data  []byte
 }
 
-func (c *ThreadPageCatcher) ViaThreadRef(tRef skyobject.Reference) func(v *skyobject.Value) bool {
-	return func(v *skyobject.Value) bool {
-		c.Index += 1
-		fmt.Println("Index:", c.Index)
-		vRef, _ := v.Static()
-		fmt.Println("Ref:", vRef.String())
-		tVal, e := v.FieldByName("Thread")
-		if e != nil {
-			return false
-		}
-		ref, e := tVal.Static()
-		if e != nil {
-			return false
-		}
+func (c *ThreadPageCatcher) ViaThreadRef(tRef skyobject.Reference) func(int, skyobject.Reference) bool {
+	return func(i int, ref skyobject.Reference) bool {
 		if ref == tRef {
-			fmt.Println("/t Gotcha!")
-			c.Data = v.Data()
+			c.Index = i
 			return true
 		}
 		return false

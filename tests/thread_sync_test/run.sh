@@ -32,13 +32,17 @@ sleep 1
 
 echo "> IMPORT THREAD FROM 'A' TO 'B' ..."
 
+echo "   - (subscribing to board 032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b)"
+
 curl \
     -X POST \
     -F "board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
     -sS http://127.0.0.1:$PORT_B/api/subscribe \
     | jq
 
-sleep 1
+echo "   - (waiting 10 seconds after subscription)"
+
+sleep 10
 
 curl \
     -X POST \
@@ -48,7 +52,11 @@ curl \
 	-sS http://127.0.0.1:$PORT_B/api/import_thread \
     | jq
 
+sleep 1
+
 echo "> ADD SOME POSTS ..."
+
+echo "   - (from Node B)"
 
 curl \
     -X POST \
@@ -60,6 +68,8 @@ curl \
     | jq
 
 sleep 1
+
+echo "   - (from Node A)"
 
 curl \
     -X POST \
@@ -74,13 +84,24 @@ sleep 1
 
 echo "> WAIT A WHILE FOR SYNC ..."
 
-sleep 7
+sleep 10
 
-echo "> SHOW IMPORTED THREADPAGE ..."
+echo "> SHOW IMPORTED THREADPAGE (FROM B) ..."
 
 curl \
     -X POST \
-    -F "board=02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" \
+    -F "board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
     -F "thread=c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865" \
 	-sS http://127.0.0.1:$PORT_B/api/get_threadpage \
+    | jq
+
+sleep 1
+
+echo "> SHOW IMPORTED THREADPAGE (FROM A) ..."
+
+curl \
+    -X POST \
+    -F "board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
+    -F "thread=c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865" \
+	-sS http://127.0.0.1:$PORT_A/api/get_threadpage \
     | jq
