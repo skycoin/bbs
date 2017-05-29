@@ -10,7 +10,6 @@ import (
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"sync"
-	"time"
 )
 
 const BoardSaverFileName = "bbs_boards.json"
@@ -96,14 +95,28 @@ func (bs *BoardSaver) load() error {
 // Keeps imported threads synced.
 func (bs *BoardSaver) service() {
 	log.Println("[BOARDSAVER] Sync service started.")
-	ticker := time.NewTicker(5 * time.Second)
+	msgs := bs.c.GetUpdatesChan()
 	for {
 		select {
-		case <-ticker.C:
-			bs.Lock()
-			bs.checkDeps()
-			bs.Unlock()
-
+		case msg := <- msgs:
+			switch msg.Mode() {
+			case cxo.RootFilled:
+				bs.Lock()
+				bs.checkSingleDep(msg.PubKey())
+				bs.Unlock()
+			case cxo.FeedAdded:
+				bs.Lock()
+				if bi, got := bs.store[msg.PubKey()]; got {
+					bi.Synced = true
+				}
+				bs.Unlock()
+			case cxo.FeedDeleted:
+				bs.Lock()
+				if bi, got := bs.store[msg.PubKey()]; got {
+					bi.Synced = false
+				}
+				bs.Unlock()
+			}
 		case <-bs.quit:
 			return
 		}
@@ -140,8 +153,36 @@ func (bs *BoardSaver) checkSynced() {
 	log.Printf("[BOARDSAVER] Synced boards: (%d/%d)\n", len(feeds), len(bs.store))
 }
 
+// Helper function. Checks whether single dependency is valid.
+func (bs *BoardSaver) checkSingleDep(bpkDep cipher.PubKey) {
+	for _, bi := range bs.store {
+		for _, dep := range bi.Config.Deps {
+			if dep.Board != bpkDep.Hex() {
+				continue
+			}
+			for _, t := range dep.Threads {
+				tRef, e := misc.GetReference(t)
+				if e != nil {
+					log.Println("[BOARDSAVER] 'checkSingleDep()' error:", e)
+					log.Println("[BOARDSAVER] removing thread dependency of reference:", t)
+					bi.Config.RemoveDep(bpkDep, tRef)
+					continue
+				}
+				// Sync.
+				e = bs.c.ImportThread(bpkDep, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
+				if e != nil {
+					log.Println("[BOARDSAVER] sync failed for thread of reference:", t)
+					log.Println("\t- cause:", e)
+					continue
+				}
+			}
+			// List of dependencies are of unique dependencies. No duplicates so continue.
+			continue
+		}
+	}
+}
+
 // Helper function. Checks whether dependencies are valid.
-// TODO: Implement.
 func (bs *BoardSaver) checkDeps() {
 	for _, bi := range bs.store {
 		for j, dep := range bi.Config.Deps {
@@ -150,7 +191,7 @@ func (bs *BoardSaver) checkDeps() {
 				log.Println("[BOARDSAVER] 'checkDeps()' error:", e)
 				log.Println("[BOARDSAVER] removing all dependencies of board with public key:", dep.Board)
 				bi.Config.Deps = append(bi.Config.Deps[:j], bi.Config.Deps[j+1:]...)
-				return
+				continue
 			}
 			// Subscribe internally.
 			bs.c.Subscribe(fromBpk)
@@ -161,15 +202,13 @@ func (bs *BoardSaver) checkDeps() {
 					log.Println("[BOARDSAVER] 'checkDeps()' error:", e)
 					log.Println("[BOARDSAVER] removing thread dependency of reference:", t)
 					bi.Config.RemoveDep(fromBpk, tRef)
-					return
+					continue
 				}
 				// Sync.
 				e = bs.c.ImportThread(fromBpk, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
 				if e != nil {
-					log.Println("[BOARDSAVER] 'checkDeps()' error:", e)
 					log.Println("[BOARDSAVER] sync failed for thread of reference:", t)
-					log.Println("[BOARDSAVER] removing thread dependency of reference:", t)
-					bi.Config.RemoveDep(fromBpk, tRef)
+					log.Println("\t- cause:", e)
 					return
 				}
 			}
@@ -195,7 +234,7 @@ func (bs *BoardSaver) save() error {
 func (bs *BoardSaver) List() []BoardInfo {
 	bs.Lock()
 	defer bs.Unlock()
-	bs.checkSynced()
+	//bs.checkSynced()
 	list, i := make([]BoardInfo, len(bs.store)), 0
 	for _, bi := range bs.store {
 		list[i] = *bi

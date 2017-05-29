@@ -17,10 +17,14 @@ type Container struct {
 	c      *node.Container
 	client *node.Client
 	config *args.Config
+	msgs   chan *Msg
 }
 
 func NewContainer(config *args.Config) (c *Container, e error) {
-	c = &Container{config: config}
+	c = &Container{
+		config: config,
+		msgs:   make(chan *Msg),
+	}
 
 	// Setup cxo registry.
 	r := skyobject.NewRegistry()
