@@ -1,6 +1,9 @@
 package typ
 
-import "github.com/skycoin/cxo/skyobject"
+import (
+	"github.com/skycoin/cxo/skyobject"
+	"github.com/pkg/errors"
+)
 
 // ThreadVotePage is an element of ThreadVoteContainer.
 type ThreadVotePage struct {
@@ -11,6 +14,16 @@ type ThreadVotePage struct {
 // ThreadVoteContainer contains the votes of threads.
 type ThreadVoteContainer struct {
 	Threads []ThreadVotePage
+}
+
+// GetThreadVoteRefs obtains the thread vote references for specified thread.
+func (tvc *ThreadVoteContainer) GetThreadVoteRefs(tRef skyobject.Reference) (skyobject.References, error) {
+	for _, tvp := range tvc.Threads {
+		if tvp.Thread == tRef {
+			return tvp.Votes, nil
+		}
+	}
+	return nil, errors.New("thread votes not found")
 }
 
 // GetThread obtains a ThreadVotePage from thread reference.
