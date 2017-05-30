@@ -47,6 +47,7 @@ func (p *Post) Sign(pk cipher.PubKey, sk cipher.SecKey) error {
 	return nil
 }
 
+// Verify checks the legitimacy of the post.
 func (p Post) Verify() error {
 	// Check title and body.
 	if e := p.checkContent(); e != nil {

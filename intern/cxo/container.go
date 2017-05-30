@@ -33,6 +33,12 @@ func NewContainer(config *args.Config) (c *Container, e error) {
 	r.Register("Post", typ.Post{})
 	r.Register("ThreadPage", typ.ThreadPage{})
 	r.Register("BoardContainer", typ.BoardContainer{})
+
+	r.Register("Vote", typ.Vote{})
+	r.Register("ThreadVotePage", typ.ThreadVotePage{})
+	r.Register("PostVotePage", typ.PostVotePage{})
+	r.Register("ThreadVoteContainer", typ.ThreadVoteContainer{})
+	r.Register("PostVoteContainer", typ.PostVoteContainer{})
 	r.Done()
 
 	// Setup cxo config.
@@ -114,16 +120,25 @@ func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKey) error {
 	r, e := c.c.NewRoot(pk, sk)
 	if e != nil {
-		fmt.Println("[Container.NewBoard] [113] Error:", e)
 		return e
 	}
 	bRef := r.Save(*board)
+	// Prepare board container.
 	bCont := typ.BoardContainer{Board: bRef}
-	_, _, e = r.Inject("BoardContainer", bCont)
-	if e != nil {
-		fmt.Println("[Container.NewBoard] [120] Error:", e)
+	if _, _, e = r.Inject("BoardContainer", bCont); e != nil {
+		return e
 	}
-	return e
+	// Prepare thread vote container.
+	tvCont := typ.ThreadVoteContainer{}
+	if _, _, e := r.Inject("ThreadVoteContainer", tvCont); e != nil {
+		return e
+	}
+	// Prepare post vote container.
+	pvCont := typ.PostVoteContainer{}
+	if _, _, e := r.Inject("PostVoteContainer", pvCont); e != nil {
+		return e
+	}
+	return nil
 }
 
 // RemoveBoard attempts to remove a board by a given public key.
@@ -134,7 +149,6 @@ func (c *Container) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
-
 	return w.RemoveCurrent()
 }
 
@@ -175,42 +189,59 @@ func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 }
 
 // NewThread attempts to create a new thread from a board of given public key.
-func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.Thread) (e error) {
+func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.Thread) error {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
-	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
 	thread.MasterBoard = bpk.Hex()
-	var tRef skyobject.Reference
-	if tRef, e = w.AppendToRefsField("Threads", *thread); e != nil {
+	tRef, e := w.AppendToRefsField("Threads", *thread)
+	if e != nil {
 		return e
 	}
-	_, e = w.AppendToRefsField("ThreadPages", typ.ThreadPage{Thread: tRef})
+	tp := typ.ThreadPage{Thread: tRef}
+	if _, e := w.AppendToRefsField("ThreadPages", tp); e != nil {
+		return e
+	}
 	thread.Ref = cipher.SHA256(tRef).Hex()
-	return
+	// Prepare thread vote container.
+	w.Clear()
+	tvc := &typ.ThreadVoteContainer{}
+	if e := w.AdvanceFromRoot(tvc, makeThreadVoteContainerFinder(w.Root())); e != nil {
+		return e
+	}
+	tvc.AddThread(tRef)
+	if e := w.ReplaceCurrent(*tvc); e != nil {
+		return e
+	}
+	return nil
 }
 
 // RemoveThread attempts to remove a thread from a board of given public key.
-func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) (e error) {
+func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
-	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
+	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
-
-	fmt.Println("Removing thread:", tRef.String())
-	e = w.RemoveInRefsByRef("Threads", tRef)
-	if e != nil {
-		return errors.New("remove thread from threads failed: " + e.Error())
+	if e := w.RemoveInRefsByRef("Threads", tRef); e != nil {
+		return errors.Wrap(e, "remove thread failed")
+	}
+	if e := w.RemoveInRefsField("ThreadPages", makeThreadPageFinder(w, tRef)); e != nil {
+		return errors.Wrap(e, "remove thread page failed")
 	}
 
-	fmt.Println("Removing from thread pages")
-	e = w.RemoveInRefsField("ThreadPages", makeThreadPageFinder(w, tRef))
-	if e != nil {
-		return errors.New("remove thread from threadpages failed: " + e.Error())
+	// remove thread votes.
+	w.Clear()
+	tvc := &typ.ThreadVoteContainer{}
+	if e := w.AdvanceFromRoot(tvc, makeThreadVoteContainerFinder(w.Root())); e != nil {
+		return errors.Wrap(e, "obtaining thread vote container failed")
 	}
-
+	tvc.RemoveThread(tRef)
+	if e := w.ReplaceCurrent(*tvc); e != nil {
+		return errors.Wrap(e, "swapping thread vote container failed")
+	}
 	return nil
 }
 

@@ -33,7 +33,7 @@ func (c *Container) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Referen
 
 	catcher := &ThreadPageCatcher{Index: -1}
 	tp := &typ.ThreadPage{}
-	if e = w.AdvanceFromRefsField("ThreadPages", tp, catcher.ViaThreadRef(tRef)); e != nil {
+	if e = w.AdvanceFromRefsField("ThreadPages", tp, catcher.ViaThreadRef(w, tRef)); e != nil {
 		return
 	}
 

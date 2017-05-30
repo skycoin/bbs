@@ -98,7 +98,7 @@ func (bs *BoardSaver) service() {
 	msgs := bs.c.GetUpdatesChan()
 	for {
 		select {
-		case msg := <- msgs:
+		case msg := <-msgs:
 			switch msg.Mode() {
 			case cxo.RootFilled:
 				bs.Lock()

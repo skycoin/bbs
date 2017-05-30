@@ -7,12 +7,22 @@ import (
 )
 
 func makeBoardContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) bool {
-	return func(i int, dRef skyobject.Dynamic) bool {
+	return func(_ int, dRef skyobject.Dynamic) bool {
 		schema, e := r.SchemaByReference(dRef.Schema)
 		if e != nil {
 			return false
 		}
 		return schema.Name() == "BoardContainer"
+	}
+}
+
+func makeThreadVoteContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) bool {
+	return func(_ int, dRef skyobject.Dynamic) bool {
+		schema, e := r.SchemaByReference(dRef.Schema)
+		if e != nil {
+			return false
+		}
+		return schema.Name() == "ThreadVoteContainer"
 	}
 }
 
@@ -24,24 +34,18 @@ func makeThreadPageFinder(w *node.RootWalker, tRef skyobject.Reference) func(i i
 	}
 }
 
-func makeThreadFinder(tRef skyobject.Reference) func(v *skyobject.Value) bool {
-	return func(v *skyobject.Value) bool {
-		if r, _ := v.Static(); r == tRef {
-			return true
-		}
-		return false
-	}
-}
-
 type ThreadPageCatcher struct {
 	Index int
 	Data  []byte
 }
 
-func (c *ThreadPageCatcher) ViaThreadRef(tRef skyobject.Reference) func(int, skyobject.Reference) bool {
-	return func(i int, ref skyobject.Reference) bool {
-		if ref == tRef {
+func (c *ThreadPageCatcher) ViaThreadRef(w *node.RootWalker, tRef skyobject.Reference) func(int, skyobject.Reference) bool {
+	return func(i int, tpRef skyobject.Reference) bool {
+		threadPage := &typ.ThreadPage{}
+		w.DeserializeFromRef(tpRef, threadPage)
+		if threadPage.Thread == tRef {
 			c.Index = i
+			c.Data, _ = w.Root().Get(tpRef)
 			return true
 		}
 		return false
