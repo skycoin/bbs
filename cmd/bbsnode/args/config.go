@@ -48,7 +48,7 @@ func NewConfig() *Config {
 		cxoMemoryMode:     false,
 		cxoDir:            "bbs",
 		webGUIEnable:      true,
-		webGUIPort:        6420,
+		webGUIPort:        7410,
 		webGUIDir:         "./extern/gui/static",
 		webGUIOpenBrowser: true,
 	}

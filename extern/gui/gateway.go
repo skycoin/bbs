@@ -343,8 +343,8 @@ func (g *Gateway) ImportThread(fromBpk, toBpk cipher.PubKey, tRef skyobject.Refe
 */
 
 type VotesView struct {
-	VotesCount int `json:"votes_count"`
-	VotesSum            int  `json:"votes_sum"`
+	UpVotes             int  `json:"up_votes"`
+	DownVotes           int  `json:"down_votes"`
 	CurrentUserVoted    bool `json:"current_user_voted"`
 	CurrentUserVoteMode int  `json:"current_user_vote_mode,omitempty"`
 }
@@ -358,9 +358,14 @@ func (g *Gateway) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference)
 	if e != nil {
 		return nil, e
 	}
-	vv := &VotesView{VotesCount: len(votes)}
+	vv := &VotesView{}
 	for _, vote := range votes {
-		vv.VotesSum += int(vote.Mode)
+		switch vote.Mode {
+		case +1:
+			vv.UpVotes += 1
+		case -1:
+			vv.DownVotes += 1
+		}
 		if vote.User == upk {
 			vv.CurrentUserVoted = true
 			vv.CurrentUserVoteMode = int(vote.Mode)
@@ -378,9 +383,14 @@ func (g *Gateway) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) (
 	if e != nil {
 		return nil, e
 	}
-	vv := &VotesView{VotesCount: len(votes)}
+	vv := &VotesView{}
 	for _, vote := range votes {
-		vv.VotesSum += int(vote.Mode)
+		switch vote.Mode {
+		case +1:
+			vv.UpVotes += 1
+		case -1:
+			vv.DownVotes += 1
+		}
 		if vote.User == upk {
 			vv.CurrentUserVoted = true
 			vv.CurrentUserVoteMode = int(vote.Mode)
