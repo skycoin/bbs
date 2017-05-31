@@ -171,8 +171,13 @@ func (qs *QueueSaver) AddNewPostReq(bpk cipher.PubKey, tRef skyobject.Reference,
 		qs.save()
 		return nil
 	}
-	_, e = rpcClient.NewPost(req)
-	return e
+	pRef, e := rpcClient.NewPost(req)
+	if e != nil {
+		log.Println("[QUEUESAVER]", e)
+		return e
+	}
+	post.Ref = *pRef
+	return nil
 }
 
 func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey, thread *typ.Thread) error {
@@ -194,10 +199,11 @@ func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey,
 		qs.save()
 		return e
 	}
-	_, e = rpcClient.NewThread(req)
+	tRef, e := rpcClient.NewThread(req)
 	if e != nil {
 		log.Println("[QUEUESAVER]", e)
 		return e
 	}
+	thread.Ref = *tRef
 	return nil
 }

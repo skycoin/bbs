@@ -10,7 +10,6 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strconv"
-	"time"
 )
 
 type Container struct {
@@ -35,10 +34,10 @@ func NewContainer(config *args.Config) (c *Container, e error) {
 	r.Register("BoardContainer", typ.BoardContainer{})
 
 	r.Register("Vote", typ.Vote{})
-	r.Register("ThreadVotePage", typ.ThreadVotePage{})
-	r.Register("PostVotePage", typ.PostVotePage{})
-	r.Register("ThreadVoteContainer", typ.ThreadVoteContainer{})
-	r.Register("PostVoteContainer", typ.PostVoteContainer{})
+	r.Register("ThreadVotes", typ.ThreadVotes{})
+	r.Register("PostVotes", typ.PostVotes{})
+	r.Register("ThreadVotesContainer", typ.ThreadVotesContainer{})
+	r.Register("PostVotesContainer", typ.PostVotesContainer{})
 	r.Done()
 
 	// Setup cxo config.
@@ -59,9 +58,10 @@ func NewContainer(config *args.Config) (c *Container, e error) {
 
 	// Set Container.
 	c.c = c.client.Container()
+	//c.client
 
 	// Wait.
-	time.Sleep(5 * time.Second)
+	//time.Sleep(3 * time.Second)
 	return
 }
 
@@ -129,13 +129,13 @@ func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKe
 		return e
 	}
 	// Prepare thread vote container.
-	tvCont := typ.ThreadVoteContainer{}
-	if _, _, e := r.Inject("ThreadVoteContainer", tvCont); e != nil {
+	tvCont := typ.ThreadVotesContainer{}
+	if _, _, e := r.Inject("ThreadVotesContainer", tvCont); e != nil {
 		return e
 	}
 	// Prepare post vote container.
-	pvCont := typ.PostVoteContainer{}
-	if _, _, e := r.Inject("PostVoteContainer", pvCont); e != nil {
+	pvCont := typ.PostVotesContainer{}
+	if _, _, e := r.Inject("PostVotesContainer", pvCont); e != nil {
 		return e
 	}
 	return nil
@@ -207,8 +207,8 @@ func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.
 	thread.Ref = cipher.SHA256(tRef).Hex()
 	// Prepare thread vote container.
 	w.Clear()
-	tvc := &typ.ThreadVoteContainer{}
-	if e := w.AdvanceFromRoot(tvc, makeThreadVoteContainerFinder(w.Root())); e != nil {
+	tvc := &typ.ThreadVotesContainer{}
+	if e := w.AdvanceFromRoot(tvc, makeThreadVotesContainerFinder(w.Root())); e != nil {
 		return e
 	}
 	tvc.AddThread(tRef)
@@ -234,8 +234,8 @@ func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyo
 
 	// remove thread votes.
 	w.Clear()
-	tvc := &typ.ThreadVoteContainer{}
-	if e := w.AdvanceFromRoot(tvc, makeThreadVoteContainerFinder(w.Root())); e != nil {
+	tvc := &typ.ThreadVotesContainer{}
+	if e := w.AdvanceFromRoot(tvc, makeThreadVotesContainerFinder(w.Root())); e != nil {
 		return errors.Wrap(e, "obtaining thread vote container failed")
 	}
 	tvc.RemoveThread(tRef)
@@ -332,6 +332,17 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 		return e
 	}
 	post.Ref = cipher.SHA256(pRef).Hex()
+
+	// Prepare post vote container.
+	w.Clear()
+	pvc := &typ.PostVotesContainer{}
+	if e := w.AdvanceFromRoot(pvc, makePostVotesContainerFinder(w.Root())); e != nil {
+		return errors.Wrap(e, "unable to obtain post vote container")
+	}
+	pvc.AddPost(pRef)
+	if e := w.ReplaceCurrent(*pvc); e != nil {
+		return e
+	}
 	return nil
 }
 
@@ -346,10 +357,19 @@ func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef 
 	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(w, tRef)); e != nil {
 		return e
 	}
-
-	fmt.Println("Removing post:", pRef.String())
 	if e := w.RemoveInRefsByRef("Posts", pRef); e != nil {
-		return errors.New("remove post from posts failed: " + e.Error())
+		return errors.Wrap(e, "post removal failed")
+	}
+
+	// Remove post votes.
+	w.Clear()
+	pvc := &typ.PostVotesContainer{}
+	if e := w.AdvanceFromRoot(pvc, makePostVotesContainerFinder(w.Root())); e != nil {
+		return errors.Wrap(e, "unable to obtain post vote container")
+	}
+	pvc.RemovePost(pRef)
+	if e := w.ReplaceCurrent(*pvc); e != nil {
+		return errors.Wrap(e, "unable to replace post vote container")
 	}
 	return nil
 }
@@ -360,24 +380,24 @@ func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecK
 	w := c.c.LastRoot(fromBpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
-		return errors.Wrap(e, "import thread failed: AdvanceFromRoot failed for board "+fromBpk.Hex())
+		return errors.Wrap(e, "import thread failed: failed to obtain board "+fromBpk.Hex())
 	}
 
 	// Obtain thread and thread page.
 	tp := &typ.ThreadPage{}
 	if e := w.AdvanceFromRefsField("ThreadPages", tp, makeThreadPageFinder(w, tRef)); e != nil {
-		return errors.Wrap(e, "import thread failed: AdvanceFromRefsField failed for board "+fromBpk.Hex())
+		return errors.Wrap(e, "import thread failed: failed to obtain thread page for board "+fromBpk.Hex())
 	}
 	t := &typ.Thread{}
 	if e := w.GetFromRefField("Thread", t); e != nil {
-		return errors.Wrap(e, "import thread failed: GetFromRefField failed for board "+fromBpk.Hex())
+		return errors.Wrap(e, "import thread failed: failed to obtain thread for board "+fromBpk.Hex())
 	}
 
 	// Get from 'to' Board.
 	w = c.c.LastRootSk(toBpk, toBsk).Walker()
 	bc = &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
-		return errors.Wrap(e, "import thread failed: AdvanceFromRoot failed for board "+toBpk.Hex())
+		return errors.Wrap(e, "import thread failed: failed to obtain board "+toBpk.Hex())
 	}
 	if e := w.ReplaceInRefsField("ThreadPages", *tp, makeThreadPageFinder(w, tRef)); e != nil {
 		/* THREAD DOES NOT EXIST */

@@ -16,7 +16,7 @@ type Post struct {
 	Author    string     `json:"author"`
 	Created   int64      `json:"created"`
 	Signature cipher.Sig `json:"-"`
-	Ref       string     `json:"hash" enc:"-"`
+	Ref       string     `json:"ref" enc:"-"`
 }
 
 func (p *Post) checkContent() error {

@@ -15,7 +15,7 @@ type Thread struct {
 	Name        string `json:"name"`
 	Desc        string `json:"description"`
 	MasterBoard string `json:"master_board"`
-	Ref         string `json:"hash" enc:"-"`
+	Ref         string `json:"ref" enc:"-"`
 }
 
 func (t *Thread) Check() error {

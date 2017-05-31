@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"errors"
 	"fmt"
 	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
@@ -9,6 +8,7 @@ import (
 	"github.com/evanlinjin/bbs/intern/store/msg"
 	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/evanlinjin/bbs/misc"
+	"github.com/pkg/errors"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
@@ -336,6 +336,102 @@ func (g *Gateway) ImportThread(fromBpk, toBpk cipher.PubKey, tRef skyobject.Refe
 	}
 	// Import thread.
 	return g.container.ImportThread(fromBpk, toBpk, bi.Config.GetSK(), tRef)
+}
+
+/*
+	<<< VOTES >>>
+*/
+
+type VotesView struct {
+	VotesSum            int  `json:"votes_sum"`
+	CurrentUserVoted    bool `json:"current_user_voted"`
+	CurrentUserVoteMode int  `json:"current_user_vote_mode,omitempty"`
+}
+
+func (g *Gateway) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) (*VotesView, error) {
+	// Get current user.
+	cu := g.userSaver.GetCurrent()
+	upk := cu.GetPK()
+	// Get votes.
+	votes, e := g.container.GetVotesForThread(bpk, tRef)
+	if e != nil {
+		return nil, e
+	}
+	vv := &VotesView{}
+	for _, vote := range votes {
+		vv.VotesSum += int(vote.Mode)
+		if vote.User == upk {
+			vv.CurrentUserVoted = true
+			vv.CurrentUserVoteMode = int(vote.Mode)
+		}
+	}
+	return vv, nil
+}
+
+func (g *Gateway) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) (*VotesView, error) {
+	// Get current user.
+	cu := g.userSaver.GetCurrent()
+	upk := cu.GetPK()
+	// Get votes.
+	votes, e := g.container.GetVotesForPost(bpk, pRef)
+	if e != nil {
+		return nil, e
+	}
+	vv := &VotesView{}
+	for _, vote := range votes {
+		vv.VotesSum += int(vote.Mode)
+		if vote.User == upk {
+			vv.CurrentUserVoted = true
+			vv.CurrentUserVoteMode = int(vote.Mode)
+		}
+	}
+	return vv, nil
+}
+
+func (g *Gateway) AddVoteForThread(bpk cipher.PubKey, tRef skyobject.Reference, vote *typ.Vote) error {
+	// Get current user.
+	uc := g.userSaver.GetCurrent()
+	// Check vote.
+	if e := vote.Sign(uc.GetPK(), uc.GetSK()); e != nil {
+		return errors.Wrap(e, "vote signing failed")
+	}
+	// Check board.
+	bi, got := g.boardSaver.Get(bpk)
+	if !got {
+		return errors.Errorf("not subscribed to board '%s'", bpk.Hex())
+	}
+	// Check if this node owns the board.
+	if bi.Config.Master {
+		// Via Container.
+		return g.container.AddVoteForThread(bpk, bi.Config.GetSK(), tRef, vote)
+	} else {
+		// TODO: Via RPC Client.
+		return errors.New("not implemented")
+	}
+	return nil
+}
+
+func (g *Gateway) AddVoteForPost(bpk cipher.PubKey, pRef skyobject.Reference, vote *typ.Vote) error {
+	// Get current user.
+	uc := g.userSaver.GetCurrent()
+	// Check vote.
+	if e := vote.Sign(uc.GetPK(), uc.GetSK()); e != nil {
+		return errors.Wrap(e, "vote signing failed")
+	}
+	// Check board.
+	bi, got := g.boardSaver.Get(bpk)
+	if !got {
+		return errors.Errorf("not subscribed to board '%s'", bpk.Hex())
+	}
+	// Check if this node owns the board.
+	if bi.Config.Master {
+		// Via Container.
+		return g.container.AddVoteForPost(bpk, bi.Config.GetSK(), pRef, vote)
+	} else {
+		// TODO: Via RPC Client.
+		return errors.New("not implemented")
+	}
+	return nil
 }
 
 /*

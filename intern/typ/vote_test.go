@@ -1,9 +1,9 @@
 package typ
 
 import (
-	"testing"
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
+	"testing"
 )
 
 func runVote(i int) error {

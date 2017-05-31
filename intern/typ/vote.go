@@ -1,8 +1,8 @@
 package typ
 
 import (
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/pkg/errors"
+	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 )
 
@@ -31,14 +31,10 @@ func (v *Vote) checkAuthor() error {
 }
 
 // Up sets vote to up-vote.
-func (v *Vote) Up() {
-	v.Mode = 1
-}
+func (v *Vote) Up() { v.Mode = 1 }
 
 // Down sets vote to down-vote.
-func (v *Vote) Down() {
-	v.Mode = -1
-}
+func (v *Vote) Down() { v.Mode = -1 }
 
 // Sign checks and signs the post.
 func (v *Vote) Sign(upk cipher.PubKey, usk cipher.SecKey) error {

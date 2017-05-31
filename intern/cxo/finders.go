@@ -16,13 +16,23 @@ func makeBoardContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) 
 	}
 }
 
-func makeThreadVoteContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) bool {
+func makeThreadVotesContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) bool {
 	return func(_ int, dRef skyobject.Dynamic) bool {
 		schema, e := r.SchemaByReference(dRef.Schema)
 		if e != nil {
 			return false
 		}
-		return schema.Name() == "ThreadVoteContainer"
+		return schema.Name() == "ThreadVotesContainer"
+	}
+}
+
+func makePostVotesContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) bool {
+	return func(_ int, dRef skyobject.Dynamic) bool {
+		schema, e := r.SchemaByReference(dRef.Schema)
+		if e != nil {
+			return false
+		}
+		return schema.Name() == "PostVotesContainer"
 	}
 }
 

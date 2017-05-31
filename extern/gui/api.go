@@ -342,6 +342,110 @@ func (a *API) ImportThread(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
+	<<< VOTES >>>
+*/
+
+func (a *API) GetVotesForThread(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRef, e := misc.GetReference(r.FormValue("thread"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get votes.
+	vv, e := a.g.GetVotesForThread(bpk, tRef)
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, vv, http.StatusOK)
+}
+
+func (a *API) GetVotesForPost(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get post reference.
+	pRef, e := misc.GetReference(r.FormValue("post"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get posts.
+	vv, e := a.g.GetVotesForPost(bpk, pRef)
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, vv, http.StatusOK)
+}
+
+func (a *API) AddVoteForThread(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get thread reference.
+	tRef, e := misc.GetReference(r.FormValue("thread"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get vote mode (up/down vote).
+	mode, e := strconv.Atoi(r.FormValue("mode"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Prepare vote.
+	vote := &typ.Vote{Mode: int8(mode), Tag: []byte(r.FormValue("tag"))}
+	if e := a.g.AddVoteForThread(bpk, tRef, vote); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
+}
+
+func (a *API) AddVoteForPost(w http.ResponseWriter, r *http.Request) {
+	// Get board public key.
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get post reference.
+	pRef, e := misc.GetReference(r.FormValue("post"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Get vote mode (up/down vote).
+	mode, e := strconv.Atoi(r.FormValue("mode"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	// Prepare vote.
+	vote := &typ.Vote{Mode: int8(mode), Tag: []byte(r.FormValue("tag"))}
+	if e := a.g.AddVoteForPost(bpk, pRef, vote); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
+}
+
+/*
 	<<< HEX >>>
 */
 

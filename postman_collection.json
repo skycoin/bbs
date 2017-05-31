@@ -126,7 +126,7 @@
 								},
 								{
 									"key": "thread",
-									"value": "10864517e610006b30cf334d8d6784e2cdc4a66c3a5e8c84ef093c5084156cef",
+									"value": "c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865",
 									"type": "text",
 									"enabled": true
 								}
@@ -519,6 +519,144 @@
 								{
 									"key": "user",
 									"value": "0369f1cf2abf86d21414913eecdcd0c45450f97f8af9a9deeaea26af4cf16bab14",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Votes",
+			"description": "",
+			"item": [
+				{
+					"name": "Get Thread Votes",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/get_thread_votes",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "thread",
+									"value": "c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Post Votes",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/get_post_votes",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "post",
+									"value": "04bc27ee3381133d53d9f1d804ca5cbf691d841382a1daf1f5d1fc72118940c5",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Add Thread Vote",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/add_thread_vote",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "thread",
+									"value": "c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "mode",
+									"value": "1",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "tag",
+									"value": "",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Add Post Vote",
+					"request": {
+						"url": "http://127.0.0.1:6420/api/add_post_vote",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "post",
+									"value": "04bc27ee3381133d53d9f1d804ca5cbf691d841382a1daf1f5d1fc72118940c5",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "mode",
+									"value": "1",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "tag",
+									"value": "",
 									"type": "text",
 									"enabled": true
 								}
