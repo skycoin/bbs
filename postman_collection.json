@@ -14,7 +14,7 @@
 				{
 					"name": "Get Boards",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/get_boards",
+						"url": "http://127.0.0.1:7410/api/get_boards",
 						"method": "GET",
 						"header": [],
 						"body": {},
@@ -25,7 +25,7 @@
 				{
 					"name": "New Board",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/new_board",
+						"url": "http://127.0.0.1:7410/api/new_board",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -58,7 +58,7 @@
 				{
 					"name": "Get Threads",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/get_threads",
+						"url": "http://127.0.0.1:7410/api/get_threads",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -79,7 +79,7 @@
 				{
 					"name": "New Thread",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/new_thread",
+						"url": "http://127.0.0.1:7410/api/new_thread",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -112,7 +112,7 @@
 				{
 					"name": "Get ThreadPage",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/get_threadpage",
+						"url": "http://127.0.0.1:7410/api/get_threadpage",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -139,7 +139,7 @@
 				{
 					"name": "Get Posts",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/get_posts",
+						"url": "http://127.0.0.1:7410/api/get_posts",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -166,7 +166,7 @@
 				{
 					"name": "New Post",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/new_post",
+						"url": "http://127.0.0.1:7410/api/new_post",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -205,7 +205,7 @@
 				{
 					"name": "Import Thread",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/import_thread",
+						"url": "http://127.0.0.1:7410/api/import_thread",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -244,7 +244,7 @@
 				{
 					"name": "Get ThreadPage (Hex)",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/hex/get_threadpage",
+						"url": "http://127.0.0.1:7410/api/hex/get_threadpage",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -277,7 +277,7 @@
 				{
 					"name": "Get Subscriptions",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/get_subscriptions",
+						"url": "http://127.0.0.1:7410/api/get_subscriptions",
 						"method": "GET",
 						"header": [],
 						"body": {},
@@ -288,7 +288,7 @@
 				{
 					"name": "Get Subscription",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/get_subscription",
+						"url": "http://127.0.0.1:7410/api/get_subscription",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -309,7 +309,7 @@
 				{
 					"name": "Subscribe",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/subscribe",
+						"url": "http://127.0.0.1:7410/api/subscribe",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -330,7 +330,7 @@
 				{
 					"name": "Unsubscribe",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/unsubscribe",
+						"url": "http://127.0.0.1:7410/api/unsubscribe",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -357,7 +357,7 @@
 				{
 					"name": "New Filled Board",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/tests/new_filled_board",
+						"url": "http://127.0.0.1:7410/api/tests/new_filled_board",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -377,7 +377,7 @@
 								},
 								{
 									"key": "min_posts",
-									"value": "20",
+									"value": "10",
 									"type": "text",
 									"enabled": true
 								},
@@ -402,7 +402,7 @@
 				{
 					"name": "Get Current",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/users/get_current",
+						"url": "http://127.0.0.1:7410/api/users/get_current",
 						"method": "GET",
 						"header": [],
 						"body": {},
@@ -413,7 +413,7 @@
 				{
 					"name": "Set Current",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/users/set_current",
+						"url": "http://127.0.0.1:7410/api/users/set_current",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -434,7 +434,7 @@
 				{
 					"name": "Get All Masters",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/users/get_masters",
+						"url": "http://127.0.0.1:7410/api/users/get_masters",
 						"method": "GET",
 						"header": [],
 						"body": {},
@@ -445,7 +445,7 @@
 				{
 					"name": "New Master",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/users/new_master",
+						"url": "http://127.0.0.1:7410/api/users/new_master",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -472,7 +472,7 @@
 				{
 					"name": "Get All",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/users/get_all",
+						"url": "http://127.0.0.1:7410/api/users/get_all",
 						"method": "GET",
 						"header": [],
 						"body": {},
@@ -483,7 +483,7 @@
 				{
 					"name": "New",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/users/new",
+						"url": "http://127.0.0.1:7410/api/users/new",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -510,7 +510,7 @@
 				{
 					"name": "Remove",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/users/remove",
+						"url": "http://127.0.0.1:7410/api/users/remove",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -537,7 +537,7 @@
 				{
 					"name": "Get Thread Votes",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/get_thread_votes",
+						"url": "http://127.0.0.1:7410/api/get_thread_votes",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -564,7 +564,7 @@
 				{
 					"name": "Get Post Votes",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/get_post_votes",
+						"url": "http://127.0.0.1:7410/api/get_post_votes",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -591,7 +591,7 @@
 				{
 					"name": "Add Thread Vote",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/add_thread_vote",
+						"url": "http://127.0.0.1:7410/api/add_thread_vote",
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -630,7 +630,7 @@
 				{
 					"name": "Add Post Vote",
 					"request": {
-						"url": "http://127.0.0.1:6420/api/add_post_vote",
+						"url": "http://127.0.0.1:7410/api/add_post_vote",
 						"method": "POST",
 						"header": [],
 						"body": {
