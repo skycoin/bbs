@@ -6,6 +6,7 @@ import (
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/evanlinjin/bbs/misc"
+	"github.com/pkg/errors"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
@@ -80,55 +81,85 @@ func (qs *QueueSaver) Close() {
 }
 
 func (qs *QueueSaver) Process() {
-	//TODO: screams for refactoring
 	qs.Lock()
 	defer qs.Unlock()
+
 	if len(qs.queue) == 0 {
 		return
 	}
 	log.Println("[QUEUESAVER] Processing queue ...")
 	doneList := []int{}
 
+	connectRemote := func(bpk cipher.PubKey, qi *QueueItem) (*rpc.Client, error) {
+		b, e := qs.c.GetBoard(bpk)
+		if e != nil {
+			log.Printf("[QUEUESAVER] \t- Failed to get board '%s': %s",
+				bpk.Hex(), e.Error())
+			qi.GetBoardFails += 1
+			return nil, e
+		}
+		rpcClient, e := rpc.NewClient(b.URL)
+		if e != nil {
+			log.Printf("[QUEUESAVER] \t- Failed to connect to '%s': %s",
+				b.URL, e.Error())
+			qi.ConnectionFails += 1
+			return nil, e
+		}
+		return rpcClient, nil
+	}
+
 	for i, qi := range qs.queue {
 		switch {
 		case qi.ReqNewPost != nil:
-			log.Println("[QUEUESAVER] (New Post Request)")
 			req := qi.ReqNewPost
-			b, e := qs.c.GetBoard(req.BoardPubKey)
+			log.Println("[QUEUESAVER] RESENDING: (New Post Request)")
+
+			rpcClient, e := connectRemote(req.BoardPubKey, qi)
 			if e != nil {
-				log.Printf("[QUEUESAVER] \t- Failed to get board '%s': %s",
-					req.BoardPubKey.Hex(), e.Error())
-				qi.GetBoardFails += 1
 				break
 			}
-			rpcClient, e := rpc.NewClient(b.URL)
-			if e != nil {
-				log.Printf("[QUEUESAVER] \t- Failed to connect to '%s': %s",
-					b.URL, e.Error())
-				qi.ConnectionFails += 1
-				break
-			}
-			rpcClient.NewPost(req)
+
+			ref, e := rpcClient.NewPost(req)
+			log.Printf("[QUEUESAVER] \t- (COMPLETE!) Ref: '%s', Err: '%s'", ref, e.Error())
 			doneList = append(doneList, i)
 
 		case qi.ReqNewThread != nil:
-			log.Println("[QUEUESAVER] (New Thread Request)")
 			req := qi.ReqNewThread
-			b, e := qs.c.GetBoard(req.BoardPubKey)
+			log.Println("[QUEUESAVER] (New Thread Request)")
+
+			rpcClient, e := connectRemote(req.BoardPubKey, qi)
 			if e != nil {
-				log.Printf("[QUEUESAVER] \t- Failed to get board '%s': %s",
-					req.BoardPubKey.Hex(), e.Error())
-				qi.GetBoardFails += 1
 				break
 			}
-			rpcClient, e := rpc.NewClient(b.URL)
+
+			ref, e := rpcClient.NewThread(req)
+			log.Printf("[QUEUESAVER] \t- (COMPLETE!) Ref: '%s', Err: '%s'", ref, e.Error())
+			doneList = append(doneList, i)
+
+		case qi.ReqVotePost != nil:
+			req := qi.ReqVotePost
+			log.Println("[QUEUESAVER] RESENDING: (Vote Post Request)")
+
+			rpcClient, e := connectRemote(req.BoardPubKey, qi)
 			if e != nil {
-				log.Printf("[QUEUESAVER] \t- Failed to connect to '%s': %s",
-					b.URL, e.Error())
-				qi.ConnectionFails += 1
 				break
 			}
-			rpcClient.NewThread(req)
+
+			ok, e := rpcClient.VotePost(req)
+			log.Printf("[QUEUESAVER] \t- (COMPLETE!) Status: '%v', Err: '%s'", ok, e.Error())
+			doneList = append(doneList, i)
+
+		case qi.ReqVoteThread != nil:
+			req := qi.ReqVoteThread
+			log.Println("[QUEUESAVER] RESENDING: (Vote Thread Request)")
+
+			rpcClient, e := connectRemote(req.BoardPubKey, qi)
+			if e != nil {
+				break
+			}
+
+			ok, e := rpcClient.VoteThread(req)
+			log.Printf("[QUEUESAVER] \t- (COMPLETE!) Status: '%v', Err: '%s'", ok, e.Error())
 			doneList = append(doneList, i)
 		}
 	}
@@ -139,57 +170,129 @@ func (qs *QueueSaver) Process() {
 	for i := range misc.ReverseIntSlice(doneList) {
 		qs.queue = append(qs.queue[:i], qs.queue[i+1:]...)
 	}
+	if len(doneList) > 0 {
+		qs.save()
+	}
 }
 
 func (qs *QueueSaver) AddNewPostReq(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) error {
 	qs.Lock()
 	defer qs.Unlock()
-	log.Println("[QUEUESAVER] New Post Request.")
+	log.Println("[QUEUESAVER] Sending new post request...")
 	req := &rpc.ReqNewPost{bpk, tRef, post}
 	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
+		e = errors.Wrap(e, "failed to obtain board")
+		log.Printf("[QUEUESAVER] \t- Error: '%s'", e.Error())
 		return e
 	}
 	rpcClient, e := rpc.NewClient(b.URL)
 	if e != nil {
 		// Add to queue.
-		qs.queue = append(qs.queue, NewQueueItem().SetPost(req))
+		log.Printf("[QUEUESAVER] \t- rpc error: '%s'", e.Error())
+		log.Printf("[QUEUESAVER] \t- adding request to queue: %v", req)
+		qs.queue = append(qs.queue, NewQueueItem().SetReqNewPost(req))
 		qs.save()
 		return nil
 	}
-	pRef, e := rpcClient.NewPost(req)
-	if e != nil {
-		log.Println("[QUEUESAVER]", e)
+	if pRef, e := rpcClient.NewPost(req); e != nil {
+		e = errors.Wrap(e, "error from remote")
+		log.Println("[QUEUESAVER] \t- reply:", e)
 		return e
+	} else {
+		log.Println("[QUEUESAVER] \t- (COMPLETE!) Ref:", pRef)
+		post.Ref = pRef
+		return nil
 	}
-	post.Ref = pRef
-	return nil
 }
 
 func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey, thread *typ.Thread) error {
 	qs.Lock()
 	defer qs.Unlock()
-	log.Println("[QUEUESAVER] New Thread Request.")
+	log.Println("[QUEUESAVER] Sending new thread request...")
 	req := &rpc.ReqNewThread{bpk, upk, thread.Sign(usk), thread}
 	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
-		log.Println("[QUEUESAVER]", e)
+		e = errors.Wrap(e, "failed to obtain board")
+		log.Printf("[QUEUESAVER] \t- Error: '%s'", e.Error())
 		return e
 	}
-	log.Println("[QUEUESAVER] Got Board.")
 	rpcClient, e := rpc.NewClient(b.URL)
 	if e != nil {
 		// Add to queue.
-		log.Println("[QUEUESAVER]", e)
-		qs.queue = append(qs.queue, NewQueueItem().SetThread(req))
+		log.Printf("[QUEUESAVER] \t- rpc error: '%s'", e.Error())
+		log.Printf("[QUEUESAVER] \t- adding request to queue: %v", req)
+		qs.queue = append(qs.queue, NewQueueItem().SetReqNewThread(req))
 		qs.save()
 		return e
 	}
-	tRef, e := rpcClient.NewThread(req)
+	if tRef, e := rpcClient.NewThread(req); e != nil {
+		e = errors.Wrap(e, "error from remote")
+		log.Println("[QUEUESAVER] \t- reply:", e)
+		return e
+	} else {
+		log.Println("[QUEUESAVER] \t- (COMPLETE!) Ref:", tRef)
+		thread.Ref = tRef
+		return nil
+	}
+}
+
+func (qs *QueueSaver) AddVotePostReq(bpk cipher.PubKey, pRef skyobject.Reference, vote *typ.Vote) error {
+	qs.Lock()
+	defer qs.Unlock()
+	log.Println("[QUEUESAVER] Sending vote post request...")
+	req := &rpc.ReqVotePost{bpk, pRef, vote}
+	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
-		log.Println("[QUEUESAVER]", e)
+		e = errors.Wrap(e, "failed to obtain board")
+		log.Printf("[QUEUESAVER] \t- Error: '%s'", e.Error())
 		return e
 	}
-	thread.Ref = tRef
-	return nil
+	rpcClient, e := rpc.NewClient(b.URL)
+	if e != nil {
+		// Add to queue.
+		log.Printf("[QUEUESAVER] \t- rpc error: '%s'", e.Error())
+		log.Printf("[QUEUESAVER] \t- adding request to queue: %v", req)
+		qs.queue = append(qs.queue, NewQueueItem().SetReqVotePost(req))
+		qs.save()
+		return nil
+	}
+	if ok, e := rpcClient.VotePost(req); e != nil {
+		e = errors.Wrap(e, "error from remote")
+		log.Println("[QUEUESAVER] \t- reply:", e)
+		return e
+	} else {
+		log.Println("[QUEUESAVER] \t- (COMPLETE!) Status:", ok)
+		return nil
+	}
+}
+
+func (qs *QueueSaver) AddVoteThreadReq(bpk cipher.PubKey, tRef skyobject.Reference, vote *typ.Vote) error {
+	qs.Lock()
+	defer qs.Unlock()
+	log.Println("[QUEUESAVER] Sending vote thread request...")
+	req := &rpc.ReqVoteThread{bpk, tRef, vote}
+	b, e := qs.c.GetBoard(bpk)
+	if e != nil {
+		e = errors.Wrap(e, "failed to obtain board")
+		log.Printf("[QUEUESAVER] \t- Error: '%s'", e.Error())
+		return e
+	}
+	rpcClient, e := rpc.NewClient(b.URL)
+	if e != nil {
+		// Add to queue.
+		log.Printf("[QUEUESAVER] \t- rpc error: '%s'", e.Error())
+		log.Printf("[QUEUESAVER] \t- adding request to queue: %v", req)
+		qs.queue = append(qs.queue, NewQueueItem().SetReqVoteThread(req))
+		qs.save()
+		return nil
+	}
+	if ok, e := rpcClient.VoteThread(req); e != nil {
+		e = errors.Wrap(e, "error from remote")
+		log.Println("[QUEUESAVER] \t- reply:", e)
+		return e
+	} else {
+		log.Println("[QUEUESAVER] \t- (COMPLETE!) Status:", ok)
+		return nil
+	}
 }

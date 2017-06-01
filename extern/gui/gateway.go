@@ -421,8 +421,7 @@ func (g *Gateway) VoteForThread(bpk cipher.PubKey, tRef skyobject.Reference, vot
 			return g.container.AddVoteForThread(bpk, bi.Config.GetSK(), tRef, vote)
 		}
 	} else {
-		// TODO: Via RPC Client.
-		return errors.New("not implemented")
+		return g.queueSaver.AddVoteThreadReq(bpk, tRef, vote)
 	}
 	return nil
 }
@@ -449,8 +448,7 @@ func (g *Gateway) VoteForPost(bpk cipher.PubKey, pRef skyobject.Reference, vote 
 			return g.container.AddVoteForPost(bpk, bi.Config.GetSK(), pRef, vote)
 		}
 	} else {
-		// TODO: Via RPC Client.
-		return errors.New("not implemented")
+		return g.queueSaver.AddVotePostReq(bpk, pRef, vote)
 	}
 	return nil
 }

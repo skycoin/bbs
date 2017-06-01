@@ -1,10 +1,10 @@
 package rpc
 
 import (
-	"github.com/pkg/errors"
 	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/intern/store"
+	"github.com/pkg/errors"
 	"log"
 )
 
