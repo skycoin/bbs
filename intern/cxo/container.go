@@ -10,6 +10,8 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strconv"
+	"time"
+	"log"
 )
 
 type Container struct {
@@ -19,8 +21,8 @@ type Container struct {
 	msgs   chan *Msg
 }
 
-func NewContainer(config *args.Config) (c *Container, e error) {
-	c = &Container{
+func NewContainer(config *args.Config) (*Container, error) {
+	c := &Container{
 		config: config,
 		msgs:   make(chan *Msg),
 	}
@@ -45,24 +47,39 @@ func NewContainer(config *args.Config) (c *Container, e error) {
 	cc.InMemoryDB = config.CXOUseMemory()
 	cc.DataDir = config.CXODir()
 
+	var e error
+
 	// Setup cxo client.
-	c.client, e = node.NewClient(cc, r)
-	if e != nil {
-		return
+	if c.client, e = node.NewClient(cc, r); e != nil {
+		return nil, e
 	}
 
 	// Run cxo client.
-	if e = c.client.Start("[::]:" + strconv.Itoa(c.config.CXOPort())); e != nil {
-		return
+	if e := c.client.Start("[::]:" + strconv.Itoa(c.config.CXOPort())); e != nil {
+		return nil, e
 	}
+
+	// Wait for connection.
+	if !c.client.IsConnected() {
+		panicTimer := time.NewTimer(10 * time.Second)
+		checkTicker := time.NewTicker(time.Second)
+		for {
+			select {
+			case <-checkTicker.C:
+				log.Println("[CXOCONTAINER] Awaiting connection to cxo daemon...")
+				if c.client.IsConnected() {
+					break
+				}
+			case <- panicTimer.C:
+				return nil, errors.New("timeout: unable to connect to cxo daemon")
+			}
+		}
+	}
+	log.Println("[CXOCONTAINER] Connection to cxo daemon established!")
 
 	// Set Container.
 	c.c = c.client.Container()
-	//c.client
-
-	// Wait.
-	//time.Sleep(3 * time.Second)
-	return
+	return c, nil
 }
 
 func (c *Container) Close() error                      { return c.client.Close() }

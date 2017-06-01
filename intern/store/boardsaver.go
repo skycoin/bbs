@@ -10,6 +10,8 @@ import (
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"sync"
+	"path/filepath"
+	"os"
 )
 
 const BoardSaverFileName = "bbs_boards.json"
@@ -59,6 +61,10 @@ func (bs *BoardSaver) Close() {
 	}
 }
 
+func (bs *BoardSaver) absConfigDir() string {
+	return filepath.Join(bs.config.ConfigDir(), BoardSaverFileName)
+}
+
 // Helper function. Loads and checks boards' configuration file to memory.
 func (bs *BoardSaver) load() error {
 	// Don't load if specified not to.
@@ -68,7 +74,7 @@ func (bs *BoardSaver) load() error {
 	log.Println("[BOARDSAVER] Loading configuration file...")
 	// Load boards from file.
 	bcf := BoardSaverFile{}
-	if e := util.LoadJSON(BoardSaverFileName, &bcf); e != nil {
+	if e := util.LoadJSON(bs.absConfigDir(), &bcf); e != nil {
 		log.Println("[BOARDSAVER]", e)
 	}
 	// Check loaded boards and intern in memory.
@@ -90,6 +96,20 @@ func (bs *BoardSaver) load() error {
 		go bs.service()
 	}
 	return nil
+}
+
+// Helper function. Saves boards into configuration file.
+func (bs *BoardSaver) save() error {
+	// Don't save if specified.
+	if !bs.config.SaveConfig() {
+		return nil
+	}
+	// Load from memory.
+	bcf := BoardSaverFile{}
+	for _, bi := range bs.store {
+		bcf.Boards = append(bcf.Boards, &bi.Config)
+	}
+	return util.SaveJSON(bs.absConfigDir(), bcf, os.FileMode(0700))
 }
 
 // Keeps imported threads synced.
@@ -216,19 +236,6 @@ func (bs *BoardSaver) checkDeps() {
 	}
 }
 
-// Helper function. Saves boards into configuration file.
-func (bs *BoardSaver) save() error {
-	// Don't save if specified.
-	if !bs.config.SaveConfig() {
-		return nil
-	}
-	// Load from memory.
-	bcf := BoardSaverFile{}
-	for _, bi := range bs.store {
-		bcf.Boards = append(bcf.Boards, &bi.Config)
-	}
-	return util.SaveJSON(BoardSaverFileName, bcf, 0600)
-}
 
 // List returns a list of boards that are in configuration.
 func (bs *BoardSaver) List() []BoardInfo {

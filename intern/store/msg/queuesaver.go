@@ -13,10 +13,12 @@ import (
 	"log"
 	"sync"
 	"time"
+	"path/filepath"
+	"os"
 )
 
-// QueueConfigFileName represents the filename of the queue configuration file.
-const QueueConfigFileName = "bbs_queue.json"
+// QueueSaverFileName represents the filename of the queue configuration file.
+const QueueSaverFileName = "bbs_queue.json"
 
 type QueueSaver struct {
 	sync.Mutex
@@ -41,12 +43,16 @@ func NewQueueSaver(config *args.Config, container *cxo.Container) (*QueueSaver, 
 	return &qs, nil
 }
 
+func (qs *QueueSaver) absConfigDir() string {
+	return filepath.Join(qs.config.ConfigDir(), QueueSaverFileName)
+}
+
 func (qs *QueueSaver) load() error {
 	// Don't load if specified not to.
 	if !qs.config.SaveConfig() {
 		return nil
 	}
-	if e := util.LoadJSON(QueueConfigFileName, &qs.queue); e != nil {
+	if e := util.LoadJSON(qs.absConfigDir(), &qs.queue); e != nil {
 		return e
 	}
 	return nil
@@ -57,7 +63,7 @@ func (qs *QueueSaver) save() error {
 	if !qs.config.SaveConfig() {
 		return nil
 	}
-	return util.SaveJSON(QueueConfigFileName, &qs.queue, 0600)
+	return util.SaveJSON(qs.absConfigDir(), qs.queue, os.FileMode(0700))
 }
 
 func (qs *QueueSaver) serve() {

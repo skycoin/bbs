@@ -9,10 +9,12 @@ import (
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"sync"
+	"path/filepath"
+	"os"
 )
 
-// UsersConfigFileName represents the filename of the users configuration file.
-const UsersConfigFileName = "bbs_users.json"
+// UserSaverFileName represents the filename of the users configuration file.
+const UserSaverFileName = "bbs_users.json"
 
 // UsersConfigFile represents the layout of a configuration file of boards.
 type UsersConfigFile struct {
@@ -82,6 +84,10 @@ func NewUserSaver(config *args.Config, container *cxo.Container) (*UserSaver, er
 	return &us, nil
 }
 
+func (us *UserSaver) absConfigDir() string {
+	return filepath.Join(us.config.ConfigDir(), UserSaverFileName)
+}
+
 func (us *UserSaver) load() *UsersConfigFile {
 	ucf := &UsersConfigFile{}
 	// Don't load if specified not to.
@@ -90,7 +96,7 @@ func (us *UserSaver) load() *UsersConfigFile {
 	}
 	log.Println("[USERSAVER] Loading configuration file...")
 	// Load users from file.
-	if e := util.LoadJSON(UsersConfigFileName, ucf); e != nil {
+	if e := util.LoadJSON(us.absConfigDir(), ucf); e != nil {
 		log.Println("[USERSAVER]", e)
 	}
 	return ucf
@@ -150,7 +156,7 @@ func (us *UserSaver) save() error {
 	for _, uc := range us.store {
 		ucf.Users = append(ucf.Users, uc)
 	}
-	return util.SaveJSON(UsersConfigFileName, ucf, 0600)
+	return util.SaveJSON(us.absConfigDir(), ucf, os.FileMode(0700))
 }
 
 func (us *UserSaver) autoSetCurrent() error {

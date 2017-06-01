@@ -3,7 +3,12 @@ package args
 import (
 	"flag"
 	"github.com/pkg/errors"
+	"os"
+	"github.com/skycoin/skycoin/src/util"
+	"strings"
 )
+
+const configSubDir = "/.skycoin/bbs"
 
 // Config represents commandline arguments.
 type Config struct {
@@ -41,7 +46,7 @@ func NewConfig() *Config {
 
 		master:            false,
 		saveConfig:        true,
-		configDir:         ".",
+		configDir:         "",
 		rpcServerPort:     6421,
 		rpcServerRemAdr:   "127.0.0.1:6421",
 		cxoPort:           8998,
@@ -90,7 +95,7 @@ func (c *Config) Parse() *Config {
 
 	flag.StringVar(&c.configDir,
 		"config-dir", c.configDir,
-		"configuration directory")
+		"configuration directory - set to $HOME/.skycoin/bbs if left empty")
 
 	flag.IntVar(&c.rpcServerPort,
 		"rpc-server-port", c.rpcServerPort,
@@ -152,6 +157,18 @@ func (c *Config) PostProcess() (*Config, error) {
 		// Enforce behaviour.
 		c.cxoMemoryMode = true
 		c.saveConfig = false
+	}
+	// Action on configuration directory.
+	if c.configDir == "" {
+		c.configDir = util.InitDataDir(configSubDir)
+
+	} else if !strings.HasPrefix(c.configDir, util.UserHome()) {
+		c.configDir = util.InitDataDir(c.configDir)
+
+	} else {
+		if e := os.MkdirAll(c.configDir, os.FileMode(0700)); e != nil {
+			return nil, e
+		}
 	}
 	return c, nil
 }
