@@ -9,9 +9,9 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
-	"sync"
-	"path/filepath"
 	"os"
+	"path/filepath"
+	"sync"
 )
 
 const BoardSaverFileName = "bbs_boards.json"
@@ -235,7 +235,6 @@ func (bs *BoardSaver) checkDeps() {
 		}
 	}
 }
-
 
 // List returns a list of boards that are in configuration.
 func (bs *BoardSaver) List() []BoardInfo {

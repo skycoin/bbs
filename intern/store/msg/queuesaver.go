@@ -11,10 +11,10 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
-	"path/filepath"
-	"os"
 )
 
 // QueueSaverFileName represents the filename of the queue configuration file.

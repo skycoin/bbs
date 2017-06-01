@@ -9,14 +9,16 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
+	"log"
 	"strconv"
 	"time"
-	"log"
+	"github.com/skycoin/cxo/node/gnet"
 )
 
 type Container struct {
 	c      *node.Container
 	client *node.Client
+	conn    *gnet.Conn
 	config *args.Config
 	msgs   chan *Msg
 }
@@ -60,21 +62,27 @@ func NewContainer(config *args.Config) (*Container, error) {
 	}
 
 	// Wait for connection.
-	if !c.client.IsConnected() {
-		panicTimer := time.NewTimer(10 * time.Second)
-		checkTicker := time.NewTicker(time.Second)
+	log.Println("[CXOCONTAINER] Awaiting connection to cxo daemon...")
+	c.conn = c.client.Conn()
+
+	if c.conn.State() != gnet.ConnStateConnected {
+		timeout := time.NewTimer(10 * time.Second)
+		defer timeout.Stop()
+		check := time.NewTicker(time.Second)
+		defer check.Stop()
 		for {
 			select {
-			case <-checkTicker.C:
-				log.Println("[CXOCONTAINER] Awaiting connection to cxo daemon...")
-				if c.client.IsConnected() {
-					break
+			case <-check.C:
+				if c.conn.State() == gnet.ConnStateConnected {
+					goto OnConnected
 				}
-			case <- panicTimer.C:
-				return nil, errors.New("timeout: unable to connect to cxo daemon")
+			case <-timeout.C:
+				return nil, errors.New(
+					"timeout occurred before connection to cxo daemon was established")
 			}
 		}
 	}
+OnConnected:
 	log.Println("[CXOCONTAINER] Connection to cxo daemon established!")
 
 	// Set Container.
@@ -83,10 +91,10 @@ func NewContainer(config *args.Config) (*Container, error) {
 }
 
 func (c *Container) Close() error                      { return c.client.Close() }
-func (c *Container) Connected() bool                   { return c.client.IsConnected() }
+//func (c *Container) Connected() bool                   { return c.client.IsConnected() }
 func (c *Container) Feeds() []cipher.PubKey            { return c.client.Feeds() }
 func (c *Container) Subscribe(pk cipher.PubKey) bool   { return c.client.Subscribe(pk) }
-func (c *Container) Unsubscribe(pk cipher.PubKey) bool { return c.client.Unsubscribe(pk) }
+func (c *Container) Unsubscribe(pk cipher.PubKey) bool { return c.client.Unsubscribe(pk, false) }
 
 // ChangeBoardURL changes the board's URL of given public key.
 func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url string) error {

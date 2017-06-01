@@ -3,8 +3,8 @@ package args
 import (
 	"flag"
 	"github.com/pkg/errors"
-	"os"
 	"github.com/skycoin/skycoin/src/util"
+	"os"
 	"strings"
 )
 

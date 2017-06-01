@@ -8,9 +8,9 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
-	"sync"
-	"path/filepath"
 	"os"
+	"path/filepath"
+	"sync"
 )
 
 // UserSaverFileName represents the filename of the users configuration file.
