@@ -16,7 +16,7 @@ type Vote struct {
 
 func (v *Vote) checkContent() error {
 	switch v.Mode {
-	case -1, 1:
+	case 0, +1, -1:
 		return nil
 	default:
 		return errors.New("invalid vote mode")
@@ -53,7 +53,7 @@ func (v Vote) Verify() error {
 	if e := v.checkContent(); e != nil {
 		return e
 	}
-	// Chek user.
+	// Check user.
 	if e := v.checkAuthor(); e != nil {
 		return e
 	}

@@ -399,7 +399,7 @@ func (g *Gateway) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) (
 	return vv, nil
 }
 
-func (g *Gateway) AddVoteForThread(bpk cipher.PubKey, tRef skyobject.Reference, vote *typ.Vote) error {
+func (g *Gateway) VoteForThread(bpk cipher.PubKey, tRef skyobject.Reference, vote *typ.Vote) error {
 	// Get current user.
 	uc := g.userSaver.GetCurrent()
 	// Check vote.
@@ -414,7 +414,12 @@ func (g *Gateway) AddVoteForThread(bpk cipher.PubKey, tRef skyobject.Reference, 
 	// Check if this node owns the board.
 	if bi.Config.Master {
 		// Via Container.
-		return g.container.AddVoteForThread(bpk, bi.Config.GetSK(), tRef, vote)
+		switch vote.Mode {
+		case 0:
+			return g.container.RemoveVoteForThread(uc.GetPK(), bpk, bi.Config.GetSK(), tRef)
+		case -1, +1:
+			return g.container.AddVoteForThread(bpk, bi.Config.GetSK(), tRef, vote)
+		}
 	} else {
 		// TODO: Via RPC Client.
 		return errors.New("not implemented")
@@ -422,7 +427,7 @@ func (g *Gateway) AddVoteForThread(bpk cipher.PubKey, tRef skyobject.Reference, 
 	return nil
 }
 
-func (g *Gateway) AddVoteForPost(bpk cipher.PubKey, pRef skyobject.Reference, vote *typ.Vote) error {
+func (g *Gateway) VoteForPost(bpk cipher.PubKey, pRef skyobject.Reference, vote *typ.Vote) error {
 	// Get current user.
 	uc := g.userSaver.GetCurrent()
 	// Check vote.
@@ -437,7 +442,12 @@ func (g *Gateway) AddVoteForPost(bpk cipher.PubKey, pRef skyobject.Reference, vo
 	// Check if this node owns the board.
 	if bi.Config.Master {
 		// Via Container.
-		return g.container.AddVoteForPost(bpk, bi.Config.GetSK(), pRef, vote)
+		switch vote.Mode {
+		case 0:
+			return g.container.RemoveVoteForPost(uc.GetPK(), bpk, bi.Config.GetSK(), pRef)
+		case -1, +1:
+			return g.container.AddVoteForPost(bpk, bi.Config.GetSK(), pRef, vote)
+		}
 	} else {
 		// TODO: Via RPC Client.
 		return errors.New("not implemented")

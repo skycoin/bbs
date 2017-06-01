@@ -17,32 +17,6 @@ import (
 // QueueConfigFileName represents the filename of the queue configuration file.
 const QueueConfigFileName = "bbs_queue.json"
 
-type QueueItem struct {
-	ID           string            `json:"id"`
-	Submitted    int64             `json:"submitted"`
-	ReqNewPost   *rpc.ReqNewPost   `json:"new_post_request,omitempty"`
-	ReqNewThread *rpc.ReqNewThread `json:"new_thread_request,omitempty"`
-}
-
-func NewQueueItem() *QueueItem {
-	return &QueueItem{
-		ID:        misc.MakeTimeStampedRandomID(100).Hex(),
-		Submitted: time.Now().UnixNano(),
-	}
-}
-
-func (qi *QueueItem) SetPost(req *rpc.ReqNewPost) *QueueItem {
-	qi.ReqNewThread = nil
-	qi.ReqNewPost = req
-	return qi
-}
-
-func (qi *QueueItem) SetThread(req *rpc.ReqNewThread) *QueueItem {
-	qi.ReqNewPost = nil
-	qi.ReqNewThread = req
-	return qi
-}
-
 type QueueSaver struct {
 	sync.Mutex
 	config *args.Config
@@ -112,45 +86,57 @@ func (qs *QueueSaver) Process() {
 	if len(qs.queue) == 0 {
 		return
 	}
-	log.Println("[QUEUESAVER] Processing queue...")
-
-	toRemoveList := []int{}
+	log.Println("[QUEUESAVER] Processing queue ...")
+	doneList := []int{}
 
 	for i, qi := range qs.queue {
 		switch {
 		case qi.ReqNewPost != nil:
+			log.Println("[QUEUESAVER] (New Post Request)")
 			req := qi.ReqNewPost
 			b, e := qs.c.GetBoard(req.BoardPubKey)
 			if e != nil {
-				toRemoveList = append(toRemoveList, i)
+				log.Printf("[QUEUESAVER] \t- Failed to get board '%s': %s",
+					req.BoardPubKey.Hex(), e.Error())
+				qi.GetBoardFails += 1
 				break
 			}
 			rpcClient, e := rpc.NewClient(b.URL)
 			if e != nil {
+				log.Printf("[QUEUESAVER] \t- Failed to connect to '%s': %s",
+					b.URL, e.Error())
+				qi.ConnectionFails += 1
 				break
 			}
 			rpcClient.NewPost(req)
-			toRemoveList = append(toRemoveList, i)
+			doneList = append(doneList, i)
 
 		case qi.ReqNewThread != nil:
+			log.Println("[QUEUESAVER] (New Thread Request)")
 			req := qi.ReqNewThread
 			b, e := qs.c.GetBoard(req.BoardPubKey)
 			if e != nil {
-				toRemoveList = append(toRemoveList, i)
+				log.Printf("[QUEUESAVER] \t- Failed to get board '%s': %s",
+					req.BoardPubKey.Hex(), e.Error())
+				qi.GetBoardFails += 1
 				break
 			}
 			rpcClient, e := rpc.NewClient(b.URL)
 			if e != nil {
+				log.Printf("[QUEUESAVER] \t- Failed to connect to '%s': %s",
+					b.URL, e.Error())
+				qi.ConnectionFails += 1
 				break
 			}
 			rpcClient.NewThread(req)
-			toRemoveList = append(toRemoveList, i)
+			doneList = append(doneList, i)
 		}
 	}
-	for _, i := range toRemoveList {
+
+	for _, i := range doneList {
 		qs.done = append(qs.done, qs.queue[i])
 	}
-	for i := range misc.ReverseIntSlice(toRemoveList) {
+	for i := range misc.ReverseIntSlice(doneList) {
 		qs.queue = append(qs.queue[:i], qs.queue[i+1:]...)
 	}
 }
@@ -176,7 +162,7 @@ func (qs *QueueSaver) AddNewPostReq(bpk cipher.PubKey, tRef skyobject.Reference,
 		log.Println("[QUEUESAVER]", e)
 		return e
 	}
-	post.Ref = *pRef
+	post.Ref = pRef
 	return nil
 }
 
@@ -204,6 +190,6 @@ func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey,
 		log.Println("[QUEUESAVER]", e)
 		return e
 	}
-	thread.Ref = *tRef
+	thread.Ref = tRef
 	return nil
 }

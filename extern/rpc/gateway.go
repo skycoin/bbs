@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/intern/store"
@@ -30,6 +30,7 @@ func NewGateway(
 }
 
 func (g *Gateway) NewPost(req *ReqNewPost, pRefStr *string) (e error) {
+	log.Println("[RPCGATEWAY] NewPost request recieved. Processing...")
 	if req == nil || req.Post == nil {
 		return errors.New("nil error")
 	}
@@ -52,7 +53,7 @@ func (g *Gateway) NewPost(req *ReqNewPost, pRefStr *string) (e error) {
 }
 
 func (g *Gateway) NewThread(req *ReqNewThread, tRefStr *string) error {
-	log.Println("[RPCGATEWAY] Recieved NewThread Request.")
+	log.Println("[RPCGATEWAY] NewThread request recieved. Processing...")
 	if req == nil || req.Thread == nil {
 		return errors.New("nil error")
 	}
@@ -77,4 +78,70 @@ func (g *Gateway) NewThread(req *ReqNewThread, tRefStr *string) error {
 	req.Thread.MasterBoard = req.BoardPubKey.Hex()
 	tRefStr = &req.Thread.Ref
 	return nil
+}
+
+func (g *Gateway) VotePost(req *ReqVotePost, ok *bool) error {
+	log.Println("[RPCGATEWAY] VotePost request recieved. Processing...")
+	if req == nil || ok == nil {
+		return errors.New("nil error")
+	}
+	// Check vote.
+	vote := req.Vote
+	if e := vote.Verify(); e != nil {
+		return e
+	}
+	// Check board.
+	bi, has := g.boardSaver.Get(req.BoardPubKey)
+	if !has {
+		return errors.New("not subscribed to board")
+	}
+	// Check if this BBS Node owns the board.
+	if !bi.Config.Master {
+		return errors.New("not master of board")
+	}
+	// Do vote.
+	switch vote.Mode {
+	case 0:
+		return g.container.RemoveVoteForPost(
+			vote.User, req.BoardPubKey, bi.Config.GetSK(), req.PostRef)
+	case -1, +1:
+		return g.container.AddVoteForPost(
+			req.BoardPubKey, bi.Config.GetSK(), req.PostRef, vote)
+	default:
+		return errors.Errorf("invalid vote mode '%d'", vote.Mode)
+	}
+}
+
+func (g *Gateway) VoteThread(req *ReqVoteThread, ok *bool) error {
+	log.Println("[RPCGATEWAY] VoteThread request recieved. Processing...")
+	if req == nil || ok == nil {
+		return errors.New("nil error")
+	}
+	// Check vote.
+	vote := req.Vote
+	if e := vote.Verify(); e != nil {
+		return e
+	}
+	// Check board.
+	bi, has := g.boardSaver.Get(req.BoardPubKey)
+	if !has {
+		return errors.Errorf("not subscribed to board '%s'",
+			req.BoardPubKey.Hex())
+	}
+	// Check if this BBS Node owns the board.
+	if !bi.Config.Master {
+		return errors.Errorf("not master of board '%s'",
+			req.BoardPubKey.Hex())
+	}
+	// Do vote.
+	switch vote.Mode {
+	case 0:
+		return g.container.RemoveVoteForThread(
+			vote.User, req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef)
+	case -1, +1:
+		return g.container.AddVoteForThread(
+			req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef, vote)
+	default:
+		return errors.Errorf("invalid vote mode '%d'", vote.Mode)
+	}
 }

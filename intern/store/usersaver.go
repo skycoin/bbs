@@ -1,7 +1,7 @@
 package store
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/misc"

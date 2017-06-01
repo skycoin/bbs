@@ -410,7 +410,7 @@ func (a *API) AddVoteForThread(w http.ResponseWriter, r *http.Request) {
 	}
 	// Prepare vote.
 	vote := &typ.Vote{Mode: int8(mode), Tag: []byte(r.FormValue("tag"))}
-	if e := a.g.AddVoteForThread(bpk, tRef, vote); e != nil {
+	if e := a.g.VoteForThread(bpk, tRef, vote); e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
@@ -438,7 +438,7 @@ func (a *API) AddVoteForPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// Prepare vote.
 	vote := &typ.Vote{Mode: int8(mode), Tag: []byte(r.FormValue("tag"))}
-	if e := a.g.AddVoteForPost(bpk, pRef, vote); e != nil {
+	if e := a.g.VoteForPost(bpk, pRef, vote); e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}

@@ -47,7 +47,7 @@ func (c *Container) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference)
 	return votes, nil
 }
 
-// AddVoteForThread adds a vote for a thread on a specified board.
+// VoteForThread adds a vote for a thread on a specified board.
 func (c *Container) AddVoteForThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, newVote *typ.Vote) error {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	vc := &typ.ThreadVotesContainer{}
@@ -78,7 +78,7 @@ SaveThreadVotesContainer:
 	return w.ReplaceCurrent(*vc)
 }
 
-// AddVoteForPost adds a vote for a post on a specified board.
+// VoteForPost adds a vote for a post on a specified board.
 func (c *Container) AddVoteForPost(bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference, newVote *typ.Vote) error {
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	vc := &typ.PostVotesContainer{}
