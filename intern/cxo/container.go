@@ -6,19 +6,20 @@ import (
 	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/pkg/errors"
 	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"log"
 	"strconv"
+	"sync"
 	"time"
-	"github.com/skycoin/cxo/node/gnet"
 )
 
 type Container struct {
+	sync.Mutex
 	c      *node.Container
 	client *node.Client
-	conn    *gnet.Conn
 	config *args.Config
 	msgs   chan *Msg
 }
@@ -63,9 +64,8 @@ func NewContainer(config *args.Config) (*Container, error) {
 
 	// Wait for connection.
 	log.Println("[CXOCONTAINER] Awaiting connection to cxo daemon...")
-	c.conn = c.client.Conn()
 
-	if c.conn.State() != gnet.ConnStateConnected {
+	if c.client.Conn().State() != gnet.ConnStateConnected {
 		timeout := time.NewTimer(10 * time.Second)
 		defer timeout.Stop()
 		check := time.NewTicker(time.Second)
@@ -73,7 +73,7 @@ func NewContainer(config *args.Config) (*Container, error) {
 		for {
 			select {
 			case <-check.C:
-				if c.conn.State() == gnet.ConnStateConnected {
+				if c.client.Conn().State() == gnet.ConnStateConnected {
 					goto OnConnected
 				}
 			case <-timeout.C:
@@ -91,13 +91,15 @@ OnConnected:
 }
 
 func (c *Container) Close() error                      { return c.client.Close() }
-//func (c *Container) Connected() bool                   { return c.client.IsConnected() }
 func (c *Container) Feeds() []cipher.PubKey            { return c.client.Feeds() }
 func (c *Container) Subscribe(pk cipher.PubKey) bool   { return c.client.Subscribe(pk) }
 func (c *Container) Unsubscribe(pk cipher.PubKey) bool { return c.client.Unsubscribe(pk, false) }
 
 // ChangeBoardURL changes the board's URL of given public key.
 func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url string) error {
+	c.Lock()
+	defer c.Unlock()
+
 	r := c.c.LastRootSk(bpk, bsk)
 	w := r.Walker()
 	bc := &typ.BoardContainer{}
@@ -116,7 +118,10 @@ func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url str
 
 // GetBoard attempts to obtain the board of a given public key.
 func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
-	w := c.c.LastRoot(bpk).Walker()
+	c.Lock()
+	defer c.Unlock()
+
+	w := c.c.LastFullRoot(bpk).Walker()
 	bc := typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(&bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return nil, e
@@ -128,6 +133,9 @@ func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
 
 // GetBoards attempts to obtain a list of boards from the given public keys.
 func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
+	c.Lock()
+	defer c.Unlock()
+
 	boards := make([]*typ.Board, len(bpks))
 	for i, bpk := range bpks {
 		w := c.c.LastRoot(bpk).Walker()
@@ -143,6 +151,9 @@ func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 
 // NewBoard attempts to create a new board from a given board and seed.
 func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKey) error {
+	c.Lock()
+	defer c.Unlock()
+
 	r, e := c.c.NewRoot(pk, sk)
 	if e != nil {
 		return e
@@ -168,6 +179,9 @@ func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKe
 
 // RemoveBoard attempts to remove a board by a given public key.
 func (c *Container) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	fmt.Println("Removing board:", bpk.Hex())
 	bc := &typ.BoardContainer{}
@@ -179,6 +193,9 @@ func (c *Container) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
 
 // GetThread obtains a single thread via reference.
 func (c *Container) GetThread(tRef skyobject.Reference) (*typ.Thread, error) {
+	c.Lock()
+	defer c.Unlock()
+
 	tData, has := c.c.Get(tRef)
 	if !has {
 		return nil, errors.New("thread not found")
@@ -193,7 +210,10 @@ func (c *Container) GetThread(tRef skyobject.Reference) (*typ.Thread, error) {
 
 // GetThreads attempts to obtain a list of threads from a board of public key.
 func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
-	w := c.c.LastRoot(bpk).Walker()
+	c.Lock()
+	defer c.Unlock()
+
+	w := c.c.LastFullRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return nil, e
@@ -215,6 +235,9 @@ func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 
 // NewThread attempts to create a new thread from a board of given public key.
 func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.Thread) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
@@ -245,6 +268,9 @@ func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.
 
 // RemoveThread attempts to remove a thread from a board of given public key.
 func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
@@ -272,6 +298,9 @@ func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyo
 
 // GetThreadPage requests a page from a thread
 func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*typ.Thread, []*typ.Post, error) {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
@@ -309,7 +338,10 @@ func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (
 
 // GetPosts attempts to obtain posts from a specified board and thread.
 func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.Post, error) {
-	w := c.c.LastRoot(bpk).Walker()
+	c.Lock()
+	defer c.Unlock()
+
+	w := c.c.LastFullRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return nil, e
@@ -335,6 +367,9 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 
 // NewPost attempts to create a new post in a given board and thread.
 func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, post *typ.Post) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
@@ -373,6 +408,9 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 
 // RemovePost attempts to remove a post in a given board and thread.
 func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef skyobject.Reference) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
@@ -401,8 +439,11 @@ func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef 
 
 // ImportThread imports a thread from a board to another board (which this node owns). If already imported replaces it.
 func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tRef skyobject.Reference) error {
+	c.Lock()
+	defer c.Unlock()
+
 	// Get from 'from' Board.
-	w := c.c.LastRoot(fromBpk).Walker()
+	w := c.c.LastFullRoot(fromBpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return errors.Wrap(e, "import thread failed: failed to obtain board "+fromBpk.Hex())

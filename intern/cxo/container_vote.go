@@ -9,6 +9,9 @@ import (
 
 // GetVotesForThread obtains the votes for specified thread present in specified board.
 func (c *Container) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) ([]typ.Vote, error) {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastFullRoot(bpk).Walker()
 	vc := &typ.ThreadVotesContainer{}
 	if e := w.AdvanceFromRoot(vc, makeThreadVotesContainerFinder(w.Root())); e != nil {
@@ -29,6 +32,9 @@ func (c *Container) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Referenc
 
 // GetVotesForPost obtains the votes for specified post present in specified board.
 func (c *Container) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) ([]typ.Vote, error) {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastFullRoot(bpk).Walker()
 	vc := &typ.PostVotesContainer{}
 	if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
@@ -49,6 +55,9 @@ func (c *Container) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference)
 
 // VoteForThread adds a vote for a thread on a specified board.
 func (c *Container) AddVoteForThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, newVote *typ.Vote) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	vc := &typ.ThreadVotesContainer{}
 	if e := w.AdvanceFromRoot(vc, makeThreadVotesContainerFinder(w.Root())); e != nil {
@@ -80,6 +89,9 @@ SaveThreadVotesContainer:
 
 // VoteForPost adds a vote for a post on a specified board.
 func (c *Container) AddVoteForPost(bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference, newVote *typ.Vote) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	vc := &typ.PostVotesContainer{}
 	if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
@@ -111,6 +123,9 @@ SavePostVotesContainer:
 
 // RemoveVoteForThread removes a vote completely for a thread and specified user.
 func (c *Container) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	vc := &typ.ThreadVotesContainer{}
 	if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
@@ -141,6 +156,9 @@ func (c *Container) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKe
 
 // RemoveVoteForPost removes a vote completely for a post and specified user.
 func (c *Container) RemoveVoteForPost(upk, bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference) error {
+	c.Lock()
+	defer c.Unlock()
+
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	vc := &typ.PostVotesContainer{}
 	if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {

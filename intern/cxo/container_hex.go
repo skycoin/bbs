@@ -23,8 +23,11 @@ type ThreadPageHex struct {
 
 // GetThreadPageAsHex retrieves a ThreadPage with data as hex.
 func (c *Container) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Reference) (tph *ThreadPageHex, e error) {
+	c.Lock()
+	defer c.Unlock()
+
 	tph = new(ThreadPageHex)
-	w := c.c.LastRoot(bpk).Walker()
+	w := c.c.LastFullRoot(bpk).Walker()
 
 	bc := &typ.BoardContainer{}
 	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
@@ -66,6 +69,9 @@ func (c *Container) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Referen
 // GetThreadPageWithTpRefAsHex retrieves a ThreadPage with data as hex.
 // This function uses the reference of a ThreadPage.
 func (c *Container) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (tph *ThreadPageHex, e error) {
+	c.Lock()
+	defer c.Unlock()
+
 	tph = new(ThreadPageHex)
 
 	tp := &typ.ThreadPage{}
@@ -100,6 +106,9 @@ func (c *Container) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (tph 
 
 // NewThreadWithHex attempts to creates a new thread in a board with hex data of thread.
 func (c *Container) NewThreadWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tData []byte) (e error) {
+	c.Lock()
+	defer c.Unlock()
+
 	// Obtain thread.
 	t := &typ.Thread{}
 	if e = t.Deserialize(tData); e != nil {
@@ -124,6 +133,9 @@ func (c *Container) NewThreadWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tData
 // NewPostWithHex attempts to create a new post in a given board and thread with hex data of post.
 // The post better be properly signed otherwise other nodes will not accept it.
 func (c *Container) NewPostWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, pData []byte) error {
+	c.Lock()
+	defer c.Unlock()
+
 	// Obtain post.
 	p := &typ.Post{}
 	if e := p.Deserialize(pData); e != nil {
