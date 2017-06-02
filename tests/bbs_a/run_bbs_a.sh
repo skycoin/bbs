@@ -27,18 +27,12 @@ echo "> CXO DAEMON ..."
     --data-dir=$a_cxodir \
     &
 sleep 5
-echo "> ADDING FEEDS ..."
-./cli \
-    --a=[::]:$a_cxorpc \
-    --e='add_feed 032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b'
-./cli \
-    --a=[::]:$a_cxorpc \
-    --e='add_feed 02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b'
 echo "> BBS SERVER ..."
 ./bbsnode \
     --master=true \
     --save-config=false \
     --cxo-port=$a_cxod \
+    --cxo-rpc-port=$a_cxorpc \
     --cxo-memory-mode=true \
     --cxo-dir=bbs_a \
     --rpc-server-port=$a_bbsrpc \

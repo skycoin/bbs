@@ -20,6 +20,7 @@ type Container struct {
 	sync.Mutex
 	c      *node.Container
 	client *node.Client
+	rpc    *node.RPCClient
 	config *args.Config
 	msgs   chan *Msg
 }
@@ -49,7 +50,9 @@ func NewContainer(config *args.Config) (*Container, error) {
 	cc := node.NewClientConfig()
 	cc.InMemoryDB = config.CXOUseMemory()
 	cc.DataDir = config.CXODir()
-	cc.OnRootFilled = c.rootFilledCallBack
+	if config.Master() {
+		cc.OnRootFilled = c.rootFilledCallBack
+	}
 	cc.OnAddFeed = c.feedAddedCallBack
 	cc.OnDelFeed = c.feedDeleted
 
@@ -90,13 +93,37 @@ OnConnected:
 
 	// Set Container.
 	c.c = c.client.Container()
+
+	// Setup cxo rpc.
+	if c.rpc, e = node.NewRPCClient("[::]:" + strconv.Itoa(c.config.CXORPCPort())); e != nil {
+		return nil, e
+	}
+
 	return c, nil
 }
 
-func (c *Container) Close() error                      { return c.client.Close() }
-func (c *Container) Feeds() []cipher.PubKey            { return c.client.Feeds() }
-func (c *Container) Subscribe(pk cipher.PubKey) bool   { return c.client.Subscribe(pk) }
-func (c *Container) Unsubscribe(pk cipher.PubKey) bool { return c.client.Unsubscribe(pk, false) }
+func (c *Container) Close() error {
+	c.rpc.Close()
+	return c.client.Close()
+}
+
+func (c *Container) Feeds() []cipher.PubKey {
+	return c.client.Feeds()
+}
+
+func (c *Container) Subscribe(pk cipher.PubKey) (bool, error) {
+	if _, e := c.rpc.AddFeed(pk); e != nil {
+		return false, e
+	}
+	return c.client.Subscribe(pk), nil
+}
+
+func (c *Container) Unsubscribe(pk cipher.PubKey) (bool, error) {
+	if _, e := c.rpc.DelFeed(pk); e != nil {
+		return false, e
+	}
+	return c.client.Unsubscribe(pk, false), nil
+}
 
 // ChangeBoardURL changes the board's URL of given public key.
 func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url string) error {
