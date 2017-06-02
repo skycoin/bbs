@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
 	"github.com/evanlinjin/bbs/intern/cxo"
 	"github.com/evanlinjin/bbs/misc"
@@ -68,26 +69,26 @@ func (bs *BoardSaver) absConfigDir() string {
 // Helper function. Loads and checks boards' configuration file to memory.
 func (bs *BoardSaver) load() error {
 	// Don't load if specified not to.
-	if !bs.config.SaveConfig() {
-		return nil
-	}
-	log.Println("[BOARDSAVER] Loading configuration file...")
-	// Load boards from file.
-	bcf := BoardSaverFile{}
-	if e := util.LoadJSON(bs.absConfigDir(), &bcf); e != nil {
-		log.Println("[BOARDSAVER]", e)
-	}
-	// Check loaded boards and intern in memory.
-	for _, bc := range bcf.Boards {
-		log.Printf("\t- %v (master: %v)", bc.PubKey, bc.Master)
-		bpk, e := bc.Check()
-		if e != nil {
-			log.Println("\t\t config file check:", e)
-			continue
+	if bs.config.SaveConfig() {
+
+		log.Println("[BOARDSAVER] Loading configuration file...")
+		// Load boards from file.
+		bcf := BoardSaverFile{}
+		if e := util.LoadJSON(bs.absConfigDir(), &bcf); e != nil {
+			log.Println("[BOARDSAVER]", e)
 		}
-		bs.store[bpk] = &BoardInfo{Config: *bc}
-		bs.c.Subscribe(bpk)
-		log.Println("\t\t loaded in memory")
+		// Check loaded boards and intern in memory.
+		for _, bc := range bcf.Boards {
+			log.Printf("\t- %v (master: %v)", bc.PubKey, bc.Master)
+			bpk, e := bc.Check()
+			if e != nil {
+				log.Println("\t\t config file check:", e)
+				continue
+			}
+			bs.store[bpk] = &BoardInfo{Config: *bc}
+			bs.c.Subscribe(bpk)
+			log.Println("\t\t loaded in memory")
+		}
 	}
 	bs.checkSynced()
 	if bs.config.Master() {
@@ -122,6 +123,7 @@ func (bs *BoardSaver) service() {
 			switch msg.Mode() {
 			case cxo.RootFilled:
 				bs.Lock()
+				log.Printf("[BOARDSAVER] Checking dependencies for board '%s'", msg.PubKey().Hex())
 				bs.checkSingleDep(msg.PubKey())
 				bs.Unlock()
 			case cxo.FeedAdded:

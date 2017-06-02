@@ -49,6 +49,9 @@ func NewContainer(config *args.Config) (*Container, error) {
 	cc := node.NewClientConfig()
 	cc.InMemoryDB = config.CXOUseMemory()
 	cc.DataDir = config.CXODir()
+	cc.OnRootFilled = c.rootFilledCallBack
+	cc.OnAddFeed = c.feedAddedCallBack
+	cc.OnDelFeed = c.feedDeleted
 
 	var e error
 
@@ -441,6 +444,9 @@ func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef 
 func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tRef skyobject.Reference) error {
 	c.Lock()
 	defer c.Unlock()
+
+	log.Printf("[CONTAINER] Syncing thread '%s' from board '%s' to board '%s'.",
+		tRef.String(), fromBpk.Hex(), toBpk.Hex())
 
 	// Get from 'from' Board.
 	w := c.c.LastFullRoot(fromBpk).Walker()

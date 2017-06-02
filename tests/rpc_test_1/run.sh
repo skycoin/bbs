@@ -83,7 +83,7 @@ curl \
 	-sS http://127.0.0.1:$PORT_B/api/new_post \
     | jq
 
-sleep 1
+sleep 5
 
 echo "> OBTAIN THREADPAGE FROM BBS NODE 'A' ..."
 
@@ -106,7 +106,7 @@ curl \
 	-sS http://127.0.0.1:$PORT_B/api/new_board \
     | jq
 
-sleep 1
+sleep 2
 
 echo "[ TESTING IMPORT THREAD ]"
 
@@ -120,7 +120,7 @@ curl \
 	-sS http://127.0.0.1:$PORT_B/api/import_thread \
     | jq
 
-sleep 1
+sleep 2
 
 echo "> SHOW IMPORTED THREADPAGE ..."
 
@@ -155,7 +155,7 @@ curl \
 	-sS http://127.0.0.1:$PORT_B/api/new_post \
     | jq
 
-sleep 1
+sleep 5
 
 echo "> SHOW IMPORTED THREADPAGE (AGAIN) ..."
 
@@ -165,5 +165,3 @@ curl \
     -F "thread=8d26f218cb37fadb931fb081808037c6241d3f3b5958d1175642264e4757d1f6" \
 	-sS http://127.0.0.1:$PORT_B/api/get_threadpage \
     | jq
-
-sleep 1
