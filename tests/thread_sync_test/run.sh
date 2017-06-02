@@ -105,3 +105,43 @@ curl \
     -F "thread=c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865" \
 	-sS http://127.0.0.1:$PORT_A/api/get_threadpage \
     | jq
+
+sleep 1
+
+echo "> VOTE FOR A THREAD LOCALLY, THEN VIA RPC ..."
+
+curl \
+    -X POST \
+    -F "board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
+    -F "thread=c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865" \
+    -F "mode=1" \
+    -sS http://127.0.0.1:$PORT_A/api/add_thread_vote \
+    | jq
+
+sleep 1
+
+curl \
+    -X POST \
+    -F "board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
+    -F "thread=c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865" \
+    -F "mode=1" \
+    -sS http://127.0.0.1:$PORT_B/api/add_thread_vote \
+    | jq
+
+sleep 1
+
+echo "> SHOW VOTES FOR THE THREAD ..."
+
+curl \
+    -X POST \
+    -F "board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
+    -F "thread=c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865" \
+    -sS http://127.0.0.1:$PORT_A/api/get_thread_votes \
+    | jq
+
+curl \
+    -X POST \
+    -F "board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
+    -F "thread=c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865" \
+    -sS http://127.0.0.1:$PORT_B/api/get_thread_votes \
+    | jq
