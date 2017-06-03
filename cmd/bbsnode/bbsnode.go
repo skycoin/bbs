@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
+	"github.com/evanlinjin/bbs/extern/dev"
 	"github.com/evanlinjin/bbs/extern/gui"
 	"github.com/evanlinjin/bbs/extern/rpc"
 	"github.com/evanlinjin/bbs/intern/cxo"
@@ -55,6 +56,12 @@ func main() {
 		serveAddr, e := gui.OpenWebInterface(config, gateway)
 		CatchError(e, "unable to start web server")
 		defer gui.Close()
+
+		if config.TestMode() {
+			tester, e := dev.NewTester(config, gateway)
+			CatchError(e, "unable to start tester")
+			defer tester.Close()
+		}
 
 		log.Println("[WEBGUI] Serving on:", serveAddr)
 

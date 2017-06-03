@@ -19,6 +19,7 @@ type Config struct {
 
 	testMode            bool // Whether to enable test mode.
 	testModeThreads     int  // Number of threads to use for test mode (will create them in test mode).
+	testModeUsers       int  // Number of master users used for simulated activity.
 	testModeMinInterval int  // Minimum interval between simulated activity (in seconds).
 	testModeMaxInterval int  // Maximum interval between simulated activity (in seconds).
 
@@ -42,6 +43,7 @@ func NewConfig() *Config {
 	return &Config{
 		testMode:            false,
 		testModeThreads:     3,
+		testModeUsers:       1,
 		testModeMinInterval: 1,
 		testModeMaxInterval: 10,
 
@@ -74,6 +76,10 @@ func (c *Config) Parse() *Config {
 	flag.IntVar(&c.testModeThreads,
 		"test-mode-threads", c.testModeThreads,
 		"number of threads to use for test mode")
+
+	flag.IntVar(&c.testModeUsers,
+		"test-mode-users", c.testModeUsers,
+		"number of users to use for test mode")
 
 	flag.IntVar(&c.testModeMinInterval,
 		"test-mode-min", c.testModeMinInterval,
@@ -151,6 +157,9 @@ func (c *Config) PostProcess() (*Config, error) {
 		if c.testModeThreads < 0 {
 			return nil, errors.New("invalid number of test mode threads specified")
 		}
+		if c.testModeUsers < 1 {
+			return nil, errors.New("invalid number of test mode users specified")
+		}
 		if c.testModeMinInterval < 1 {
 			return nil, errors.New("invalid test mode minimum interval specified")
 		}
@@ -161,11 +170,13 @@ func (c *Config) PostProcess() (*Config, error) {
 			return nil, errors.New("test mode minimum interval > maximum interval")
 		}
 		// Enforce behaviour.
+		c.master = true
+		c.webGUIEnable = true
 		c.cxoMemoryMode = true
 		c.saveConfig = false
 	}
 	// Action on configuration directory.
-	if c.configDir == "" {
+	if c.saveConfig && c.configDir == "" {
 		c.configDir = util.InitDataDir(configSubDir)
 
 	} else if !strings.HasPrefix(c.configDir, util.UserHome()) {
@@ -185,6 +196,7 @@ func (c *Config) PostProcess() (*Config, error) {
 
 func (c *Config) TestMode() bool           { return c.testMode }
 func (c *Config) TestModeThreads() int     { return c.testModeThreads }
+func (c *Config) TestModeUsers() int       { return c.testModeUsers }
 func (c *Config) TestModeMinInterval() int { return c.testModeMinInterval }
 func (c *Config) TestModeMaxInterval() int { return c.testModeMaxInterval }
 

@@ -12,7 +12,6 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
-	"math/rand"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.
@@ -513,7 +512,10 @@ func (g *Gateway) TestNewFilledBoard(seed string, threads, minPosts, maxPosts in
 		if e := g.NewThread(bpk, t); e != nil {
 			return errors.New("on creating thread " + string(i) + "; " + e.Error())
 		}
-		nPosts := rand.Intn(maxPosts-minPosts) + minPosts
+		nPosts, e := misc.MakeIntBetween(minPosts, maxPosts)
+		if e != nil {
+			return e
+		}
 		for j := 1; j <= nPosts; j++ {
 
 			p := &typ.Post{
