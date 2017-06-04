@@ -11,8 +11,6 @@ a_bbsgui=6490
 echo "[ BUILDING EXECUTABLES ]"
 echo "> cxod ..."
 go build $GOPATH/src/github.com/skycoin/cxo/cmd/cxod/cxod.go
-echo "> cli ..."
-go build $GOPATH/src/github.com/skycoin/cxo/cmd/cli/cli.go
 echo "> bbsnode ..."
 go build $GOPATH/src/github.com/evanlinjin/bbs/cmd/bbsnode/bbsnode.go
 
@@ -26,7 +24,6 @@ echo "> CXO DAEMON ..."
     --mem-db=true \
     --data-dir=$a_cxodir \
     &
-sleep 5
 echo "> BBS SERVER ..."
 ./bbsnode \
     --master=true \
@@ -44,5 +41,5 @@ echo "> BBS SERVER ..."
 
 wait
 echo "[ CLEANING UP ]"
-rm cli cxod bbsnode
+rm cxod bbsnode
 echo "Goodbye!"

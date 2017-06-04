@@ -160,10 +160,10 @@ func (c *Config) PostProcess() (*Config, error) {
 		if c.testModeUsers < 1 {
 			return nil, errors.New("invalid number of test mode users specified")
 		}
-		if c.testModeMinInterval < 1 {
+		if c.testModeMinInterval < 0 {
 			return nil, errors.New("invalid test mode minimum interval specified")
 		}
-		if c.testModeMaxInterval < 1 {
+		if c.testModeMaxInterval < 0 {
 			return nil, errors.New("invalid test mode maximum interval specified")
 		}
 		if c.testModeMinInterval > c.testModeMaxInterval {

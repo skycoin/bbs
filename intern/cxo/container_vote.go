@@ -128,13 +128,13 @@ func (c *Container) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKe
 
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	vc := &typ.ThreadVotesContainer{}
-	if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
+	if e := w.AdvanceFromRoot(vc, makeThreadVotesContainerFinder(w.Root())); e != nil {
 		return e
 	}
 	// Obtain vote references.
 	voteRefs, e := vc.GetThreadVotes(tRef)
 	if e != nil {
-		return e
+		return errors.Wrap(e, "failed to remove vote for thread")
 	}
 	// loop through votes to see what to remove.
 	for i, vRef := range voteRefs.Votes {
