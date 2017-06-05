@@ -14,7 +14,7 @@ go build $GOPATH/src/github.com/skycoin/cxo/cmd/cxod/cxod.go
 echo "> cli ..."
 go build $GOPATH/src/github.com/skycoin/cxo/cmd/cli/cli.go
 echo "> bbsnode ..."
-go build $GOPATH/src/github.com/evanlinjin/bbs/cmd/bbsnode/bbsnode.go
+go build $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go
 
 # Start BBS Node 'B'.
 
