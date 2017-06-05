@@ -1,8 +1,8 @@
 package cxo
 
 import (
-	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/pkg/errors"
+	"github.com/skycoin/bbs/intern/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )

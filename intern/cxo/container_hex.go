@@ -3,7 +3,7 @@ package cxo
 import (
 	"encoding/hex"
 	"errors"
-	"github.com/evanlinjin/bbs/intern/typ"
+	"github.com/skycoin/bbs/intern/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )

@@ -1,10 +1,10 @@
 package rpc
 
 import (
-	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
-	"github.com/evanlinjin/bbs/intern/cxo"
-	"github.com/evanlinjin/bbs/intern/store"
 	"github.com/pkg/errors"
+	"github.com/skycoin/bbs/cmd/bbsnode/args"
+	"github.com/skycoin/bbs/intern/cxo"
+	"github.com/skycoin/bbs/intern/store"
 	"log"
 )
 

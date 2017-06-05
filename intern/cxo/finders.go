@@ -1,7 +1,7 @@
 package cxo
 
 import (
-	"github.com/evanlinjin/bbs/intern/typ"
+	"github.com/skycoin/bbs/intern/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 )

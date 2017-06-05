@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/evanlinjin/bbs/misc"
+	"github.com/skycoin/bbs/misc"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"

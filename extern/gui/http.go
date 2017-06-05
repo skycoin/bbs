@@ -2,7 +2,7 @@ package gui
 
 import (
 	"fmt"
-	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
+	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"net"
 	"net/http"
 	"path/filepath"

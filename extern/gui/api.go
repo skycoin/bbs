@@ -2,8 +2,8 @@ package gui
 
 import (
 	"encoding/json"
-	"github.com/evanlinjin/bbs/intern/typ"
-	"github.com/evanlinjin/bbs/misc"
+	"github.com/skycoin/bbs/intern/typ"
+	"github.com/skycoin/bbs/misc"
 	"net/http"
 	"strconv"
 )

@@ -1,10 +1,10 @@
 package store
 
 import (
-	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
-	"github.com/evanlinjin/bbs/intern/cxo"
-	"github.com/evanlinjin/bbs/misc"
 	"github.com/pkg/errors"
+	"github.com/skycoin/bbs/cmd/bbsnode/args"
+	"github.com/skycoin/bbs/intern/cxo"
+	"github.com/skycoin/bbs/misc"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
 	"log"

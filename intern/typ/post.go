@@ -2,7 +2,7 @@ package typ
 
 import (
 	"errors"
-	"github.com/evanlinjin/bbs/misc"
+	"github.com/skycoin/bbs/misc"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strings"

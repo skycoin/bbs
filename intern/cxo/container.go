@@ -2,9 +2,9 @@ package cxo
 
 import (
 	"fmt"
-	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
-	"github.com/evanlinjin/bbs/intern/typ"
 	"github.com/pkg/errors"
+	"github.com/skycoin/bbs/cmd/bbsnode/args"
+	"github.com/skycoin/bbs/intern/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/skyobject"

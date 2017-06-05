@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/evanlinjin/bbs/cmd/bbsnode/args"
-	"github.com/evanlinjin/bbs/extern/dev"
-	"github.com/evanlinjin/bbs/extern/gui"
-	"github.com/evanlinjin/bbs/extern/rpc"
-	"github.com/evanlinjin/bbs/intern/cxo"
-	"github.com/evanlinjin/bbs/intern/store"
-	"github.com/evanlinjin/bbs/intern/store/msg"
+	"github.com/skycoin/bbs/cmd/bbsnode/args"
+	"github.com/skycoin/bbs/extern/dev"
+	"github.com/skycoin/bbs/extern/gui"
+	"github.com/skycoin/bbs/extern/rpc"
+	"github.com/skycoin/bbs/intern/cxo"
+	"github.com/skycoin/bbs/intern/store"
+	"github.com/skycoin/bbs/intern/store/msg"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"os"
