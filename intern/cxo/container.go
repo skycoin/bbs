@@ -126,7 +126,7 @@ OnConnected:
 func (c *Container) Close() error {
 	for {
 		select {
-		case c.quit<- struct{}{}:
+		case c.quit <- struct{}{}:
 		default:
 			goto ServiceFinished
 		}
@@ -152,7 +152,7 @@ func (c *Container) service() {
 		select {
 		case <-c.quit:
 			return
-		case <- ticker.C:
+		case <-ticker.C:
 			c.Lock()
 			c.c.GC(false)
 			c.Unlock()
