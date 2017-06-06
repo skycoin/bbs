@@ -21,7 +21,9 @@ type Tester struct {
 	bpk    cipher.PubKey
 	tRefs  skyobject.References
 	users  []store.UserConfig
+	pCap bool
 	pNum   int
+	pCount int
 	quit   chan struct{}
 }
 
@@ -30,6 +32,8 @@ func NewTester(config *args.Config, gateway *gui.Gateway) (*Tester, error) {
 	t := &Tester{
 		config: config,
 		g:      gateway,
+		pCap: config.TestModePostCap() >= 0,
+		pNum: 1,
 		quit:   make(chan struct{}),
 	}
 	if e := t.setupUsers(); e != nil {
@@ -91,30 +95,33 @@ func (t *Tester) service() {
 		}()
 	}
 	for {
-		choice, _ := misc.MakeIntBetween(0, 3)
-		switch choice {
-		case 0:
-			log.Println("[TESTER] <<< Action: Change User >>>")
-			t.actionChangeUser()
-		case 1:
-			log.Println("[TESTER] <<< Action: New Post >>>")
-			t.actionNewPost()
-		case 2:
-			log.Println("[TESTER] <<< ACTION: Vote Post >>>")
-			t.actionVotePost()
-		case 3:
-			log.Println("[TESTER] <<< ACTION: Vote Thread >>>")
-			t.actionVoteThread()
-		}
+		interval := t.getInterval()
+		log.Printf("[TESTER] (PAUSE: %ds)", interval/time.Second)
+		time.Sleep(interval)
+
 		select {
 		case <-t.quit:
 			log.Println("[TESTER] Closing...")
 			return
 		default:
-			interval := t.getInterval()
-			log.Printf("[TESTER] (PAUSE: %ds)", interval/time.Second)
-			time.Sleep(interval)
-			continue
+			break
+		}
+
+		choice, _ := misc.MakeIntBetween(0, 10)
+		t.actionChangeUser()
+		switch choice {
+		case 0, 1, 2:
+			log.Println("[TESTER] <<< Action: New Post >>>")
+			t.actionNewPost()
+		case 3:
+			log.Println("[TESTER] <<< Action: Remove Post >>>")
+			t.actionDeletePost()
+		case 4, 5, 6, 7:
+			log.Println("[TESTER] <<< Action: Vote Post >>>")
+			t.actionVotePost()
+		case 8, 9, 10:
+			log.Println("[TESTER] <<< Action: Vote Thread >>>")
+			t.actionVoteThread()
 		}
 	}
 }
@@ -153,10 +160,17 @@ func (t *Tester) getPostNum() int {
 	return t.pNum
 }
 
-func (t *Tester) getRandomPostRef(tRef skyobject.Reference) skyobject.Reference {
+func (t *Tester) getPostCount() int {
+	return t.pCount
+}
+
+func (t *Tester) getRandomPostRef(tRef skyobject.Reference) (skyobject.Reference, bool) {
 	posts, e := t.g.GetPosts(t.bpk, tRef)
 	if e != nil {
 		log.Panic(e)
+	}
+	if len(posts) == 0 {
+		return skyobject.Reference{}, false
 	}
 	i, e := misc.MakeIntBetween(0, len(posts)-1)
 	if e != nil {
@@ -166,7 +180,7 @@ func (t *Tester) getRandomPostRef(tRef skyobject.Reference) skyobject.Reference 
 	if e != nil {
 		log.Panic(e)
 	}
-	return ref
+	return ref, true
 }
 
 func (t *Tester) actionChangeUser() {
@@ -180,12 +194,19 @@ func (t *Tester) actionChangeUser() {
 }
 
 func (t *Tester) actionNewPost() {
+	if t.pCap && t.pCount >= t.config.TestModePostCap() {
+		log.Println("[TESTER] \t- Post cap reached. Continuing...")
+		return
+	}
 	user := t.g.GetCurrentUser()
+	log.Printf("[TESTER] \t- User: %s '%s'", user.Alias, user.PubKey)
 	tRef := t.getRandomThreadRef()
+	log.Printf("[TESTER] \t- Thread: '%s'", tRef.String())
 	post := &typ.Post{
 		Title: fmt.Sprintf("Test Post %d", t.getPostNum()),
 		Body:  fmt.Sprintf("This is a test post by test user %s.", user.Alias),
 	}
+	log.Printf("[TESTER] \t- Post: {Title: '%s', Body: '%s'}", post.Title, post.Body)
 	if e := post.Sign(user.GetPK(), user.GetSK()); e != nil {
 		log.Panic(e)
 	}
@@ -194,10 +215,33 @@ func (t *Tester) actionNewPost() {
 	}
 }
 
+func (t *Tester) actionDeletePost() {
+	tRef := t.getRandomThreadRef()
+	log.Printf("[TESTER] \t- Thread: '%s'", tRef.String())
+	pRef, has := t.getRandomPostRef(tRef)
+	if !has {
+		log.Printf("[TESTER] \t- No posts here. Continuing...")
+		return
+	} else {
+		log.Printf("[TESTER] \t- Post: '%s'", pRef.String())
+	}
+	if e := t.g.RemovePost(t.bpk, tRef, pRef); e != nil {
+		log.Panic(e)
+	}
+}
+
 func (t *Tester) actionVotePost() {
 	user := t.g.GetCurrentUser()
-	pRef := t.getRandomPostRef(t.getRandomThreadRef())
+	log.Printf("[TESTER] \t- User: %s '%s'", user.Alias, user.PubKey)
+	pRef, has := t.getRandomPostRef(t.getRandomThreadRef())
+	if !has {
+		log.Printf("[TESTER] \t- No posts here. Continuing...")
+		return
+	} else {
+		log.Printf("[TESTER] \t- Post: '%s'", pRef.String())
+	}
 	vMode, e := misc.MakeIntBetween(-1, +1)
+	log.Printf("[TESTER] \t- Mode: %d", vMode)
 	if e != nil {
 		log.Panic(e)
 	}

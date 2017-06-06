@@ -9,13 +9,12 @@ import (
 )
 
 const configSubDir = "/.skycoin/bbs"
-const cxoTempSubDir = "temp_cxo_bbs"
 
 // Config represents commandline arguments.
 type Config struct {
 
 	// [TEST MODE] enforces the following behaviours:
-	// - `cxoMemoryMode = true` (disables modification to cxo database).
+	// - `cxoMemoryMode = false` (disables modification to cxo database, uses temp file instead).
 	// - `saveConfig = false` (disables modification to config files).
 
 	testMode            bool // Whether to enable test mode.
@@ -24,6 +23,7 @@ type Config struct {
 	testModeMinInterval int  // Minimum interval between simulated activity (in seconds).
 	testModeMaxInterval int  // Maximum interval between simulated activity (in seconds).
 	testModeTimeOut     int  // Will stop simulated activity after this time (in seconds). Disabled if negative.
+	testModePostCap     int  // Maximum number of posts allowed. Disabled if negative.
 
 	master            bool   // Whether BBS node can host boards.
 	saveConfig        bool   // Whether to save and use BBS configuration files.
@@ -49,6 +49,7 @@ func NewConfig() *Config {
 		testModeMinInterval: 1,
 		testModeMaxInterval: 10,
 		testModeTimeOut:     -1,
+		testModePostCap:     -1,
 
 		master:            false,
 		saveConfig:        true,
@@ -94,7 +95,11 @@ func (c *Config) Parse() *Config {
 
 	flag.IntVar(&c.testModeTimeOut,
 		"test-mode-timeout", c.testModeTimeOut,
-		"time in seconds before simulated activity stops - if negative, timeout is disabled")
+		"time in seconds before simulated activity stops - disabled if negative")
+
+	flag.IntVar(&c.testModePostCap,
+		"test-mode-post-cap", c.testModePostCap,
+		"maximum number of posts allowed to be created - disabled if negative")
 
 	/*
 		<<< BBS FLAGS >>>
@@ -179,8 +184,6 @@ func (c *Config) PostProcess() (*Config, error) {
 		// Enforce behaviour.
 		c.master = true
 		c.webGUIEnable = true
-
-		// So that no memory problems occur....
 		c.cxoMemoryMode = false
 		c.cxoDir = ""
 		c.saveConfig = false
@@ -210,6 +213,7 @@ func (c *Config) TestModeUsers() int       { return c.testModeUsers }
 func (c *Config) TestModeMinInterval() int { return c.testModeMinInterval }
 func (c *Config) TestModeMaxInterval() int { return c.testModeMaxInterval }
 func (c *Config) TestModeTimeOut() int     { return c.testModeTimeOut }
+func (c *Config) TestModePostCap() int     { return c.testModePostCap }
 
 func (c *Config) Master() bool            { return c.master }
 func (c *Config) SaveConfig() bool        { return c.saveConfig }
