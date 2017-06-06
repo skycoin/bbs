@@ -9,11 +9,6 @@ go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
     --test-mode-threads=3 \
     --test-mode-users=50 \
     --test-mode-min=0 \
-    --test-mode-max=1
-
-# Clean up.
-
+    --test-mode-max=3
 wait
-echo "[ CLEANING UP ]"
-rm cxod bbsnode
 echo "Goodbye!"
