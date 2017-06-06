@@ -35,11 +35,11 @@ func (c *Container) rootFilledCallBack(root *node.Root) {
 	go c.sendMsg(root.Pub(), RootFilled)
 }
 
-func (c *Container) feedAddedCallBack(pk cipher.PubKey) {
+func (c *Container) feedAddedInternalCB(pk cipher.PubKey) {
 	go c.sendMsg(pk, FeedAdded)
 }
 
-func (c *Container) feedDeleted(pk cipher.PubKey) {
+func (c *Container) feedDeletedInternalCB(pk cipher.PubKey) {
 	go c.sendMsg(pk, FeedDeleted)
 }
 

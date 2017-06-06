@@ -22,9 +22,12 @@ type Container struct {
 	sync.Mutex
 	c      *node.Container
 	client *node.Client
-	rpc    *node.RPCClient
 	config *args.Config
 	msgs   chan *Msg
+
+	cbAddFeed func(key cipher.PubKey) (bool, error)
+	cbDelFeed func(key cipher.PubKey) (bool, error)
+	cbClose   func() error
 
 	tempTestFile string
 
@@ -37,7 +40,45 @@ func NewContainer(config *args.Config) (*Container, error) {
 		msgs:   make(chan *Msg),
 	}
 
-	// Setup cxo registry.
+	// Prepare waiter, error channel and timeout.
+	var wg sync.WaitGroup
+	eChan := make(chan error, 100)
+	timeout := 10 * time.Second
+
+	// run stuff.
+	go c.setupCXOClient(wg, eChan, timeout)
+	if config.CXOUseInternal() {
+		go c.setupInternalCXODaemon(wg, eChan, timeout)
+	} else {
+		go c.setupCXORPCClient(wg, eChan, timeout)
+	}
+
+	// Wait.
+	time.Sleep(time.Second)
+	wg.Wait()
+
+	// Check for errors.
+	select {
+	case e := <-eChan:
+		if e != nil {
+			return nil, e
+		}
+	default:
+		break
+	}
+
+	log.Println("[CXOCONTAINER] Connection to cxo daemon established!")
+
+	go c.service()
+	return c, nil
+}
+
+func (c *Container) setupCXOClient(wg sync.WaitGroup, eChan chan error, timeout time.Duration) {
+	wg.Add(1)
+	defer wg.Done()
+	timer := time.NewTimer(timeout)
+
+	// Setup CXO Registry.
 	r := skyobject.NewRegistry()
 	r.Register("Board", typ.Board{})
 	r.Register("Thread", typ.Thread{})
@@ -52,75 +93,160 @@ func NewContainer(config *args.Config) (*Container, error) {
 	r.Register("PostVotesContainer", typ.PostVotesContainer{})
 	r.Done()
 
-	// Setup cxo config.
+	// Setup CXO Configuration.
 	cc := node.NewClientConfig()
-	cc.MaxMessageSize = 0
-	cc.InMemoryDB = config.CXOUseMemory()
-	if config.TestMode() {
-		tempFile, e := ioutil.TempFile("", "cxo_bbs_client.db")
+	cc.MaxMessageSize = 0 /* TODO: Should really look into adjusting this in the future. */
+	cc.InMemoryDB = c.config.CXOUseMemory()
+	cc.DataDir = c.config.CXODir()
+
+	// Setup CXO Callbacks.
+	if c.config.Master() {
+		cc.OnRootFilled = c.rootFilledCallBack
+	}
+	cc.OnAddFeed = c.feedAddedInternalCB
+	cc.OnDelFeed = c.feedDeletedInternalCB
+
+	// Change some configurations if test mode.
+	if c.config.TestMode() {
+
+		// Make temp file.
+		tempFile, e := ioutil.TempFile("", "")
 		if e != nil {
 			panic(e)
 		}
-		c.tempTestFile = tempFile.Name()
-		cc.DBPath = tempFile.Name()
-		cc.InMemoryDB = false
+		tempFileName := tempFile.Name()
 		tempFile.Close()
-	} else {
-		cc.DataDir = config.CXODir()
+
+		// Change stuff.
+		c.tempTestFile = tempFileName
+		cc.DBPath = tempFileName
+		cc.InMemoryDB = false
 	}
 
-	fmt.Println("DATADIR:", cc.DataDir)
-	if config.Master() {
-		cc.OnRootFilled = c.rootFilledCallBack
-	}
-	cc.OnAddFeed = c.feedAddedCallBack
-	cc.OnDelFeed = c.feedDeleted
-
+	// Attempt to set up CXO Client.
 	var e error
-
-	// Setup cxo client.
-	if c.client, e = node.NewClient(cc, r); e != nil {
-		fmt.Println("error herefsvdvdv")
-		return nil, e
-	}
-
-	// Run cxo client.
-	if e := c.client.Start("[::]:" + strconv.Itoa(c.config.CXOPort())); e != nil {
-		return nil, e
-	}
-
-	// Wait for connection.
-	log.Println("[CXOCONTAINER] Awaiting connection to cxo daemon...")
-
-	if c.client.Conn().State() != gnet.ConnStateConnected {
-		timeout := time.NewTimer(10 * time.Second)
-		defer timeout.Stop()
-		check := time.NewTicker(time.Second)
-		defer check.Stop()
-		for {
-			select {
-			case <-check.C:
-				if c.client.Conn().State() == gnet.ConnStateConnected {
-					goto OnConnected
-				}
-			case <-timeout.C:
-				return nil, errors.New(
-					"timeout occurred before connection to cxo daemon was established")
-			}
+	for {
+		c.client, e = node.NewClient(cc, r)
+		if e == nil {
+			break
+		}
+		select {
+		case <-timer.C:
+			eChan <- errors.Wrap(e, "timeout before cxo client initiation")
+			return
+		default:
+			time.Sleep(time.Second)
+			continue
 		}
 	}
-OnConnected:
-	log.Println("[CXOCONTAINER] Connection to cxo daemon established!")
-
-	// Set Container.
-	c.c = c.client.Container()
-
-	// Setup cxo rpc.
-	if c.rpc, e = node.NewRPCClient("[::]:" + strconv.Itoa(c.config.CXORPCPort())); e != nil {
-		return nil, e
+	addr := "[::]:" + strconv.Itoa(c.config.CXOPort())
+	for {
+		e = c.client.Start(addr)
+		if e == nil {
+			break
+		}
+		select {
+		case <-timer.C:
+			eChan <- errors.Wrap(e, "timeout before cxo client start")
+			return
+		default:
+			time.Sleep(time.Second)
+			continue
+		}
 	}
-	go c.service()
-	return c, nil
+	for {
+		if c.client.Conn().State() == gnet.ConnStateConnected {
+			break
+		}
+		select {
+		case <-timer.C:
+			eChan <- errors.New("timeout before cxo client-daemon connection")
+			return
+		default:
+			time.Sleep(time.Second)
+			continue
+		}
+	}
+	// Setup internal container.
+	c.c = c.client.Container()
+	return
+}
+
+func (c *Container) setupCXORPCClient(wg sync.WaitGroup, eChan chan error, timeout time.Duration) {
+	wg.Add(1)
+	defer wg.Done()
+	timer := time.NewTimer(timeout)
+
+	// Attempt to set up CXO RPC.
+	addr := "[::]:" + strconv.Itoa(c.config.CXORPCPort())
+	for {
+		rpc, e := node.NewRPCClient(addr)
+		if e == nil {
+			c.cbAddFeed = rpc.AddFeed
+			c.cbDelFeed = rpc.DelFeed
+			c.cbClose = rpc.Close
+			break
+		}
+		select {
+		case <-timer.C:
+			eChan <- errors.Wrap(e, "timeout before rpc connected")
+		default:
+			time.Sleep(time.Second)
+			continue
+		}
+	}
+	return
+}
+
+func (c *Container) setupInternalCXODaemon(wg sync.WaitGroup, eChan chan error, timeout time.Duration) {
+	wg.Add(1)
+	defer wg.Done()
+	timer := time.NewTimer(timeout)
+
+	// Setup CXO Server Configuration.
+	sc := node.NewServerConfig()
+	sc.InMemoryDB = c.config.CXOUseMemory()
+	sc.MaxMessageSize = 0
+	sc.Listen = "[::]:" + strconv.Itoa(c.config.CXOPort())
+	sc.RPCAddress = "[::]:" + strconv.Itoa(c.config.CXORPCPort())
+
+	// Attempt to run server.
+	var cxoServer *node.Server
+	var e error
+	for {
+		cxoServer, e = node.NewServer(sc)
+		if e == nil {
+			c.cbAddFeed = func(key cipher.PubKey) (bool, error) {
+				return cxoServer.AddFeed(key), nil
+			}
+			c.cbDelFeed = func(key cipher.PubKey) (bool, error) {
+				return cxoServer.DelFeed(key), nil
+			}
+			c.cbClose = cxoServer.Close
+			break
+		}
+		select {
+		case <-timer.C:
+			eChan <- errors.Wrap(e, "timeout before cxo server created")
+		default:
+			time.Sleep(time.Second)
+			continue
+		}
+	}
+	for {
+		e := cxoServer.Start()
+		if e == nil {
+			break
+		}
+		select {
+		case <-timer.C:
+			eChan <- errors.Wrap(e, "timeout before cxo server started")
+		default:
+			time.Sleep(time.Second)
+			continue
+		}
+	}
+	return
 }
 
 func (c *Container) Close() error {
@@ -135,7 +261,7 @@ ServiceFinished:
 	if c.config.TestMode() {
 		defer c.deleteTemp(c.tempTestFile)
 	}
-	c.rpc.Close()
+	c.cbClose()
 	return c.client.Close()
 }
 
@@ -165,14 +291,14 @@ func (c *Container) Feeds() []cipher.PubKey {
 }
 
 func (c *Container) Subscribe(pk cipher.PubKey) (bool, error) {
-	if _, e := c.rpc.AddFeed(pk); e != nil {
+	if _, e := c.cbAddFeed(pk); e != nil {
 		return false, e
 	}
 	return c.client.Subscribe(pk), nil
 }
 
 func (c *Container) Unsubscribe(pk cipher.PubKey) (bool, error) {
-	if _, e := c.rpc.DelFeed(pk); e != nil {
+	if _, e := c.cbDelFeed(pk); e != nil {
 		return false, e
 	}
 	return c.client.Unsubscribe(pk, false), nil

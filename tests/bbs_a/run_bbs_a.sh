@@ -28,6 +28,7 @@ echo "> BBS SERVER ..."
 ./bbsnode \
     --master=true \
     --save-config=false \
+    --cxo-use-internal=false \
     --cxo-port=$a_cxod \
     --cxo-rpc-port=$a_cxorpc \
     --cxo-memory-mode=true \

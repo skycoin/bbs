@@ -21,7 +21,7 @@ type Tester struct {
 	bpk    cipher.PubKey
 	tRefs  skyobject.References
 	users  []store.UserConfig
-	pCap bool
+	pCap   bool
 	pNum   int
 	pCount int
 	quit   chan struct{}
@@ -32,8 +32,8 @@ func NewTester(config *args.Config, gateway *gui.Gateway) (*Tester, error) {
 	t := &Tester{
 		config: config,
 		g:      gateway,
-		pCap: config.TestModePostCap() >= 0,
-		pNum: 1,
+		pCap:   config.TestModePostCap() >= 0,
+		pNum:   1,
 		quit:   make(chan struct{}),
 	}
 	if e := t.setupUsers(); e != nil {

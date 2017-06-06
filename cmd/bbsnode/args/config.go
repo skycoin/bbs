@@ -25,15 +25,18 @@ type Config struct {
 	testModeTimeOut     int  // Will stop simulated activity after this time (in seconds). Disabled if negative.
 	testModePostCap     int  // Maximum number of posts allowed. Disabled if negative.
 
-	master            bool   // Whether BBS node can host boards.
-	saveConfig        bool   // Whether to save and use BBS configuration files.
-	configDir         string // Configuration directory.
-	rpcServerPort     int    // RPC server port (master node only).
-	rpcServerRemAdr   string // RPC remote address (master node only).
-	cxoPort           int    // Port of CXO Daemon.
-	cxoRPCPort        int    // Port of CXO Daemon's RPC.
-	cxoMemoryMode     bool   // Whether to use in-memory database for CXO.
-	cxoDir            string // Folder name to store db.
+	master          bool   // Whether BBS node can host boards.
+	saveConfig      bool   // Whether to save and use BBS configuration files.
+	configDir       string // Configuration directory.
+	rpcServerPort   int    // RPC server port (master node only).
+	rpcServerRemAdr string // RPC remote address (master node only).
+
+	cxoUseInternal bool   // Whether to use internal CXO Daemon.
+	cxoPort        int    // Port of CXO Daemon.
+	cxoRPCPort     int    // Port of CXO Daemon's RPC.
+	cxoMemoryMode  bool   // Whether to use in-memory database for CXO.
+	cxoDir         string // Folder name to store db.
+
 	webGUIEnable      bool   // Whether to enable web GUI.
 	webGUIPort        int    // Port of web GUI.
 	webGUIDir         string // Root directory that has the index.html file.
@@ -56,10 +59,13 @@ func NewConfig() *Config {
 		configDir:         "",
 		rpcServerPort:     6421,
 		rpcServerRemAdr:   "127.0.0.1:6421",
+
+		cxoUseInternal:    true,
 		cxoPort:           8998,
 		cxoRPCPort:        8997,
 		cxoMemoryMode:     false,
 		cxoDir:            "bbs",
+
 		webGUIEnable:      true,
 		webGUIPort:        7410,
 		webGUIDir:         "./extern/gui/static",
@@ -125,6 +131,14 @@ func (c *Config) Parse() *Config {
 		"rpc-server-remote-address", c.rpcServerRemAdr,
 		"remote address of rpc server for master node")
 
+	/*
+		<<< CXO FLAGS >>>
+	*/
+
+	flag.BoolVar(&c.cxoUseInternal,
+		"cxo-use-internal", c.cxoUseInternal,
+		"whether to use internal cxo daemon")
+
 	flag.IntVar(&c.cxoPort,
 		"cxo-port", c.cxoPort,
 		"port of cxo daemon to connect to")
@@ -140,6 +154,10 @@ func (c *Config) Parse() *Config {
 	flag.StringVar(&c.cxoDir,
 		"cxo-dir", c.cxoDir,
 		"folder to store cxo db files in")
+
+	/*
+		<<< WEB GUI FLAGS >>>
+	*/
 
 	flag.BoolVar(&c.webGUIEnable,
 		"web-gui-enable", c.webGUIEnable,
@@ -220,10 +238,13 @@ func (c *Config) SaveConfig() bool        { return c.saveConfig }
 func (c *Config) ConfigDir() string       { return c.configDir }
 func (c *Config) RPCServerPort() int      { return c.rpcServerPort }
 func (c *Config) RPCServerRemAdr() string { return c.rpcServerRemAdr }
-func (c *Config) CXOPort() int            { return c.cxoPort }
-func (c *Config) CXORPCPort() int         { return c.cxoRPCPort }
-func (c *Config) CXOUseMemory() bool      { return c.cxoMemoryMode }
-func (c *Config) CXODir() string          { return c.cxoDir }
+
+func (c *Config) CXOUseInternal() bool { return c.cxoUseInternal }
+func (c *Config) CXOPort() int         { return c.cxoPort }
+func (c *Config) CXORPCPort() int      { return c.cxoRPCPort }
+func (c *Config) CXOUseMemory() bool   { return c.cxoMemoryMode }
+func (c *Config) CXODir() string       { return c.cxoDir }
+
 func (c *Config) WebGUIEnable() bool      { return c.webGUIEnable }
 func (c *Config) WebGUIPort() int         { return c.webGUIPort }
 func (c *Config) WebGUIDir() string       { return c.webGUIDir }
