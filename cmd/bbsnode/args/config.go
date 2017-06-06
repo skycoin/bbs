@@ -23,6 +23,7 @@ type Config struct {
 	testModeUsers       int  // Number of master users used for simulated activity.
 	testModeMinInterval int  // Minimum interval between simulated activity (in seconds).
 	testModeMaxInterval int  // Maximum interval between simulated activity (in seconds).
+	testModeTimeOut     int  // Will stop simulated activity after this time (in seconds). Disabled if negative.
 
 	master            bool   // Whether BBS node can host boards.
 	saveConfig        bool   // Whether to save and use BBS configuration files.
@@ -47,6 +48,7 @@ func NewConfig() *Config {
 		testModeUsers:       1,
 		testModeMinInterval: 1,
 		testModeMaxInterval: 10,
+		testModeTimeOut:     -1,
 
 		master:            false,
 		saveConfig:        true,
@@ -89,6 +91,10 @@ func (c *Config) Parse() *Config {
 	flag.IntVar(&c.testModeMaxInterval,
 		"test-mode-max", c.testModeMaxInterval,
 		"maximum interval in seconds between simulated activity")
+
+	flag.IntVar(&c.testModeTimeOut,
+		"test-mode-timeout", c.testModeTimeOut,
+		"time in seconds before simulated activity stops - if negative, timeout is disabled")
 
 	/*
 		<<< BBS FLAGS >>>
@@ -203,6 +209,7 @@ func (c *Config) TestModeThreads() int     { return c.testModeThreads }
 func (c *Config) TestModeUsers() int       { return c.testModeUsers }
 func (c *Config) TestModeMinInterval() int { return c.testModeMinInterval }
 func (c *Config) TestModeMaxInterval() int { return c.testModeMaxInterval }
+func (c *Config) TestModeTimeOut() int     { return c.testModeTimeOut }
 
 func (c *Config) Master() bool            { return c.master }
 func (c *Config) SaveConfig() bool        { return c.saveConfig }

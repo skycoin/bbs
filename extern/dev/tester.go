@@ -74,6 +74,22 @@ func (t *Tester) setupBoard() error {
 }
 
 func (t *Tester) service() {
+	if t.config.TestModeTimeOut() >= 0 {
+		log.Printf("[TESTER] Test mode timeout set as %ds.", t.config.TestModeTimeOut())
+		go func() {
+			timer := time.NewTimer(time.Duration(t.config.TestModeTimeOut()) * time.Second)
+			for {
+				select {
+				case <-t.quit:
+					return
+				case <-timer.C:
+					log.Println("[TESTER] Test mode timeout done.")
+					t.Close()
+					return
+				}
+			}
+		}()
+	}
 	for {
 		choice, _ := misc.MakeIntBetween(0, 3)
 		switch choice {
@@ -104,9 +120,13 @@ func (t *Tester) service() {
 }
 
 func (t *Tester) Close() {
-	go func() {
-		t.quit <- struct{}{}
-	}()
+	for {
+		select {
+		case t.quit <- struct{}{}:
+			log.Println("[TESTER] Sent quit signal.")
+			return
+		}
+	}
 }
 
 func (t *Tester) getInterval() time.Duration {
