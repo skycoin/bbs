@@ -10,7 +10,9 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
+	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -23,6 +25,8 @@ type Container struct {
 	rpc    *node.RPCClient
 	config *args.Config
 	msgs   chan *Msg
+
+	tempTestFile string
 }
 
 func NewContainer(config *args.Config) (*Container, error) {
@@ -49,7 +53,19 @@ func NewContainer(config *args.Config) (*Container, error) {
 	// Setup cxo config.
 	cc := node.NewClientConfig()
 	cc.InMemoryDB = config.CXOUseMemory()
-	cc.DataDir = config.CXODir()
+	if config.TestMode() {
+		tempFile, e := ioutil.TempFile("", "cxo_bbs_client.db")
+		if e != nil {
+			panic(e)
+		}
+		c.tempTestFile = tempFile.Name()
+		cc.DBPath = tempFile.Name()
+		tempFile.Close()
+	} else {
+		cc.DataDir = config.CXODir()
+	}
+
+	fmt.Println("DATADIR:", cc.DataDir)
 	if config.Master() {
 		cc.OnRootFilled = c.rootFilledCallBack
 	}
@@ -60,6 +76,7 @@ func NewContainer(config *args.Config) (*Container, error) {
 
 	// Setup cxo client.
 	if c.client, e = node.NewClient(cc, r); e != nil {
+		fmt.Println("error herefsvdvdv")
 		return nil, e
 	}
 
@@ -103,8 +120,18 @@ OnConnected:
 }
 
 func (c *Container) Close() error {
+	if c.config.TestMode() {
+		defer c.deleteTemp(c.tempTestFile)
+	}
 	c.rpc.Close()
 	return c.client.Close()
+}
+
+func (c *Container) deleteTemp(cxoDir string) {
+	// Get home dir.
+	if e := os.Remove(cxoDir); e != nil {
+		fmt.Println("REMOVING (ERROR):", e.Error())
+	}
 }
 
 func (c *Container) Feeds() []cipher.PubKey {

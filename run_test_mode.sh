@@ -10,9 +10,8 @@ go build $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go
 
 echo "[ STARTING BBS NODE ]"
 echo "> CXO DAEMON ..."
-./cxod \
-    --mem-db=true \
-    &
+./cxod &
+sleep 5
 echo "> BBS SERVER ..."
 ./bbsnode \
     --test-mode=true \

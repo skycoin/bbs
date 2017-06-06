@@ -9,6 +9,7 @@ import (
 )
 
 const configSubDir = "/.skycoin/bbs"
+const cxoTempSubDir = "temp_cxo_bbs"
 
 // Config represents commandline arguments.
 type Config struct {
@@ -172,7 +173,10 @@ func (c *Config) PostProcess() (*Config, error) {
 		// Enforce behaviour.
 		c.master = true
 		c.webGUIEnable = true
-		c.cxoMemoryMode = true
+
+		// So that no memory problems occur....
+		c.cxoMemoryMode = false
+		c.cxoDir = ""
 		c.saveConfig = false
 	}
 	// Action on configuration directory.
