@@ -27,6 +27,8 @@ type Container struct {
 	msgs   chan *Msg
 
 	tempTestFile string
+
+	quit chan struct{}
 }
 
 func NewContainer(config *args.Config) (*Container, error) {
@@ -52,6 +54,7 @@ func NewContainer(config *args.Config) (*Container, error) {
 
 	// Setup cxo config.
 	cc := node.NewClientConfig()
+	cc.MaxMessageSize = 0
 	cc.InMemoryDB = config.CXOUseMemory()
 	if config.TestMode() {
 		tempFile, e := ioutil.TempFile("", "cxo_bbs_client.db")
@@ -60,6 +63,7 @@ func NewContainer(config *args.Config) (*Container, error) {
 		}
 		c.tempTestFile = tempFile.Name()
 		cc.DBPath = tempFile.Name()
+		cc.InMemoryDB = false
 		tempFile.Close()
 	} else {
 		cc.DataDir = config.CXODir()
@@ -115,11 +119,19 @@ OnConnected:
 	if c.rpc, e = node.NewRPCClient("[::]:" + strconv.Itoa(c.config.CXORPCPort())); e != nil {
 		return nil, e
 	}
-
+	go c.service()
 	return c, nil
 }
 
 func (c *Container) Close() error {
+	for {
+		select {
+		case c.quit<- struct{}{}:
+		default:
+			goto ServiceFinished
+		}
+	}
+ServiceFinished:
 	if c.config.TestMode() {
 		defer c.deleteTemp(c.tempTestFile)
 	}
@@ -131,6 +143,20 @@ func (c *Container) deleteTemp(cxoDir string) {
 	// Get home dir.
 	if e := os.Remove(cxoDir); e != nil {
 		fmt.Println("REMOVING (ERROR):", e.Error())
+	}
+}
+
+func (c *Container) service() {
+	ticker := time.NewTicker(10 * time.Second)
+	for {
+		select {
+		case <-c.quit:
+			return
+		case <- ticker.C:
+			c.Lock()
+			c.c.GC(false)
+			c.Unlock()
+		}
 	}
 }
 
