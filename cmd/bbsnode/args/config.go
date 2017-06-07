@@ -5,10 +5,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/skycoin/skycoin/src/util"
 	"os"
-	"strings"
+	"path/filepath"
 )
 
-const configSubDir = "/.skycoin/bbs"
+const configSubDir = "/.skybbs"
 
 // Config represents commandline arguments.
 type Config struct {
@@ -35,7 +35,7 @@ type Config struct {
 	cxoPort        int    // Port of CXO Daemon.
 	cxoRPCPort     int    // Port of CXO Daemon's RPC.
 	cxoMemoryMode  bool   // Whether to use in-memory database for CXO.
-	cxoDir         string // Folder name to store db.
+	cxoDir         string // Directory to store cxo databases.
 
 	webGUIEnable      bool   // Whether to enable web GUI.
 	webGUIPort        int    // Port of web GUI.
@@ -64,7 +64,7 @@ func NewConfig() *Config {
 		cxoPort:        8998,
 		cxoRPCPort:     8997,
 		cxoMemoryMode:  false,
-		cxoDir:         "bbs",
+		cxoDir:         "",
 
 		webGUIEnable:      true,
 		webGUIPort:        7410,
@@ -152,8 +152,8 @@ func (c *Config) Parse() *Config {
 		"whether to use in-memory database")
 
 	flag.StringVar(&c.cxoDir,
-		"cxo-dir", c.cxoDir,
-		"folder to store cxo db files in")
+		"cxo-client-dir", c.cxoDir,
+		"directory to store cxo databases - uses default if empty")
 
 	/*
 		<<< WEB GUI FLAGS >>>
@@ -206,15 +206,21 @@ func (c *Config) PostProcess() (*Config, error) {
 		c.cxoDir = ""
 		c.saveConfig = false
 	}
-	// Action on configuration directory.
-	if c.saveConfig && c.configDir == "" {
-		c.configDir = util.InitDataDir(configSubDir)
-
-	} else if !strings.HasPrefix(c.configDir, util.UserHome()) {
-		c.configDir = util.InitDataDir(c.configDir)
-
-	} else {
+	// Configure configuration directories if necessary.
+	if c.saveConfig {
+		// Action on BBS configuration files.
+		if c.configDir == "" {
+			c.configDir = filepath.Join(util.UserHome(), configSubDir)
+		}
+		// Action on CXO configuration files.
+		if c.cxoDir == "" {
+			c.cxoDir = filepath.Join(util.UserHome(), configSubDir, "cxo")
+		}
+		// Ensure directories exist.
 		if e := os.MkdirAll(c.configDir, os.FileMode(0700)); e != nil {
+			return nil, e
+		}
+		if e := os.MkdirAll(c.cxoDir, os.FileMode(0700)); e != nil {
 			return nil, e
 		}
 	}
@@ -243,7 +249,7 @@ func (c *Config) CXOUseInternal() bool { return c.cxoUseInternal }
 func (c *Config) CXOPort() int         { return c.cxoPort }
 func (c *Config) CXORPCPort() int      { return c.cxoRPCPort }
 func (c *Config) CXOUseMemory() bool   { return c.cxoMemoryMode }
-func (c *Config) CXODir() string       { return c.cxoDir }
+func (c *Config) CXOCDir() string      { return c.cxoDir }
 
 func (c *Config) WebGUIEnable() bool      { return c.webGUIEnable }
 func (c *Config) WebGUIPort() int         { return c.webGUIPort }

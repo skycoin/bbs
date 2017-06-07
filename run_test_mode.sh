@@ -9,7 +9,7 @@ go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
     --test-mode-users=50 \
     --test-mode-min=0 \
     --test-mode-max=0 \
-    --test-mode-timeout=-1 \
+    --test-mode-timeout=10 \
     --test-mode-post-cap=200 \
     --cxo-use-internal=true
 echo "Goodbye!"

@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -97,7 +98,8 @@ func (c *Container) setupCXOClient(wg sync.WaitGroup, eChan chan error, timeout 
 	cc := node.NewClientConfig()
 	cc.MaxMessageSize = 0 /* TODO: Should really look into adjusting this in the future. */
 	cc.InMemoryDB = c.config.CXOUseMemory()
-	cc.DataDir = c.config.CXODir()
+	cc.DataDir = c.config.CXOCDir()
+	cc.DBPath = filepath.Join(cc.DataDir, "client.db")
 
 	// Setup CXO Callbacks.
 	if c.config.Master() {
@@ -110,15 +112,22 @@ func (c *Container) setupCXOClient(wg sync.WaitGroup, eChan chan error, timeout 
 	if c.config.TestMode() {
 
 		// Make temp file.
-		tempFile, e := ioutil.TempFile("", "")
+		tempDir, e := ioutil.TempDir("", "skybbs")
 		if e != nil {
-			panic(e)
+			eChan <- errors.Wrap(e, "unable to create temp dir")
+			return
+		}
+		tempFile, e := ioutil.TempFile(tempDir, "")
+		if e != nil {
+			eChan <- errors.Wrap(e, "unable to create temp file")
+			return
 		}
 		tempFileName := tempFile.Name()
 		tempFile.Close()
 
 		// Change stuff.
 		c.tempTestFile = tempFileName
+		cc.DataDir = tempDir
 		cc.DBPath = tempFileName
 		cc.InMemoryDB = false
 	}
@@ -205,10 +214,35 @@ func (c *Container) setupInternalCXODaemon(wg sync.WaitGroup, eChan chan error, 
 
 	// Setup CXO Server Configuration.
 	sc := node.NewServerConfig()
+	sc.DataDir = c.config.CXOCDir()
+	sc.DBPath = filepath.Join(sc.DataDir, "server.db")
 	sc.InMemoryDB = c.config.CXOUseMemory()
 	sc.MaxMessageSize = 0
 	sc.Listen = "[::]:" + strconv.Itoa(c.config.CXOPort())
 	sc.RPCAddress = "[::]:" + strconv.Itoa(c.config.CXORPCPort())
+
+	// Change some configurations if test mode.
+	if c.config.TestMode() {
+
+		// Make temp file.
+		tempDir, e := ioutil.TempDir("", "skybbs")
+		if e != nil {
+			eChan <- errors.Wrap(e, "unable to create temp dir")
+			return
+		}
+		tempFile, e := ioutil.TempFile(tempDir, "")
+		if e != nil {
+			eChan <- errors.Wrap(e, "unable to create temp file")
+			return
+		}
+		tempFileName := tempFile.Name()
+		tempFile.Close()
+
+		// Change stuff.
+		sc.DataDir = tempDir
+		sc.DBPath = tempFileName
+		sc.InMemoryDB = false
+	}
 
 	// Attempt to run server.
 	var cxoServer *node.Server
