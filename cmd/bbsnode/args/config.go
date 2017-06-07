@@ -68,7 +68,7 @@ func NewConfig() *Config {
 
 		webGUIEnable:      true,
 		webGUIPort:        7410,
-		webGUIDir:         "./extern/gui/static",
+		webGUIDir:         "./static/app",
 		webGUIOpenBrowser: true,
 	}
 }
