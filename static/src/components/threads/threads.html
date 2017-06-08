@@ -1,0 +1,8 @@
+<div class="threads">
+  <div class="threads-container">
+    <div *ngFor="let item of threads" class="item" (click)="open(item.master_board,item.ref)">
+      <h3 class="name">{{item.name}}</h3>
+      <p class="description">{{item.description}}</p>
+    </div>
+  </div>
+</div>

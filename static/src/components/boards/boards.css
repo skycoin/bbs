@@ -1,0 +1,45 @@
+boards-list {
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.boards {
+  width: 100%;
+  min-height: 50%;
+}
+.boards .boards-container {
+  width: 90%;
+  margin: 0 auto;
+  /*overflow: hidden;*/
+}
+.boards .boards-container .item {
+  /*width: 50%;*/
+  display: block;
+  float: left;
+  padding: 1rem;
+  cursor: pointer;
+  color: #000;
+  /*overflow: hidden;*/
+  text-decoration: none;
+}
+.boards .boards-container .item:hover,
+.boards .boards-container .item:focus {
+  text-decoration: none;
+}
+.boards .boards-container .item .content {
+  width: 100%;
+  padding: 1rem;
+  border: .1rem solid #999;
+  overflow: hidden;
+}
+.boards .boards-container .item .content .name {
+  margin: .5rem 0;
+}
+.boards .boards-container .item .content .description {
+  font-size: 1.5rem;
+  color: #ccc;
+}
+
+.boards .boards-container .item .content .created {
+  /*text-align:  right;*/
+}

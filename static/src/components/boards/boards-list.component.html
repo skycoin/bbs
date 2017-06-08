@@ -1,0 +1,11 @@
+<div class='boards'>
+  <div class='boards-container'>
+    <div *ngFor="let board of boards" class="item" (click)="openThreads($event)">
+      <div class="content">
+        <h3 class="name">{{board.name}}</h3>
+        <div class="description">{{board.description}}</div>
+        <div class="created">{{board.created / 1000000 | date: 'medium'}}</div>
+      </div>
+    </div>
+  </div>
+</div>
