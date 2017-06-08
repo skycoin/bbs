@@ -198,7 +198,7 @@ func (c *Container) setupCXORPCClient(wg sync.WaitGroup, eChan chan error, timeo
 			c.cbClose = rpc.Close
 			c.cbConnect = rpc.Connect
 			c.cbDisconnect = rpc.Disconnect
-			c.cbConnections = rpc.Connections
+			c.cbConnections = rpc.OutgoingConnections
 			break
 		}
 		select {
@@ -269,9 +269,11 @@ func (c *Container) setupInternalCXODaemon(wg sync.WaitGroup, eChan chan error, 
 			c.cbDisconnect = cxoServer.Disconnect
 			c.cbConnections = func() ([]string, error) {
 				connections := cxoServer.Connections()
-				addresses := make([]string, len(connections))
-				for i, conn := range connections {
-					addresses[i] = conn.Address()
+				addresses := []string{}
+				for _, conn := range connections {
+					if !conn.IsIncoming() {
+						addresses = append(addresses, conn.Address())
+					}
 				}
 				return addresses, nil
 			}
