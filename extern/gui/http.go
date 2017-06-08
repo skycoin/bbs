@@ -64,6 +64,11 @@ func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 
 	mux.Handle("/", http.FileServer(http.Dir(appLoc)))
 
+	mux.HandleFunc("/api/get_stats", api.GetStats)
+	mux.HandleFunc("/api/connections/get_all", api.GetConnections)
+	mux.HandleFunc("/api/connections/new", api.AddConnection)
+	mux.HandleFunc("/api/connections/remove", api.RemoveConnection)
+
 	mux.HandleFunc("/api/get_subscription", api.GetSubscription)
 	mux.HandleFunc("/api/get_subscriptions", api.GetSubscriptions)
 	mux.HandleFunc("/api/subscribe", api.Subscribe)

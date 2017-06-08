@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/bbs/misc"
 	"net/http"
 	"strconv"
+	"github.com/pkg/errors"
 )
 
 // API wraps cxo.Gateway.
@@ -16,6 +17,48 @@ type API struct {
 // NewAPI creates a new API.
 func NewAPI(g *Gateway) *API {
 	return &API{g}
+}
+
+/*
+	<<< FOR STATS >>>
+*/
+
+func (a *API) GetStats(w http.ResponseWriter, r *http.Request) {
+	sendResponse(w, a.g.GetStats(), http.StatusOK)
+}
+
+/*
+	<<< FOR CONNECTIONS >>>
+*/
+
+func (a *API) GetConnections(w http.ResponseWriter, r *http.Request) {
+	connections, e := a.g.GetConnections()
+	if e != nil {
+		e = errors.Wrap(e, "unable to obtain connections")
+		sendResponse(w, e.Error(), http.StatusInternalServerError)
+		return
+	}
+	sendResponse(w, connections, http.StatusOK)
+}
+
+func (a *API) AddConnection(w http.ResponseWriter, r *http.Request) {
+	address := r.FormValue("address")
+	if e := a.g.AddConnection(address); e != nil {
+		e = errors.Wrapf(e, "failed to connect to '%s'", address)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
+}
+
+func (a *API) RemoveConnection(w http.ResponseWriter, r *http.Request) {
+	address := r.FormValue("address")
+	if e := a.g.RemoveConnection(address); e != nil {
+		e = errors.Wrapf(e, "failed to disconnect from '%s'", address)
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
 }
 
 /*

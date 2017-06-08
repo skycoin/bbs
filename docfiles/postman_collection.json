@@ -34,20 +34,17 @@
 								{
 									"key": "name",
 									"value": "Board of Life",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "description",
 									"value": "All about life.",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "seed",
 									"value": "a",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -67,8 +64,7 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -88,20 +84,17 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "name",
 									"value": "Food",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "description",
 									"value": "All about stuff you can chew on.",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -121,14 +114,12 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "thread",
 									"value": "c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -148,14 +139,12 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "thread",
 									"value": "10864517e610006b30cf334d8d6784e2cdc4a66c3a5e8c84ef093c5084156cef",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -175,26 +164,22 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "thread",
 									"value": "0d8a68a6fa8748c7574badd347cc40937fc11f9e2c3694074429ccc6f04347fc",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "title",
 									"value": "Banana",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "body",
 									"value": "It's a very healthy fruit!",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -214,20 +199,76 @@
 								{
 									"key": "from_board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "to_board",
 									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "thread",
 									"value": "053fb17da0250158996a96b405e09b2971e578f9add2f656380bc07f6af5686a",
-									"type": "text",
-									"enabled": true
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Connections",
+			"description": "",
+			"item": [
+				{
+					"name": "Get All Connections",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "New Connection",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "address",
+									"value": "[::1]:7452",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Connection",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/remove",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "address",
+									"value": "[::1]:7452",
+									"description": "",
+									"type": "text"
 								}
 							]
 						},
@@ -253,17 +294,32 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "thread",
 									"value": "10864517e610006b30cf334d8d6784e2cdc4a66c3a5e8c84ef093c5084156cef",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Stats",
+			"description": "",
+			"item": [
+				{
+					"name": "Get Stats",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/get_stats",
+						"method": "GET",
+						"header": [],
+						"body": {},
 						"description": ""
 					},
 					"response": []
@@ -297,8 +353,7 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -318,8 +373,7 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -339,8 +393,7 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -366,26 +419,22 @@
 								{
 									"key": "seed",
 									"value": "a",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "threads",
 									"value": "5",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "min_posts",
 									"value": "10",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "max_posts",
 									"value": "100",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -422,8 +471,7 @@
 								{
 									"key": "user",
 									"value": "030e40dda21c27126d829b6ae57816e1440dcb2cc73e37e860af26eff1ec55ed73",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -454,14 +502,12 @@
 								{
 									"key": "alias",
 									"value": "evanlinjin",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "seed",
 									"value": "random_seed",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -492,14 +538,12 @@
 								{
 									"key": "user",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "alias",
 									"value": "not_master",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -519,8 +563,7 @@
 								{
 									"key": "user",
 									"value": "0369f1cf2abf86d21414913eecdcd0c45450f97f8af9a9deeaea26af4cf16bab14",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -546,14 +589,12 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "thread",
 									"value": "c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -573,14 +614,12 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "post",
 									"value": "04bc27ee3381133d53d9f1d804ca5cbf691d841382a1daf1f5d1fc72118940c5",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -600,26 +639,22 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "thread",
 									"value": "c0ae8d23fcf299393ee6df2d507d93c0d14487cd36d9b813fd02297d411cd865",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "mode",
 									"value": "1",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "tag",
 									"value": "",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},
@@ -639,26 +674,22 @@
 								{
 									"key": "board",
 									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "post",
 									"value": "04bc27ee3381133d53d9f1d804ca5cbf691d841382a1daf1f5d1fc72118940c5",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "mode",
 									"value": "1",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								},
 								{
 									"key": "tag",
 									"value": "",
-									"type": "text",
-									"enabled": true
+									"type": "text"
 								}
 							]
 						},

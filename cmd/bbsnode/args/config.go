@@ -152,7 +152,7 @@ func (c *Config) Parse() *Config {
 		"whether to use in-memory database")
 
 	flag.StringVar(&c.cxoDir,
-		"cxo-client-dir", c.cxoDir,
+		"cxo-dir", c.cxoDir,
 		"directory to store cxo databases - uses default if empty")
 
 	/*

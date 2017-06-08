@@ -42,6 +42,36 @@ func NewGateway(
 }
 
 /*
+	<<< FOR STATS >>>
+*/
+
+type StatsView struct {
+	NodeIsMaster bool `json:"node_is_master"`
+}
+
+func (g *Gateway) GetStats() *StatsView {
+	return &StatsView{
+		NodeIsMaster: g.config.Master(),
+	}
+}
+
+/*
+	<<< FOR CONNECTIONS >>>
+*/
+
+func (g *Gateway) GetConnections() ([]string, error) {
+	return g.container.GetConnections()
+}
+
+func (g *Gateway) AddConnection(address string) error {
+	return g.container.Connect(address)
+}
+
+func (g *Gateway) RemoveConnection(address string) error {
+	return g.container.Disconnect(address)
+}
+
+/*
 	<<< FOR SUBSCRIPTIONS >>>
 */
 
