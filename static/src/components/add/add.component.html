@@ -1,0 +1,35 @@
+<div class="box">
+  <h1>Add Component</h1>
+  <div class="form-group">
+    <label for="type">Select add</label>
+    <select class="form-control" id="type" [(ngModel)]="select">
+    <option value="board">Board</option>
+      <option value="thread">Thread</option>
+      <option value="post">Post</option>
+  </select>
+  </div>
+  <!--<form>-->
+  <div class="form-group" [hidden]="select != 'board' && select != 'thread'">
+    <label for="name">Input board name</label>
+    <input type="text" placeholder="name" id="name" [(ngModel)]="form.name">
+  </div>
+  <div class="form-group" [hidden]="select != 'board' && select != 'thread'">
+    <label for="board">Input board key</label>
+    <input type="text" placeholder="board" id="board" [(ngModel)]="form.board">
+  </div>
+  <div class="form-group">
+    <label for="thread">Input thread key</label>
+    <input type="text" placeholder="thread" id="thread" [(ngModel)]="form.thread">
+  </div>
+  <div class="form-group">
+    <label for="description">Input description</label>
+    <input type="text" placeholder="description" id="description" [(ngModel)]="form.description">
+  </div>
+  <div class="form-group">
+    <label for="seed">Input seed</label>
+    <input type="text" placeholder="seed" id="seed" [(ngModel)]="form.seed">
+  </div>
+  <button (click)="add($event)">ok</button>
+  <!--</form>-->
+
+</div>

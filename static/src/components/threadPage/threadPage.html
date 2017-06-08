@@ -1,0 +1,13 @@
+<div class="container">
+  <div class="thread">
+    <h3>{{data.thread.name}}</h3>
+    <p>{{data.thread.description}}</p>
+  </div>
+  <div class="posts" *ngFor="let item of data.posts">
+    <div>title:{{item.title}}</div>
+    <div>body:{{item.body}}</div>
+    <div>author:{{item.author}}</div>
+    <div>{{item.created / 1000000 | date:'medium'}}</div>
+  </div>
+
+</div>

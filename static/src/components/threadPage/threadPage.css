@@ -1,0 +1,17 @@
+threadPage {
+  width: 100%;
+}
+
+.container {
+  width: 90%;
+  margin: 0 auto;
+}
+
+.container .thread {
+  border-bottom: .1rem solid #000;
+}
+.container .posts {
+  border: .1rem solid #ccc;
+  margin: 1rem 0;
+  padding: 1rem;
+}
