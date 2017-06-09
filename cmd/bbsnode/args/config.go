@@ -2,13 +2,17 @@ package args
 
 import (
 	"flag"
+	"fmt"
 	"github.com/pkg/errors"
+	"github.com/skycoin/bbs/misc"
 	"github.com/skycoin/skycoin/src/util"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
-const configSubDir = "/.skybbs"
+const configSubDir = ".skybbs"
+const webSubDir = "src/github.com/skycoin/bbs/static/dist"
 
 // Config represents commandline arguments.
 type Config struct {
@@ -25,11 +29,11 @@ type Config struct {
 	testModeTimeOut     int  // Will stop simulated activity after this time (in seconds). Disabled if negative.
 	testModePostCap     int  // Maximum number of posts allowed. Disabled if negative.
 
-	master          bool   // Whether BBS node can host boards.
-	saveConfig      bool   // Whether to save and use BBS configuration files.
-	configDir       string // Configuration directory.
-	rpcServerPort   int    // RPC server port (master node only).
-	rpcServerRemAdr string // RPC remote address (master node only).
+	master     bool   // Whether BBS node can host boards.
+	saveConfig bool   // Whether to save and use BBS configuration files.
+	configDir  string // Configuration directory.
+	rpcPort    int    // RPC server port (master node only).
+	rpcRemAdr  string // RPC remote address (master node only).
 
 	cxoUseInternal bool   // Whether to use internal CXO Daemon.
 	cxoPort        int    // Port of CXO Daemon.
@@ -54,11 +58,11 @@ func NewConfig() *Config {
 		testModeTimeOut:     -1,
 		testModePostCap:     -1,
 
-		master:          false,
-		saveConfig:      true,
-		configDir:       "",
-		rpcServerPort:   6421,
-		rpcServerRemAdr: "127.0.0.1:6421",
+		master:     false,
+		saveConfig: true,
+		configDir:  "",
+		rpcPort:    6421,
+		rpcRemAdr:  "",
 
 		cxoUseInternal: true,
 		cxoPort:        8998,
@@ -68,7 +72,7 @@ func NewConfig() *Config {
 
 		webGUIEnable:      true,
 		webGUIPort:        7410,
-		webGUIDir:         "./static/dist",
+		webGUIDir:         "",
 		webGUIOpenBrowser: true,
 	}
 }
@@ -123,12 +127,12 @@ func (c *Config) Parse() *Config {
 		"config-dir", c.configDir,
 		"configuration directory - set to $HOME/.skycoin/bbs if left empty")
 
-	flag.IntVar(&c.rpcServerPort,
-		"rpc-server-port", c.rpcServerPort,
+	flag.IntVar(&c.rpcPort,
+		"rpc-port", c.rpcPort,
 		"port of rpc server for master node")
 
-	flag.StringVar(&c.rpcServerRemAdr,
-		"rpc-server-remote-address", c.rpcServerRemAdr,
+	flag.StringVar(&c.rpcRemAdr,
+		"rpc-remote-address", c.rpcRemAdr,
 		"remote address of rpc server for master node")
 
 	/*
@@ -224,6 +228,16 @@ func (c *Config) PostProcess() (*Config, error) {
 			return nil, e
 		}
 	}
+	// Master mode stuff.
+	if c.Master() && c.rpcRemAdr == "" {
+		c.rpcRemAdr = misc.GetIP() + ":" + strconv.Itoa(c.rpcPort)
+		fmt.Println("External Addr:", c.rpcRemAdr)
+	}
+	// Web interface.
+	if c.webGUIDir == "" {
+		c.webGUIDir = filepath.Join(os.Getenv("GOPATH"), webSubDir)
+		fmt.Println("Web Dir:", c.webGUIDir)
+	}
 	return c, nil
 }
 
@@ -239,17 +253,17 @@ func (c *Config) TestModeMaxInterval() int { return c.testModeMaxInterval }
 func (c *Config) TestModeTimeOut() int     { return c.testModeTimeOut }
 func (c *Config) TestModePostCap() int     { return c.testModePostCap }
 
-func (c *Config) Master() bool            { return c.master }
-func (c *Config) SaveConfig() bool        { return c.saveConfig }
-func (c *Config) ConfigDir() string       { return c.configDir }
-func (c *Config) RPCServerPort() int      { return c.rpcServerPort }
-func (c *Config) RPCServerRemAdr() string { return c.rpcServerRemAdr }
+func (c *Config) Master() bool      { return c.master }
+func (c *Config) SaveConfig() bool  { return c.saveConfig }
+func (c *Config) ConfigDir() string { return c.configDir }
+func (c *Config) RPCPort() int      { return c.rpcPort }
+func (c *Config) RPCRemAdr() string { return c.rpcRemAdr }
 
 func (c *Config) CXOUseInternal() bool { return c.cxoUseInternal }
 func (c *Config) CXOPort() int         { return c.cxoPort }
 func (c *Config) CXORPCPort() int      { return c.cxoRPCPort }
 func (c *Config) CXOUseMemory() bool   { return c.cxoMemoryMode }
-func (c *Config) CXOCDir() string      { return c.cxoDir }
+func (c *Config) CXODir() string       { return c.cxoDir }
 
 func (c *Config) WebGUIEnable() bool      { return c.webGUIEnable }
 func (c *Config) WebGUIPort() int         { return c.webGUIPort }

@@ -2,7 +2,6 @@ package gui
 
 import (
 	"fmt"
-	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -13,12 +12,12 @@ var (
 	quit     chan struct{}
 )
 
-func OpenWebInterface(c *args.Config, g *Gateway) (string, error) {
+func OpenWebInterface(g *Gateway) (string, error) {
 	// Get host.
-	host := fmt.Sprintf("127.0.0.1:%d", c.WebGUIPort())
+	host := fmt.Sprintf("127.0.0.1:%d", g.config.WebGUIPort())
 
 	quit = make(chan struct{})
-	appLoc, e := filepath.Abs(c.WebGUIDir())
+	appLoc, e := filepath.Abs(g.config.WebGUIDir())
 	if e != nil {
 		return "", e
 	}
@@ -62,7 +61,9 @@ func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 	// Prepare mux.
 	mux := http.NewServeMux()
 
-	mux.Handle("/", http.FileServer(http.Dir(appLoc)))
+	if g.config.WebGUIEnable() {
+		mux.Handle("/", http.FileServer(http.Dir(appLoc)))
+	}
 
 	mux.HandleFunc("/api/get_stats", api.GetStats)
 	mux.HandleFunc("/api/connections/get_all", api.GetConnections)

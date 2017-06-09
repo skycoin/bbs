@@ -44,34 +44,34 @@ func main() {
 	var rpcServer *rpc.Server
 	if config.Master() {
 		rpcGateway := rpc.NewGateway(config, container, boardSaver, userSaver)
-		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCServerPort())
+
+		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCPort())
 		CatchError(e, "unable to start rpc server")
 		defer rpcServer.Close()
 
 		log.Println("[RPCSERVER] Serving on address:", rpcServer.Address())
 	}
 
-	if config.WebGUIEnable() {
-		gateway := gui.NewGateway(config, container, boardSaver, userSaver, queueSaver)
-		serveAddr, e := gui.OpenWebInterface(config, gateway)
-		CatchError(e, "unable to start web server")
-		defer gui.Close()
+	gateway := gui.NewGateway(config, container, boardSaver, userSaver, queueSaver)
 
-		if config.TestMode() {
-			tester, e := dev.NewTester(config, gateway)
-			CatchError(e, "unable to start tester")
-			defer tester.Close()
-		}
+	serveAddr, e := gui.OpenWebInterface(gateway)
+	CatchError(e, "unable to start web server")
+	defer gui.Close()
 
-		log.Println("[WEBGUI] Serving on:", serveAddr)
+	if config.TestMode() {
+		tester, e := dev.NewTester(config, gateway)
+		CatchError(e, "unable to start tester")
+		defer tester.Close()
+	}
 
-		if config.WebGUIOpenBrowser() {
-			go func() {
-				time.Sleep(time.Millisecond * 100)
-				log.Println("Opening web browser...")
-				util.OpenBrowser(serveAddr)
-			}()
-		}
+	log.Println("[WEBGUI] Serving on:", serveAddr)
+
+	if config.WebGUIEnable() && config.WebGUIOpenBrowser() {
+		go func() {
+			time.Sleep(time.Millisecond * 100)
+			log.Println("Opening web browser...")
+			util.OpenBrowser(serveAddr)
+		}()
 	}
 
 	log.Println("!!! EVERYTHING UP AND RUNNING !!!")

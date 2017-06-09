@@ -99,7 +99,7 @@ func (c *Container) setupCXOClient(wg sync.WaitGroup, eChan chan error, timeout 
 	cc := node.NewClientConfig()
 	cc.MaxMessageSize = 0 /* TODO: Should really look into adjusting this in the future. */
 	cc.InMemoryDB = c.config.CXOUseMemory()
-	cc.DataDir = c.config.CXOCDir()
+	cc.DataDir = c.config.CXODir()
 	cc.DBPath = filepath.Join(cc.DataDir, "client.db")
 
 	// Setup CXO Callbacks.
@@ -220,7 +220,7 @@ func (c *Container) setupInternalCXODaemon(wg sync.WaitGroup, eChan chan error, 
 
 	// Setup CXO Server Configuration.
 	sc := node.NewServerConfig()
-	sc.DataDir = c.config.CXOCDir()
+	sc.DataDir = c.config.CXODir()
 	sc.DBPath = filepath.Join(sc.DataDir, "server.db")
 	sc.InMemoryDB = c.config.CXOUseMemory()
 	sc.MaxMessageSize = 0

@@ -152,8 +152,8 @@ func (bs *BoardSaver) checkURLs() {
 			if e != nil {
 				continue
 			}
-			if b.URL != bs.config.RPCServerRemAdr() {
-				bs.c.ChangeBoardURL(bpk, bi.Config.GetSK(), bs.config.RPCServerRemAdr())
+			if b.URL != bs.config.RPCRemAdr() {
+				bs.c.ChangeBoardURL(bpk, bi.Config.GetSK(), bs.config.RPCRemAdr())
 			}
 		}
 	}
@@ -187,18 +187,17 @@ func (bs *BoardSaver) checkSingleDep(bpkDep cipher.PubKey) {
 					log.Println("[BOARDSAVER] 'checkSingleDep()' error:", e)
 					log.Println("[BOARDSAVER] removing thread dependency of reference:", t)
 					bi.Config.RemoveDep(bpkDep, tRef)
-					continue
+					return
 				}
 				// Sync.
-				e = bs.c.ImportThread(bpkDep, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
-				if e != nil {
-					log.Println("[BOARDSAVER] sync failed for thread of reference:", t)
-					log.Println("\t- cause:", e)
-					continue
-				}
+				go func() {
+					e = bs.c.ImportThread(bpkDep, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
+					if e != nil {
+						log.Println("[BOARDSAVER] sync failed for thread of reference:", t)
+						log.Println("\t- cause:", e)
+					}
+				}()
 			}
-			// List of dependencies are of unique dependencies. No duplicates so continue.
-			continue
 		}
 	}
 }
