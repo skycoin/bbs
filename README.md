@@ -75,3 +75,16 @@ bbsnode \
 The `save-config` flag determines whether or not to save the Skycoin BBS configuration files for boards, users and messages. Here, it is set as false.
 
 When the `cxo-memory-mode` flag is set to true, instead of storing objects and configurations to file, the cxo client and server will store everything in memory. When the application exits, everything stored locally will be deleted.
+
+#### Run a node that uses an external CXO Daemon
+
+Multiple applications can share the same CXO Daemon. Use this if you have other applications that reply on CXO.
+
+```bash
+bbsnode \
+    -cxo-use-internal=false \
+    -cxo-port=2345 \
+    -cxo-rpc-port=3456
+```
+
+The flag `cxo-use-internal` determines whether or not to use an internal CXO Daemon. If set false, it attempts to connect to an external CXO Daemon that is hosted on port `cxo-port`, and has an RPC interface hosted on port `cxo-rpc-port`.
