@@ -9,26 +9,16 @@ There are many configurations for running a Skycoin BBS Node.
 * A node can also be configured to run purely in memory (RAM) so nothing is stored on disk.
 * Additionally, you can run a node in test mode where it simulates the actions of users. This is useful for developers or those setting up master nodes.
 
-## Build Skycoin BBS
+## Building Skycoin BBS
 
-Get source code, dependencies and build BBS Node:
+Get the source code, dependencies and build BBS Node:
 ```bash
 go get github.com/skycoin/bbs/cmd/bbsnode
 ```
 
-If the CXO Daemon is to run as a separate process:
-```bash
-go get github.com/skycoin/cxo/cmd/cxod
-```
+The executable will be in `$GOPATH/bin`.
 
-If a command line interface for the CXO Daemon is required:
-```bash
-go get github.com/skycoin/cxo/cmd/cli
-```
-
-For all the commands above, the executables will be in `$GOPATH/bin`.
-
-## Run Skycoin BBS
+## Running Skycoin BBS
 
 By default (aka running `bbsnode` without specifying flags), a BBS Node will have the following characteristics:
 
