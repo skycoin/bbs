@@ -88,3 +88,10 @@ bbsnode \
 ```
 
 The flag `cxo-use-internal` determines whether or not to use an internal CXO Daemon. If set false, it attempts to connect to an external CXO Daemon that is hosted on port `cxo-port`, and has an RPC interface hosted on port `cxo-rpc-port`.
+
+## Using Skycoin BBS
+
+There are currently two ways of interacting with Skycoin BBS.
+* **Web interface -** By default, the flags `web-gui-enable` and `web-gui-open-browser` are enabled. Hence, when BBS is launched, the web gui will be opened via the system browser.
+
+* **Restful json api -** This is ideal for controlling nodes without a graphical user interface (in a server), or for building applications or administrator tools. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [docfiles/postman_collection.json](https://raw.githubusercontent.com/skycoin/bbs/master/docfiles/postman_collection.json).
