@@ -36,7 +36,10 @@ By default (aka running `bbsnode` without specifying flags), a BBS Node will hav
 
 The following examples assume that you have `$GOPATH/bin` in your `$PATH`, and the above executables have been built.
 
-For a detailed look at the flags associated with the BBS Node, refer to [cmd/bbsnode/README.md](https://github.com/skycoin/bbs/blob/master/cmd/bbsnode/README.md).
+#### Show help dialog and exit
+```bash
+bbsnode --help
+```
 
 #### Run a node as master
 
