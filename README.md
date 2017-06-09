@@ -89,6 +89,29 @@ bbsnode \
 
 The flag `cxo-use-internal` determines whether or not to use an internal CXO Daemon. If set false, it attempts to connect to an external CXO Daemon that is hosted on port `cxo-port`, and has an RPC interface hosted on port `cxo-rpc-port`.
 
+#### Run a node in test mode
+
+In test mode, the node generates a board, and creates threads, posts and votes as different users. It does this in intervals.
+
+```bash
+bbsnode \
+    -test-mode=true \
+    -test-mode-threads=4 \
+    -test-mode-users=50 \
+    -test-mode-min=1 \
+    -test-mode-max=5 \
+    -test-mode-timeout=10 \
+    -test-mode-post-cap=200
+```
+Test mode forces the node to be run as master. BBS configuration files will not be stored in test mode, and CXO files will be stored in `/tmp` and deleted after the node exits.
+
+* `test-mode-threads` specifies how many threads are to be created on the test board.
+* `test-mode-users` specifies how many simulated users are to be created.
+* `test-mode-min` is the minimum interval in seconds between simulated activity.
+* `test-mode-max` is the maximum interval in seconds between simulated activity.
+* `test-mode-timeout` is the time in seconds before all simulated activity stops. This can be set as `-1` to disable the timeout.
+* `test-most-post-cap` is the maximum number of posts that are allowed to be created. This can be set as `-1` to disable the cap.
+
 ## Using Skycoin BBS
 
 There are currently two ways of interacting with Skycoin BBS.
