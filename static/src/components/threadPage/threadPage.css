@@ -2,16 +2,28 @@ threadPage {
   width: 100%;
 }
 
-.container {
-  width: 90%;
-  margin: 0 auto;
-}
-
-.container .thread {
+.thread {
   border-bottom: .1rem solid #000;
 }
-.container .posts {
-  border: .1rem solid #ccc;
+.thread .thread-description {
+  min-height: 200px;
+}
+.thread .btn-box {
+  margin: 1rem 0;
+  text-align: right;
+}
+.posts {
+  /*border: .1rem solid #ccc;*/
   margin: 1rem 0;
   padding: 1rem;
+  background-color: hsla(0, 0%, 80%, 0.3);
+}
+.posts .post-author {
+  color: red;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.posts .post-body {
+  margin: 1rem 0;
+  font-weight: 500;
 }

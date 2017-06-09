@@ -1,35 +1,52 @@
-<div class="box">
-  <h1>Add Component</h1>
+<div class="container">
+  <h1>Add</h1>
   <div class="form-group">
     <label for="type">Select add</label>
-    <select class="form-control" id="type" [(ngModel)]="select">
-    <option value="board">Board</option>
-      <option value="thread">Thread</option>
-      <option value="post">Post</option>
+    <select class="form-control" id="type" [ngModel]="select" (ngModelChange)="clear($event)">
+    <option value="board">Add Board</option>
+      <option value="thread">Add Thread</option>
+      <option value="post">Add Post</option>
+      <option value="changeBoard">ChangeBoard</option>
   </select>
   </div>
   <!--<form>-->
   <div class="form-group" [hidden]="select != 'board' && select != 'thread'">
     <label for="name">Input board name</label>
-    <input type="text" placeholder="name" id="name" [(ngModel)]="form.name">
+    <input type="text" class="form-control" placeholder="name" id="name" [(ngModel)]="form.name">
+  </div>
+  <div class="form-group" [hidden]="select != 'thread' && select != 'post'">
+    <label for="board">Input board key</label>
+    <input type="text" class="form-control" placeholder="board" id="board" [(ngModel)]="form.board">
+  </div>
+  <div class="form-group" [hidden]="select != 'post' && select != 'changeBoard'">
+    <label for="thread">Input thread key</label>
+    <input type="text" class="form-control" placeholder="thread" id="thread" [(ngModel)]="form.thread">
+  </div>
+  <div class="form-group" [hidden]="select != 'post'">
+    <label for="title">Input title</label>
+    <input type="text" class="form-control" placeholder="title" id="title" [(ngModel)]="form.title">
+  </div>
+  <div class="form-group" [hidden]="select != 'post'">
+    <label for="body">Input Post Body</label>
+    <textarea class="form-control" rows="3" id="body" [(ngModel)]="form.body"></textarea>
   </div>
   <div class="form-group" [hidden]="select != 'board' && select != 'thread'">
-    <label for="board">Input board key</label>
-    <input type="text" placeholder="board" id="board" [(ngModel)]="form.board">
-  </div>
-  <div class="form-group">
-    <label for="thread">Input thread key</label>
-    <input type="text" placeholder="thread" id="thread" [(ngModel)]="form.thread">
-  </div>
-  <div class="form-group">
     <label for="description">Input description</label>
-    <input type="text" placeholder="description" id="description" [(ngModel)]="form.description">
+    <input type="text" class="form-control" placeholder="description" id="description" [(ngModel)]="form.description">
   </div>
-  <div class="form-group">
+  <div class="form-group" [hidden]="select != 'board'">
     <label for="seed">Input seed</label>
-    <input type="text" placeholder="seed" id="seed" [(ngModel)]="form.seed">
+    <input type="text" class="form-control" placeholder="seed" id="seed" [(ngModel)]="form.seed">
   </div>
-  <button (click)="add($event)">ok</button>
+  <div class="form-group" [hidden]="select != 'changeBoard'">
+    <label for="fromBoard">From Board</label>
+    <input type="text" class="form-control" placeholder="fromBoard" id="fromBoard" [(ngModel)]="form.fromBoard">
+  </div>
+  <div class="form-group" [hidden]="select != 'changeBoard'">
+    <label for="toBoard">To Board</label>
+    <input type="text" class="form-control" placeholder="toBoard" id="toBoard" [(ngModel)]="form.toBoard">
+  </div>
+  <button class="btn btn-info" (click)="add($event)">Submit</button>
   <!--</form>-->
 
 </div>

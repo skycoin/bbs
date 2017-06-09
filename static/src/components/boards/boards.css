@@ -1,45 +1,48 @@
 boards-list {
-  width: 100%;
-  margin: 2rem 0;
-}
-
-.boards {
-  width: 100%;
-  min-height: 50%;
-}
-.boards .boards-container {
-  width: 90%;
-  margin: 0 auto;
-  /*overflow: hidden;*/
-}
-.boards .boards-container .item {
-  /*width: 50%;*/
   display: block;
-  float: left;
-  padding: 1rem;
-  cursor: pointer;
-  color: #000;
-  /*overflow: hidden;*/
-  text-decoration: none;
-}
-.boards .boards-container .item:hover,
-.boards .boards-container .item:focus {
-  text-decoration: none;
-}
-.boards .boards-container .item .content {
   width: 100%;
-  padding: 1rem;
-  border: .1rem solid #999;
-  overflow: hidden;
-}
-.boards .boards-container .item .content .name {
-  margin: .5rem 0;
-}
-.boards .boards-container .item .content .description {
-  font-size: 1.5rem;
-  color: #ccc;
 }
 
-.boards .boards-container .item .content .created {
-  /*text-align:  right;*/
+
+/*.container-fluid {
+  padding: 0;
+}*/
+
+.boards h1 {
+  text-align: center;
+  color: red;
+}
+
+.boards .boardNot {
+  width: 100%;
+  text-align: center;
+}
+
+table>thead>tr {
+  background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);
+}
+
+table>tbody>tr {
+  border-bottom: 1px solid #ccc;
+}
+
+table>tbody>tr>td {
+  cursor: pointer;
+  vertical-align: middle !important;
+}
+
+table .url {
+  max-width: 90px;
+}
+
+table .description,
+table .title {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+table .created {
+  width: 200px;
 }

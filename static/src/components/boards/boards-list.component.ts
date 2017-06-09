@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter } from '@angular/core';
 import { ApiService } from "../../providers";
 import { Board } from "../../providers/api/msg";
-
+import { Router, ActivatedRoute } from "@angular/router";
 @Component({
     selector: 'boards-list',
     templateUrl: 'boards-list.component.html',
@@ -12,8 +12,9 @@ export class BoardsListComponent implements OnInit {
     @Output() board: EventEmitter<string> = new EventEmitter();
     boardsTitle: string = 'Boards List';
     errorMessage: string;
+    test:false;
     boards: Array<Board> = [];
-    constructor(private api: ApiService) {
+    constructor(private api: ApiService, private router: Router) {
 
     }
 
@@ -22,9 +23,10 @@ export class BoardsListComponent implements OnInit {
             this.boards = <Array<Board>>data;
         });
     }
-    openThreads(ev: Event) {
+    openThreads(ev: Event, key: string) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
-        this.board.emit(this.boards[0].public_key);
+        this.router.navigate(['/threads', { board: key }])
+        // this.board.emit(this.boards[0].public_key);
     }
 }
