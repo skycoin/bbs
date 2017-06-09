@@ -46,12 +46,10 @@ By default (aka running `bbsnode` without specifying flags), a BBS Node will hav
 
 The following examples assume that you have `$GOPATH/bin` in your `$PATH`, and the above executables have been built.
 
-#### Run a node with default configurations.
-```bash
-bbsnode
-```
+#### Run a node as master
 
-#### Run a node as master.
+Master nodes have the ability to create and host boards.
+
 ```bash
 bbsnode \
     -master=true \
@@ -59,12 +57,21 @@ bbsnode \
     -rpc-remote-address=34.215.131.150:1234 \
     -web-gui-enable=false
 ```
-It's important to set the `rpc-port` and `rpc-remote-address` flags when running a node in master mode.
 
-#### Run a node in memory.
+Nodes that run as master will host an RPC server. Other nodes add posts, threads and votes, on hosted boards via this RPC connection. Hence, a port needs to be specified of where the RPC connection is hosted, as well as the remote address of the connection. The flags `rpc-port` and `rpc-remote-address` are used to specify these.
 
+If a graphical user interface is not needed for the node, setting `web-gui-enable` to false can disable it.
 
-Don't want to make any changes to disk?
+#### Run a node in memory
+
+This mode is ideal for testing, or if you don't wish to save anything to disk.
+
 ```bash
-./run_in_memory.sh
+bbsnode \
+    -save-config=false \
+    -cxo-memory-mode=true
 ```
+
+The `save-config` flag determines whether or not to save the Skycoin BBS configuration files for boards, users and messages. Here, it is set as false.
+
+When the `cxo-memory-mode` flag is set to true, instead of storing objects and configurations to file, the cxo client and server will store everything in memory. When the application exits, everything stored locally will be deleted.
