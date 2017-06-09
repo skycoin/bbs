@@ -1,8 +1,14 @@
 <div class="threads">
-  <div class="threads-container">
+  <div class="container-fluid">
+    <!--<ol class="breadcrumb">
+      <li><a outerLink="/">All Board</a></li>
+      <li><a outerLink="/">Home</a></li>
+    </ol>-->
     <div *ngFor="let item of threads" class="item" (click)="open(item.master_board,item.ref)">
       <h3 class="name">{{item.name}}</h3>
       <p class="description">{{item.description}}</p>
     </div>
+    <h3 class="boardNot" *ngIf="threads?.length == 0">Not Found Threads</h3>
+
   </div>
 </div>

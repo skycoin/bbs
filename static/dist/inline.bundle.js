@@ -104,9 +104,8 @@
 /******/ 				}
 /******/ 				installedChunks[chunkId] = undefined;
 /******/ 			}
-            /******/
-        }
-        /******/ 		head.appendChild(script);
+/******/ 		};
+/******/ 		head.appendChild(script);
 /******/
 /******/ 		return promise;
 /******/ 	};

@@ -1,5 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter } from '@angular/core';
 import { ApiService } from "../../providers";
+import { Router, ActivatedRoute } from "@angular/router";
+
 @Component({
   selector: 'threads',
   templateUrl: 'threads.html',
@@ -9,9 +11,12 @@ import { ApiService } from "../../providers";
 
 export class ThreadsComponent implements OnInit {
   @Output() thread: EventEmitter<{ master: string, ref: string }> = new EventEmitter();
-  constructor(private api: ApiService) { }
+  constructor(private api: ApiService, private router: Router, private route: ActivatedRoute) { }
   threads: Array<any> = [];
   ngOnInit() {
+    this.route.params.subscribe(res => {
+      this.start(res['board']);
+    })
   }
   start(key) {
     this.api.getThreads(key).then(data => {
@@ -21,6 +26,7 @@ export class ThreadsComponent implements OnInit {
   }
 
   open(master, ref: string) {
-    this.thread.emit({ master: master, ref: ref });
+    this.router.navigate(['p', { board: master, thread: ref }], { relativeTo: this.route });
+    // this.thread.emit({ master: master, ref: ref });
   }
 }

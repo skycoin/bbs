@@ -1,11 +1,34 @@
 <div class='boards'>
-  <div class='boards-container'>
-    <div *ngFor="let board of boards" class="item" (click)="openThreads($event)">
+  <div class='container-fluid'>
+    <h1 class="title">All Board</h1>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Url</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let board of boards" (click)="openThreads($event,board.public_key)">
+          <td class="url">{{board.url}}</td>
+          <td class="title" title="{{board.name}}">{{board.name}}</td>
+          <td class="description" title="{{board.description}}">{{board.description}}</td>
+          <td class="created">{{board.created / 1000000 | date: 'short'}}</td>
+        </tr>
+
+      </tbody>
+
+    </table>
+    <h3 class="boardNot" *ngIf="boards?.length == 0">Not Found Board</h3>
+
+    <!--<div *ngFor="let board of boards" class="item" (click)="openThreads($event,board.public_key)">
       <div class="content">
         <h3 class="name">{{board.name}}</h3>
         <div class="description">{{board.description}}</div>
         <div class="created">{{board.created / 1000000 | date: 'medium'}}</div>
       </div>
-    </div>
+    </div>-->
   </div>
 </div>

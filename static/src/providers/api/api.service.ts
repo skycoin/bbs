@@ -53,6 +53,9 @@ export class ApiService {
   private handlePost(url, data: FormData) {
     return new Promise((resolve, reject) => {
       this.http.post(url, data).subscribe(res => {
+        if (res.status != 200) {
+          reject(new Error('Request Fail'));
+        }
         resolve(res.json());
       }, err => {
         reject(err);
