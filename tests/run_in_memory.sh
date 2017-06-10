@@ -10,14 +10,14 @@ PORT_CXO_SERVER=8988
 PORT_CXO_RPC=8987
 
 go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
-    --master=true \
-    --save-config=false \
-    --rpc-port=$PORT_BBS_RPC \
+    -master=true \
+    -save-config=false \
+    -rpc-port=$PORT_BBS_RPC \
+    -cxo-use-internal=true \
+    -cxo-port=$PORT_CXO_SERVER \
+    -cxo-rpc-port=$PORT_CXO_RPC \
+    -cxo-memory-mode=true \
+    -web-gui-port=$PORT_BBS_GUI \
+    -web-gui-open-browser=true
 #    --rpc-remote-address=127.0.0.1:$PORT_BBS_RPC \
-    --cxo-use-internal=true \
-    --cxo-port=$PORT_CXO_SERVER \
-    --cxo-rpc-port=$PORT_CXO_RPC \
-    --cxo-memory-mode=true \
-    --web-gui-port=$PORT_BBS_GUI \
-    --web-gui-open-browser=true \
 #    --web-gui-dir=$GOPATH/src/github.com/skycoin/bbs/static/dist

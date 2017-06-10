@@ -257,7 +257,9 @@ func (c *Container) setupInternalCXODaemon(wg sync.WaitGroup, eChan chan error, 
 	var e error
 	for {
 		cxoServer, e = node.NewServer(sc)
-		if e == nil {
+		if e != nil {
+			log.Println("[CONTAINER] New CXO Server Error:", e)
+		} else {
 			c.cbAddFeed = func(key cipher.PubKey) (bool, error) {
 				return cxoServer.AddFeed(key), nil
 			}
