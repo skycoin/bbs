@@ -21,6 +21,7 @@ type Gateway struct {
 	container  *cxo.Container
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
+	connsSaver *store.ConnectionSaver
 	queueSaver *msg.QueueSaver
 }
 
@@ -30,6 +31,7 @@ func NewGateway(
 	container *cxo.Container,
 	boardSaver *store.BoardSaver,
 	userSaver *store.UserSaver,
+	connsSaver *store.ConnectionSaver,
 	queueSaver *msg.QueueSaver,
 ) *Gateway {
 	return &Gateway{
@@ -37,6 +39,7 @@ func NewGateway(
 		container:  container,
 		boardSaver: boardSaver,
 		userSaver:  userSaver,
+		connsSaver: connsSaver,
 		queueSaver: queueSaver,
 	}
 }
@@ -60,15 +63,15 @@ func (g *Gateway) GetStats() *StatsView {
 */
 
 func (g *Gateway) GetConnections() ([]string, error) {
-	return g.container.GetConnections()
+	return g.connsSaver.List(), nil
 }
 
 func (g *Gateway) AddConnection(address string) error {
-	return g.container.Connect(address)
+	return g.connsSaver.Add(address)
 }
 
 func (g *Gateway) RemoveConnection(address string) error {
-	return g.container.Disconnect(address)
+	return g.connsSaver.Remove(address)
 }
 
 /*

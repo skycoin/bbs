@@ -30,6 +30,9 @@ func main() {
 	CatchError(e, "unable to create cxo container")
 	defer container.Close()
 
+	connsSaver, e := store.NewConnectionSaver(config, container)
+	CatchError(e, "unable to create connection saver")
+
 	boardSaver, e := store.NewBoardSaver(config, container)
 	CatchError(e, "unable to create board saver")
 	defer boardSaver.Close()
@@ -52,7 +55,7 @@ func main() {
 		log.Println("[RPCSERVER] Serving on address:", rpcServer.Address())
 	}
 
-	gateway := gui.NewGateway(config, container, boardSaver, userSaver, queueSaver)
+	gateway := gui.NewGateway(config, container, boardSaver, userSaver, connsSaver, queueSaver)
 
 	serveAddr, e := gui.OpenWebInterface(gateway)
 	CatchError(e, "unable to start web server")
