@@ -31,3 +31,5 @@ This may seem like a lot, but most of these changes are typo/wording changes.
     
 ### UI Changes
 
+[[https://github.com/skycoin/bbs/blob/master/docfiles/mu_threadpage.jpg]]
+[[https://github.com/skycoin/bbs/blob/master/docfiles/mu_boardpage.jpg]]
