@@ -65415,6 +65415,43 @@ function flattenUnsubscriptionErrors(errors) {
 
 /***/ }),
 
+/***/ "./node_modules/rxjs/add/observable/throw.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var Observable_1 = __webpack_require__("./node_modules/rxjs/Observable.js");
+var throw_1 = __webpack_require__("./node_modules/rxjs/observable/throw.js");
+Observable_1.Observable.throw = throw_1._throw;
+//# sourceMappingURL=throw.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/add/operator/catch.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var Observable_1 = __webpack_require__("./node_modules/rxjs/Observable.js");
+var catch_1 = __webpack_require__("./node_modules/rxjs/operator/catch.js");
+Observable_1.Observable.prototype.catch = catch_1._catch;
+Observable_1.Observable.prototype._catch = catch_1._catch;
+//# sourceMappingURL=catch.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/add/operator/map.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var Observable_1 = __webpack_require__("./node_modules/rxjs/Observable.js");
+var map_1 = __webpack_require__("./node_modules/rxjs/operator/map.js");
+Observable_1.Observable.prototype.map = map_1.map;
+//# sourceMappingURL=map.js.map
+
+/***/ }),
+
 /***/ "./node_modules/rxjs/observable/ArrayLikeObservable.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -65882,6 +65919,95 @@ var EmptyObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.EmptyObservable = EmptyObservable;
 //# sourceMappingURL=EmptyObservable.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/observable/ErrorObservable.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Observable_1 = __webpack_require__("./node_modules/rxjs/Observable.js");
+/**
+ * We need this JSDoc comment for affecting ESDoc.
+ * @extends {Ignored}
+ * @hide true
+ */
+var ErrorObservable = (function (_super) {
+    __extends(ErrorObservable, _super);
+    function ErrorObservable(error, scheduler) {
+        _super.call(this);
+        this.error = error;
+        this.scheduler = scheduler;
+    }
+    /**
+     * Creates an Observable that emits no items to the Observer and immediately
+     * emits an error notification.
+     *
+     * <span class="informal">Just emits 'error', and nothing else.
+     * </span>
+     *
+     * <img src="./img/throw.png" width="100%">
+     *
+     * This static operator is useful for creating a simple Observable that only
+     * emits the error notification. It can be used for composing with other
+     * Observables, such as in a {@link mergeMap}.
+     *
+     * @example <caption>Emit the number 7, then emit an error.</caption>
+     * var result = Rx.Observable.throw(new Error('oops!')).startWith(7);
+     * result.subscribe(x => console.log(x), e => console.error(e));
+     *
+     * @example <caption>Map and flatten numbers to the sequence 'a', 'b', 'c', but throw an error for 13</caption>
+     * var interval = Rx.Observable.interval(1000);
+     * var result = interval.mergeMap(x =>
+     *   x === 13 ?
+     *     Rx.Observable.throw('Thirteens are bad') :
+     *     Rx.Observable.of('a', 'b', 'c')
+     * );
+     * result.subscribe(x => console.log(x), e => console.error(e));
+     *
+     * @see {@link create}
+     * @see {@link empty}
+     * @see {@link never}
+     * @see {@link of}
+     *
+     * @param {any} error The particular Error to pass to the error notification.
+     * @param {Scheduler} [scheduler] A {@link IScheduler} to use for scheduling
+     * the emission of the error notification.
+     * @return {Observable} An error Observable: emits only the error notification
+     * using the given error argument.
+     * @static true
+     * @name throw
+     * @owner Observable
+     */
+    ErrorObservable.create = function (error, scheduler) {
+        return new ErrorObservable(error, scheduler);
+    };
+    ErrorObservable.dispatch = function (arg) {
+        var error = arg.error, subscriber = arg.subscriber;
+        subscriber.error(error);
+    };
+    ErrorObservable.prototype._subscribe = function (subscriber) {
+        var error = this.error;
+        var scheduler = this.scheduler;
+        if (scheduler) {
+            return scheduler.schedule(ErrorObservable.dispatch, 0, {
+                error: error, subscriber: subscriber
+            });
+        }
+        else {
+            subscriber.error(error);
+        }
+    };
+    return ErrorObservable;
+}(Observable_1.Observable));
+exports.ErrorObservable = ErrorObservable;
+//# sourceMappingURL=ErrorObservable.js.map
 
 /***/ }),
 
@@ -66548,6 +66674,17 @@ exports.merge = merge_1.mergeStatic;
 var ArrayObservable_1 = __webpack_require__("./node_modules/rxjs/observable/ArrayObservable.js");
 exports.of = ArrayObservable_1.ArrayObservable.of;
 //# sourceMappingURL=of.js.map
+
+/***/ }),
+
+/***/ "./node_modules/rxjs/observable/throw.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var ErrorObservable_1 = __webpack_require__("./node_modules/rxjs/observable/ErrorObservable.js");
+exports._throw = ErrorObservable_1.ErrorObservable.create;
+//# sourceMappingURL=throw.js.map
 
 /***/ }),
 

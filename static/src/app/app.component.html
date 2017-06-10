@@ -5,14 +5,16 @@
 <add></add>-->
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
-    <a class="navbar-brand" routerLink="/" >BBS</a>
+    <a class="navbar-brand" routerLink="/">BBS</a>
     <div class=" collapse navbar-collapse " id="bs-example-navbar-collapse-1 ">
       <ul class="nav navbar-nav ">
         <li><a routerLink="/">Board</a></li>
         <li><a routerLink="/add">Add/Change</a></li>
+        <li><a routerLink="/userlist">UserList</a></li>
+        <li><a href="javascript:void(0);" class="nav-name">Current User:{{name}}</a></li>
+
       </ul>
     </div>
   </div>
-
 </nav>
 <router-outlet></router-outlet>

@@ -2,18 +2,27 @@ threads {
   width: 100%;
 }
 
-.threads {
-  width: 100%;
+.threads table>thead>tr {
+  background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);
 }
-.threads .item {
-  display: block;
-  width: 100%;
-  min-height: 200px;
-  text-decoration: none;
-  /*border-top: .1rem solid #ccc;*/
-  border-bottom: .1rem solid #ccc;
-  cursor: pointer;
+.threads .page-header {
+  border-bottom: none;
 }
-.threads .item .description {
-  color: #999;
+.threads .page-header>h1 {
+  color: red;
+  text-align: center;
+}
+
+.threads table .name {
+  min-width: 10px;
+}
+
+.threads table .board {
+  min-width: 100px;
+}
+.threads table .board > a {
+  text-decoration: underline;
+}
+.threads table .board >a:hover {
+  color: red;
 }

@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ApiService } from "../providers";
 import { BoardsListComponent, ThreadsComponent, ThreadPageComponent } from "../components";
+import { UserService, User } from "../providers";
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -11,16 +12,13 @@ export class AppComponent implements OnInit {
   @ViewChild(ThreadsComponent) threads: ThreadsComponent;
   @ViewChild(ThreadPageComponent) threadPage: ThreadPageComponent
   title = 'app';
-  constructor(private api: ApiService) {
+  name: string = '';
+  constructor(private api: ApiService, private user: UserService) {
   }
   ngOnInit() {
-    this.api.getBoards();
-  }
-  openThreads(key: string) {
-    this.threads.start(key);
-  }
-  openThreadpage(data: { master: string, ref: string }) {
-    this.threadPage.open(data.master, data.ref);
+    this.user.getCurrent().subscribe(user => {
+      this.name = user.alias;
+    })
   }
   test() {
     console.log('test');
