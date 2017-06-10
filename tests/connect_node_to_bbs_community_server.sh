@@ -2,7 +2,6 @@
 
 # Usage: bash connect_node_to_bbs_community_server.sh [PORT OF YOUR WEB GUI]
 
-
 if [[ $# -ne 1 ]] ; then
     echo "1 argument required. Please specify web gui port of your local BBS node."
     exit 1

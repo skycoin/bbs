@@ -48,12 +48,14 @@ Master nodes have the ability to create and host boards.
 ```bash
 bbsnode \
     -master=true \
-    -rpc-port=1234 \
-    -rpc-remote-address=34.215.131.150:1234 \
+    -rpc-port=8234 \
+    -rpc-remote-address=34.215.131.150:8234 \
+    -cxo-port=8456 \
     -web-gui-enable=false
 ```
+Other nodes connect to the master node via it's CXO Port (specified with `cxo-port` flag). If the external IP address of the server of the above example is `34.215.131.150`, then other nodes can connect via the address `34.215.131.150:8456` (assuming that the port `8456` is shared).
 
-Nodes that run as master will host an RPC server. Other nodes add posts, threads and votes, on hosted boards via this RPC connection. Hence, a port needs to be specified of where the RPC connection is hosted, as well as the remote address of the connection. The flags `rpc-port` and `rpc-remote-address` are used to specify these.
+Nodes that run as master will host a BBS RPC server. Other nodes add posts, threads and votes, on hosted boards via this RPC connection. Hence, a port needs to be specified of where the RPC connection is hosted, as well as the remote address of the connection. The flags `rpc-port` and `rpc-remote-address` are used to specify these.
 
 If a graphical user interface is not needed for the node, setting `web-gui-enable` to false can disable it.
 
