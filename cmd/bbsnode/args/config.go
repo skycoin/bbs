@@ -218,7 +218,7 @@ func (c *Config) PostProcess() (*Config, error) {
 		}
 		// Action on CXO configuration files.
 		if c.cxoDir == "" {
-			c.cxoDir = filepath.Join(util.UserHome(), configSubDir, "cxo")
+			c.cxoDir = filepath.Join(c.configDir, "cxo")
 		}
 		// Ensure directories exist.
 		if e := os.MkdirAll(c.configDir, os.FileMode(0700)); e != nil {
