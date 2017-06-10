@@ -1,0 +1,22 @@
+.user-list {}
+
+.user-list table .alias {
+  min-width: 10px;
+}
+
+.user-list table .master {
+  min-width: 10px;
+}
+
+.user-list table .key {
+  min-width: 10px;
+}
+
+.user-list table .del {
+  min-width: 10px;
+  cursor: pointer;
+}
+
+.user-list table .del:hover {
+  color: red;
+}

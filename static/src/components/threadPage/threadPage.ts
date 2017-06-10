@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService } from "../../providers";
+import { ApiService, ThreadPage } from "../../providers";
 import { Router, ActivatedRoute } from "@angular/router";
 
 @Component({
@@ -11,7 +11,7 @@ import { Router, ActivatedRoute } from "@angular/router";
 export class ThreadPageComponent implements OnInit {
   boardKey: string = '';
   threadKey: string = '';
-  data: { posts: Array<any>, thread: any } = { posts: [], thread: { name: '', description: '' } };
+  data: ThreadPage = { posts: [], thread: { name: '', description: '' } };
   constructor(private api: ApiService, private router: Router, private route: ActivatedRoute) { }
 
   ngOnInit() {
@@ -30,10 +30,8 @@ export class ThreadPageComponent implements OnInit {
   }
   open(master, ref: string) {
     console.warn('open:', master);
-    this.api.getThreadpage(master, ref).then(data => {
-      console.warn('get threads2:', data);
-      this.data = <{ posts: Array<any>, thread: any }>data;
-      console.log('this data:', this.data);
+    this.api.getThreadpage(master, ref).subscribe(data => {
+      this.data = data;
     });
   }
 }

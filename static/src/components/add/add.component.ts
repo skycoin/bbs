@@ -69,23 +69,18 @@ export class AddComponent implements OnInit {
         data.append('name', this.form.name);
         data.append('description', this.form.description);
         data.append('seed', this.form.seed);
-        this.api.addBoard(data).then(res => {
+        this.api.addBoard(data).subscribe(res => {
           alert('add success');
-          this.init();
-        }, err => {
-          console.error('err:', err);
+          this.init()
         });
         break;
       case 'thread':
         data.append('board', this.form.board);
         data.append('description', this.form.description);
         data.append('name', this.form.name);
-        this.api.addThread(data).then(res => {
+        this.api.addThread(data).subscribe(res => {
           alert('add success');
-          this.init();
-          console.log('add success:', res);
-        }, err => {
-          console.error('err:', err);
+          this.init()
         });
         break;
       case 'post':
@@ -93,24 +88,18 @@ export class AddComponent implements OnInit {
         data.append('thread', this.form.thread);
         data.append('title', this.form.title);
         data.append('body', this.form.body);
-        this.api.addPost(data).then(res => {
-          console.log('add success:', res);
-          this.init();
+        this.api.addPost(data).subscribe(res => {
           alert('add success');
-        }, err => {
-          console.error('err:', err);
+          this.init()
         });
         break;
       case 'changeBoard':
         data.append('from_board', this.form.fromBoard);
         data.append('to_board', this.form.toBoard);
         data.append('thread', this.form.thread);
-        this.api.changeThread(data).then(res => {
-          console.log('add success:', res);
-          this.init();
+        this.api.importThread(data).subscribe(res => {
           alert('add success');
-        }, err => {
-          console.error('err:', err);
+          this.init()
         });
         break;
     }

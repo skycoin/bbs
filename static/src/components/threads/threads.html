@@ -4,11 +4,26 @@
       <li><a outerLink="/">All Board</a></li>
       <li><a outerLink="/">Home</a></li>
     </ol>-->
-    <div *ngFor="let item of threads" class="item" (click)="open(item.master_board,item.ref)">
-      <h3 class="name">{{item.name}}</h3>
-      <p class="description">{{item.description}}</p>
+    <div class="page-header">
+      <h1>All Threads</h1>
     </div>
-    <h3 class="boardNot" *ngIf="threads?.length == 0">Not Found Threads</h3>
 
+    <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>Thread</th>
+          <th>Board</th>
+          <th>Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let thread of threads">
+          <td class="name" title="{{thread.name}}">{{thread.name}}</td>
+          <td class="board" title="{{url}}"><a href="javascript:void(0);" (click)="open(thread?.master_board,thread?.ref)">{{url}}</a></td>
+          <td class="description" title="{{thread.description}}">{{thread.description}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 class="boardNot" *ngIf="threads?.length == 0">Not Found Threads</h3>
   </div>
 </div>
