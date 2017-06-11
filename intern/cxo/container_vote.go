@@ -9,7 +9,7 @@ import (
 
 // GetVotesForThread obtains the votes for specified thread present in specified board.
 func (c *Container) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) ([]typ.Vote, error) {
-	c.Lock()
+	c.Lock(c.GetVotesForThread)
 	defer c.Unlock()
 
 	w := c.c.LastFullRoot(bpk).Walker()
@@ -32,7 +32,7 @@ func (c *Container) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Referenc
 
 // GetVotesForPost obtains the votes for specified post present in specified board.
 func (c *Container) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) ([]typ.Vote, error) {
-	c.Lock()
+	c.Lock(c.GetVotesForPost)
 	defer c.Unlock()
 
 	w := c.c.LastFullRoot(bpk).Walker()
@@ -55,7 +55,7 @@ func (c *Container) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference)
 
 // VoteForThread adds a vote for a thread on a specified board.
 func (c *Container) AddVoteForThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, newVote *typ.Vote) error {
-	c.Lock()
+	c.Lock(c.AddVoteForThread)
 	defer c.Unlock()
 
 	w := c.c.LastRootSk(bpk, bsk).Walker()
@@ -89,7 +89,7 @@ SaveThreadVotesContainer:
 
 // VoteForPost adds a vote for a post on a specified board.
 func (c *Container) AddVoteForPost(bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference, newVote *typ.Vote) error {
-	c.Lock()
+	c.Lock(c.AddVoteForPost)
 	defer c.Unlock()
 
 	w := c.c.LastRootSk(bpk, bsk).Walker()
@@ -123,7 +123,7 @@ SavePostVotesContainer:
 
 // RemoveVoteForThread removes a vote completely for a thread and specified user.
 func (c *Container) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
-	c.Lock()
+	c.Lock(c.RemoveVoteForThread)
 	defer c.Unlock()
 
 	w := c.c.LastRootSk(bpk, bsk).Walker()
@@ -156,7 +156,7 @@ func (c *Container) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKe
 
 // RemoveVoteForPost removes a vote completely for a post and specified user.
 func (c *Container) RemoveVoteForPost(upk, bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference) error {
-	c.Lock()
+	c.Lock(c.RemoveVoteForPost)
 	defer c.Unlock()
 
 	w := c.c.LastRootSk(bpk, bsk).Walker()

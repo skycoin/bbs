@@ -15,10 +15,11 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/misc"
 )
 
 type Container struct {
-	sync.Mutex
+	misc.PrintMux
 	c      *node.Container
 	client *node.Client
 	config *args.Config
@@ -70,7 +71,7 @@ func NewContainer(config *args.Config) (*Container, error) {
 
 	log.Println("[CXOCONTAINER] Connection to cxo daemon established!")
 
-	go c.service()
+	//go c.service()
 	return c, nil
 }
 
@@ -330,7 +331,7 @@ func (c *Container) service() {
 		case <-c.quit:
 			return
 		case <-ticker.C:
-			c.Lock()
+			c.Lock(c.service)
 			c.c.GC(false)
 			c.Unlock()
 		}
@@ -339,14 +340,14 @@ func (c *Container) service() {
 
 // Feeds returns a list of all feeds we are subscribed to.
 func (c *Container) Feeds() []cipher.PubKey {
-	c.Lock()
+	c.Lock(c.Feeds)
 	defer c.Unlock()
 	return c.client.Feeds()
 }
 
 // Subscribe subscribes to a cxo feed.
 func (c *Container) Subscribe(pk cipher.PubKey) (bool, error) {
-	c.Lock()
+	c.Lock(c.Subscribe)
 	defer c.Unlock()
 	if _, e := c.cbAddFeed(pk); e != nil {
 		return false, e
@@ -356,7 +357,7 @@ func (c *Container) Subscribe(pk cipher.PubKey) (bool, error) {
 
 // Unsubscribe unsubscribes from a cxo feed.
 func (c *Container) Unsubscribe(pk cipher.PubKey) (bool, error) {
-	c.Lock()
+	c.Lock(c.Unsubscribe)
 	defer c.Unlock()
 	if _, e := c.cbDelFeed(pk); e != nil {
 		return false, e
@@ -366,21 +367,21 @@ func (c *Container) Unsubscribe(pk cipher.PubKey) (bool, error) {
 
 // Connect connects to external BBS Node.
 func (c *Container) Connect(address string) error {
-	c.Lock()
+	c.Lock(c.Connect)
 	defer c.Unlock()
 	return c.cbConnect(address)
 }
 
 // Disconnect disconnects from external BBS Node.
 func (c *Container) Disconnect(address string) error {
-	c.Lock()
+	c.Lock(c.Disconnect)
 	defer c.Unlock()
 	return c.cbDisconnect(address)
 }
 
 // GetConnections gets a list of all external BBS Node addresses we are connected to.
 func (c *Container) GetConnections() ([]string, error) {
-	c.Lock()
+	c.Lock(c.GetConnections)
 	defer c.Unlock()
 	return c.cbConnections()
 }

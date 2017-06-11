@@ -27,6 +27,8 @@ func (m *Msg) Mode() MsgMode {
 }
 
 func (c *Container) GetUpdatesChan() chan *Msg {
+	c.Lock(c.GetUpdatesChan)
+	defer c.Unlock()
 	return c.msgs
 }
 
