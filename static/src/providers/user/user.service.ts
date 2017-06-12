@@ -35,8 +35,7 @@ export class UserService {
     return this.http.post(this.base_url + 'new_master', data).map((res: Response) => <User>res.json()).catch(err => this.common.handleError(err));
   }
 
-  //not master 
-  newUser(data: FormData) {
+  newOrModifyUser(data: FormData) {
     return this.http.post(this.base_url + 'new', data).map((res: Response) => <User>res.json()).catch(err => this.common.handleError(err));
   }
 

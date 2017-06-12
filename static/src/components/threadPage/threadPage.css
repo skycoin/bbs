@@ -2,9 +2,6 @@ threadPage {
   width: 100%;
 }
 
-.thread {
-  border-bottom: .1rem solid #000;
-}
 .thread .thread-description {
   min-height: 200px;
 }
@@ -12,18 +9,6 @@ threadPage {
   margin: 1rem 0;
   text-align: right;
 }
-.posts {
-  /*border: .1rem solid #ccc;*/
-  margin: 1rem 0;
-  padding: 1rem;
-  background-color: hsla(0, 0%, 80%, 0.3);
-}
-.posts .post-author {
-  color: red;
-  text-decoration: underline;
-  cursor: pointer;
-}
-.posts .post-body {
-  margin: 1rem 0;
-  font-weight: 500;
+.post {
+  margin: 10px 0;
 }

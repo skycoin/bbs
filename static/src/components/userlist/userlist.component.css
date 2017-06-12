@@ -11,12 +11,11 @@
 .user-list table .key {
   min-width: 10px;
 }
-
+.user-list table .edit,
 .user-list table .del {
-  min-width: 10px;
   cursor: pointer;
 }
-
+.user-list table .edit:hover,
 .user-list table .del:hover {
   color: red;
 }

@@ -1,13 +1,42 @@
 <div class="container-fluid">
-  <div class="thread">
-    <h3>{{data.thread.name}}</h3>
-    <p class="thread-description">{{data.thread.description}}</p>
-    <div class="btn-box"><button class="btn btn-info" (click)="reply()">reply</button></div>
+  <div class="card thread">
+    <div class="card-block">
+      <h3 class="card-title">{{data.thread.name}}</h3>
+      <p class="thread-description">{{data.thread.description}}</p>
+      <p class="btn-box"><button class="btn btn-info" (click)="openReply(addPost)">reply</button></p>
+    </div>
   </div>
-  <div class="posts" *ngFor="let item of data.posts">
-    <h5 class="post-title">{{item.title}}</h5>
-    <a class="post-author">{{item.author}}</a>
-    <p class="post-body">{{item.body}}</p>
-    <p class="post-created">{{item.created / 1000000 | date:'yMMMdjms'}}</p>
+  <div class="card post" *ngFor="let item of data.posts">
+    <div class="card-block">
+      <h5 class="card-title">{{item.title}}</h5>
+      <a class="card-text">{{item.author}}</a>
+      <p class="card-text">{{item.body}}</p>
+      <p class="card-text">{{item.created / 1000000 | date:'yMMMdjms'}}</p>
+    </div>
   </div>
 </div>
+
+<ng-template #addPost let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">New Post</h4>
+    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="postForm" novalidate>
+      <div class="form-group">
+        <label for="seed">Title</label>
+        <input type="text" class="form-control" placeholder="title" id="title" formControlName="title">
+      </div>
+      <div class="form-group">
+        <label for="body">Content</label>
+        <textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="c(false)">cancel</button>
+    <button type="button" class="btn btn-secondary" (click)="c(true)">submit</button>
+  </div>
+</ng-template>

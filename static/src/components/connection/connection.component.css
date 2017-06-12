@@ -1,0 +1,15 @@
+.connection .btn-group {
+  float: right;
+}
+.connection .index {
+  width: 20px;
+}
+.connection .del {
+  width: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.connection .del:hover {
+  color: red;
+}

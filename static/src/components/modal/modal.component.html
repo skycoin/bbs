@@ -1,0 +1,13 @@
+<div class="modal-header">
+  <h4 class="modal-title">Edit</h4>
+  <button type="button" class="close" aria-label="Close" (click)="exec(false)">
+        <span aria-hidden="true">&times;</span>
+      </button>
+</div>
+<div class="modal-body">
+  <input [(ngModel)]="name" type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="exec(false)">cancel</button>
+  <button type="button" class="btn btn-secondary" (click)="exec(true)">submit</button>
+</div>

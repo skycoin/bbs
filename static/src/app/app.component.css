@@ -1,3 +1,6 @@
 .nav-name {
-  color: red !important;
+  color: #d21b1b !important;
+}
+.nav-name span {
+  margin: 0 5px;
 }

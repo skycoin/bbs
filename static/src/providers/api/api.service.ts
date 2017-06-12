@@ -9,8 +9,12 @@ import 'rxjs/add/operator/catch';
 export class ApiService {
   private base_url = 'http://127.0.0.1:7410/api/'
   constructor(private http: Http, private common: CommonService) {
-
   }
+
+  getStats() {
+    return this.http.get(this.base_url + 'get_stats').map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+  }
+
   getThreads(key: string) {
     let data = new FormData();
     data.append('board', key);

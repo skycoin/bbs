@@ -3,6 +3,7 @@
     <div class="page-header">
       <h1>All Boards</h1>
     </div>
+    <p class="btn-group"><button [class.disabled]="!isRoot" type="button" class="btn btn-outline-primary" (click)="openAdd(add)">New Board</button></p>
     <table class="table table-hover table-bordered">
       <thead>
         <tr>
@@ -19,9 +20,7 @@
           <td class="description" title="{{board.description}}">{{board.description}}</td>
           <td class="created">{{board.created / 1000000 | date: 'short'}}</td>
         </tr>
-
       </tbody>
-
     </table>
     <h3 class="boardNot" *ngIf="boards?.length == 0">Not Found Boards</h3>
 
@@ -34,3 +33,31 @@
     </div>-->
   </div>
 </div>
+<ng-template #add let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">New Board</h4>
+    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="addForm" novalidate>
+      <div class="form-group">
+        <label for="name">Board name</label>
+        <input type="text" class="form-control" placeholder="name" id="name" formControlName="name">
+      </div>
+      <div class="form-group">
+        <label for="description">Board description</label>
+        <input type="text" class="form-control" placeholder="description" id="description" formControlName="description">
+      </div>
+      <div class="form-group">
+        <label for="seed">Board seed</label>
+        <input type="text" class="form-control" placeholder="seed" id="seed" formControlName="seed">
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="c(false)">cancel</button>
+    <button type="button" class="btn btn-secondary" (click)="c(true)">submit</button>
+  </div>
+</ng-template>

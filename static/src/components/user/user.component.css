@@ -1,0 +1,11 @@
+.user-box {
+  display: block;
+  width: 100%;
+}
+.user-box .item span {
+  margin: 0 10px;
+}
+.user-box .item .exec {
+  font-size: 12px;
+  text-decoration: underline;
+}
