@@ -1,23 +1,46 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpModule } from '@angular/http';
-import { FormsModule } from '@angular/forms';
-import { MaterialModule } from '@angular/material';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppComponent } from './app.component';
-import { ApiService, UserService, CommonService } from "../providers";
+import { ApiService, UserService, CommonService, ConnectionService } from "../providers";
 import { AppRouterRoutingModule } from "../router/app-router-routing.module";
 
-import { BoardsListComponent, ThreadsComponent, ThreadPageComponent, AddComponent, UserlistComponent } from "../components";
+import {
+  BoardsListComponent,
+  ThreadsComponent,
+  ThreadPageComponent,
+  AddComponent,
+  UserlistComponent,
+  UserComponent,
+  ModalComponent,
+  ConnectionComponent
+} from "../components";
 
 @NgModule({
-  declarations: [
-    AppComponent, BoardsListComponent, ThreadsComponent, ThreadPageComponent, AddComponent, UserlistComponent
-  ],
   imports: [
-    BrowserModule, HttpModule, FormsModule, AppRouterRoutingModule
+    BrowserModule,
+    HttpModule,
+    FormsModule,
+    ReactiveFormsModule,
+    AppRouterRoutingModule,
+    NgbModule.forRoot(),
   ],
-  providers: [CommonService, ApiService, UserService],
+  declarations: [
+    AppComponent,
+    BoardsListComponent,
+    ThreadsComponent,
+    ThreadPageComponent,
+    AddComponent,
+    UserlistComponent,
+    UserComponent,
+    ModalComponent,
+    ConnectionComponent
+  ],
+  entryComponents: [ModalComponent],
+  providers: [CommonService, ApiService, UserService, ConnectionService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

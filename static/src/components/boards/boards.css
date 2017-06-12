@@ -3,10 +3,10 @@ boards-list {
   width: 100%;
 }
 
+.boards .btn-group {
+  float: right;
+}
 
-/*.container-fluid {
-  padding: 0;
-}*/
 .boards .page-header {
   border-bottom: none;
 }

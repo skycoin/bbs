@@ -1,7 +1,9 @@
 threads {
   width: 100%;
 }
-
+.threads .btn-group {
+  float: right;
+}
 .threads table>thead>tr {
   background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);
 }
