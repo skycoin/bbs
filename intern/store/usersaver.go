@@ -225,8 +225,12 @@ func (us *UserSaver) SetCurrent(upk cipher.PubKey) error {
 func (us *UserSaver) Add(alias string, upk cipher.PubKey) {
 	us.Lock()
 	defer us.Unlock()
-	uc := UserConfig{Alias: alias, Master: false, PubKey: upk.Hex()}
-	us.store[upk] = &uc
+	if uc, has := us.store[upk]; has {
+		uc.Alias = alias
+	} else {
+		uc := UserConfig{Alias: alias, Master: false, PubKey: upk.Hex()}
+		us.store[upk] = &uc
+	}
 	us.save()
 }
 

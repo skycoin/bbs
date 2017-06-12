@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/intern/typ"
+	"github.com/skycoin/bbs/misc"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/skyobject"
@@ -15,7 +16,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/misc"
 )
 
 type Container struct {
@@ -71,7 +71,7 @@ func NewContainer(config *args.Config) (*Container, error) {
 
 	log.Println("[CXOCONTAINER] Connection to cxo daemon established!")
 
-	//go c.service()
+	go c.service()
 	return c, nil
 }
 
