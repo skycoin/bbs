@@ -15,11 +15,13 @@ There are many configurations for running a Skycoin BBS Node.
 
 Skycoin BBS can be installed on some Linux distributions as a [snap package](https://snapcraft.io/).
 ```bash
+# Install.
 sudo snap install skycoin-bbs --edge
-```
-After installation, visit `localhost:7410` in your browser of choice. Configuration files will be stored in `/var/snap/skycoin-bbs/common`.
 
-Note that, currently, there is no way to configure the snap-packaged Skycoin BBS to be a master node. Nor can you configure what ports are to be used. This will be changed in future releases.
+# Run.
+skycoin-bbs.bbsnode
+```
+Configuration files will be stored in `$HOME/snap/skycoin-bbs/common`.
 
 ### Building from source
 

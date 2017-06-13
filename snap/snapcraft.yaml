@@ -1,5 +1,5 @@
 name: skycoin-bbs
-version: '0.0.1'
+version: '0.0.3'
 summary: Next-generation decentralized social network
 description: |
   Decentralized social network.
@@ -9,11 +9,11 @@ confinement: strict # 'devmode' 'strict'
 
 apps:
   bbsnode:
-    command: bin/bbsnode -web-gui-dir=$SNAP/static/dist -config-dir=$SNAP_COMMON -web-gui-open-browser=false
-    daemon: simple
+    command: bin/bbsnode -web-gui-dir=$SNAP/static/dist -config-dir=$SNAP_USER_COMMON -web-gui-open-browser=true
     plugs:
       - network
       - network-bind
+      - home
 
 parts:
   assets:
