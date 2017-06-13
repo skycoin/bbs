@@ -24,9 +24,9 @@ table>thead>tr {
   background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);
 }
 
-/*table>tbody>tr {
-  border-bottom: 1px solid #ccc;
-}*/
+table>tbody>tr {
+  cursor: pointer;
+}
 
 table>tbody>tr>td {
   /*cursor: pointer;*/
@@ -50,7 +50,14 @@ table .title {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
+table .subscribe {
+  width: 25px;
+  text-align: center;
+}
+table .subscribe i {
+  margin-left: 0;
+  color: red;
+}
 table .created {
   width: 200px;
   text-align: center;

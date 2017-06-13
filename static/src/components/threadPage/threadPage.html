@@ -1,5 +1,5 @@
 <div class="container-fluid">
-  <div class="card thread">
+  <div class="card thread" *ngIf="data">
     <div class="card-block">
       <h3 class="card-title">{{data.thread.name}}</h3>
       <p class="thread-description">{{data.thread.description}}</p>

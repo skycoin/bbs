@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService, ThreadPage } from "../../providers";
+import { ApiService, ThreadPage, CommonService } from "../../providers";
 import { Router, ActivatedRoute } from "@angular/router";
 import { FormControl, FormGroup } from '@angular/forms';
 import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
@@ -18,7 +18,12 @@ export class ThreadPageComponent implements OnInit {
     title: new FormControl(),
     body: new FormControl()
   });
-  constructor(private api: ApiService, private router: Router, private route: ActivatedRoute, private modal: NgbModal) { }
+  constructor(
+    private api: ApiService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private modal: NgbModal,
+    private common: CommonService) { }
 
   ngOnInit() {
     this.route.params.subscribe(res => {
@@ -38,9 +43,10 @@ export class ThreadPageComponent implements OnInit {
       this.api.addPost(data).subscribe(post => {
         if (post) {
           this.data.posts.unshift(post);
+          this.common.showAlert('Added successfully', 'success', 3000);
         }
       })
-    },err => {});
+    }, err => { });
 
   }
 
@@ -52,7 +58,6 @@ export class ThreadPageComponent implements OnInit {
     this.router.navigate(['/add', { exec: 'post', board: this.boardKey, thread: this.threadKey }]);
   }
   open(master, ref: string) {
-    console.warn('open:', master);
     this.api.getThreadpage(master, ref).subscribe(data => {
       this.data = data;
     });

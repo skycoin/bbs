@@ -28,4 +28,22 @@ export interface Board {
   public_key?: string;
   url?: string;
   created?: number;
+  ui_options?: UIOptions;
+}
+
+export interface UIOptions {
+  subscribe?: boolean;
+}
+
+
+
+export interface SubScription {
+  synced?: boolean;
+  config?: SubScriptionOptions;
+}
+
+export interface SubScriptionOptions {
+  master?: boolean;
+  public_key?: string;
+  secret_key?: string;
 }
