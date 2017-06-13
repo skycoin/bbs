@@ -9,7 +9,19 @@ There are many configurations for running a Skycoin BBS Node.
 * A node can also be configured to run purely in memory (RAM) so nothing is stored on disk.
 * Additionally, you can run a node in test mode where it simulates the actions of users. This is useful for developers or those setting up master nodes.
 
-## Building Skycoin BBS
+## Installing Skycoin BBS
+
+### As a snap
+
+Skycoin BBS can be installed on some Linux distributions as a [snap package](https://snapcraft.io/).
+```bash
+sudo snap install skycoin-bbs --edge
+```
+After installation, visit `localhost:7410` in your browser of choice. Configuration files will be stored in `/var/snap/skycoin-bbs/common`.
+
+Note that, currently, there is no way to configure the snap-packaged Skycoin BBS to be a master node. Nor can you configure what ports are to be used. This will be changed in future releases.
+
+### Building from source
 
 Get the source code, dependencies and build BBS Node:
 ```bash
