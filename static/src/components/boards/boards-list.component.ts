@@ -1,9 +1,10 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter } from '@angular/core';
-import { ApiService, UserService } from "../../providers";
-import { Board } from "../../providers/api/msg";
+import { ApiService, UserService, CommonService } from "../../providers";
+import { Board, UIOptions } from "../../providers/api/msg";
 import { Router, ActivatedRoute } from "@angular/router";
 import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
 import { FormControl, FormGroup } from '@angular/forms';
+import { AlertComponent } from "../alert/alert.component";
 
 @Component({
     selector: 'boards-list',
@@ -22,33 +23,80 @@ export class BoardsListComponent implements OnInit {
         description: new FormControl(),
         seed: new FormControl()
     });
-    constructor(private api: ApiService, private user: UserService, private router: Router, private modal: NgbModal) {
+    tmpBoard: Board = null;
+    constructor(
+        private api: ApiService,
+        private user: UserService,
+        private router: Router,
+        private modal: NgbModal,
+        private common: CommonService) {
 
     }
 
     ngOnInit(): void {
-        this.api.getBoards().subscribe(boards => {
-            this.boards = boards;
-        })
+        this.getBoards();
         this.api.getStats().subscribe(root => {
             this.isRoot = root;
-        })
+        });
+    }
+
+    private getBoards() {
+        this.api.getBoards().subscribe(boards => {
+            this.boards = boards;
+            this.boards.forEach(el => {
+                let data = new FormData();
+                data.append('board', el.public_key);
+                this.api.getSubscription(data).subscribe(res => {
+                    if (res.config && res.config.secret_key) {
+                        el.ui_options = { subscribe: true };
+                    }
+                })
+            });
+        });
+    }
+
+    openInfo(ev: Event, board: Board, content: any) {
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        this.tmpBoard = board;
+        this.modal.open(content, { size: 'lg' });
     }
     openAdd(content) {
         this.modal.open(content).result.then((result) => {
-            if (result) {
+            if (result === true) {
                 let data = new FormData();
                 data.append('name', this.addForm.get('name').value);
                 data.append('description', this.addForm.get('description').value);
                 data.append('seed', this.addForm.get('seed').value);
                 this.api.addBoard(data).subscribe(res => {
-                    console.log('add board:', res);
                     this.api.getBoards().subscribe(boards => {
                         this.boards = boards;
+                        this.common.showAlert('Added successfully', 'success', 3000);
                     });
                 });
             }
-        });
+        }, err => { });
+    }
+    subscribe(ev: Event, key: string, index: number) {
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        let data = new FormData()
+        data.append('board', key)
+        if (!this.boards[index].ui_options.subscribe) {
+            this.api.subscribe(data).subscribe(isOk => {
+                let options = { subscribe: isOk };
+                this.boards[index].ui_options = options;
+                this.common.showAlert('Subscribe successfully', 'success', 3000);
+            })
+        } else {
+            this.api.unSubscribe(data).subscribe(isOk => {
+                if (isOk) {
+                    this.boards[index].ui_options.subscribe = false;
+                    this.common.showAlert('Unsubscribe successfully', 'success', 3000);
+                    this.getBoards();
+                }
+            })
+        }
     }
     openThreads(ev: Event, key, url: string) {
         ev.stopImmediatePropagation();

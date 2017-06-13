@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule, RouterOutletMap } from '@angular/router';
+import { Routes, RouterModule } from '@angular/router';
 import {
   BoardsListComponent,
   ThreadsComponent,
@@ -31,6 +31,5 @@ const routes: Routes = [
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
-  // providers: [RouterOutletMap]
 })
 export class AppRouterRoutingModule { }

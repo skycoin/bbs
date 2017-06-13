@@ -18,7 +18,16 @@ threads {
 .threads table .name {
   min-width: 10px;
 }
-
+.threads table .transfer {
+  width: 25px;
+  cursor: pointer;
+}
+.threads table .transfer i {
+  margin-left: 0;
+}
+.threads table .transfer i:hover {
+  color: red;
+}
 .threads table .board {
   min-width: 100px;
 }

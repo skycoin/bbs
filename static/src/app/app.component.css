@@ -1,6 +1,19 @@
 .nav-name {
   color: #d21b1b !important;
 }
+
+.nav-node {
+  color: blue !important;
+}
+
 .nav-name span {
   margin: 0 5px;
+}
+
+.app-pop {
+  position: fixed;
+  bottom: 0;
+  width: 50%;
+  left: 25%;
+  right: 25%;
 }

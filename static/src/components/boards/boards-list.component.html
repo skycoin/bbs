@@ -7,30 +7,27 @@
     <table class="table table-hover table-bordered">
       <thead>
         <tr>
-          <th>Board</th>
+          <!--<th>Board</th>-->
           <th>Name</th>
           <th>Description</th>
           <th>Created</th>
+          <th></th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let board of boards">
-          <td class="url"><a href="javascript:void(0);" (click)="openThreads($event,board.public_key,board.url)">{{board.url}}</a></td>
-          <td class="title" title="{{board.name}}">{{board.name}}</td>
-          <td class="description" title="{{board.description}}">{{board.description}}</td>
-          <td class="created">{{board.created / 1000000 | date: 'short'}}</td>
+        <tr *ngFor="let board of boards;let i = index;" (click)="openThreads($event,board.public_key,board.url)">
+          <!--<td class="url"><a href="javascript:void(0);" (click)="openThreads($event,board.public_key,board.url)">{{board.url}}</a></td>-->
+          <td class="title" title="{{board?.name}}">{{board?.name}}</td>
+          <td class="description" title="{{board?.description}}">{{board?.description}}</td>
+          <td class="created">{{board?.created / 1000000 | date: 'short'}}</td>
+          <td class="subscribe" title="Subscribe/Unsubscribe" (click)="subscribe($event,board.public_key,i)"><a href="javascript:void(0);"><i class="fa" [class.fa-star-o]="!board.ui_options?.subscribe" [class.fa-star]="board.ui_options?.subscribe"></i></a></td>
+          <td class="subscribe" title="Board Info" (click)="openInfo($event,board,info)"><a href="javascript:void(0);"><i class="fa fa-info-circle"></i></a></td>
         </tr>
       </tbody>
     </table>
     <h3 class="boardNot" *ngIf="boards?.length == 0">Not Found Boards</h3>
-
-    <!--<div *ngFor="let board of boards" class="item" (click)="openThreads($event,board.public_key)">
-      <div class="content">
-        <h3 class="name">{{board.name}}</h3>
-        <div class="description">{{board.description}}</div>
-        <div class="created">{{board.created / 1000000 | date: 'medium'}}</div>
-      </div>
-    </div>-->
+    
   </div>
 </div>
 <ng-template #add let-c="close" let-d="dismiss">
@@ -48,7 +45,7 @@
       </div>
       <div class="form-group">
         <label for="description">Board description</label>
-        <input type="text" class="form-control" placeholder="description" id="description" formControlName="description">
+        <textarea class="form-control" rows="3" id="description" formControlName="description"></textarea>
       </div>
       <div class="form-group">
         <label for="seed">Board seed</label>
@@ -59,5 +56,39 @@
   <div class="modal-footer">
     <button type="button" class="btn btn-secondary" (click)="c(false)">cancel</button>
     <button type="button" class="btn btn-secondary" (click)="c(true)">submit</button>
+  </div>
+</ng-template>
+
+<ng-template #info let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">Board</h4>
+    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label for="tmpName">Name</label>
+      <input type="text" class="form-control" id="tmpName" [(ngModel)]="tmpBoard.name">
+    </div>
+    <div class="form-group">
+      <label for="tmpDescription">Description</label>
+      <input type="text" class="form-control" id="tmpDescription" [(ngModel)]="tmpBoard.description">
+    </div>
+    <div class="form-group">
+      <label for="tmpPublicKey">Public Key</label>
+      <input type="text" class="form-control" id="tmpPublicKey" [(ngModel)]="tmpBoard.public_key">
+    </div>
+    <div class="form-group">
+      <label for="tmpUrl">Url</label>
+      <input type="text" class="form-control" id="tmpUrl" [(ngModel)]="tmpBoard.url">
+    </div>
+    <div class="form-group">
+      <label for="tmpCreated">Created</label>
+      <input type="text" class="form-control" id="tmpCreated" [(ngModel)]="tmpBoard.created">
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="c(false)">close</button>
   </div>
 </ng-template>

@@ -11,6 +11,19 @@ export class ApiService {
   constructor(private http: Http, private common: CommonService) {
   }
 
+  getSubscriptions() {
+    return this.common.handleGet(this.base_url + "get_subscriptions");
+  }
+
+  getSubscription(data: FormData) {
+    return this.common.handlePost(this.base_url + 'get_subscription', data);
+  }
+  subscribe(data: FormData) {
+    return this.common.handlePost(this.base_url + 'subscribe', data);
+  }
+  unSubscribe(data: FormData) {
+    return this.common.handlePost(this.base_url + 'unsubscribe', data);
+  }
   getStats() {
     return this.http.get(this.base_url + 'get_stats').map((res: Response) => res.json()).catch(err => this.common.handleError(err));
   }
@@ -34,7 +47,6 @@ export class ApiService {
   }
 
 
-  // get_threadpage
   getThreadpage(masterKey: string, sub: string) {
     let data = new FormData();
     data.append('board', masterKey);

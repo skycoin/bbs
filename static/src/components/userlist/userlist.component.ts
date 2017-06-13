@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService, User } from "../../providers";
+import { UserService, User, CommonService } from "../../providers";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { ModalComponent } from "../modal/modal.component";
 
@@ -10,7 +10,7 @@ import { ModalComponent } from "../modal/modal.component";
 })
 export class UserlistComponent implements OnInit {
   userlist: Array<User> = [];
-  constructor(private user: UserService, private modal: NgbModal) { }
+  constructor(private user: UserService, private modal: NgbModal, private common: CommonService) { }
   ngOnInit() {
     this.user.getAll().subscribe(userlist => {
       this.userlist = userlist;
@@ -34,6 +34,7 @@ export class UserlistComponent implements OnInit {
       this.userlist = [];
       this.user.getAll().subscribe(userlist => {
         this.userlist = userlist;
+        this.common.showAlert('successfully modified', 'success', 3000);
       })
     })
   }
@@ -47,7 +48,10 @@ export class UserlistComponent implements OnInit {
         this.userlist = [];
         this.user.getAll().subscribe(userlist => {
           this.userlist = userlist;
+          this.common.showAlert('successfully deleted', 'success', 1000);
         })
+      } else {
+        this.common.showAlert('failed to delete', 'success', 1000);
       }
     })
   }

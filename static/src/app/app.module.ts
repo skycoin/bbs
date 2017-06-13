@@ -16,7 +16,8 @@ import {
   UserlistComponent,
   UserComponent,
   ModalComponent,
-  ConnectionComponent
+  ConnectionComponent,
+  AlertComponent,
 } from "../components";
 
 @NgModule({
@@ -37,9 +38,10 @@ import {
     UserlistComponent,
     UserComponent,
     ModalComponent,
-    ConnectionComponent
+    ConnectionComponent,
+    AlertComponent,
   ],
-  entryComponents: [ModalComponent],
+  entryComponents: [ModalComponent, AlertComponent],
   providers: [CommonService, ApiService, UserService, ConnectionService],
   bootstrap: [AppComponent]
 })
