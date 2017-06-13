@@ -274,12 +274,25 @@ func (bs *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
 
 // Add adds a board to configuration.
 func (bs *BoardSaver) Add(bpk cipher.PubKey) {
+	bs.Lock()
+	defer bs.Unlock()
+
+	if _, has := bs.store[bpk]; has {
+		return
+	}
+
 	bc := BoardConfig{Master: false, PubKey: bpk.Hex()}
 	bs.c.Subscribe(bpk)
 
+	bs.store[bpk] = &BoardInfo{Config: bc}
+	bs.save()
+}
+
+// Remove removes a board from configuration.
+func (bs *BoardSaver) Remove(bpk cipher.PubKey) {
 	bs.Lock()
 	defer bs.Unlock()
-	bs.store[bpk] = &BoardInfo{Config: bc}
+	delete(bs.store, bpk)
 	bs.save()
 }
 
@@ -339,12 +352,4 @@ func (bs *BoardSaver) RemoveBoardDep(bpk, depBpk cipher.PubKey, deptRef skyobjec
 	}
 	bs.save()
 	return nil
-}
-
-// Remove removes a board from configuration.
-func (bs *BoardSaver) Remove(bpk cipher.PubKey) {
-	bs.Lock()
-	defer bs.Unlock()
-	delete(bs.store, bpk)
-	bs.save()
 }

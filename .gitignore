@@ -15,6 +15,7 @@ fabric.properties
 .glide
 .idea
 *.bak
+*.snap
 /tests/bbs_b/cli
 /tests/bbs_b/cxod
 /tests/bbs_b/main
