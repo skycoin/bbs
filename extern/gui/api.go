@@ -208,6 +208,20 @@ func (a *API) RemoveBoard(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *API) GetBoardPage(w http.ResponseWriter, r *http.Request) {
+	bpk, e := misc.GetPubKey(r.FormValue("board"))
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	bpv, e := a.g.GetBoardPage(bpk)
+	if e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, bpv, http.StatusOK)
+}
+
 func (a *API) GetThreads(w http.ResponseWriter, r *http.Request) {
 	bpkStr := r.FormValue("board")
 	if bpkStr == "" {

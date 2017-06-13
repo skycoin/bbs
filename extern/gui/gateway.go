@@ -188,6 +188,23 @@ func (g *Gateway) RemoveBoard(bpk cipher.PubKey) error {
 	return nil
 }
 
+type BoardPageView struct {
+	Board *typ.Board `json:"board"`
+	Threads []*typ.Thread `json:"threads"`
+}
+
+func (g *Gateway) GetBoardPage(bpk cipher.PubKey) (*BoardPageView, error) {
+	board, e := g.container.GetBoard(bpk)
+	if e != nil {
+		return nil, errors.Wrap(e, "unable to obtain board")
+	}
+	threads, e := g.container.GetThreads(bpk)
+	if e != nil {
+		return nil, errors.Wrap(e, "unable to obtain threads")
+	}
+	return &BoardPageView{board, threads}, nil
+}
+
 // GetThreads obtains threads of boards we are subscribed to.
 // Input `bpks` acts as a filter.
 // If no `bpks` are specified, threads of all boards will be obtained.
@@ -284,17 +301,21 @@ func (g *Gateway) RemoveThread(bpk cipher.PubKey, tRef skyobject.Reference) erro
 }
 
 type ThreadPageView struct {
+	Board *typ.Board `json:"board"`
 	Thread *typ.Thread `json:"thread"`
 	Posts  []*typ.Post `json:"posts"`
 }
 
 func (g *Gateway) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*ThreadPageView, error) {
-	_, has := g.boardSaver.Get(bpk)
-	if has == false {
-		return nil, errors.New("not subscribed to board")
+	b, e := g.container.GetBoard(bpk)
+	if e != nil {
+		return nil, errors.Wrap(e, "unable to obtain board")
 	}
 	thread, posts, e := g.container.GetThreadPage(bpk, tRef)
-	return &ThreadPageView{thread, posts}, e
+	if e != nil {
+		return nil, errors.Wrap(e, "unable to obtain threadpage")
+	}
+	return &ThreadPageView{b,thread, posts}, nil
 }
 
 // GetPosts obtains posts of specified board and thread.

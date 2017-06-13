@@ -53,6 +53,26 @@
 					"response": []
 				},
 				{
+					"name": "Get BoardPage",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/get_boardpage",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
 					"name": "Get Threads",
 					"request": {
 						"url": "http://127.0.0.1:7410/api/get_threads",
@@ -83,17 +103,17 @@
 							"formdata": [
 								{
 									"key": "board",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
 									"type": "text"
 								},
 								{
 									"key": "name",
-									"value": "Food",
+									"value": "Web User Interface",
 									"type": "text"
 								},
 								{
 									"key": "description",
-									"value": "All about stuff you can chew on.",
+									"value": "Regarding the user interface of Skycoin BBS.",
 									"type": "text"
 								}
 							]
@@ -245,7 +265,7 @@
 							"formdata": [
 								{
 									"key": "address",
-									"value": "[::1]:7452",
+									"value": "34.204.161.180:8210",
 									"description": "",
 									"type": "text"
 								}
@@ -266,7 +286,7 @@
 							"formdata": [
 								{
 									"key": "address",
-									"value": "[::1]:7452",
+									"value": "34.204.161.180:8210",
 									"description": "",
 									"type": "text"
 								}
@@ -372,7 +392,7 @@
 							"formdata": [
 								{
 									"key": "board",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
 									"type": "text"
 								}
 							]
@@ -392,7 +412,7 @@
 							"formdata": [
 								{
 									"key": "board",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
 									"type": "text"
 								}
 							]
