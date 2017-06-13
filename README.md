@@ -13,6 +13,8 @@ There are many configurations for running a Skycoin BBS Node.
 
 ### As a snap
 
+***Warning: There is currently a bug with Skycoin BBS packaged as a snap where files aren't saving.***
+
 Skycoin BBS can be installed on some Linux distributions as a [snap package](https://snapcraft.io/).
 ```bash
 # Install.
