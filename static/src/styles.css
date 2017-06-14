@@ -10,4 +10,6 @@ body {
 i {
   margin-left: 5px;
 }
-
+.not-found {
+  text-align: center;
+}

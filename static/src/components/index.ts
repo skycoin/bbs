@@ -8,5 +8,4 @@ export * from './connection/connection.component'
 
 
 // Modal
-export * from './modal/modal.component';
 export * from './alert/alert.component';

@@ -10,11 +10,12 @@
     <div class="card-block">
       <h5 class="card-title">{{item.title}}</h5>
       <a class="card-text">{{item.author}}</a>
-      <p class="card-text">{{item.body}}</p>
+      <p class="card-text" [innerHTML]="item.body | safeHtml"></p>
       <p class="card-text">{{item.created / 1000000 | date:'yMMMdjms'}}</p>
     </div>
   </div>
 </div>
+
 
 <ng-template #addPost let-c="close" let-d="dismiss">
   <div class="modal-header">
@@ -24,19 +25,22 @@
     </button>
   </div>
   <div class="modal-body">
+
     <form [formGroup]="postForm" novalidate>
       <div class="form-group">
-        <label for="seed">Title</label>
-        <input type="text" class="form-control" placeholder="title" id="title" formControlName="title">
+        <label for="title">Title</label>
+        <input type="text" class="form-control " placeholder="title" id="title" formControlName="title">
       </div>
+      <!--<div [froalaEditor]="editorOptions"></div>-->
       <div class="form-group">
         <label for="body">Content</label>
-        <textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>
+        <textarea [froalaEditor]="editorOptions" formControlName="body"></textarea>
+        <!--<textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>-->
       </div>
     </form>
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-secondary" (click)="c(false)">cancel</button>
-    <button type="button" class="btn btn-secondary" (click)="c(true)">submit</button>
+    <button type="button" class="btn btn-primary" (click)="c(true)">submit</button>
   </div>
 </ng-template>

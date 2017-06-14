@@ -21,9 +21,16 @@
       "styles": [
         "../node_modules/bootstrap/dist/css/bootstrap.min.css",
         "styles.css",
-        "../node_modules/font-awesome/css/font-awesome.css"
+        "../node_modules/font-awesome/css/font-awesome.css",
+        "../node_modules/froala-editor/css/froala_editor.pkgd.min.css"
       ],
-      "scripts": [],
+      "scripts": [
+        "../node_modules/jquery/dist/jquery.min.js",
+        "../node_modules/froala-editor/js/froala_editor.pkgd.min.js"
+      ],
+      "addons": [
+        "../node_modules/font-awesome/fonts/*.+(otf|eot|svg|ttf|woff|woff2)"
+      ],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",

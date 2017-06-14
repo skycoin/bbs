@@ -1,29 +1,32 @@
-import { Component, OnInit, ViewEncapsulation, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, Output, EventEmitter,HostBinding } from '@angular/core';
 import { ApiService, UserService, CommonService } from "../../providers";
 import { Board, UIOptions } from "../../providers/api/msg";
 import { Router, ActivatedRoute } from "@angular/router";
 import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
 import { FormControl, FormGroup } from '@angular/forms';
 import { AlertComponent } from "../alert/alert.component";
+import { slideInLeftAnimation } from "../../animations/router.animations";
 
 @Component({
     selector: 'boards-list',
     templateUrl: 'boards-list.component.html',
     styleUrls: ['boards.css'],
     encapsulation: ViewEncapsulation.None,
+    animations: [slideInLeftAnimation],
 })
 export class BoardsListComponent implements OnInit {
+    @HostBinding('@routeAnimation') routeAnimation = true;
+    @HostBinding('style.display') display = 'block';
+    @HostBinding('style.position') position = 'absolute';
     @Output() board: EventEmitter<string> = new EventEmitter();
-    boardsTitle: string = 'Boards List';
-    errorMessage: string;
-    isRoot: boolean = false;
-    boards: Array<Board> = [];
-    addForm = new FormGroup({
+    private isRoot: boolean = false;
+    private boards: Array<Board> = [];
+    private addForm = new FormGroup({
         name: new FormControl(),
         description: new FormControl(),
         seed: new FormControl()
     });
-    tmpBoard: Board = null;
+    private tmpBoard: Board = null;
     constructor(
         private api: ApiService,
         private user: UserService,
@@ -101,7 +104,7 @@ export class BoardsListComponent implements OnInit {
     openThreads(ev: Event, key, url: string) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
-        this.router.navigate(['/threads', { board: key, url: url }])
+        this.router.navigate(['/threads', { board: key }])
         // this.board.emit(this.boards[0].public_key);
     }
     private getDismissReason(reason: any) {
