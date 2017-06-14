@@ -294,6 +294,7 @@ func (bs *BoardSaver) Add(addr string, bpk cipher.PubKey) {
 func (bs *BoardSaver) Remove(bpk cipher.PubKey) {
 	bs.Lock()
 	defer bs.Unlock()
+	bs.c.Unsubscribe("", bpk)
 	delete(bs.store, bpk)
 	bs.save()
 }
