@@ -127,12 +127,11 @@ func (t *Tester) service() {
 }
 
 func (t *Tester) Close() {
-	for {
-		select {
-		case t.quit <- struct{}{}:
-			log.Println("[TESTER] Sent quit signal.")
-			return
-		}
+	timer := time.NewTimer(time.Duration(t.config.TestModeMaxInterval()) * time.Second)
+	select {
+	case t.quit <- struct{}{}:
+		log.Println("[TESTER] Sent quit signal.")
+	case <-timer.C:
 	}
 }
 
@@ -142,7 +141,8 @@ func (t *Tester) getInterval() time.Duration {
 		t.config.TestModeMaxInterval(),
 	)
 	if e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return time.Second
 	}
 	return time.Duration(i) * time.Second
 }
@@ -150,7 +150,8 @@ func (t *Tester) getInterval() time.Duration {
 func (t *Tester) getRandomThreadRef() skyobject.Reference {
 	i, e := misc.MakeIntBetween(0, len(t.tRefs)-1)
 	if e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return skyobject.Reference{}
 	}
 	return t.tRefs[i]
 }
@@ -167,18 +168,21 @@ func (t *Tester) getPostCount() int {
 func (t *Tester) getRandomPostRef(tRef skyobject.Reference) (skyobject.Reference, bool) {
 	posts, e := t.g.GetPosts(t.bpk, tRef)
 	if e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return skyobject.Reference{}, false
 	}
 	if len(posts) == 0 {
 		return skyobject.Reference{}, false
 	}
 	i, e := misc.MakeIntBetween(0, len(posts)-1)
 	if e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return skyobject.Reference{}, false
 	}
 	ref, e := misc.GetReference(posts[i].Ref)
 	if e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return skyobject.Reference{}, false
 	}
 	return ref, true
 }
@@ -186,10 +190,12 @@ func (t *Tester) getRandomPostRef(tRef skyobject.Reference) (skyobject.Reference
 func (t *Tester) actionChangeUser() {
 	i, e := misc.MakeIntBetween(0, len(t.users)-1)
 	if e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return
 	}
 	if e := t.g.SetCurrentUser(t.users[i].GetPK()); e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return
 	}
 }
 
@@ -208,10 +214,11 @@ func (t *Tester) actionNewPost() {
 	}
 	log.Printf("[TESTER] \t- Post: {Title: '%s', Body: '%s'}", post.Title, post.Body)
 	if e := post.Sign(user.GetPK(), user.GetSK()); e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return
 	}
 	if e := t.g.NewPost(t.bpk, tRef, post); e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 	}
 }
 
@@ -226,7 +233,7 @@ func (t *Tester) actionDeletePost() {
 		log.Printf("[TESTER] \t- Post: '%s'", pRef.String())
 	}
 	if e := t.g.RemovePost(t.bpk, tRef, pRef); e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 	}
 }
 
@@ -243,14 +250,17 @@ func (t *Tester) actionVotePost() {
 	vMode, e := misc.MakeIntBetween(-1, +1)
 	log.Printf("[TESTER] \t- Mode: %d", vMode)
 	if e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return
 	}
 	vote := &typ.Vote{Mode: int8(vMode)}
 	if e := vote.Sign(user.GetPK(), user.GetSK()); e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return
 	}
 	if e := t.g.VoteForPost(t.bpk, pRef, vote); e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return
 	}
 }
 
@@ -262,11 +272,13 @@ func (t *Tester) actionVoteThread() {
 	vMode, e := misc.MakeIntBetween(-1, +1)
 	log.Printf("[TESTER] \t- Mode: %d", vMode)
 	if e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return
 	}
 	vote := &typ.Vote{Mode: int8(vMode)}
 	if e := vote.Sign(user.GetPK(), user.GetSK()); e != nil {
-		log.Panic(e)
+		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
+		return
 	}
 	if e := t.g.VoteForThread(t.bpk, tRef, vote); e != nil {
 		log.Printf("[TESTER] !!! Error: %s !!!", e.Error())

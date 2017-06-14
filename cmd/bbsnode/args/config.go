@@ -35,11 +35,10 @@ type Config struct {
 	rpcPort    int    // RPC server port (master node only).
 	rpcRemAdr  string // RPC remote address (master node only).
 
-	cxoUseInternal bool   // Whether to use internal CXO Daemon.
-	cxoPort        int    // Port of CXO Daemon.
-	cxoRPCPort     int    // Port of CXO Daemon's RPC.
-	cxoMemoryMode  bool   // Whether to use in-memory database for CXO.
-	cxoDir         string // Directory to store cxo databases.
+	cxoPort       int    // Port of CXO Daemon.
+	cxoRPCPort    int    // Port of CXO Daemon's RPC.
+	cxoMemoryMode bool   // Whether to use in-memory database for CXO.
+	cxoDir        string // Directory to store cxo databases.
 
 	webGUIEnable      bool   // Whether to enable web GUI.
 	webGUIPort        int    // Port of web GUI.
@@ -64,11 +63,10 @@ func NewConfig() *Config {
 		rpcPort:    6421,
 		rpcRemAdr:  "",
 
-		cxoUseInternal: true,
-		cxoPort:        8998,
-		cxoRPCPort:     8997,
-		cxoMemoryMode:  false,
-		cxoDir:         "",
+		cxoPort:       8998,
+		cxoRPCPort:    8997,
+		cxoMemoryMode: false,
+		cxoDir:        "",
 
 		webGUIEnable:      true,
 		webGUIPort:        7410,
@@ -138,10 +136,6 @@ func (c *Config) Parse() *Config {
 	/*
 		<<< CXO FLAGS >>>
 	*/
-
-	flag.BoolVar(&c.cxoUseInternal,
-		"cxo-use-internal", c.cxoUseInternal,
-		"whether to use internal cxo daemon")
 
 	flag.IntVar(&c.cxoPort,
 		"cxo-port", c.cxoPort,
@@ -259,11 +253,10 @@ func (c *Config) ConfigDir() string { return c.configDir }
 func (c *Config) RPCPort() int      { return c.rpcPort }
 func (c *Config) RPCRemAdr() string { return c.rpcRemAdr }
 
-func (c *Config) CXOUseInternal() bool { return c.cxoUseInternal }
-func (c *Config) CXOPort() int         { return c.cxoPort }
-func (c *Config) CXORPCPort() int      { return c.cxoRPCPort }
-func (c *Config) CXOUseMemory() bool   { return c.cxoMemoryMode }
-func (c *Config) CXODir() string       { return c.cxoDir }
+func (c *Config) CXOPort() int       { return c.cxoPort }
+func (c *Config) CXORPCPort() int    { return c.cxoRPCPort }
+func (c *Config) CXOUseMemory() bool { return c.cxoMemoryMode }
+func (c *Config) CXODir() string     { return c.cxoDir }
 
 func (c *Config) WebGUIEnable() bool      { return c.webGUIEnable }
 func (c *Config) WebGUIPort() int         { return c.webGUIPort }

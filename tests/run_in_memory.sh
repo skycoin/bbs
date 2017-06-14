@@ -13,7 +13,6 @@ go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
     -master=true \
     -save-config=false \
     -rpc-port=$PORT_BBS_RPC \
-    -cxo-use-internal=true \
     -cxo-port=$PORT_CXO_SERVER \
     -cxo-rpc-port=$PORT_CXO_RPC \
     -cxo-memory-mode=true \

@@ -55,7 +55,6 @@ RunNode() {
         --save-config=false \
         --rpc-port=$PORT_BBS_RPC \
         --rpc-remote-address=127.0.0.1:$PORT_BBS_RPC \
-        --cxo-use-internal=true \
         --cxo-port=$PORT_CXO_SERVER \
         --cxo-rpc-port=$PORT_CXO_RPC \
         --cxo-memory-mode=true \
@@ -63,20 +62,6 @@ RunNode() {
         --web-gui-open-browser=$OPEN_GUI \
         --web-gui-dir=$GOPATH/src/github.com/skycoin/bbs/static/dist \
         &
-}
-
-# Connects a node to another.
-ConnectNodes() {
-    if [[ $# -ne 2 ]] ; then
-        echo "2 arguments required"
-        exit 1
-    fi
-    pv "CONNECTING NODE SERVED AT PORT ${1}, TO NODE VIA CXO SERVER PORT ${2}..."
-    curl \
-        -X POST \
-        -F "address=[::1]:${2}" \
-        -sS "http://127.0.0.1:${1}/api/connections/new" | jq
-#    sleep 1
 }
 
 # Injects a test board on a specified node with seed.
@@ -98,14 +83,15 @@ InjectFilledBoard() {
 
 # Subscribes a node to a board.
 SubscribeToBoard() {
-    if [[ $# -ne 2 ]] ; then
-        echo "2 arguments required"
+    if [[ $# -ne 3 ]] ; then
+        echo "3 arguments required"
         exit 1
     fi
-    pv "SUBSCRIBING TO BOARD ${2} ON NODE ${1}..."
+    pv "SUBSCRIBING TO BOARD ${3} ON NODE ${1}..."
     curl \
         -X POST \
-        -F "board=${2}" \
+        -F "address=127.0.0.1:${2}" \
+        -F "board=${3}" \
         -sS "http://127.0.0.1:${1}/api/subscribe" | jq
     sleep 1
 }
@@ -121,16 +107,6 @@ RunNode 7450 7451 7452 7453 false
 pv2 "SLEEPING 10s"
 sleep 10
 
-# Connect first node to all other nodes.
-# NOTE:
-#  * first port provided is of json api of first node.
-#  * second port is of cxo rpc of second node.
-pv2 "CONNECTING FIRST NODE TO ALL OTHERS"
-ConnectNodes 7410 7422
-ConnectNodes 7410 7432
-ConnectNodes 7410 7442
-ConnectNodes 7410 7452
-
 # Make some filled boards on the nodes.
 pv2 "INJECTING FILLED BOARDS ON THE NODES"
 InjectFilledBoard 7410 a 5 10 20
@@ -141,10 +117,10 @@ InjectFilledBoard 7450 e 5 10 20
 
 # Subscribe first node to all boards of other nodes.
 pv2 "SUBSCRIBING FIRST NODE TO OTHER BOARDS"
-SubscribeToBoard 7410 $(GenPK b)
-SubscribeToBoard 7410 $(GenPK c)
-SubscribeToBoard 7410 $(GenPK d)
-SubscribeToBoard 7410 $(GenPK e)
+SubscribeToBoard 7410 7422 $(GenPK b)
+SubscribeToBoard 7410 7432 $(GenPK c)
+SubscribeToBoard 7410 7442 $(GenPK d)
+SubscribeToBoard 7410 7452 $(GenPK e)
 
 pv "ALL DONE!"
 wait

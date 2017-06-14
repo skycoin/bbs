@@ -23,8 +23,9 @@ type BoardSaverFile struct {
 
 // BoardInfo represents the board's information.
 type BoardInfo struct {
-	Synced bool        `json:"synced"`
-	Config BoardConfig `json:"config"`
+	Accepted      bool        `json:"accepted"`
+	RejectedCount int         `json:"rejected_count"`
+	Config        BoardConfig `json:"config"`
 }
 
 // BoardSaver manages boards.
@@ -85,7 +86,7 @@ func (bs *BoardSaver) load() error {
 				continue
 			}
 			bs.store[bpk] = &BoardInfo{Config: *bc}
-			bs.c.Subscribe(bpk)
+			bs.c.Subscribe(bc.Address, bpk)
 			log.Println("\t\t loaded in memory")
 		}
 	}
@@ -125,16 +126,17 @@ func (bs *BoardSaver) service() {
 				log.Printf("[BOARDSAVER] Checking dependencies for board '%s'", msg.PubKey().Hex())
 				bs.checkSingleDep(msg.PubKey())
 				bs.Unlock()
-			case cxo.FeedAdded:
+			case cxo.SubAccepted:
 				bs.Lock()
 				if bi, got := bs.store[msg.PubKey()]; got {
-					bi.Synced = true
+					bi.Accepted = true
 				}
 				bs.Unlock()
-			case cxo.FeedDeleted:
+			case cxo.SubRejected:
 				bs.Lock()
 				if bi, got := bs.store[msg.PubKey()]; got {
-					bi.Synced = false
+					bi.Accepted = false
+					bi.RejectedCount += 1
 				}
 				bs.Unlock()
 			}
@@ -162,16 +164,16 @@ func (bs *BoardSaver) checkURLs() {
 // Helper function. Checks whether boards are synced.
 func (bs *BoardSaver) checkSynced() {
 	for _, bi := range bs.store {
-		bi.Synced = false
+		bi.Accepted = false
 	}
 	feeds := bs.c.Feeds()
 	for _, f := range feeds {
 		bi, has := bs.store[f]
 		if has {
-			bi.Synced = true
+			bi.Accepted = true
 		}
 	}
-	log.Printf("[BOARDSAVER] Synced boards: (%d/%d)\n", len(feeds), len(bs.store))
+	log.Printf("[BOARDSAVER] Accepted boards: (%d/%d)\n", len(feeds), len(bs.store))
 }
 
 // Helper function. Checks whether single dependency is valid.
@@ -214,7 +216,7 @@ func (bs *BoardSaver) checkDeps() {
 				continue
 			}
 			// Subscribe internally.
-			bs.c.Subscribe(fromBpk)
+			bs.c.Subscribe("", fromBpk)
 
 			for _, t := range dep.Threads {
 				tRef, e := misc.GetReference(t)
@@ -273,7 +275,7 @@ func (bs *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
 }
 
 // Add adds a board to configuration.
-func (bs *BoardSaver) Add(bpk cipher.PubKey) {
+func (bs *BoardSaver) Add(addr string, bpk cipher.PubKey) {
 	bs.Lock()
 	defer bs.Unlock()
 
@@ -281,8 +283,8 @@ func (bs *BoardSaver) Add(bpk cipher.PubKey) {
 		return
 	}
 
-	bc := BoardConfig{Master: false, PubKey: bpk.Hex()}
-	bs.c.Subscribe(bpk)
+	bc := BoardConfig{Master: false, Address: addr, PubKey: bpk.Hex()}
+	bs.c.Subscribe(addr, bpk)
 
 	bs.store[bpk] = &BoardInfo{Config: bc}
 	bs.save()
@@ -306,7 +308,7 @@ func (bs *BoardSaver) MasterAdd(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	if e != nil {
 		return e
 	}
-	bs.c.Subscribe(bpk)
+	bs.c.Subscribe("", bpk)
 
 	bs.Lock()
 	defer bs.Unlock()

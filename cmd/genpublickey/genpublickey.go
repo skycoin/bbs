@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/skycoin/skycoin/src/cipher"
 	"os"
-	"fmt"
 )
 
 func main() {

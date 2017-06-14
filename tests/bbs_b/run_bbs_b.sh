@@ -6,36 +6,13 @@ b_cxodir=bbs_b_server
 b_bbsrpc=6481
 b_bbsgui=6480
 
-# Build executables.
-
-echo "[ BUILDING EXECUTABLES ]"
-echo "> cxod ..."
-go build $GOPATH/src/github.com/skycoin/cxo/cmd/cxod/cxod.go
-echo "> cli ..."
-go build $GOPATH/src/github.com/skycoin/cxo/cmd/cli/cli.go
-echo "> bbsnode ..."
-go build $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go
-
 # Start BBS Node 'B'.
 
 echo "[ STARTING BBS NODE 'B' ]"
-echo "> CXO DAEMON ..."
-./cxod \
-    --address=[::]:$b_cxod \
-    --rpc-address=[::]:$b_cxorpc \
-    --mem-db=true \
-    --data-dir=$b_cxodir \
-    &
-sleep 5
-echo "> CONNECTING TO DAEMON A ..."
-./cli \
-    --a=[::]:$b_cxorpc \
-    --e='connect [::]:8998'
-echo "> BBS SERVER ..."
-./bbsnode \
+
+go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
     --master=true \
     --save-config=false \
-    --cxo-use-internal=false \
     --cxo-port=$b_cxod \
     --cxo-rpc-port=$b_cxorpc \
     --cxo-memory-mode=true \
@@ -45,9 +22,4 @@ echo "> BBS SERVER ..."
     --web-gui-port=$b_bbsgui \
     --web-gui-open-browser=false
 
-# Cleanup.
-
-wait
-echo "[ CLEANING UP ]"
-rm cli cxod bbsnode
 echo "Goodbye!"

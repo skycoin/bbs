@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 PORT_A=6490
+PORT_A_CXO=8998
 PORT_B=6480
 
 # Run commands.
@@ -22,6 +23,7 @@ echo "> ADDING A THREAD TO THE BOARD FROM BBS NODE 'B' ..."
 
 curl \
     -X POST \
+    -F "address=127.0.0.1:${PORT_A_CXO}" \
     -F "board=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
 	-sS http://127.0.0.1:$PORT_B/api/subscribe \
     | jq

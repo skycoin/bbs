@@ -5,7 +5,6 @@ Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) 
 
 There are many configurations for running a Skycoin BBS Node.
 * By default, a node cannot host/create new boards. But a node can be set as master to enable such an ability.
-* A node can be set to have it's own internal CXO Daemon, or use and external CXO Daemon that is running as a separate process.
 * A node can also be configured to run purely in memory (RAM) so nothing is stored on disk.
 * Additionally, you can run a node in test mode where it simulates the actions of users. This is useful for developers or those setting up master nodes.
 
@@ -41,8 +40,6 @@ By default (aka running `bbsnode` without specifying flags), a BBS Node will hav
 * **Not in master mode -** This means that the node does not have the ability to create and host boards. However, it can subscribe to boards of other nodes it is connected to and interact with those.
 
 * **Saves configuration and cxo files -** Configuration files for boards, users and message queue will be stored in the `$HOME/.skybbs` directory. CXO files will be in `$HOME/.skybbs/cxo`.
-
-* **Runs an internal cxo daemon -** The cxo daemon will run as a goroutine within the executable.
 
 * **Uses the following ports -** The CXO Daemon will listen on `8998` and `8997` (RPC). The BBS Node will host it's web interface and JSON API on `7410`.
 
@@ -88,19 +85,6 @@ bbsnode \
 The `save-config` flag determines whether or not to save the Skycoin BBS configuration files for boards, users and messages. Here, it is set as false.
 
 When the `cxo-memory-mode` flag is set to true, instead of storing objects and configurations to file, the cxo client and server will store everything in memory. When the application exits, everything stored locally will be deleted.
-
-#### Run a node that uses an external CXO Daemon
-
-Multiple applications can share the same CXO Daemon. Use this if you have other applications that reply on CXO.
-
-```bash
-bbsnode \
-    -cxo-use-internal=false \
-    -cxo-port=2345 \
-    -cxo-rpc-port=3456
-```
-
-The flag `cxo-use-internal` determines whether or not to use an internal CXO Daemon. If set false, it attempts to connect to an external CXO Daemon that is hosted on port `cxo-port`, and has an RPC interface hosted on port `cxo-rpc-port`.
 
 #### Run a node in test mode
 

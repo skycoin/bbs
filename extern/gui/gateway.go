@@ -21,7 +21,6 @@ type Gateway struct {
 	container  *cxo.Container
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
-	connsSaver *store.ConnectionSaver
 	queueSaver *msg.QueueSaver
 }
 
@@ -31,7 +30,6 @@ func NewGateway(
 	container *cxo.Container,
 	boardSaver *store.BoardSaver,
 	userSaver *store.UserSaver,
-	connsSaver *store.ConnectionSaver,
 	queueSaver *msg.QueueSaver,
 ) *Gateway {
 	return &Gateway{
@@ -39,7 +37,6 @@ func NewGateway(
 		container:  container,
 		boardSaver: boardSaver,
 		userSaver:  userSaver,
-		connsSaver: connsSaver,
 		queueSaver: queueSaver,
 	}
 }
@@ -62,16 +59,8 @@ func (g *Gateway) GetStats() *StatsView {
 	<<< FOR CONNECTIONS >>>
 */
 
-func (g *Gateway) GetConnections() ([]string, error) {
-	return g.connsSaver.List(), nil
-}
-
-func (g *Gateway) AddConnection(address string) error {
-	return g.connsSaver.Add(address)
-}
-
-func (g *Gateway) RemoveConnection(address string) error {
-	return g.connsSaver.Remove(address)
+func (g *Gateway) GetConnections() []string {
+	return g.container.GetConnections()
 }
 
 /*
@@ -89,8 +78,8 @@ func (g *Gateway) GetSubscription(bpk cipher.PubKey) (store.BoardInfo, bool) {
 }
 
 // Subscribe subscribes to a board.
-func (g *Gateway) Subscribe(bpk cipher.PubKey) {
-	g.boardSaver.Add(bpk)
+func (g *Gateway) Subscribe(addr string, bpk cipher.PubKey) {
+	g.boardSaver.Add(addr, bpk)
 }
 
 // Unsubscribe unsubscribes from a board.
@@ -189,7 +178,7 @@ func (g *Gateway) RemoveBoard(bpk cipher.PubKey) error {
 }
 
 type BoardPageView struct {
-	Board *typ.Board `json:"board"`
+	Board   *typ.Board    `json:"board"`
 	Threads []*typ.Thread `json:"threads"`
 }
 
@@ -301,7 +290,7 @@ func (g *Gateway) RemoveThread(bpk cipher.PubKey, tRef skyobject.Reference) erro
 }
 
 type ThreadPageView struct {
-	Board *typ.Board `json:"board"`
+	Board  *typ.Board  `json:"board"`
 	Thread *typ.Thread `json:"thread"`
 	Posts  []*typ.Post `json:"posts"`
 }
@@ -315,7 +304,7 @@ func (g *Gateway) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*T
 	if e != nil {
 		return nil, errors.Wrap(e, "unable to obtain threadpage")
 	}
-	return &ThreadPageView{b,thread, posts}, nil
+	return &ThreadPageView{b, thread, posts}, nil
 }
 
 // GetPosts obtains posts of specified board and thread.

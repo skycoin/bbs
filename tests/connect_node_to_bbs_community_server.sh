@@ -9,15 +9,10 @@ fi
 
 PORT=$1
 
-echo "> CONNECTING TO SERVER..."
-curl \
-    -X POST \
-    -F "address=34.204.161.180:8210" \
-    -sS "http://127.0.0.1:${PORT}/api/connections/new" | jq
-
 echo "> SUBSCRIBING TO BOARD..."
 curl \
     -X POST \
+    -F "address=34.204.161.180:8210" \
     -F "board=03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742" \
     -sS "http://127.0.0.1:${PORT}/api/subscribe" | jq
 

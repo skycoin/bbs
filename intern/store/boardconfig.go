@@ -16,10 +16,11 @@ type BoardDep struct {
 
 // BoardConfig represents the config of a board.
 type BoardConfig struct {
-	Master bool        `json:"master"`
-	PubKey string      `json:"public_key"`
-	SecKey string      `json:"secret_key,omitempty"`
-	Deps   []*BoardDep `json:"dependencies,omitempty"`
+	Master  bool        `json:"master"`
+	Address string      `json:"address,omitempty"`
+	PubKey  string      `json:"public_key"`
+	SecKey  string      `json:"secret_key,omitempty"`
+	Deps    []*BoardDep `json:"dependencies,omitempty"`
 }
 
 // Check checks the validity of the BoardConfig.
@@ -38,6 +39,10 @@ func (bc *BoardConfig) Check() (cipher.PubKey, error) {
 		}
 	}
 	return pk, nil
+}
+
+func (bc *BoardConfig) GetAddress() string {
+	return bc.Address
 }
 
 func (bc *BoardConfig) GetPK() cipher.PubKey {

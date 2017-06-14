@@ -253,48 +253,6 @@
 						"description": ""
 					},
 					"response": []
-				},
-				{
-					"name": "New Connection",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/connections/new",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "address",
-									"value": "34.204.161.180:8210",
-									"description": "",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Remove Connection",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/connections/remove",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "address",
-									"value": "34.204.161.180:8210",
-									"description": "",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
 				}
 			]
 		},
@@ -390,6 +348,12 @@
 						"body": {
 							"mode": "formdata",
 							"formdata": [
+								{
+									"key": "address",
+									"value": "127.0.0.1:7412",
+									"description": "",
+									"type": "text"
+								},
 								{
 									"key": "board",
 									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
