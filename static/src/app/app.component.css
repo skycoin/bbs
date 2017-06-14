@@ -4,6 +4,7 @@
 
 .nav-node {
   color: blue !important;
+  padding: 0;
 }
 
 .nav-name span {
@@ -16,4 +17,22 @@
   width: 50%;
   left: 25%;
   right: 25%;
+}
+
+.top-btn {
+  position: fixed;
+  z-index: 99;
+  bottom: 2%;
+  right: 2%;
+  cursor: pointer;
+}
+
+.top-btn .top {
+  width: 0;
+  height: 0;
+  border-left: .5em solid transparent;
+  border-right: .5em solid transparent;
+  border-bottom: 1em solid #fff;
+  margin: 0 auto;
+  border-bottom: 1em solid #fff;
 }

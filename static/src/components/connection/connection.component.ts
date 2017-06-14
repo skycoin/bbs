@@ -1,14 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostBinding, ViewEncapsulation } from '@angular/core';
 import { ConnectionService, CommonService } from "../../providers";
 import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
-
+import { slideInLeftAnimation } from "../../animations/router.animations";
+import { AlertComponent } from "../../components";
 @Component({
   selector: 'app-connection',
   templateUrl: './connection.component.html',
-  styleUrls: ['./connection.component.css']
+  styleUrls: ['./connection.component.css'],
+  encapsulation: ViewEncapsulation.None,
+  animations: [slideInLeftAnimation]
 })
 
 export class ConnectionComponent implements OnInit {
+  @HostBinding('@routeAnimation') routeAnimation = true;
+  @HostBinding('style.display') display = 'block';
   list: Array<string> = [];
   addUrl: string = '';
   constructor(
@@ -44,12 +49,19 @@ export class ConnectionComponent implements OnInit {
     }, err => { });
   }
   remove(address: string) {
-    let data = new FormData();
-    data.append('address', address);
-    this.conn.removeConnection(data).subscribe(isOk => {
-      if (isOk) {
-        this.getAllConnections();
-        this.common.showAlert('The connection has been deleted', 'success', 3000);
+    const modalRef = this.modal.open(AlertComponent);
+    modalRef.componentInstance.title = 'Delete Connection';
+    modalRef.componentInstance.body = "Do you delete the connection?"
+    modalRef.result.then(result => {
+      if (result) {
+        let data = new FormData();
+        data.append('address', address);
+        this.conn.removeConnection(data).subscribe(isOk => {
+          if (isOk) {
+            this.getAllConnections();
+            this.common.showAlert('The connection has been deleted', 'success', 3000);
+          }
+        })
       }
     })
   }

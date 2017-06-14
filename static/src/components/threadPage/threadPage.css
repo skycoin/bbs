@@ -10,5 +10,7 @@ threadPage {
   text-align: right;
 }
 .post {
+  /*max-width: 50%;*/
   margin: 10px 0;
+  background-color: #e5ecfd;
 }

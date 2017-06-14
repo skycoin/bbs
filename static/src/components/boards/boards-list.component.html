@@ -21,13 +21,13 @@
           <td class="title" title="{{board?.name}}">{{board?.name}}</td>
           <td class="description" title="{{board?.description}}">{{board?.description}}</td>
           <td class="created">{{board?.created / 1000000 | date: 'short'}}</td>
-          <td class="subscribe" title="Subscribe/Unsubscribe" (click)="subscribe($event,board.public_key,i)"><a href="javascript:void(0);"><i class="fa" [class.fa-star-o]="!board.ui_options?.subscribe" [class.fa-star]="board.ui_options?.subscribe"></i></a></td>
+          <td class="subscribe" title="{{board.ui_options?.subscribe ? 'Subscribe':'Unsubscribe'}}" (click)="subscribe($event,board.public_key,i)"><a href="javascript:void(0);"><i class="fa" [class.fa-star-o]="!board.ui_options?.subscribe" [class.fa-star]="board.ui_options?.subscribe"></i></a></td>
           <td class="subscribe" title="Board Info" (click)="openInfo($event,board,info)"><a href="javascript:void(0);"><i class="fa fa-info-circle"></i></a></td>
         </tr>
       </tbody>
     </table>
     <h3 class="boardNot" *ngIf="boards?.length == 0">Not Found Boards</h3>
-    
+
   </div>
 </div>
 <ng-template #add let-c="close" let-d="dismiss">

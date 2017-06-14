@@ -11,7 +11,7 @@ import {
 } from "../components";
 
 const routes: Routes = [
-  { path: '', component: BoardsListComponent },
+  { path: '', component: BoardsListComponent, pathMatch: 'full' },
   {
     path: 'threads', children: [
       { path: '', component: ThreadsComponent },

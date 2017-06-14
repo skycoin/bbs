@@ -13,7 +13,9 @@
 }
 .user-list table .edit,
 .user-list table .del {
+  width: 20px;
   cursor: pointer;
+  text-align: center;
 }
 .user-list table .edit:hover,
 .user-list table .del:hover {

@@ -7,6 +7,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AppComponent } from './app.component';
 import { ApiService, UserService, CommonService, ConnectionService } from "../providers";
 import { AppRouterRoutingModule } from "../router/app-router-routing.module";
+import { FroalaEditorModule, FroalaViewModule } from 'angular2-froala-wysiwyg';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import {
   BoardsListComponent,
@@ -15,19 +17,22 @@ import {
   AddComponent,
   UserlistComponent,
   UserComponent,
-  ModalComponent,
   ConnectionComponent,
   AlertComponent,
 } from "../components";
+import { SafeHTMLPipe } from '../pipes';
 
 @NgModule({
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     HttpModule,
     FormsModule,
     ReactiveFormsModule,
     AppRouterRoutingModule,
     NgbModule.forRoot(),
+    FroalaEditorModule.forRoot(),
+    FroalaViewModule.forRoot()
   ],
   declarations: [
     AppComponent,
@@ -37,11 +42,11 @@ import {
     AddComponent,
     UserlistComponent,
     UserComponent,
-    ModalComponent,
     ConnectionComponent,
     AlertComponent,
+    SafeHTMLPipe,
   ],
-  entryComponents: [ModalComponent, AlertComponent],
+  entryComponents: [AlertComponent],
   providers: [CommonService, ApiService, UserService, ConnectionService],
   bootstrap: [AppComponent]
 })

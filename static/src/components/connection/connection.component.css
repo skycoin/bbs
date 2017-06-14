@@ -9,7 +9,9 @@
   text-align: center;
   cursor: pointer;
 }
-
+table>thead>tr {
+  background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);
+}
 .connection .del:hover {
   color: red;
 }

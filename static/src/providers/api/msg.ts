@@ -11,6 +11,11 @@ export interface ThreadPage {
   posts?: Array<Post>;
 }
 
+export interface BoardPage {
+  board?: Board;
+  threads?: Array<Thread>;
+}
+
 export interface Stats {
   node_is_master: boolean;
 }
