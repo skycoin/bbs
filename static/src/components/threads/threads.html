@@ -21,13 +21,13 @@
       <tbody>
         <tr *ngFor="let thread of threads">
           <td class="name" title="{{thread.name}}">{{thread.name}}</td>
-          <td class="board" title="{{url}}"><a href="javascript:void(0);" (click)="open(thread?.master_board,thread?.ref)">{{url}}</a></td>
+          <td class="board" title="{{url}}"><a href="javascript:void(0);" (click)="open(thread?.master_board,thread?.ref)">{{board.url}}</a></td>
           <td class="description" title="{{thread.description}}">{{thread.description}}</td>
-          <td class="transfer" (click)="openTransfer(tansfer,thread.ref)"><i title="Import Thread" class="fa fa-exchange"></i></td>
+          <td class="transfer" (click)="openImport(importBox,thread.ref)"><i title="Import Thread" class="fa fa-exchange"></i></td>
         </tr>
       </tbody>
     </table>
-    <h3 class="boardNot" *ngIf="threads?.length == 0">Not Found Threads</h3>
+    <h3 class="not-found" *ngIf="threads?.length == 0">Not Found Threads</h3>
   </div>
 </div>
 
@@ -56,7 +56,7 @@
   </div>
 </ng-template>
 
-<ng-template #tansfer let-c="close" let-d="dismiss">
+<ng-template #importBox let-c="close" let-d="dismiss">
   <div class="modal-header">
     <h4 class="modal-title">Import Thread</h4>
     <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
@@ -65,9 +65,9 @@
   </div>
   <div class="modal-body">
     <div class="form-group">
-      <label for="toBoard">Choose to move</label>
-      <select class="form-control" id="toBoard" [(ngModel)]="transferBoardKey" placeholder="Choose to move">
-        <option *ngFor="let board of transferBoards" value="{{board.public_key}}">{{board.name}}</option>
+      <label for="toBoard">Choose to import</label>
+      <select class="form-control" id="toBoard" [(ngModel)]="importBoardKey" placeholder="Choose to move">
+        <option *ngFor="let board of importBoards" value="{{board.public_key}}">{{board.name}}</option>
     </select>
       <!--<input type="text" class="form-control" placeholder="toBoard" id="toBoard">-->
     </div>

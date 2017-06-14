@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+
 
 @Component({
   selector: 'app-alert',
@@ -7,7 +9,9 @@ import { Component, OnInit } from '@angular/core';
 })
 
 export class AlertComponent implements OnInit {
-  constructor() { }
+  title: string = '';
+  body: string = '';
+  constructor(public activeModal: NgbActiveModal) { }
 
   ngOnInit() { }
 }

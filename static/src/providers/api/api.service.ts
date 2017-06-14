@@ -25,53 +25,47 @@ export class ApiService {
     return this.common.handlePost(this.base_url + 'unsubscribe', data);
   }
   getStats() {
-    return this.http.get(this.base_url + 'get_stats').map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+    return this.common.handleGet(this.base_url + 'get_stats');
   }
 
-  getThreads(key: string) {
-    let data = new FormData();
-    data.append('board', key);
-    return this.http.post(this.base_url + 'get_threads', data).map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+  getThreads(data:FormData) {
+    return this.common.handlePost(this.base_url + 'get_threads', data);
   }
 
   getBoards() {
-    return this.http.get(this.base_url + 'get_boards').map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+    return this.common.handleGet(this.base_url + 'get_boards');
   }
 
-  getPosts(masterKey: string, sub: string) {
-    let data = new FormData();
-    data.append('board', masterKey);
-    data.append('thread', sub);
-    return this.http.post(this.base_url + 'get_posts', data).map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+  getPosts(data:FormData) {
+    return this.common.handlePost(this.base_url + 'get_posts', data);
 
   }
 
-
-  getThreadpage(masterKey: string, sub: string) {
-    let data = new FormData();
-    data.append('board', masterKey);
-    data.append('thread', sub);
-    return this.http.post(this.base_url + 'get_threadpage', data).map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+  getBoardPage(data: FormData) {
+    return this.common.handlePost(this.base_url + 'get_boardpage', data);
+  }
+  getThreadpage(data:FormData) {
+    return this.common.handlePost(this.base_url + 'get_threadpage', data);
 
   }
 
   addBoard(data: FormData) {
-    return this.http.post(this.base_url + 'new_board', data).map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+    return this.common.handlePost(this.base_url + 'new_board', data);
 
   }
 
   addThread(data: FormData) {
-    return this.http.post(this.base_url + 'new_thread', data).map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+    return this.common.handlePost(this.base_url + 'new_thread', data);
 
   }
 
   addPost(data: FormData) {
-    return this.http.post(this.base_url + 'new_post', data).map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+    return this.common.handlePost(this.base_url + 'new_post', data);
 
   }
 
   importThread(data: FormData) {
-    return this.http.post(this.base_url + 'import_thread', data).map((res: Response) => res.json()).catch(err => this.common.handleError(err));
+    return this.common.handlePost(this.base_url + 'import_thread', data);
 
   }
 }

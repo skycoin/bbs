@@ -1,12 +1,13 @@
 <div class="modal-header">
-  <h4 class="modal-title">Hi there!</h4>
-  <button type="button" class="close" aria-label="Close">
+  <h4 class="modal-title">{{title}}</h4>
+  <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss(false)">
         <span aria-hidden="true">&times;</span>
       </button>
 </div>
 <div class="modal-body">
-  <p>Hello, Alert!</p>
+  <p>{{body}}</p>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-secondary">Close</button>
+  <button type="button" class="btn btn-secondary" (click)="activeModal.close(false)">Cancel</button>
+  <button type="button" class="btn btn-secondary" (click)="activeModal.close(true)">Submit</button>
 </div>

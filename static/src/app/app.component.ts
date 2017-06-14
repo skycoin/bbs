@@ -2,6 +2,9 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { ApiService } from "../providers";
 import { BoardsListComponent, ThreadsComponent, ThreadPageComponent } from "../components";
 import { UserService, User, CommonService } from "../providers";
+import { Router, NavigationStart } from "@angular/router";
+import 'rxjs/add/operator/filter';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -14,7 +17,11 @@ export class AppComponent implements OnInit {
   title = 'app';
   name: string = '';
   isMasterNode: boolean = false;
-  constructor(private api: ApiService, private user: UserService, public common: CommonService) {
+  constructor(
+    private api: ApiService,
+    private user: UserService,
+    private router: Router,
+    public common: CommonService) {
   }
   ngOnInit() {
     this.user.getCurrent().subscribe(user => {
@@ -23,6 +30,9 @@ export class AppComponent implements OnInit {
     this.api.getStats().subscribe(res => {
       this.isMasterNode = res.node_is_master;
     });
+    this.router.events.filter(ev => ev instanceof NavigationStart).subscribe(ev => {
+      this.common.topBtn = false;
+    })
   }
   test() {
     console.log('test');
