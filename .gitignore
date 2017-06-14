@@ -24,3 +24,6 @@ fabric.properties
 /tests/bbs_a/main
 .DS_Store
 node_modules
+/stage/
+/prime/
+/parts/

@@ -3,6 +3,8 @@ Skycoin BBS is a next generation decentralised social network (BBS stands for [B
 
 Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) (CXO) to store and synchronise data between nodes.  
 
+[![Skycoin BBS Alpha Showcase - YouTube](https://img.youtube.com/vi/MBceYIZltaw/0.jpg)](https://youtu.be/MBceYIZltaw)
+
 There are many configurations for running a Skycoin BBS Node.
 * By default, a node cannot host/create new boards. But a node can be set as master to enable such an ability.
 * A node can also be configured to run purely in memory (RAM) so nothing is stored on disk.
