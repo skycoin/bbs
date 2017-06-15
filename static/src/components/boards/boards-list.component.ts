@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, Output, EventEmitter,HostBinding } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, HostBinding } from '@angular/core';
 import { ApiService, UserService, CommonService } from "../../providers";
 import { Board, UIOptions } from "../../providers/api/msg";
 import { Router, ActivatedRoute } from "@angular/router";
@@ -50,9 +50,9 @@ export class BoardsListComponent implements OnInit {
                 let data = new FormData();
                 data.append('board', el.public_key);
                 this.api.getSubscription(data).subscribe(res => {
-                    if (res.config && res.config.secret_key) {
-                        el.ui_options = { subscribe: true };
-                    }
+                    // if (res.config && res.config.secret_key) {
+                    el.ui_options = { subscribe: true };
+                    // }
                 })
             });
         });
@@ -84,6 +84,8 @@ export class BoardsListComponent implements OnInit {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
         let data = new FormData()
+        // TODO add address
+        data.append('address', '127.0.0.1:7412');
         data.append('board', key)
         if (!this.boards[index].ui_options.subscribe) {
             this.api.subscribe(data).subscribe(isOk => {

@@ -2,16 +2,15 @@
   float: right;
 }
 .connection .index {
-  width: 20px;
+  width: 1rem;
+  text-align: center;
 }
 .connection .del {
-  width: 20px;
+  width: 1rem;
   text-align: center;
   cursor: pointer;
 }
-table>thead>tr {
-  background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);
-}
+
 .connection .del:hover {
   color: red;
 }

@@ -10,11 +10,12 @@ export class CommonService {
   private alertMessage: string = '';
   private alert: boolean = false;
   topBtn: boolean = false;
+  loading: boolean = false;
   constructor(private http: Http) { }
 
   handleError(error: Response) {
     console.error('Error:', error.json() || 'Server error', 'danger');
-    this.showAlert(error.json() || 'Server error', 'danger', 3000);
+    this.showAlert((error.json() instanceof Object ? 'Server error': error.json()) || 'Server error', 'danger', 3000);
     return Observable.throw(error.json() || 'Server error');
   }
   handleGet(url: string) {

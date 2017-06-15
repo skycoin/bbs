@@ -3,6 +3,7 @@ import { UserService, User, CommonService } from "../../providers";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { slideInLeftAnimation } from "../../animations/router.animations";
 import { AlertComponent } from "../alert/alert.component";
+import { FormControl, FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'app-userlist',
@@ -16,6 +17,10 @@ export class UserlistComponent implements OnInit {
   // @HostBinding('style.position') position = 'absolute';
   userlist: Array<User> = [];
   editName: string = '';
+  private addForm = new FormGroup({
+    alias: new FormControl(),
+    seed: new FormControl()
+  });
   constructor(private user: UserService, private modal: NgbModal, private common: CommonService) { }
   ngOnInit() {
     this.user.getAll().subscribe(userlist => {
@@ -28,6 +33,18 @@ export class UserlistComponent implements OnInit {
         this.edit(this.editName, key);
       }
     });
+  }
+  openAdd(content: any) {
+    this.modal.open(content).result.then((result) => {
+      if (result) {
+        let data = new FormData();
+        data.append('alias', this.addForm.get('alias').value);
+        data.append('seed', this.addForm.get('seed').value);
+        this.user.newMaster(data).subscribe(user => {
+          this.userlist.unshift(user);
+        })
+      }
+    })
   }
   edit(name, key: string) {
     let data = new FormData();

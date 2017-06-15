@@ -80,7 +80,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "/* You can add global styles to this file, and also import other style files */\nhtml,body {\n  height: 100%;\n}\n\nbody {\n  padding-top: 80px;\n}\n\ni {\n  margin-left: 5px;\n}\n.not-found {\n  text-align: center;\n}\n", ""]);
+exports.push([module.i, "/* You can add global styles to this file, and also import other style files */\nhtml,body {\n  height: 100%;\n}\n\nbody {\n  padding-top: 80px;\n}\n\ni {\n  margin-left: 5px;\n}\n.not-found {\n  text-align: center;\n}\n.loading {\n  position: absolute;\n  top: 45%;\n  left: 45%;\n  width: 10%;\n  height: 10%;\n  background-image: url(" + __webpack_require__("./src/assets/loading.svg") + ");\n  background-size: 100% 100%;\n}\n.btn {\n  cursor: pointer;\n}", ""]);
 
 // exports
 
@@ -516,6 +516,13 @@ function updateLink(linkElement, obj) {
 		URL.revokeObjectURL(oldSrc);
 }
 
+
+/***/ }),
+
+/***/ "./src/assets/loading.svg":
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__.p + "loading.65f5c6fda306ecdd677a.svg";
 
 /***/ }),
 

@@ -1,23 +1,49 @@
 .user-list {}
+.user-list .btn-group{
+  float: right;
+  margin: 1rem;
+}
+.user-list .btn-group .btn {
+  cursor: pointer;
+}
+.user-list table .alias,
+.user-list table .key {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .user-list table .alias {
-  min-width: 10px;
+  max-width: 2rem;
 }
 
 .user-list table .master {
-  min-width: 10px;
+  width: 1rem;
+  text-align: center;
 }
 
 .user-list table .key {
-  min-width: 10px;
+  max-width: 6rem;
 }
+
 .user-list table .edit,
 .user-list table .del {
-  width: 20px;
+  width: 1rem;
   cursor: pointer;
   text-align: center;
 }
-.user-list table .edit:hover,
+
+.user-list table .edit {
+  color: blue;
+}
+.user-list table .del {
+  color: #8e1e1e;
+}
+
+.user-list table .edit:hover{
+  color: red;
+  
+}
 .user-list table .del:hover {
   color: red;
 }

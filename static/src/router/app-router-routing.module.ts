@@ -18,8 +18,6 @@ const routes: Routes = [
       { path: 'p', component: ThreadPageComponent },
     ]
   },
-  // { path: 'threads', component: ThreadsComponent },
-
   { path: 'add', component: AddComponent },
   { path: 'userlist', component: UserlistComponent },
   { path: 'user', component: UserComponent },

@@ -1,6 +1,7 @@
 <div class="user-list">
+  <p class="d-flex justify-content-end"><button type="button" class="btn btn-outline-primary" (click)="openAdd(addBox)">New Master</button></p>
   <table class="table table-hover table-bordered">
-    <thead>
+    <thead class="thead-inverse">
       <tr>
         <th>Name</th>
         <th>Master</th>
@@ -11,15 +12,41 @@
     </thead>
     <tbody>
       <tr *ngFor="let user of userlist">
-        <td class="alias">{{user.alias}}</td>
+        <td class="alias" title="{{user.alias}}">{{user.alias}}</td>
         <td class="master">{{user.master}}</td>
-        <td class="key">{{user.public_key}}</td>
+        <td class="key" title="{{user.public_key}}">{{user.public_key}}</td>
         <td class="edit" (click)="openEdit(editBox,user.public_key)"><i class="fa fa-pencil" aria-hidden="true"></i></td>
         <td class="del" (click)="remove($event,user.public_key)"><i class="fa fa-trash" aria-hidden="true"></i></td>
       </tr>
     </tbody>
   </table>
 </div>
+
+<ng-template #addBox let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">New Master</h4>
+    <button type="button" class="close" aria-label="Close" (click)="c(false)">
+        <span aria-hidden="true">&times;</span>
+      </button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="addForm" novalidate>
+      <div class="form-group">
+        <label for="alias">Alias</label>
+        <input type="text" class="form-control " placeholder="alias" id="alias" formControlName="alias">
+      </div>
+      <div class="form-group">
+        <label for="seed">Seed</label>
+        <input type="text" class="form-control " placeholder="seed" id="seed" formControlName="seed">
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="c(false)">cancel</button>
+    <button type="button" class="btn btn-secondary" (click)="c(true)">submit</button>
+  </div>
+</ng-template>
+
 <ng-template #editBox let-c="close" let-d="dismiss">
   <div class="modal-header">
     <h4 class="modal-title">Edit</h4>

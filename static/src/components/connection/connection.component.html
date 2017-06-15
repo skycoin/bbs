@@ -2,12 +2,12 @@
   <div class="container-fluid">
     <div class="page-header">
       <h1>All Connection</h1>
-      <p class="btn-group">
-        <button type="button" class="btn btn-outline-primary" (click)="openAdd(form)">New Connection</button>
+      <p class="d-flex justify-content-end">
+        <button type="button" class="btn btn-outline-primary" disabled (click)="openAdd(form)">New Connection</button>
       </p>
     </div>
     <table class="table table-bordered">
-      <thead>
+      <thead  class="thead-inverse">
         <tr>
           <th></th>
           <th>Url</th>

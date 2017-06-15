@@ -2,15 +2,28 @@ threadPage {
   width: 100%;
 }
 
+.thread {
+  /*width: 20rem;*/
+}
+
 .thread .thread-description {
-  min-height: 200px;
+  word-break: break-all;
 }
-.thread .btn-box {
-  margin: 1rem 0;
-  text-align: right;
+
+.thread .btn {
+  float: right;
+  cursor: pointer;
 }
+
 .post {
   /*max-width: 50%;*/
-  margin: 10px 0;
-  background-color: #e5ecfd;
+  margin: .8rem 0;
+  /*background-color: #e5ecfd;*/
+}
+
+.post .author {
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
