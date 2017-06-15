@@ -3,9 +3,9 @@
     <div class="page-header">
       <h1>All Boards</h1>
     </div>
-    <p class="btn-group"><button [class.disabled]="!isRoot" type="button" class="btn btn-outline-primary" (click)="openAdd(add)">New Board</button></p>
+    <p class="d-flex justify-content-end"><button [class.disabled]="!isRoot" type="button" class="btn btn-outline-primary" (click)="openAdd(add)">New Board</button></p>
     <table class="table table-hover table-bordered">
-      <thead>
+      <thead class="thead-inverse">
         <tr>
           <!--<th>Board</th>-->
           <th>Name</th>
@@ -22,12 +22,11 @@
           <td class="description" title="{{board?.description}}">{{board?.description}}</td>
           <td class="created">{{board?.created / 1000000 | date: 'short'}}</td>
           <td class="subscribe" title="{{board.ui_options?.subscribe ? 'Subscribe':'Unsubscribe'}}" (click)="subscribe($event,board.public_key,i)"><a href="javascript:void(0);"><i class="fa" [class.fa-star-o]="!board.ui_options?.subscribe" [class.fa-star]="board.ui_options?.subscribe"></i></a></td>
-          <td class="subscribe" title="Board Info" (click)="openInfo($event,board,info)"><a href="javascript:void(0);"><i class="fa fa-info-circle"></i></a></td>
+          <td class="info" title="Board Info" (click)="openInfo($event,board,info)"><a href="javascript:void(0);"><i class="fa fa-info-circle"></i></a></td>
         </tr>
       </tbody>
     </table>
     <h3 class="boardNot" *ngIf="boards?.length == 0">Not Found Boards</h3>
-
   </div>
 </div>
 <ng-template #add let-c="close" let-d="dismiss">
@@ -73,7 +72,7 @@
     </div>
     <div class="form-group">
       <label for="tmpDescription">Description</label>
-      <input type="text" class="form-control" id="tmpDescription" [(ngModel)]="tmpBoard.description">
+      <textarea class="form-control" rows="3" id="tmpDescription" [(ngModel)]="tmpBoard.description"></textarea>
     </div>
     <div class="form-group">
       <label for="tmpPublicKey">Public Key</label>

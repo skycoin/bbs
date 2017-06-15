@@ -44,6 +44,8 @@ export interface UIOptions {
 
 export interface SubScription {
   synced?: boolean;
+  accepted?: boolean;
+  rejected_count?: number;
   config?: SubScriptionOptions;
 }
 

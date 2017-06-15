@@ -1,39 +1,58 @@
 threads {
   width: 100%;
 }
+
 .threads .btn-group {
   float: right;
 }
-.threads table>thead>tr {
-  background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);
-}
+
+
 .threads .page-header {
   border-bottom: none;
 }
+
 .threads .page-header>h1 {
   color: red;
   text-align: center;
 }
 
-.threads table .name {
-  min-width: 10px;
+
+.threads table .name,
+.threads table .board,
+.threads table .description{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.threads table .name,
+.threads table .board {
+  max-width: 3rem;
+}
+.threads table .description {
+  max-width: 5rem;
 }
 .threads table .transfer {
-  width: 25px;
+  width: 1rem;
   cursor: pointer;
 }
+
 .threads table .transfer i {
   margin-left: 0;
+  color: blue;
 }
+
 .threads table .transfer i:hover {
   color: red;
 }
+
 .threads table .board {
   min-width: 100px;
 }
-.threads table .board > a {
+
+.threads table .board>a {
   text-decoration: underline;
 }
-.threads table .board >a:hover {
+
+.threads table .board>a:hover {
   color: red;
 }

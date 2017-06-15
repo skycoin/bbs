@@ -26,7 +26,7 @@ export class ThreadPageComponent implements OnInit {
   private editorOptions = {
     placeholderText: 'Edit Your Content Here!',
     // toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertImage', 'insertVideo', 'insertFile', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
-    toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
+    toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', '|', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
     heightMin: 200,
     events: {
     },
@@ -42,6 +42,7 @@ export class ThreadPageComponent implements OnInit {
     this.route.params.subscribe(res => {
       this.boardKey = res['board'];
       this.threadKey = res['thread'];
+      this.common.loading = true;
       this.open(this.boardKey, this.threadKey);
     })
   }
@@ -80,6 +81,7 @@ export class ThreadPageComponent implements OnInit {
     data.append('thread', ref);
     this.api.getThreadpage(data).subscribe(data => {
       this.data = data;
+      this.common.loading = false;
     });
   }
 

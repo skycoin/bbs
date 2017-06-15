@@ -21,7 +21,7 @@ boards-list {
 }
 
 table>thead>tr {
-  background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);
+  /*background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);*/
 }
 
 table>tbody>tr {
@@ -33,25 +33,16 @@ table>tbody>tr>td {
   vertical-align: middle !important;
 }
 
-table .url {
-  max-width: 90px;
-}
-table .url > a {
-  text-decoration: underline;
-}
-table .url > a:hover {
-  color: red;
-}
-
 table .description,
 table .title {
-  max-width: 180px;
+  max-width: 5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-table .subscribe {
-  width: 25px;
+table .subscribe,
+table .info {
+  width: 1rem;
   text-align: center;
 }
 table .subscribe i {
@@ -59,6 +50,6 @@ table .subscribe i {
   color: red;
 }
 table .created {
-  width: 200px;
+  width: 11rem;
   text-align: center;
 }
