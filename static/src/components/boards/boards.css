@@ -2,7 +2,9 @@ boards-list {
   display: block;
   width: 100%;
 }
-
+boards-list .btn {
+  margin: 0 .5rem;
+}
 .boards .btn-group {
   float: right;
 }

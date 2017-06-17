@@ -1,29 +1,34 @@
 <div class="threads">
   <div class="container-fluid">
-    <!--<ol class="breadcrumb">
-      <li><a outerLink="/">All Board</a></li>
-      <li><a outerLink="/">Home</a></li>
-    </ol>-->
-    <div class="page-header">
-      <h1>All Threads</h1>
+    <div class="card">
+      <div class="card-header">
+        Board Details
+      </div>
+      <div class="card-block">
+        <p class="card-text">Board Name:{{board?.name}}</p>
+        <p class="card-text">Board Description:{{board?.description}}</p>
+        <p class="card-text d-flex justify-content-end">
+          <button type="button" [class.disabled]="!isRoot" class="btn btn-primary" (click)="openAdd(content)">New Thread</button>
+        </p>
+      </div>
     </div>
-    <p class="d-flex justify-content-end"><button type="button" class="btn btn-outline-primary" (click)="openAdd(content)">New Thread</button></p>
-
-    <table class="table table-hover table-bordered">
+    <table class="table table-hover table-sm table-bordered">
       <thead class="thead-inverse">
         <tr>
           <th>Thread</th>
-          <th>Board</th>
+          <!--<th>Board</th>-->
           <th>Description</th>
+          <th></th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let thread of threads">
-          <td class="name" title="{{thread.name}}">{{thread.name}}</td>
-          <td class="board" title="{{url}}"><a href="javascript:void(0);" (click)="open(thread?.master_board,thread?.ref)">{{board.url}}</a></td>
+        <tr *ngFor="let thread of threads" (click)="open(thread?.master_board,thread?.ref)">
+          <td class="name" title="{{thread.name}}"><span class="tag" [hidden]="!(thread.master_board != board.public_key)"><i class="fa fa-clone"></i>(Imported)</span>{{thread.name}}</td>
+          <!--<td class="board" title="{{url}}"><a href="javascript:void(0);" >{{board.url}}</a></td>-->
           <td class="description" title="{{thread.description}}">{{thread.description}}</td>
-          <td class="transfer" (click)="openImport(importBox,thread.ref)"><i title="Import Thread" class="fa fa-exchange"></i></td>
+          <td class="transfer" (click)="openImport($event,thread.ref,importBox)"><i title="Import Thread" class="fa fa-exchange"></i></td>
+          <td class="info" title="Thread Info"><a href="javascript:void(0);" (click)="openInfo($event,thread,infoBox)"><i class="fa fa-info-circle"></i></a></td>
         </tr>
       </tbody>
     </table>
@@ -31,6 +36,25 @@
   </div>
 </div>
 
+
+
+
+<!--Info Box-->
+<ng-template #infoBox let-c="close" let-d="dismiss">
+  <div class="card">
+    <div class="card-header">
+      Thread Info
+    </div>
+    <div class="card-block">
+      <p class="thread-item">Name: <span>{{tmpThread.name}}</span></p>
+      <p class="thread-item">Description: <span>{{tmpThread.description}}</span></p>
+      <p class="thread-item">Master Board: <span>{{tmpThread.master_board}}</span></p>
+      <p class="thread-item">Ref: <span>{{tmpThread.ref}}</span></p>
+    </div>
+  </div>
+</ng-template>
+
+<!--Add Thread-->
 <ng-template #content let-c="close" let-d="dismiss">
   <div class="modal-header">
     <h4 class="modal-title">New Thread</h4>
@@ -56,6 +80,7 @@
   </div>
 </ng-template>
 
+<!--Import Box-->
 <ng-template #importBox let-c="close" let-d="dismiss">
   <div class="modal-header">
     <h4 class="modal-title">Import Thread</h4>

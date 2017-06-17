@@ -34,7 +34,4 @@ export class AppComponent implements OnInit {
       this.common.topBtn = false;
     })
   }
-  test() {
-    console.log('test');
-  }
 }

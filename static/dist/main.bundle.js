@@ -117,9 +117,6 @@ var AppComponent = (function () {
             _this.common.topBtn = false;
         });
     };
-    AppComponent.prototype.test = function () {
-        console.log('test');
-    };
     return AppComponent;
 }());
 __decorate([
@@ -444,7 +441,7 @@ var _a;
 /***/ "./src/components/boards/boards-list.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class='boards'>\n  <div class='container-fluid'>\n    <div class=\"page-header\">\n      <h1>All Boards</h1>\n    </div>\n    <p class=\"d-flex justify-content-end\"><button [class.disabled]=\"!isRoot\" type=\"button\" class=\"btn btn-outline-primary\" (click)=\"openAdd(add)\">New Board</button></p>\n    <table class=\"table table-hover table-bordered\">\n      <thead class=\"thead-inverse\">\n        <tr>\n          <!--<th>Board</th>-->\n          <th>Name</th>\n          <th>Description</th>\n          <th>Created</th>\n          <th></th>\n          <th></th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr *ngFor=\"let board of boards;let i = index;\" (click)=\"openThreads($event,board.public_key,board.url)\">\n          <!--<td class=\"url\"><a href=\"javascript:void(0);\" (click)=\"openThreads($event,board.public_key,board.url)\">{{board.url}}</a></td>-->\n          <td class=\"title\" title=\"{{board?.name}}\">{{board?.name}}</td>\n          <td class=\"description\" title=\"{{board?.description}}\">{{board?.description}}</td>\n          <td class=\"created\">{{board?.created / 1000000 | date: 'short'}}</td>\n          <td class=\"subscribe\" title=\"{{board.ui_options?.subscribe ? 'Subscribe':'Unsubscribe'}}\" (click)=\"subscribe($event,board.public_key,i)\"><a href=\"javascript:void(0);\"><i class=\"fa\" [class.fa-star-o]=\"!board.ui_options?.subscribe\" [class.fa-star]=\"board.ui_options?.subscribe\"></i></a></td>\n          <td class=\"info\" title=\"Board Info\" (click)=\"openInfo($event,board,info)\"><a href=\"javascript:void(0);\"><i class=\"fa fa-info-circle\"></i></a></td>\n        </tr>\n      </tbody>\n    </table>\n    <h3 class=\"boardNot\" *ngIf=\"boards?.length == 0\">Not Found Boards</h3>\n  </div>\n</div>\n<ng-template #add let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Board</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"name\">Board name</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"name\" id=\"name\" formControlName=\"name\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"description\">Board description</label>\n        <textarea class=\"form-control\" rows=\"3\" id=\"description\" formControlName=\"description\"></textarea>\n      </div>\n      <div class=\"form-group\">\n        <label for=\"seed\">Board seed</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"seed\" id=\"seed\" formControlName=\"seed\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<ng-template #info let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Board</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <div class=\"form-group\">\n      <label for=\"tmpName\">Name</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpName\" [(ngModel)]=\"tmpBoard.name\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpDescription\">Description</label>\n      <textarea class=\"form-control\" rows=\"3\" id=\"tmpDescription\" [(ngModel)]=\"tmpBoard.description\"></textarea>\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpPublicKey\">Public Key</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpPublicKey\" [(ngModel)]=\"tmpBoard.public_key\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpUrl\">Url</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpUrl\" [(ngModel)]=\"tmpBoard.url\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpCreated\">Created</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpCreated\" [(ngModel)]=\"tmpBoard.created\">\n    </div>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">close</button>\n  </div>\n</ng-template>\n"
+module.exports = "<div class='boards'>\n  <div class='container-fluid'>\n    <div class=\"page-header\">\n      <h1>All Boards</h1>\n    </div>\n    <p class=\"d-flex justify-content-end\"><button type=\"button\" class=\"btn btn-outline-danger\" (click)=\"subscribe($event,subscribeBox)\">Subscribe</button>\n      <button [class.disabled]=\"!isRoot\" type=\"button\" class=\"btn btn-outline-primary\" (click)=\"openAdd(add)\">New Board</button>\n    </p>\n    <table class=\"table table-hover table-sm table-bordered\">\n      <thead class=\"thead-inverse\">\n        <tr>\n          <!--<th>Board</th>-->\n          <th>Name</th>\n          <th>Description</th>\n          <th>Created</th>\n          <th></th>\n          <th></th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr *ngFor=\"let board of boards;let i = index;\" (click)=\"openThreads($event,board?.public_key)\">\n          <td class=\"title\" title=\"{{board?.name}}\">{{board?.name}}</td>\n          <td class=\"description\" title=\"{{board?.description}}\">{{board?.description}}</td>\n          <td class=\"created\">{{board?.created / 1000000 | date: 'short'}}</td>\n          <td class=\"subscribe\" title=\"Unsubscribe\" (click)=\"unSubscribe($event,board?.public_key)\"><a href=\"javascript:void(0);\"><i class=\"fa\" [class.fa-star-o]=\"!board?.ui_options?.subscribe\" [class.fa-star]=\"board?.ui_options?.subscribe\"></i></a></td>\n          <td class=\"info\" title=\"Board Info\" (click)=\"openInfo($event,board,info)\"><a href=\"javascript:void(0);\"><i class=\"fa fa-info-circle\"></i></a></td>\n        </tr>\n      </tbody>\n    </table>\n    <h3 class=\"boardNot\" *ngIf=\"boards?.length == 0\">Not Found Boards</h3>\n  </div>\n</div>\n\n<!-- Subscribe Box-->\n<ng-template #subscribeBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Subscribe</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"subscribeForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"subscribeAddress\">Address</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"address\" id=\"subscribeAddress\" formControlName=\"address\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"subscribeBoardKey\">Board Public Key</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"board Key\" id=\"subscribeBoardKey\" formControlName=\"board\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<!--New Board-->\n<ng-template #add let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Board</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"name\">Board name</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"name\" id=\"name\" formControlName=\"name\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"description\">Board description</label>\n        <textarea class=\"form-control\" rows=\"3\" id=\"description\" formControlName=\"description\"></textarea>\n      </div>\n      <div class=\"form-group\">\n        <label for=\"seed\">Board seed</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"seed\" id=\"seed\" formControlName=\"seed\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n\n<!--Board Info-->\n<ng-template #info let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Board</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <div class=\"form-group\">\n      <label for=\"tmpName\">Name</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpName\" [(ngModel)]=\"tmpBoard.name\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpDescription\">Description</label>\n      <textarea class=\"form-control\" rows=\"3\" id=\"tmpDescription\" [(ngModel)]=\"tmpBoard.description\"></textarea>\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpPublicKey\">Public Key</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpPublicKey\" [(ngModel)]=\"tmpBoard.public_key\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpUrl\">Url</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpUrl\" [(ngModel)]=\"tmpBoard.url\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpCreated\">Created</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpCreated\" [(ngModel)]=\"tmpBoard.created\">\n    </div>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">close</button>\n  </div>\n</ng-template>\n"
 
 /***/ }),
 
@@ -487,6 +484,10 @@ var BoardsListComponent = (function () {
         this.board = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* EventEmitter */]();
         this.isRoot = false;
         this.boards = [];
+        this.subscribeForm = new __WEBPACK_IMPORTED_MODULE_4__angular_forms__["e" /* FormGroup */]({
+            address: new __WEBPACK_IMPORTED_MODULE_4__angular_forms__["f" /* FormControl */]('', __WEBPACK_IMPORTED_MODULE_4__angular_forms__["g" /* Validators */].required),
+            board: new __WEBPACK_IMPORTED_MODULE_4__angular_forms__["f" /* FormControl */]('', __WEBPACK_IMPORTED_MODULE_4__angular_forms__["g" /* Validators */].required)
+        });
         this.addForm = new __WEBPACK_IMPORTED_MODULE_4__angular_forms__["e" /* FormGroup */]({
             name: new __WEBPACK_IMPORTED_MODULE_4__angular_forms__["f" /* FormControl */](),
             description: new __WEBPACK_IMPORTED_MODULE_4__angular_forms__["f" /* FormControl */](),
@@ -506,6 +507,9 @@ var BoardsListComponent = (function () {
         this.api.getBoards().subscribe(function (boards) {
             _this.boards = boards;
             _this.boards.forEach(function (el) {
+                if (!el || !el.public_key) {
+                    return;
+                }
                 var data = new FormData();
                 data.append('board', el.public_key);
                 _this.api.getSubscription(data).subscribe(function (res) {
@@ -539,34 +543,48 @@ var BoardsListComponent = (function () {
             }
         }, function (err) { });
     };
-    BoardsListComponent.prototype.subscribe = function (ev, key, index) {
+    BoardsListComponent.prototype.subscribe = function (ev, content) {
+        var _this = this;
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        this.modal.open(content).result.then(function (result) {
+            if (result) {
+                if (!_this.subscribeForm.valid) {
+                    _this.common.showAlert('The Board Key Or Address can not be empty!!!', 'danger', 3000);
+                    return;
+                }
+                var data = new FormData();
+                data.append('address', _this.subscribeForm.get('address').value);
+                data.append('board', _this.subscribeForm.get('board').value);
+                _this.api.subscribe(data).subscribe(function (isOk) {
+                    if (isOk) {
+                        _this.common.showAlert('Subscribe successfully', 'success', 3000);
+                        _this.getBoards();
+                    }
+                });
+            }
+        });
+    };
+    BoardsListComponent.prototype.unSubscribe = function (ev, boardKey) {
         var _this = this;
         ev.stopImmediatePropagation();
         ev.stopPropagation();
         var data = new FormData();
-        // TODO add address
-        data.append('address', '127.0.0.1:7412');
-        data.append('board', key);
-        if (!this.boards[index].ui_options.subscribe) {
-            this.api.subscribe(data).subscribe(function (isOk) {
-                var options = { subscribe: isOk };
-                _this.boards[index].ui_options = options;
-                _this.common.showAlert('Subscribe successfully', 'success', 3000);
-            });
-        }
-        else {
-            this.api.unSubscribe(data).subscribe(function (isOk) {
-                if (isOk) {
-                    _this.boards[index].ui_options.subscribe = false;
-                    _this.common.showAlert('Unsubscribe successfully', 'success', 3000);
-                    _this.getBoards();
-                }
-            });
-        }
+        data.append('board', boardKey);
+        this.api.unSubscribe(data).subscribe(function (isOk) {
+            if (isOk) {
+                _this.common.showAlert('Unsubscribe successfully', 'success', 3000);
+                _this.getBoards();
+            }
+        });
     };
-    BoardsListComponent.prototype.openThreads = function (ev, key, url) {
+    BoardsListComponent.prototype.openThreads = function (ev, key) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
+        if (!key) {
+            this.common.showErrorAlert('Abnormal parameters!!!', 3000);
+            return;
+        }
         this.router.navigate(['/threads', { board: key }]);
         // this.board.emit(this.boards[0].public_key);
     };
@@ -615,7 +633,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "boards-list {\n  display: block;\n  width: 100%;\n}\n\n.boards .btn-group {\n  float: right;\n}\n\n.boards .page-header {\n  border-bottom: none;\n}\n.boards .page-header >h1 {\n  text-align: center;\n  color: red;\n}\n\n.boards .boardNot {\n  width: 100%;\n  text-align: center;\n}\n\ntable>thead>tr {\n  /*background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);*/\n}\n\ntable>tbody>tr {\n  cursor: pointer;\n}\n\ntable>tbody>tr>td {\n  /*cursor: pointer;*/\n  vertical-align: middle !important;\n}\n\ntable .description,\ntable .title {\n  max-width: 5rem;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\ntable .subscribe,\ntable .info {\n  width: 1rem;\n  text-align: center;\n}\ntable .subscribe i {\n  margin-left: 0;\n  color: red;\n}\ntable .created {\n  width: 11rem;\n  text-align: center;\n}\n", ""]);
+exports.push([module.i, "boards-list {\n  display: block;\n  width: 100%;\n}\nboards-list .btn {\n  margin: 0 .5rem;\n}\n.boards .btn-group {\n  float: right;\n}\n\n.boards .page-header {\n  border-bottom: none;\n}\n.boards .page-header >h1 {\n  text-align: center;\n  color: red;\n}\n\n.boards .boardNot {\n  width: 100%;\n  text-align: center;\n}\n\ntable>thead>tr {\n  /*background-image: linear-gradient(to bottom, #d9edf7 0, #b9def0 100%);*/\n}\n\ntable>tbody>tr {\n  cursor: pointer;\n}\n\ntable>tbody>tr>td {\n  /*cursor: pointer;*/\n  vertical-align: middle !important;\n}\n\ntable .description,\ntable .title {\n  max-width: 5rem;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\ntable .subscribe,\ntable .info {\n  width: 1rem;\n  text-align: center;\n}\ntable .subscribe i {\n  margin-left: 0;\n  color: red;\n}\ntable .created {\n  width: 11rem;\n  text-align: center;\n}\n", ""]);
 
 // exports
 
@@ -954,7 +972,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "threads {\n  width: 100%;\n}\n\n.threads .btn-group {\n  float: right;\n}\n\n\n.threads .page-header {\n  border-bottom: none;\n}\n\n.threads .page-header>h1 {\n  color: red;\n  text-align: center;\n}\n\n\n.threads table .name,\n.threads table .board,\n.threads table .description{\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.threads table .name,\n.threads table .board {\n  max-width: 3rem;\n}\n.threads table .description {\n  max-width: 5rem;\n}\n.threads table .transfer {\n  width: 1rem;\n  cursor: pointer;\n}\n\n.threads table .transfer i {\n  margin-left: 0;\n  color: blue;\n}\n\n.threads table .transfer i:hover {\n  color: red;\n}\n\n.threads table .board {\n  min-width: 100px;\n}\n\n.threads table .board>a {\n  text-decoration: underline;\n}\n\n.threads table .board>a:hover {\n  color: red;\n}", ""]);
+exports.push([module.i, "threads {\n  width: 100%;\n}\n\n.threads .btn-group {\n  float: right;\n}\n\n\n.threads .card .card-block .card-text .btn{\n  margin: 0 .5rem;\n}\n\n.threads .page-header>h1 {\n  color: red;\n  text-align: center;\n}\n\n\n.threads table .name,\n.threads table .board,\n.threads table .description{\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n.threads table .name,\n.threads table .board {\n  max-width: 3rem;\n}\n.threads table .name .tag {\n  font-size: .8rem;\n  color: blue;\n  margin: 0 .5rem;\n}\n.threads table .description {\n  max-width: 5rem;\n}\n.threads table .transfer,\n.threads table .info {\n  width: 1rem;\n  cursor: pointer;\n}\n\n.threads table .transfer i {\n  margin-left: 0;\n  color: blue;\n}\n\n.threads table .transfer i:hover {\n  color: red;\n}\n\n.threads table .board {\n  min-width: 100px;\n}\n\n.threads table .board>a {\n  text-decoration: underline;\n}\n\n.threads table .board>a:hover {\n  color: red;\n}\n.threads .thread-item {\n  border-bottom: .1rem solid #eee;\n}", ""]);
 
 // exports
 
@@ -967,7 +985,7 @@ module.exports = module.exports.toString();
 /***/ "./src/components/threads/threads.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"threads\">\n  <div class=\"container-fluid\">\n    <!--<ol class=\"breadcrumb\">\n      <li><a outerLink=\"/\">All Board</a></li>\n      <li><a outerLink=\"/\">Home</a></li>\n    </ol>-->\n    <div class=\"page-header\">\n      <h1>All Threads</h1>\n    </div>\n    <p class=\"d-flex justify-content-end\"><button type=\"button\" class=\"btn btn-outline-primary\" (click)=\"openAdd(content)\">New Thread</button></p>\n\n    <table class=\"table table-hover table-bordered\">\n      <thead class=\"thead-inverse\">\n        <tr>\n          <th>Thread</th>\n          <th>Board</th>\n          <th>Description</th>\n          <th></th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr *ngFor=\"let thread of threads\">\n          <td class=\"name\" title=\"{{thread.name}}\">{{thread.name}}</td>\n          <td class=\"board\" title=\"{{url}}\"><a href=\"javascript:void(0);\" (click)=\"open(thread?.master_board,thread?.ref)\">{{board.url}}</a></td>\n          <td class=\"description\" title=\"{{thread.description}}\">{{thread.description}}</td>\n          <td class=\"transfer\" (click)=\"openImport(importBox,thread.ref)\"><i title=\"Import Thread\" class=\"fa fa-exchange\"></i></td>\n        </tr>\n      </tbody>\n    </table>\n    <h3 class=\"not-found\" *ngIf=\"threads?.length == 0\">Not Found Threads</h3>\n  </div>\n</div>\n\n<ng-template #content let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Thread</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"name\">Thread name</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"name\" id=\"name\" formControlName=\"name\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"description\">Thread description</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"description\" id=\"description\" formControlName=\"description\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<ng-template #importBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Import Thread</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <div class=\"form-group\">\n      <label for=\"toBoard\">Choose to import</label>\n      <select class=\"form-control\" id=\"toBoard\" [(ngModel)]=\"importBoardKey\" placeholder=\"Choose to move\">\n        <option *ngFor=\"let board of importBoards\" value=\"{{board.public_key}}\">{{board.name}}</option>\n    </select>\n      <!--<input type=\"text\" class=\"form-control\" placeholder=\"toBoard\" id=\"toBoard\">-->\n    </div>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
+module.exports = "<div class=\"threads\">\n  <div class=\"container-fluid\">\n    <div class=\"card\">\n      <div class=\"card-header\">\n        Board Details\n      </div>\n      <div class=\"card-block\">\n        <p class=\"card-text\">Board Name:{{board?.name}}</p>\n        <p class=\"card-text\">Board Description:{{board?.description}}</p>\n        <p class=\"card-text d-flex justify-content-end\">\n          <button type=\"button\" [class.disabled]=\"!isRoot\" class=\"btn btn-primary\" (click)=\"openAdd(content)\">New Thread</button>\n        </p>\n      </div>\n    </div>\n    <table class=\"table table-hover table-sm table-bordered\">\n      <thead class=\"thead-inverse\">\n        <tr>\n          <th>Thread</th>\n          <!--<th>Board</th>-->\n          <th>Description</th>\n          <th></th>\n          <th></th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr *ngFor=\"let thread of threads\" (click)=\"open(thread?.master_board,thread?.ref)\">\n          <td class=\"name\" title=\"{{thread.name}}\"><span class=\"tag\" [hidden]=\"!(thread.master_board != board.public_key)\"><i class=\"fa fa-clone\"></i>(Imported)</span>{{thread.name}}</td>\n          <!--<td class=\"board\" title=\"{{url}}\"><a href=\"javascript:void(0);\" >{{board.url}}</a></td>-->\n          <td class=\"description\" title=\"{{thread.description}}\">{{thread.description}}</td>\n          <td class=\"transfer\" (click)=\"openImport($event,thread.ref,importBox)\"><i title=\"Import Thread\" class=\"fa fa-exchange\"></i></td>\n          <td class=\"info\" title=\"Thread Info\"><a href=\"javascript:void(0);\" (click)=\"openInfo($event,thread,infoBox)\"><i class=\"fa fa-info-circle\"></i></a></td>\n        </tr>\n      </tbody>\n    </table>\n    <h3 class=\"not-found\" *ngIf=\"threads?.length == 0\">Not Found Threads</h3>\n  </div>\n</div>\n\n\n\n\n<!--Info Box-->\n<ng-template #infoBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"card\">\n    <div class=\"card-header\">\n      Thread Info\n    </div>\n    <div class=\"card-block\">\n      <p class=\"thread-item\">Name: <span>{{tmpThread.name}}</span></p>\n      <p class=\"thread-item\">Description: <span>{{tmpThread.description}}</span></p>\n      <p class=\"thread-item\">Master Board: <span>{{tmpThread.master_board}}</span></p>\n      <p class=\"thread-item\">Ref: <span>{{tmpThread.ref}}</span></p>\n    </div>\n  </div>\n</ng-template>\n\n<!--Add Thread-->\n<ng-template #content let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Thread</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"name\">Thread name</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"name\" id=\"name\" formControlName=\"name\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"description\">Thread description</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"description\" id=\"description\" formControlName=\"description\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<!--Import Box-->\n<ng-template #importBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Import Thread</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <div class=\"form-group\">\n      <label for=\"toBoard\">Choose to import</label>\n      <select class=\"form-control\" id=\"toBoard\" [(ngModel)]=\"importBoardKey\" placeholder=\"Choose to move\">\n        <option *ngFor=\"let board of importBoards\" value=\"{{board.public_key}}\">{{board.name}}</option>\n    </select>\n      <!--<input type=\"text\" class=\"form-control\" placeholder=\"toBoard\" id=\"toBoard\">-->\n    </div>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
 
 /***/ }),
 
@@ -1012,6 +1030,8 @@ var ThreadsComponent = (function () {
         this.importBoardKey = '';
         this.boardKey = '';
         this.board = null;
+        this.isRoot = false;
+        this.tmpThread = null;
         this.addForm = new __WEBPACK_IMPORTED_MODULE_3__angular_forms__["e" /* FormGroup */]({
             description: new __WEBPACK_IMPORTED_MODULE_3__angular_forms__["f" /* FormControl */](),
             name: new __WEBPACK_IMPORTED_MODULE_3__angular_forms__["f" /* FormControl */]()
@@ -1020,9 +1040,11 @@ var ThreadsComponent = (function () {
     ThreadsComponent.prototype.ngOnInit = function () {
         var _this = this;
         this.route.params.subscribe(function (res) {
-            // this.url = res['url'];
             _this.boardKey = res['board'];
             _this.init();
+            _this.api.getStats().subscribe(function (root) {
+                _this.isRoot = root;
+            });
         });
     };
     ThreadsComponent.prototype.initThreads = function (key) {
@@ -1042,6 +1064,12 @@ var ThreadsComponent = (function () {
             _this.threads = data.threads;
         });
     };
+    ThreadsComponent.prototype.openInfo = function (ev, thread, content) {
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        this.tmpThread = thread;
+        this.modal.open(content, { size: 'lg' });
+    };
     ThreadsComponent.prototype.openAdd = function (content) {
         var _this = this;
         this.modal.open(content).result.then(function (result) {
@@ -1060,12 +1088,14 @@ var ThreadsComponent = (function () {
     ThreadsComponent.prototype.open = function (master, ref) {
         this.router.navigate(['p', { board: master, thread: ref }], { relativeTo: this.route });
     };
-    ThreadsComponent.prototype.openImport = function (content, threadKey) {
+    ThreadsComponent.prototype.openImport = function (ev, threadKey, content) {
         var _this = this;
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
         if (this.importBoards.length <= 0) {
             this.api.getBoards().subscribe(function (boards) {
                 _this.importBoards = boards;
-                _this.importBoardKey = boards[0].public_key;
+                _this.importBoardKey = _this.boardKey;
             });
         }
         this.modal.open(content, { size: 'lg' }).result.then(function (result) {
@@ -1242,7 +1272,7 @@ module.exports = module.exports.toString();
 /***/ "./src/components/userlist/userlist.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"user-list\">\n  <p class=\"d-flex justify-content-end\"><button type=\"button\" class=\"btn btn-outline-primary\" (click)=\"openAdd(addBox)\">New Master</button></p>\n  <table class=\"table table-hover table-bordered\">\n    <thead class=\"thead-inverse\">\n      <tr>\n        <th>Name</th>\n        <th>Master</th>\n        <th>Public Key</th>\n        <th>Edit</th>\n        <th>Remove</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr *ngFor=\"let user of userlist\">\n        <td class=\"alias\" title=\"{{user.alias}}\">{{user.alias}}</td>\n        <td class=\"master\">{{user.master}}</td>\n        <td class=\"key\" title=\"{{user.public_key}}\">{{user.public_key}}</td>\n        <td class=\"edit\" (click)=\"openEdit(editBox,user.public_key)\"><i class=\"fa fa-pencil\" aria-hidden=\"true\"></i></td>\n        <td class=\"del\" (click)=\"remove($event,user.public_key)\"><i class=\"fa fa-trash\" aria-hidden=\"true\"></i></td>\n      </tr>\n    </tbody>\n  </table>\n</div>\n\n<ng-template #addBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Master</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"c(false)\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"alias\">Alias</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"alias\" id=\"alias\" formControlName=\"alias\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"seed\">Seed</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"seed\" id=\"seed\" formControlName=\"seed\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<ng-template #editBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Edit</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"c(false)\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n  </div>\n  <div class=\"modal-body\">\n    <input [(ngModel)]=\"editName\" type=\"text\" class=\"form-control\" placeholder=\"Username\" aria-describedby=\"basic-addon1\">\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
+module.exports = "<div class=\"user-list\">\n  <p class=\"d-flex justify-content-end\"><button type=\"button\" class=\"btn btn-outline-primary\" (click)=\"openAdd(addBox)\">New Master</button></p>\n  <table class=\"table table-hover table-sm table-bordered\">\n    <thead class=\"thead-inverse\">\n      <tr>\n        <th>Name</th>\n        <th>Master</th>\n        <th>Public Key</th>\n        <th>Edit</th>\n        <th>Remove</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr *ngFor=\"let user of userlist\">\n        <td class=\"alias\" title=\"{{user.alias}}\">{{user.alias}}</td>\n        <td class=\"master\">{{user.master}}</td>\n        <td class=\"key\" title=\"{{user.public_key}}\">{{user.public_key}}</td>\n        <td class=\"edit\" (click)=\"openEdit(editBox,user.public_key)\"><i class=\"fa fa-pencil\" aria-hidden=\"true\"></i></td>\n        <td class=\"del\" (click)=\"remove($event,user.public_key)\"><i class=\"fa fa-trash\" aria-hidden=\"true\"></i></td>\n      </tr>\n    </tbody>\n  </table>\n</div>\n\n<ng-template #addBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Master</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"c(false)\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"alias\">Alias</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"alias\" id=\"alias\" formControlName=\"alias\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"seed\">Seed</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"seed\" id=\"seed\" formControlName=\"seed\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<ng-template #editBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Edit</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"c(false)\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n  </div>\n  <div class=\"modal-body\">\n    <input [(ngModel)]=\"editName\" type=\"text\" class=\"form-control\" placeholder=\"Username\" aria-describedby=\"basic-addon1\">\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
 
 /***/ }),
 
@@ -1622,6 +1652,9 @@ var CommonService = (function () {
             return __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__["Observable"].throw('Parameters and connections can not be empty');
         }
         return this.http.post(url, data).filter(function (res) { return res.status === 200; }).map(function (res) { return res.json(); }).catch(function (err) { return _this.handleError(err); });
+    };
+    CommonService.prototype.showErrorAlert = function (message, timeout) {
+        this.showAlert(message, 'danger', timeout);
     };
     CommonService.prototype.showAlert = function (message, type, timeout) {
         var _this = this;
