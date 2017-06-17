@@ -7,8 +7,8 @@ threads {
 }
 
 
-.threads .page-header {
-  border-bottom: none;
+.threads .card .card-block .card-text .btn{
+  margin: 0 .5rem;
 }
 
 .threads .page-header>h1 {
@@ -28,10 +28,16 @@ threads {
 .threads table .board {
   max-width: 3rem;
 }
+.threads table .name .tag {
+  font-size: .8rem;
+  color: blue;
+  margin: 0 .5rem;
+}
 .threads table .description {
   max-width: 5rem;
 }
-.threads table .transfer {
+.threads table .transfer,
+.threads table .info {
   width: 1rem;
   cursor: pointer;
 }
@@ -55,4 +61,7 @@ threads {
 
 .threads table .board>a:hover {
   color: red;
+}
+.threads .thread-item {
+  border-bottom: .1rem solid #eee;
 }

@@ -15,7 +15,7 @@ export class CommonService {
 
   handleError(error: Response) {
     console.error('Error:', error.json() || 'Server error', 'danger');
-    this.showAlert((error.json() instanceof Object ? 'Server error': error.json()) || 'Server error', 'danger', 3000);
+    this.showAlert((error.json() instanceof Object ? 'Server error' : error.json()) || 'Server error', 'danger', 3000);
     return Observable.throw(error.json() || 'Server error');
   }
   handleGet(url: string) {
@@ -30,6 +30,10 @@ export class CommonService {
       return Observable.throw('Parameters and connections can not be empty');
     }
     return this.http.post(url, data).filter((res: Response) => res.status === 200).map((res: Response) => res.json()).catch(err => this.handleError(err));
+  }
+
+  showErrorAlert(message: string, timeout?: number) {
+    this.showAlert(message, 'danger', timeout);
   }
 
   showAlert(message: string, type?: string, timeout?: number) {

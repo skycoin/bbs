@@ -25,3 +25,14 @@ i {
 .btn {
   cursor: pointer;
 }
+
+.thread-item {
+  padding: 1rem;
+  background-color: hsl(240, 14%, 97%);
+  border-radius: .25rem;
+  font-weight: bold;
+}
+.thread-item span {
+  font-size: .9rem;
+  font-weight: normal;
+}

@@ -28,20 +28,24 @@ export class ThreadsComponent implements OnInit {
   private importBoardKey: string = '';
   private boardKey: string = '';
   private board: Board = null;
+  private isRoot: boolean = false;
+  private tmpThread: Thread = null;
   private addForm = new FormGroup({
     description: new FormControl(),
     name: new FormControl()
   });
   ngOnInit() {
     this.route.params.subscribe(res => {
-      // this.url = res['url'];
       this.boardKey = res['board'];
       this.init();
+      this.api.getStats().subscribe(root => {
+        this.isRoot = root;
+      });
     })
   }
   initThreads(key) {
     let data = new FormData();
-    data.append('board',key);
+    data.append('board', key);
     this.api.getThreads(data).subscribe(threads => {
       this.threads = threads;
     });
@@ -53,6 +57,12 @@ export class ThreadsComponent implements OnInit {
       this.board = data.board;
       this.threads = data.threads;
     })
+  }
+  openInfo(ev: Event, thread: Thread, content: any) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    this.tmpThread = thread;
+    this.modal.open(content, { size: 'lg' });
   }
   openAdd(content) {
     this.modal.open(content).result.then((result) => {
@@ -68,14 +78,17 @@ export class ThreadsComponent implements OnInit {
       }
     }, err => { });
   }
+
   open(master, ref: string) {
     this.router.navigate(['p', { board: master, thread: ref }], { relativeTo: this.route });
   }
-  openImport(content: any, threadKey: string) {
+  openImport(ev: Event, threadKey: string, content: any) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
     if (this.importBoards.length <= 0) {
       this.api.getBoards().subscribe(boards => {
         this.importBoards = boards;
-        this.importBoardKey = boards[0].public_key;
+        this.importBoardKey = this.boardKey;
       });
     }
     this.modal.open(content, { size: 'lg' }).result.then(result => {
@@ -92,6 +105,6 @@ export class ThreadsComponent implements OnInit {
           })
         }
       }
-    },err => {});
+    }, err => { });
   }
 }

@@ -3,7 +3,7 @@ import { ApiService, UserService, CommonService } from "../../providers";
 import { Board, UIOptions } from "../../providers/api/msg";
 import { Router, ActivatedRoute } from "@angular/router";
 import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AlertComponent } from "../alert/alert.component";
 import { slideInLeftAnimation } from "../../animations/router.animations";
 
@@ -21,6 +21,10 @@ export class BoardsListComponent implements OnInit {
     @Output() board: EventEmitter<string> = new EventEmitter();
     private isRoot: boolean = false;
     private boards: Array<Board> = [];
+    private subscribeForm = new FormGroup({
+        address: new FormControl('', Validators.required),
+        board: new FormControl('', Validators.required)
+    });
     private addForm = new FormGroup({
         name: new FormControl(),
         description: new FormControl(),
@@ -47,6 +51,9 @@ export class BoardsListComponent implements OnInit {
         this.api.getBoards().subscribe(boards => {
             this.boards = boards;
             this.boards.forEach(el => {
+                if (!el || !el.public_key) {
+                    return;
+                }
                 let data = new FormData();
                 data.append('board', el.public_key);
                 this.api.getSubscription(data).subscribe(res => {
@@ -80,32 +87,47 @@ export class BoardsListComponent implements OnInit {
             }
         }, err => { });
     }
-    subscribe(ev: Event, key: string, index: number) {
+    subscribe(ev: Event, content: any) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
-        let data = new FormData()
-        // TODO add address
-        data.append('address', '127.0.0.1:7412');
-        data.append('board', key)
-        if (!this.boards[index].ui_options.subscribe) {
-            this.api.subscribe(data).subscribe(isOk => {
-                let options = { subscribe: isOk };
-                this.boards[index].ui_options = options;
-                this.common.showAlert('Subscribe successfully', 'success', 3000);
-            })
-        } else {
-            this.api.unSubscribe(data).subscribe(isOk => {
-                if (isOk) {
-                    this.boards[index].ui_options.subscribe = false;
-                    this.common.showAlert('Unsubscribe successfully', 'success', 3000);
-                    this.getBoards();
+        this.modal.open(content).result.then(result => {
+            if (result) {
+                if (!this.subscribeForm.valid) {
+                    this.common.showAlert('The Board Key Or Address can not be empty!!!', 'danger', 3000);
+                    return;
                 }
-            })
-        }
+                let data = new FormData()
+                data.append('address', this.subscribeForm.get('address').value);
+                data.append('board', this.subscribeForm.get('board').value)
+                this.api.subscribe(data).subscribe(isOk => {
+                    if (isOk) {
+                        this.common.showAlert('Subscribe successfully', 'success', 3000);
+                        this.getBoards();
+                    }
+                })
+            }
+        })
+
     }
-    openThreads(ev: Event, key, url: string) {
+    unSubscribe(ev: Event, boardKey: string) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
+        let data = new FormData();
+        data.append('board', boardKey);
+        this.api.unSubscribe(data).subscribe(isOk => {
+            if (isOk) {
+                this.common.showAlert('Unsubscribe successfully', 'success', 3000);
+                this.getBoards();
+            }
+        })
+    }
+    openThreads(ev: Event, key: string) {
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        if (!key) {
+            this.common.showErrorAlert('Abnormal parameters!!!', 3000);
+            return;
+        }
         this.router.navigate(['/threads', { board: key }])
         // this.board.emit(this.boards[0].public_key);
     }

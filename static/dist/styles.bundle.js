@@ -80,7 +80,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "/* You can add global styles to this file, and also import other style files */\nhtml,body {\n  height: 100%;\n}\n\nbody {\n  padding-top: 80px;\n}\n\ni {\n  margin-left: 5px;\n}\n.not-found {\n  text-align: center;\n}\n.loading {\n  position: absolute;\n  top: 45%;\n  left: 45%;\n  width: 10%;\n  height: 10%;\n  background-image: url(" + __webpack_require__("./src/assets/loading.svg") + ");\n  background-size: 100% 100%;\n}\n.btn {\n  cursor: pointer;\n}", ""]);
+exports.push([module.i, "/* You can add global styles to this file, and also import other style files */\nhtml,body {\n  height: 100%;\n}\n\nbody {\n  padding-top: 80px;\n}\n\ni {\n  margin-left: 5px;\n}\n.not-found {\n  text-align: center;\n}\n.loading {\n  position: absolute;\n  top: 45%;\n  left: 45%;\n  width: 10%;\n  height: 10%;\n  background-image: url(" + __webpack_require__("./src/assets/loading.svg") + ");\n  background-size: 100% 100%;\n}\n.btn {\n  cursor: pointer;\n}\n\n.thread-item {\n  padding: 1rem;\n  background-color: hsl(240, 14%, 97%);\n  border-radius: .25rem;\n  font-weight: bold;\n}\n.thread-item span {\n  font-size: .9rem;\n  font-weight: normal;\n}", ""]);
 
 // exports
 
