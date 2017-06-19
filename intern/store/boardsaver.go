@@ -92,8 +92,8 @@ func (bs *BoardSaver) load() error {
 	}
 	bs.checkSynced()
 	if bs.config.Master() {
-		bs.checkURLs()
-		bs.checkDeps()
+		bs.checkMasterURLs()
+		bs.checkMasterDeps()
 		go bs.service()
 	}
 	return nil
@@ -139,6 +139,12 @@ func (bs *BoardSaver) service() {
 					bi.RejectedCount += 1
 				}
 				bs.Unlock()
+			case cxo.ConnCreated:
+				bs.Lock()
+				bs.Unlock()
+			case cxo.ConnClosed:
+				bs.Lock()
+				bs.Unlock()
 			}
 		case <-bs.quit:
 			return
@@ -147,7 +153,7 @@ func (bs *BoardSaver) service() {
 }
 
 // Helper function. Check's the URL's of the boards which this node is master over.
-func (bs *BoardSaver) checkURLs() {
+func (bs *BoardSaver) checkMasterURLs() {
 	for bpk, bi := range bs.store {
 		if bi.Config.Master {
 			b, e := bs.c.GetBoard(bpk)
@@ -205,12 +211,12 @@ func (bs *BoardSaver) checkSingleDep(bpkDep cipher.PubKey) {
 }
 
 // Helper function. Checks whether dependencies are valid.
-func (bs *BoardSaver) checkDeps() {
+func (bs *BoardSaver) checkMasterDeps() {
 	for _, bi := range bs.store {
 		for j, dep := range bi.Config.Deps {
 			fromBpk, e := misc.GetPubKey(dep.Board)
 			if e != nil {
-				log.Println("[BOARDSAVER] 'checkDeps()' error:", e)
+				log.Println("[BOARDSAVER] 'checkMasterDeps()' error:", e)
 				log.Println("[BOARDSAVER] removing all dependencies of board with public key:", dep.Board)
 				bi.Config.Deps = append(bi.Config.Deps[:j], bi.Config.Deps[j+1:]...)
 				continue
@@ -221,7 +227,7 @@ func (bs *BoardSaver) checkDeps() {
 			for _, t := range dep.Threads {
 				tRef, e := misc.GetReference(t)
 				if e != nil {
-					log.Println("[BOARDSAVER] 'checkDeps()' error:", e)
+					log.Println("[BOARDSAVER] 'checkMasterDeps()' error:", e)
 					log.Println("[BOARDSAVER] removing thread dependency of reference:", t)
 					bi.Config.RemoveDep(fromBpk, tRef)
 					continue
@@ -313,7 +319,7 @@ func (bs *BoardSaver) MasterAdd(bpk cipher.PubKey, bsk cipher.SecKey) error {
 
 	bs.Lock()
 	defer bs.Unlock()
-	bs.store[bpk] = &BoardInfo{Config: bc}
+	bs.store[bpk] = &BoardInfo{Accepted: true, Config: bc}
 	bs.save()
 	return nil
 }

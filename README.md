@@ -19,7 +19,7 @@ There are many configurations for running a Skycoin BBS Node.
 Skycoin BBS can be installed on some Linux distributions as a [snap package](https://snapcraft.io/).
 ```bash
 # Install.
-sudo snap install skycoin-bbs --edge
+sudo snap install skycoin-bbs --edge --devmode
 
 # Run.
 skycoin-bbs.bbsnode

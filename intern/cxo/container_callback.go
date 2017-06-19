@@ -31,7 +31,7 @@ func (m *Msg) Mode() MsgMode         { return m.m }
 func (c *Container) GetUpdatesChan() chan *Msg {
 	c.Lock(c.GetUpdatesChan)
 	defer c.Unlock()
-	return c.RootMsgs
+	return c.msgs
 }
 
 func (c *Container) rootFilledInternalCB(root *node.Root) {
@@ -42,14 +42,12 @@ func (c *Container) rootFilledInternalCB(root *node.Root) {
 func (c *Container) subAcceptedInternalCB(conn *gnet.Conn, feed cipher.PubKey) {
 	log.Printf("[CONTAINER] SUBSCRIPTION ACCEPTED: '%s (%s)'.",
 		feed.Hex(), conn.Address())
-	go c.sendConnMsg(conn, SubAccepted)
 	go c.sendRootMsg(feed, SubAccepted)
 }
 
 func (c *Container) subRejectedInternalCB(conn *gnet.Conn, feed cipher.PubKey) {
 	log.Printf("[CONTAINER] SUBSCRIPTION REJECTED: '%s (%s)'.",
 		feed.Hex(), conn.Address())
-	go c.sendConnMsg(conn, SubRejected)
 	go c.sendRootMsg(feed, SubRejected)
 }
 
@@ -64,9 +62,9 @@ func (c *Container) connClosedInternalCB(conn *gnet.Conn) {
 }
 
 func (c *Container) sendRootMsg(pk cipher.PubKey, m MsgMode) {
-	c.RootMsgs <- &Msg{pk: pk, m: m}
+	c.msgs <- &Msg{pk: pk, m: m}
 }
 
 func (c *Container) sendConnMsg(conn *gnet.Conn, m MsgMode) {
-	c.ConnMsgs <- &Msg{c: conn, m: m}
+	c.msgs <- &Msg{c: conn, m: m}
 }

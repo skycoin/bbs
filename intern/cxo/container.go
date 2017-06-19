@@ -22,8 +22,7 @@ type Container struct {
 	node *node.Node
 
 	config   *args.Config
-	RootMsgs chan *Msg
-	ConnMsgs chan *Msg
+	msgs     chan *Msg
 
 	tempFiles []string
 }
@@ -31,8 +30,7 @@ type Container struct {
 func NewContainer(config *args.Config) (*Container, error) {
 	c := &Container{
 		config:   config,
-		RootMsgs: make(chan *Msg),
-		ConnMsgs: make(chan *Msg),
+		msgs:     make(chan *Msg),
 	}
 	// Setup stuff.
 	if e := c.setupCXONode(); e != nil {
@@ -60,7 +58,7 @@ func (c *Container) setupCXONode() error {
 	r.Done()
 
 	// Setup CXO Configuration.
-	nc := node.NewNodeConfig()
+	nc := node.NewConfig()
 	nc.MaxMessageSize = 0 /* TODO: Should really look into adjusting this in the future. */
 	nc.InMemoryDB = c.config.CXOUseMemory()
 	nc.DataDir = c.config.CXODir()
@@ -108,9 +106,6 @@ func (c *Container) setupCXONode() error {
 	if c.node, e = node.NewNodeReg(nc, r); e != nil {
 		return e
 	}
-	if e = c.node.Start(); e != nil {
-		return e
-	}
 	// Setup internal container.
 	c.c = c.node.Container()
 	return nil
@@ -121,7 +116,13 @@ func (c *Container) Close() error {
 	for _, fName := range c.tempFiles {
 		os.Remove(fName)
 	}
-	return c.node.Close()
+	if e := c.node.Close(); e != nil {
+		return e
+	}
+	select {
+	case <-c.node.Quiting():
+	}
+	return nil
 }
 
 // Lock for thread safety.
@@ -141,6 +142,11 @@ func (c *Container) Feeds() []cipher.PubKey {
 	c.Lock(c.Feeds)
 	defer c.Unlock()
 	return c.node.Feeds()
+}
+
+// Gets the address of the node.
+func (c *Container) GetAddress() string {
+	return c.node.Pool().Address()
 }
 
 // Subscribe subscribes to a cxo feed.

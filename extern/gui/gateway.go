@@ -46,12 +46,14 @@ func NewGateway(
 */
 
 type StatsView struct {
-	NodeIsMaster bool `json:"node_is_master"`
+	NodeIsMaster   bool `json:"node_is_master"`
+	NodeCXOAddress string `json:"node_cxo_address"`
 }
 
 func (g *Gateway) GetStats() *StatsView {
 	return &StatsView{
-		NodeIsMaster: g.config.Master(),
+		NodeIsMaster:   g.config.Master(),
+		NodeCXOAddress: g.container.GetAddress(),
 	}
 }
 

@@ -51,15 +51,15 @@ func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 	c.Lock(c.GetBoards)
 	defer c.Unlock()
 
-	boards := make([]*typ.Board, len(bpks))
-	for i, bpk := range bpks {
+	boards := []*typ.Board{}
+	for _, bpk := range bpks {
 		w := c.c.LastRoot(bpk).Walker()
 		bc, b := typ.BoardContainer{}, typ.Board{}
 		if e := w.AdvanceFromRoot(&bc, makeBoardContainerFinder(w.Root())); e != nil {
 			continue
 		}
 		w.AdvanceFromRefField("Board", &b)
-		boards[i] = &b
+		boards = append(boards, &b)
 	}
 	return boards
 }
