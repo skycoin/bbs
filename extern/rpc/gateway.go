@@ -48,7 +48,7 @@ func (g *Gateway) NewPost(req *ReqNewPost, pRefStr *string) (e error) {
 	if bi.Config.Master == false {
 		return errors.New("not master of board")
 	}
-	pRefStr = &req.Post.Ref
+	*pRefStr = req.Post.Ref
 	return g.container.NewPost(req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef, req.Post)
 }
 
@@ -76,7 +76,7 @@ func (g *Gateway) NewThread(req *ReqNewThread, tRefStr *string) error {
 	}
 	// Modify thread.
 	req.Thread.MasterBoard = req.BoardPubKey.Hex()
-	tRefStr = &req.Thread.Ref
+	*tRefStr = req.Thread.Ref
 	return nil
 }
 
