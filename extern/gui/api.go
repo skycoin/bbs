@@ -19,6 +19,14 @@ func NewAPI(g *Gateway) *API {
 }
 
 /*
+	<<< MISC >>>
+*/
+
+func (a *API) Quit(w http.ResponseWriter, r *http.Request) {
+	sendResponse(w, a.g.Quit(), http.StatusOK)
+}
+
+/*
 	<<< FOR STATS >>>
 */
 

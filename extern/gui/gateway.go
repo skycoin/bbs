@@ -12,6 +12,7 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
+	"time"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.
@@ -22,6 +23,7 @@ type Gateway struct {
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
 	queueSaver *msg.QueueSaver
+	quit       chan int
 }
 
 // NewGateway creates a new Gateway.
@@ -31,6 +33,7 @@ func NewGateway(
 	boardSaver *store.BoardSaver,
 	userSaver *store.UserSaver,
 	queueSaver *msg.QueueSaver,
+	quit chan int,
 ) *Gateway {
 	return &Gateway{
 		config:     config,
@@ -38,6 +41,22 @@ func NewGateway(
 		boardSaver: boardSaver,
 		userSaver:  userSaver,
 		queueSaver: queueSaver,
+		quit:       quit,
+	}
+}
+
+/*
+	<<< MISC >>>
+*/
+
+// Quit quits the node entirely.
+func (g *Gateway) Quit() bool {
+	timer := time.NewTimer(10 * time.Second)
+	select {
+	case g.quit <- 0:
+		return true
+	case <-timer.C:
+		return false
 	}
 }
 

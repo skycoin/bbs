@@ -43,7 +43,8 @@ func main() {
 
 	var rpcServer *rpc.Server
 	if config.Master() {
-		rpcGateway := rpc.NewGateway(config, container, boardSaver, userSaver)
+		rpcGateway := rpc.NewGateway(
+			config, container, boardSaver, userSaver)
 
 		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCPort())
 		CatchError(e, "unable to start rpc server")
@@ -52,7 +53,8 @@ func main() {
 		log.Println("[RPCSERVER] Serving on address:", rpcServer.Address())
 	}
 
-	gateway := gui.NewGateway(config, container, boardSaver, userSaver, queueSaver)
+	gateway := gui.NewGateway(
+		config, container, boardSaver, userSaver, queueSaver, quit)
 
 	serveAddr, e := gui.OpenWebInterface(gateway)
 	CatchError(e, "unable to start web server")
@@ -77,6 +79,7 @@ func main() {
 	log.Println("!!! EVERYTHING UP AND RUNNING !!!")
 	defer log.Println("Shutting down...")
 	<-quit
+	time.Sleep(time.Second)
 }
 
 // CatchInterrupt catches Ctrl+C behaviour.

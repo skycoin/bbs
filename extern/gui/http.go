@@ -97,6 +97,8 @@ func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 		fileServe(mux, appLoc)
 	}
 
+	mux.HandleFunc("/api/quit", api.Quit)
+
 	mux.HandleFunc("/api/get_stats", api.GetStats)
 	mux.HandleFunc("/api/connections/get_all", api.GetConnections)
 	//mux.HandleFunc("/api/connections/new", api.AddConnection)
