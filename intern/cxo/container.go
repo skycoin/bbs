@@ -21,16 +21,16 @@ type Container struct {
 	c    *node.Container
 	node *node.Node
 
-	config   *args.Config
-	msgs     chan *Msg
+	config *args.Config
+	msgs   chan *Msg
 
 	tempFiles []string
 }
 
 func NewContainer(config *args.Config) (*Container, error) {
 	c := &Container{
-		config:   config,
-		msgs:     make(chan *Msg),
+		config: config,
+		msgs:   make(chan *Msg),
 	}
 	// Setup stuff.
 	if e := c.setupCXONode(); e != nil {

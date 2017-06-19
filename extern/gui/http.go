@@ -2,9 +2,14 @@ package gui
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
+	"os"
+	"path"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -43,6 +48,33 @@ func serve(listener net.Listener, mux *http.ServeMux, q chan struct{}) {
 	}
 }
 
+// Allows serving Angular.JS content swiftly.
+func fileServe(mux *http.ServeMux, appLoc string) error {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		data, e := ioutil.ReadFile(path.Join(appLoc, "index.html"))
+		if e != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(e.Error()))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write(data)
+	})
+
+	return filepath.Walk(appLoc, func(path string, info os.FileInfo, err error) error {
+		// Skip directories.
+		if info.IsDir() {
+			return nil
+		}
+		httpPath := strings.TrimPrefix(path, appLoc)
+		log.Printf("[WEBGUI] Found path: '%s'.", httpPath)
+		mux.HandleFunc(httpPath, func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, path)
+		})
+		return nil
+	})
+}
+
 // Close closes the http service.
 func Close() {
 	if quit != nil {
@@ -62,7 +94,7 @@ func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	if g.config.WebGUIEnable() {
-		mux.Handle("/", http.FileServer(http.Dir(appLoc)))
+		fileServe(mux, appLoc)
 	}
 
 	mux.HandleFunc("/api/get_stats", api.GetStats)

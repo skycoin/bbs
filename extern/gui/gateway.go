@@ -46,7 +46,7 @@ func NewGateway(
 */
 
 type StatsView struct {
-	NodeIsMaster   bool `json:"node_is_master"`
+	NodeIsMaster   bool   `json:"node_is_master"`
 	NodeCXOAddress string `json:"node_cxo_address"`
 }
 
@@ -310,7 +310,6 @@ func (g *Gateway) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*T
 }
 
 // GetPosts obtains posts of specified board and thread.
-// TODO: In the future, as a single thread can exist across different boards, we will only need to specify the thread.
 func (g *Gateway) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.Post, error) {
 	_, has := g.boardSaver.Get(bpk)
 	if has == false {
@@ -320,7 +319,6 @@ func (g *Gateway) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.
 }
 
 // NewPost creates a new post in specified board and thread.
-// TODO: In the future, as a single thread can exist across different boards, we will only need to specify the thread.
 func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) (e error) {
 	// Check post.
 	uc := g.userSaver.GetCurrent()
