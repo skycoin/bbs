@@ -1,0 +1,21 @@
+threadPage {
+  width: 100vw;
+  .btn {
+    float: right;
+    cursor: pointer;
+  }
+  .thread {
+    .thread-description {
+      word-break: break-all;
+    }
+  }
+  .post {
+    margin: .8rem 0;
+    .author {
+      max-width: 20rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

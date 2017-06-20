@@ -10,7 +10,7 @@ import { slideInLeftAnimation } from "../../animations/router.animations";
 @Component({
     selector: 'boards-list',
     templateUrl: 'boards-list.component.html',
-    styleUrls: ['boards.css'],
+    styleUrls: ['boards.scss'],
     encapsulation: ViewEncapsulation.None,
     animations: [slideInLeftAnimation],
 })
@@ -59,6 +59,7 @@ export class BoardsListComponent implements OnInit {
                 this.api.getSubscription(data).subscribe(res => {
                     // if (res.config && res.config.secret_key) {
                     el.ui_options = { subscribe: true };
+                    // console.log('test get board:', el);
                     // }
                 })
             });
@@ -79,10 +80,7 @@ export class BoardsListComponent implements OnInit {
                 data.append('description', this.addForm.get('description').value);
                 data.append('seed', this.addForm.get('seed').value);
                 this.api.addBoard(data).subscribe(res => {
-                    this.api.getBoards().subscribe(boards => {
-                        this.boards = boards;
-                        this.common.showAlert('Added successfully', 'success', 3000);
-                    });
+                   this.getBoards();
                 });
             }
         }, err => { });

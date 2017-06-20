@@ -8,7 +8,7 @@ import { slideInLeftAnimation } from "../../animations/router.animations";
 @Component({
   selector: 'threads',
   templateUrl: 'threads.html',
-  styleUrls: ['threads.css'],
+  styleUrls: ['threads.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: [slideInLeftAnimation]
 })
@@ -85,6 +85,10 @@ export class ThreadsComponent implements OnInit {
   openImport(ev: Event, threadKey: string, content: any) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    if(!this.isRoot) {
+      this.common.showErrorAlert('Only Master Nodes Can Import',3000);
+      return;
+    }
     if (this.importBoards.length <= 0) {
       this.api.getBoards().subscribe(boards => {
         this.importBoards = boards;

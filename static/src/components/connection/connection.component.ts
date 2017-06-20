@@ -6,7 +6,7 @@ import { AlertComponent } from "../../components";
 @Component({
   selector: 'app-connection',
   templateUrl: './connection.component.html',
-  styleUrls: ['./connection.component.css'],
+  styleUrls: ['./connection.component.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: [slideInLeftAnimation]
 })

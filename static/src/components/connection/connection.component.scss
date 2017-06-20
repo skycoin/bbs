@@ -1,0 +1,17 @@
+.connection {
+  .btn-group {
+    float: right;
+  }
+  .index {
+    width: 1rem;
+    text-align: center;
+  }
+  .del {
+    width: 1rem;
+    text-align: center;
+    cursor: pointer;
+    &:hover {
+      color: red;
+    }
+  }
+}
