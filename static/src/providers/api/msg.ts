@@ -18,6 +18,7 @@ export interface BoardPage {
 
 export interface Stats {
   node_is_master: boolean;
+  node_cxo_address: string;
 }
 
 export interface Thread {

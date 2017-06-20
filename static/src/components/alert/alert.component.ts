@@ -9,8 +9,8 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 })
 
 export class AlertComponent implements OnInit {
-  title: string = '';
-  body: string = '';
+  title = '';
+  body = '';
   constructor(public activeModal: NgbActiveModal) { }
 
   ngOnInit() { }

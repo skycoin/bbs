@@ -7,7 +7,7 @@ import {
   UserlistComponent,
   UserComponent,
   ConnectionComponent
-} from "../components";
+} from '../components';
 
 const routes: Routes = [
   { path: '', component: BoardsListComponent, pathMatch: 'full' },

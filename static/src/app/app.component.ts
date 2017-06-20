@@ -1,8 +1,8 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { ApiService } from "../providers";
-import { BoardsListComponent, ThreadsComponent, ThreadPageComponent } from "../components";
-import { UserService, User, CommonService } from "../providers";
-import { Router, NavigationStart } from "@angular/router";
+import { ApiService } from '../providers';
+import { BoardsListComponent, ThreadsComponent, ThreadPageComponent } from '../components';
+import { UserService, User, CommonService } from '../providers';
+import { Router, NavigationStart } from '@angular/router';
 import 'rxjs/add/operator/filter';
 
 @Component({
@@ -15,8 +15,8 @@ export class AppComponent implements OnInit {
   @ViewChild(ThreadsComponent) threads: ThreadsComponent;
   @ViewChild(ThreadPageComponent) threadPage: ThreadPageComponent
   title = 'app';
-  name: string = '';
-  isMasterNode: boolean = false;
+  name = '';
+  isMasterNode = false;
   constructor(
     private api: ApiService,
     private user: UserService,

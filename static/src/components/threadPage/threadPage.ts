@@ -1,12 +1,12 @@
 import { Component, OnInit, HostListener, HostBinding, ViewEncapsulation } from '@angular/core';
-import { ApiService, ThreadPage, CommonService } from "../../providers";
-import { Router, ActivatedRoute } from "@angular/router";
+import { ApiService, ThreadPage, CommonService } from '../../providers';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
-import { slideInLeftAnimation } from "../../animations/router.animations";
+import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
+import { slideInLeftAnimation } from '../../animations/router.animations';
 
 @Component({
-  selector: 'threadPage',
+  selector: 'app-threadpage',
   templateUrl: 'threadPage.html',
   styleUrls: ['threadPage.scss'],
   encapsulation: ViewEncapsulation.None,
@@ -16,8 +16,8 @@ import { slideInLeftAnimation } from "../../animations/router.animations";
 export class ThreadPageComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  private boardKey: string = '';
-  private threadKey: string = '';
+  private boardKey = '';
+  private threadKey = '';
   private data: ThreadPage = { posts: [], thread: { name: '', description: '' } };
   private postForm = new FormGroup({
     title: new FormControl('', Validators.required),
@@ -25,8 +25,41 @@ export class ThreadPageComponent implements OnInit {
   });
   private editorOptions = {
     placeholderText: 'Edit Your Content Here!',
-    // toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertImage', 'insertVideo', 'insertFile', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
-    toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', '|', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
+    toolbarButtons: [
+      'bold',
+      'italic',
+      'underline',
+      'strikeThrough',
+      'subscript',
+      'superscript',
+      '|',
+      'fontFamily',
+      'fontSize',
+      'color',
+      'inlineStyle',
+      'paragraphStyle',
+      '|',
+      'paragraphFormat',
+      'align',
+      'formatOL',
+      'formatUL',
+      'outdent',
+      'indent',
+      'quote',
+      '-',
+      'insertLink',
+      '|',
+      'insertHR',
+      'selectAll',
+      'clearFormatting',
+      '|',
+      'print',
+      'spellChecker',
+      'help',
+      'html',
+      '|',
+      'undo',
+      'redo'],
     heightMin: 200,
     events: {
     },
@@ -55,7 +88,7 @@ export class ThreadPageComponent implements OnInit {
           this.common.showErrorAlert('Parameter error', 3000);
           return;
         }
-        let data = new FormData();
+        const data = new FormData();
         data.append('board', this.boardKey);
         data.append('thread', this.threadKey);
         data.append('title', this.postForm.get('title').value);
@@ -80,11 +113,11 @@ export class ThreadPageComponent implements OnInit {
     this.router.navigate(['/add', { exec: 'post', board: this.boardKey, thread: this.threadKey }]);
   }
   open(master, ref: string) {
-    let data = new FormData();
+    const data = new FormData();
     data.append('board', master);
     data.append('thread', ref);
-    this.api.getThreadpage(data).subscribe(data => {
-      this.data = data;
+    this.api.getThreadpage(data).subscribe(res => {
+      this.data = res;
       this.common.loading = false;
     });
   }

@@ -5,8 +5,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppComponent } from './app.component';
-import { ApiService, UserService, CommonService, ConnectionService } from "../providers";
-import { AppRouterRoutingModule } from "../router/app-router-routing.module";
+import { ApiService, UserService, CommonService, ConnectionService } from '../providers';
+import { AppRouterRoutingModule } from '../router/app-router-routing.module';
 import { FroalaEditorModule, FroalaViewModule } from 'angular2-froala-wysiwyg';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -18,7 +18,7 @@ import {
   UserComponent,
   ConnectionComponent,
   AlertComponent,
-} from "../components";
+} from '../components';
 import { SafeHTMLPipe } from '../pipes';
 
 @NgModule({
