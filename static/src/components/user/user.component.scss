@@ -1,0 +1,16 @@
+.user-box {
+  display: block;
+  width: 100%;
+  .item {
+    span {
+      margin: 0 10px;
+    }
+    .exec {
+      font-size: 12px;
+      text-decoration: underline;
+    }
+    i {
+      margin-right: 5px;
+    }
+  }
+}

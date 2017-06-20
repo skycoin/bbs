@@ -3,7 +3,6 @@ import { Routes, RouterModule } from '@angular/router';
 import {
   BoardsListComponent,
   ThreadsComponent,
-  AddComponent,
   ThreadPageComponent,
   UserlistComponent,
   UserComponent,
@@ -18,7 +17,6 @@ const routes: Routes = [
       { path: 'p', component: ThreadPageComponent },
     ]
   },
-  { path: 'add', component: AddComponent },
   { path: 'userlist', component: UserlistComponent },
   { path: 'user', component: UserComponent },
   { path: 'conn', component: ConnectionComponent },

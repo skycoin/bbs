@@ -1,29 +1,34 @@
 <div class='boards'>
   <div class='container-fluid'>
-    <div class="page-header">
+    <!--<div class="page-header">
       <h1>All Boards</h1>
-    </div>
-    <p class="d-flex justify-content-end"><button type="button" class="btn btn-outline-danger" (click)="subscribe($event,subscribeBox)">Subscribe</button>
-      <button [class.disabled]="!isRoot" type="button" class="btn btn-outline-primary" (click)="openAdd(add)">New Board</button>
+    </div>-->
+    <p class="d-flex justify-content-end"><button type="button" class="btn btn-sm btn-danger" (click)="subscribe($event,subscribeBox)">Subscribe</button>
+      <button [class.disabled]="!isRoot" type="button" class="btn btn-sm btn-primary" (click)="openAdd(add)">New Board</button>
     </p>
-    <table class="table table-hover table-sm table-bordered">
-      <thead class="thead-inverse">
+    <table class="table table-hover" *ngIf="boards.length > 0">
+      <thead>
         <tr>
-          <!--<th>Board</th>-->
-          <th>Name</th>
-          <th>Description</th>
+          <th>Board</th>
           <th>Created</th>
-          <th></th>
-          <th></th>
+          <th>More</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let board of boards;let i = index;" (click)="openThreads($event,board?.public_key)">
-          <td class="title" title="{{board?.name}}">{{board?.name}}</td>
-          <td class="description" title="{{board?.description}}">{{board?.description}}</td>
-          <td class="created">{{board?.created / 1000000 | date: 'short'}}</td>
-          <td class="subscribe" title="Unsubscribe" (click)="unSubscribe($event,board?.public_key)"><a href="javascript:void(0);"><i class="fa" [class.fa-star-o]="!board?.ui_options?.subscribe" [class.fa-star]="board?.ui_options?.subscribe"></i></a></td>
-          <td class="info" title="Board Info" (click)="openInfo($event,board,info)"><a href="javascript:void(0);"><i class="fa fa-info-circle"></i></a></td>
+        <tr *ngFor="let board of boards;let i = index;trackBy:board.public_key" (click)="openThreads($event,board?.public_key)">
+          <td class="content">
+            <h5>{{board?.name}}</h5>
+            <small class="text-muted">{{board?.description}}</small>
+          </td>
+          <td>
+            <small class="text-muted">{{board?.created / 1000000 | date: 'short'}}</small>
+          </td>
+          <td>
+            <a href="javascript:void(0);" (click)="unSubscribe($event,board?.public_key)"><i class="fa" [class.fa-star-o]="!board?.ui_options?.subscribe" [class.fa-star]="board?.ui_options?.subscribe"></i></a>
+            <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info-circle"></i></a>
+          </td>
+          <!--<td class="subscribe" title="Unsubscribe" ></td>
+          <td class="info" title="Board Info" ></td>-->
         </tr>
       </tbody>
     </table>

@@ -1,14 +1,14 @@
 import { Component, OnInit, HostListener, HostBinding, ViewEncapsulation } from '@angular/core';
 import { ApiService, ThreadPage, CommonService } from "../../providers";
 import { Router, ActivatedRoute } from "@angular/router";
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
 import { slideInLeftAnimation } from "../../animations/router.animations";
 
 @Component({
   selector: 'threadPage',
   templateUrl: 'threadPage.html',
-  styleUrls: ['threadPage.css'],
+  styleUrls: ['threadPage.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: [slideInLeftAnimation]
 })
@@ -20,13 +20,13 @@ export class ThreadPageComponent implements OnInit {
   private threadKey: string = '';
   private data: ThreadPage = { posts: [], thread: { name: '', description: '' } };
   private postForm = new FormGroup({
-    title: new FormControl(),
-    body: new FormControl()
+    title: new FormControl('', Validators.required),
+    body: new FormControl('', Validators.required)
   });
   private editorOptions = {
     placeholderText: 'Edit Your Content Here!',
     // toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertImage', 'insertVideo', 'insertFile', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
-    toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', '|', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
+    toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', '|', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
     heightMin: 200,
     events: {
     },
@@ -49,16 +49,20 @@ export class ThreadPageComponent implements OnInit {
 
   openReply(content) {
     this.postForm.reset();
-    this.modal.open(content, { backdrop: 'static', size: 'lg' }).result.then((result) => {
-      let data = new FormData();
+    this.modal.open(content, { backdrop: 'static', size: 'lg', keyboard: false }).result.then((result) => {
       if (result) {
+        if (!this.postForm.valid) {
+          this.common.showErrorAlert('Parameter error', 3000);
+          return;
+        }
+        let data = new FormData();
         data.append('board', this.boardKey);
         data.append('thread', this.threadKey);
         data.append('title', this.postForm.get('title').value);
         data.append('body', this.postForm.get('body').value);
+        console.log('test data:', this.postForm.get('title').value);
         this.api.addPost(data).subscribe(post => {
           if (post) {
-            console.log('add post successfully:', post);
             this.data.posts.unshift(post);
             this.common.showAlert('Added successfully', 'success', 3000);
           }

@@ -19,9 +19,7 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
       "styles": [
-        "../node_modules/bootstrap/dist/css/bootstrap.min.css",
-        "styles.css",
-        "../node_modules/font-awesome/css/font-awesome.css",
+        "styles.scss",
         "../node_modules/froala-editor/css/froala_editor.pkgd.min.css"
       ],
       "scripts": [
@@ -60,7 +58,8 @@
     }
   },
   "defaults": {
-    "styleExt": "css",
-    "component": {}
+    "styleExt": "scss",
+    "component": {
+    }
   }
 }

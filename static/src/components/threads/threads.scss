@@ -1,0 +1,32 @@
+threads {
+  width: 100vw;
+  .threads {
+    .btn-group {
+      float: right;
+    }
+    .card {
+      box-shadow: 0 0.2rem 0.5rem hsla(0, 0%, 0%, 0.3);
+      .card-block {
+        .card-text {
+          .btn {
+            margin: 0 .5rem;
+          }
+        }
+      }
+    }
+    table {
+      tbody {
+        tr {
+          td {
+            vertical-align: middle !important;
+            h5 {
+              .tag {
+                color: blue;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

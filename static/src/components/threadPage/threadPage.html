@@ -6,7 +6,7 @@
       <button class="btn btn-primary" (click)="openReply(addPost)">Reply</button>
     </div>
   </div>
-  <div class="card post" *ngFor="let item of data?.posts">
+  <div class="card post" *ngFor="let item of data?.posts;trackBy:item.ref">
     <div class="card-block">
       <!--<h5 class="card-title">{{item?.title}}</h5>-->
       <p class="card-text author text-primary" title="{{item?.author}}" placement="top" [ngbTooltip]="item?.author">{{item?.author}}</p>

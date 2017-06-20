@@ -1,0 +1,26 @@
+boards-list {
+  display: block;
+  width: 100vw;
+  .btn {
+    margin: 0 .5rem;
+  }
+  .boards {
+    .boardNot {
+      width: 100%;
+      text-align: center;
+    }
+    table {
+      tbody {
+        tr {
+          cursor: pointer;
+          .content {
+            min-width: 40rem;
+          }
+          td {
+            vertical-align: middle !important;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,34 +1,40 @@
 <div class="threads">
   <div class="container-fluid">
-    <div class="card">
-      <div class="card-header">
-        Board Details
-      </div>
+    <div class="card" *ngIf="board">
       <div class="card-block">
-        <p class="card-text">Board Name:{{board?.name}}</p>
-        <p class="card-text">Board Description:{{board?.description}}</p>
+        <h5>{{board?.name}}</h5>
+        <p class="card-text text-muted">{{board?.description}}</p>
+        <p class="card-text card-created"><small class="text-muted">{{board?.created / 1000000 | date: 'short'}}</small></p>
         <p class="card-text d-flex justify-content-end">
           <button type="button" [class.disabled]="!isRoot" class="btn btn-primary" (click)="openAdd(content)">New Thread</button>
         </p>
       </div>
     </div>
-    <table class="table table-hover table-sm table-bordered">
-      <thead class="thead-inverse">
+    <table class="table table-hover" *ngIf="threads.length > 0">
+      <thead>
         <tr>
           <th>Thread</th>
-          <!--<th>Board</th>-->
-          <th>Description</th>
-          <th></th>
-          <th></th>
+          <th>More</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let thread of threads" (click)="open(thread?.master_board,thread?.ref)">
-          <td class="name" title="{{thread.name}}"><span class="tag" [hidden]="!(thread.master_board != board.public_key)"><i class="fa fa-clone"></i>(Imported)</span>{{thread.name}}</td>
+        <tr *ngFor="let thread of threads;trackBy:thread.ref" (click)="open(thread?.master_board,thread?.ref)">
+          <td title="{{thread.name}}">
+            <h5>
+              <small class="tag" *ngIf="thread.master_board != board.public_key"><i class="fa fa-clone"></i>(Imported)</small>{{thread.name}}
+            </h5>
+            <small class="text-muted">
+              {{thread.description}}
+              </small>
+          </td>
+          <td>
+            <a href="javascript:void(0);" (click)="openImport($event,thread.ref,importBox)"><i [class.disabled]="isRoot" title="Import Thread" class="fa fa-exchange"></i></a>
+            <a href="javascript:void(0);" (click)="openInfo($event,thread,infoBox)"><i class="fa fa-info-circle"></i></a>
+          </td>
           <!--<td class="board" title="{{url}}"><a href="javascript:void(0);" >{{board.url}}</a></td>-->
-          <td class="description" title="{{thread.description}}">{{thread.description}}</td>
-          <td class="transfer" (click)="openImport($event,thread.ref,importBox)"><i title="Import Thread" class="fa fa-exchange"></i></td>
-          <td class="info" title="Thread Info"><a href="javascript:void(0);" (click)="openInfo($event,thread,infoBox)"><i class="fa fa-info-circle"></i></a></td>
+          <!--<td class="description" title="{{thread.description}}">{{thread.description}}</td>-->
+          <!--<td class="transfer" ></td>
+          <td class="info" title="Thread Info"></td>-->
         </tr>
       </tbody>
     </table>

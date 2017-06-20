@@ -32,6 +32,11 @@ export class CommonService {
     return this.http.post(url, data).filter((res: Response) => res.status === 200).map((res: Response) => res.json()).catch(err => this.handleError(err));
   }
 
+  /**
+   * Show Error Alert
+   * @param message Error Text
+   * @param timeout 
+   */
   showErrorAlert(message: string, timeout?: number) {
     this.showAlert(message, 'danger', timeout);
   }
@@ -50,6 +55,7 @@ export class CommonService {
     this.alert = true;
   }
 
+  
   showOrHideToTopBtn() {
     let pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
     let max = document.documentElement.scrollHeight;

@@ -1,7 +1,7 @@
 <div class="user-list">
-  <p class="d-flex justify-content-end"><button type="button" class="btn btn-outline-primary" (click)="openAdd(addBox)">New Master</button></p>
+  <p class="d-flex justify-content-end"><button type="button" class="btn btn-primary" (click)="openAdd(addBox)">New Master</button></p>
   <table class="table table-hover table-sm table-bordered">
-    <thead class="thead-inverse">
+    <thead>
       <tr>
         <th>Name</th>
         <th>Master</th>
@@ -11,7 +11,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let user of userlist">
+      <tr *ngFor="let user of userlist;trackBy:user.public_key">
         <td class="alias" title="{{user.alias}}">{{user.alias}}</td>
         <td class="master">{{user.master}}</td>
         <td class="key" title="{{user.public_key}}">{{user.public_key}}</td>
