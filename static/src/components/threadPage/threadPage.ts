@@ -16,6 +16,7 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
 export class ThreadPageComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
+  private sort = 'desc';
   private boardKey = '';
   private threadKey = '';
   private data: ThreadPage = { posts: [], thread: { name: '', description: '' } };
@@ -75,11 +76,12 @@ export class ThreadPageComponent implements OnInit {
     this.route.params.subscribe(res => {
       this.boardKey = res['board'];
       this.threadKey = res['thread'];
-      this.common.loading = true;
       this.open(this.boardKey, this.threadKey);
     })
   }
-
+  private setSort() {
+    this.sort = this.sort === 'desc' ? 'esc' : 'desc';
+  }
   openReply(content) {
     this.postForm.reset();
     this.modal.open(content, { backdrop: 'static', size: 'lg', keyboard: false }).result.then((result) => {
@@ -118,7 +120,6 @@ export class ThreadPageComponent implements OnInit {
     data.append('thread', ref);
     this.api.getThreadpage(data).subscribe(res => {
       this.data = res;
-      this.common.loading = false;
     });
   }
 

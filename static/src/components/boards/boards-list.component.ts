@@ -19,6 +19,7 @@ export class BoardsListComponent implements OnInit {
     @HostBinding('style.display') display = 'block';
     @HostBinding('style.position') position = 'absolute';
     @Output() board: EventEmitter<string> = new EventEmitter();
+    private sort = 'desc';
     private isRoot = false;
     private boards: Array<Board> = [];
     private subscribeForm = new FormGroup({
@@ -41,12 +42,15 @@ export class BoardsListComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        // this.common.loading.start();
         this.getBoards();
         this.api.getStats().subscribe(root => {
             this.isRoot = root;
         });
     }
-
+    private setSort() {
+        this.sort = this.sort === 'desc' ? 'esc' : 'desc';
+    }
     private getBoards() {
         this.api.getBoards().subscribe(boards => {
             this.boards = boards;
@@ -57,11 +61,9 @@ export class BoardsListComponent implements OnInit {
                 const data = new FormData();
                 data.append('board', el.public_key);
                 this.api.getSubscription(data).subscribe(res => {
-                    // if (res.config && res.config.secret_key) {
                     el.ui_options = { subscribe: true };
-                    // console.log('test get board:', el);
-                    // }
                 })
+                // this.common.loading.close();
             });
         });
     }
@@ -73,6 +75,7 @@ export class BoardsListComponent implements OnInit {
         this.modal.open(content, { size: 'lg' });
     }
     openAdd(content) {
+        this.addForm.reset();
         this.modal.open(content).result.then((result) => {
             if (result === true) {
                 const data = new FormData();
@@ -80,7 +83,8 @@ export class BoardsListComponent implements OnInit {
                 data.append('description', this.addForm.get('description').value);
                 data.append('seed', this.addForm.get('seed').value);
                 this.api.addBoard(data).subscribe(res => {
-                   this.getBoards();
+                    this.getBoards();
+                    this.common.showAlert('Added Successfully', 'success', 3000);
                 });
             }
         }, err => { });

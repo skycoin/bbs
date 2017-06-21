@@ -10,12 +10,12 @@
       <thead>
         <tr>
           <th>Board</th>
-          <th>Created</th>
-          <th>More</th>
+          <th class="sortBtn" (click)="setSort()">Created <i class="fa  fa-sort"></i></th>
+          <th><i class="fa fa-ellipsis-h"></i></th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let board of boards;let i = index;trackBy:board.public_key" (click)="openThreads($event,board?.public_key)">
+        <tr *ngFor="let board of (boards | orderBy: sort);let i = index;trackBy:board.public_key" (click)="openThreads($event,board?.public_key)">
           <td class="content">
             <h5>{{board?.name}}</h5>
             <small class="text-muted">{{board?.description}}</small>

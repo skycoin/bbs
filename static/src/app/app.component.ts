@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ApiService } from '../providers';
-import { BoardsListComponent, ThreadsComponent, ThreadPageComponent } from '../components';
+import { LoadingComponent } from '../components';
 import { UserService, User, CommonService } from '../providers';
 import { Router, NavigationStart } from '@angular/router';
 import 'rxjs/add/operator/filter';
@@ -11,9 +11,8 @@ import 'rxjs/add/operator/filter';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  @ViewChild(BoardsListComponent) boards: BoardsListComponent;
-  @ViewChild(ThreadsComponent) threads: ThreadsComponent;
-  @ViewChild(ThreadPageComponent) threadPage: ThreadPageComponent
+  @ViewChild(LoadingComponent) loading: LoadingComponent;
+
   title = 'app';
   name = '';
   isMasterNode = false;
@@ -24,6 +23,7 @@ export class AppComponent implements OnInit {
     public common: CommonService) {
   }
   ngOnInit() {
+    this.common.loading = this.loading;
     this.user.getCurrent().subscribe(user => {
       this.name = user.alias;
     });

@@ -18,8 +18,9 @@ import {
   UserComponent,
   ConnectionComponent,
   AlertComponent,
+  LoadingComponent
 } from '../components';
-import { SafeHTMLPipe } from '../pipes';
+import { SafeHTMLPipe, OrderByPipe } from '../pipes';
 
 @NgModule({
   imports: [
@@ -42,7 +43,10 @@ import { SafeHTMLPipe } from '../pipes';
     UserComponent,
     ConnectionComponent,
     AlertComponent,
+    LoadingComponent,
+    // Pipe
     SafeHTMLPipe,
+    OrderByPipe,
   ],
   entryComponents: [AlertComponent],
   providers: [CommonService, ApiService, UserService, ConnectionService],

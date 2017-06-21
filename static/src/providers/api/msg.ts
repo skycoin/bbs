@@ -7,6 +7,7 @@ export interface Post {
 }
 
 export interface ThreadPage {
+  board?: Board;
   thread?: Thread;
   posts?: Array<Post>;
 }

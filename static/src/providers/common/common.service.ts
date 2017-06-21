@@ -2,7 +2,9 @@ import { Http, Response } from '@angular/http';
 import { Injectable } from '@angular/core';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/filter';
+import 'rxjs/add/operator/do';
 import { Observable } from 'rxjs/Observable';
+import { LoadingComponent } from '../../components';
 
 @Injectable()
 export class CommonService {
@@ -10,7 +12,7 @@ export class CommonService {
   private alertMessage = '';
   private alert = false;
   topBtn = false;
-  loading = false;
+  loading: LoadingComponent = null;
   constructor(private http: Http) { }
 
   handleError(error: Response) {
@@ -22,8 +24,13 @@ export class CommonService {
     if (!url) {
       return Observable.throw('The connection is empty');
     }
-    return this.http.get(url).filter((res: Response) => res.status === 200).
+    // if (this.loading) {
+    //   this.loading.start();
+    // }
+    return this.http.get(url).
+      filter((res: Response) => res.status === 200).
       map((res: Response) => res.json()).
+      // do(() => { if (this.loading) { this.loading.close() } }).
       catch(err => this.handleError(err));
   }
 
@@ -31,10 +38,17 @@ export class CommonService {
     if (!url || !data) {
       return Observable.throw('Parameters and connections can not be empty');
     }
-    return this.http.post(url, data).filter((res: Response) => res.status === 200).
+    // if (this.loading) {
+    //   this.loading.start();
+    // }
+    return this.http.post(url, data).
+      filter((res: Response) => res.status === 200).
       map((res: Response) => res.json()).
+      // do(() => { if (this.loading) { this.loading.close() } }).
       catch(err => this.handleError(err));
   }
+
+
 
   /**
    * Show Error Alert

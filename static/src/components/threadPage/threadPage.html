@@ -1,12 +1,12 @@
 <div class="container-fluid">
-  <div class="card thread" *ngIf="data.thread.name != '' ">
+  <div class="card thread" *ngIf="data?.thread?.name != '' ">
     <div class="card-block">
       <h3 class="card-title">{{data?.thread?.name}}</h3>
       <p class="card-text thread-description">{{data?.thread?.description}}</p>
-      <button class="btn btn-sm btn-primary" (click)="openReply(addPost)">Reply</button>
+      <button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Reply</button>
     </div>
   </div>
-  <div class="card post" *ngFor="let item of data?.posts;trackBy: item?.ref">
+  <div class="card post" *ngFor="let item of (data?.posts | orderBy:sort);trackBy: item?.ref">
     <div class="card-block">
       <!--<h5 class="card-title">{{item?.title}}</h5>-->
       <p class="card-text author text-primary" title="{{item?.author}}" placement="top" [ngbTooltip]="item?.author">{{item?.author}}</p>
