@@ -42,6 +42,22 @@ func (a *API) GetConnections(w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, a.g.GetConnections(), http.StatusOK)
 }
 
+func (a *API) AddConnection(w http.ResponseWriter, r *http.Request) {
+	if e := a.g.AddConnection(r.FormValue("address")); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
+}
+
+func (a *API) RemoveConnection(w http.ResponseWriter, r *http.Request) {
+	if e := a.g.RemoveConnection(r.FormValue("address")); e != nil {
+		sendResponse(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	sendResponse(w, true, http.StatusOK)
+}
+
 /*
 	<<< FOR SUBSCRIPTIONS >>>
 */

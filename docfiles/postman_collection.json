@@ -240,6 +240,65 @@
 			]
 		},
 		{
+			"name": "Connections",
+			"description": "",
+			"item": [
+				{
+					"name": "Get All Connections",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "New Connection",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "address",
+									"value": "127.0.0.1:7412",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Connection",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/remove",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "address",
+									"value": "127.0.0.1:7412",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Hex",
 			"description": "",
 			"item": [
@@ -648,17 +707,6 @@
 					"response": []
 				}
 			]
-		},
-		{
-			"name": "Get All Connections",
-			"request": {
-				"url": "http://127.0.0.1:7410/api/connections/get_all",
-				"method": "GET",
-				"header": [],
-				"body": {},
-				"description": ""
-			},
-			"response": []
 		},
 		{
 			"name": "Get Stats",

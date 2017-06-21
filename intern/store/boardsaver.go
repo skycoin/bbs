@@ -280,6 +280,17 @@ func (bs *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
 	return *bi, has
 }
 
+// GetOfAddress obtains board information of boards of specified address.
+func (bs *BoardSaver) GetOfAddress(addr string) []BoardInfo {
+	boards := []BoardInfo{}
+	for _, bi := range bs.store {
+		if bi.Config.Address == addr {
+			boards = append(boards, *bi)
+		}
+	}
+	return boards
+}
+
 // Add adds a board to configuration.
 func (bs *BoardSaver) Add(addr string, bpk cipher.PubKey) {
 	bs.Lock()

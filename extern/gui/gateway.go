@@ -80,8 +80,24 @@ func (g *Gateway) GetStats() *StatsView {
 	<<< FOR CONNECTIONS >>>
 */
 
+// GetConnection lists all connections.
 func (g *Gateway) GetConnections() []string {
 	return g.container.GetConnections()
+}
+
+// AddConnection adds a connection.
+func (g *Gateway) AddConnection(addr string) error {
+	return g.container.Connect(addr)
+}
+
+// RemoveConnection removes a connection.
+func (g *Gateway) RemoveConnection(addr string) error {
+	boards := g.boardSaver.GetOfAddress(addr)
+	if len(boards) == 0 {
+		return g.container.Disconnect(addr)
+	}
+	return errors.Errorf("currently subscribed to %d boards under address %s",
+		len(boards), addr)
 }
 
 /*

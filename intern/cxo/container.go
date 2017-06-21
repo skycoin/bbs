@@ -176,13 +176,10 @@ func (c *Container) Unsubscribe(addr string, pk cipher.PubKey) error {
 		c.node.Unsubscribe(nil, pk)
 		return nil
 	}
-	conn, e := c.node.Pool().Dial(addr)
-	if e != nil {
-		switch e {
-		case gnet.ErrClosed:
-		default:
-			return e
-		}
+	conn := c.node.Pool().Connection(addr)
+	if conn == nil {
+		c.node.Unsubscribe(nil, pk)
+		return nil
 	}
 	c.node.Unsubscribe(conn, pk)
 	return nil
@@ -198,4 +195,25 @@ func (c *Container) GetConnections() []string {
 		addresses[i] = conn.Address()
 	}
 	return addresses
+}
+
+// Connect adds a connection.
+func (c *Container) Connect(addr string) error {
+	c.Lock(c.Connect)
+	defer c.Unlock()
+	if _, e := c.node.Pool().Dial(addr); e != nil {
+		return e
+	}
+	return nil
+}
+
+// Disconnect removes a connection.
+func (c *Container) Disconnect(addr string) error {
+	c.Lock(c.Disconnect)
+	defer c.Unlock()
+	conn := c.node.Pool().Connection(addr)
+	if conn == nil {
+		return nil
+	}
+	return conn.Close()
 }
