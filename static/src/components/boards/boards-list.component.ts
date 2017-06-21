@@ -1,14 +1,14 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, HostBinding } from '@angular/core';
-import { ApiService, UserService, CommonService } from "../../providers";
-import { Board, UIOptions } from "../../providers/api/msg";
-import { Router, ActivatedRoute } from "@angular/router";
-import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
+import { ApiService, UserService, CommonService } from '../../providers';
+import { Board, UIOptions } from '../../providers/api/msg';
+import { Router, ActivatedRoute } from '@angular/router';
+import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { AlertComponent } from "../alert/alert.component";
-import { slideInLeftAnimation } from "../../animations/router.animations";
+import { AlertComponent } from '../alert/alert.component';
+import { slideInLeftAnimation } from '../../animations/router.animations';
 
 @Component({
-    selector: 'boards-list',
+    selector: 'app-boardslist',
     templateUrl: 'boards-list.component.html',
     styleUrls: ['boards.scss'],
     encapsulation: ViewEncapsulation.None,
@@ -19,7 +19,8 @@ export class BoardsListComponent implements OnInit {
     @HostBinding('style.display') display = 'block';
     @HostBinding('style.position') position = 'absolute';
     @Output() board: EventEmitter<string> = new EventEmitter();
-    private isRoot: boolean = false;
+    private sort = 'desc';
+    private isRoot = false;
     private boards: Array<Board> = [];
     private subscribeForm = new FormGroup({
         address: new FormControl('', Validators.required),
@@ -41,12 +42,15 @@ export class BoardsListComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        // this.common.loading.start();
         this.getBoards();
         this.api.getStats().subscribe(root => {
             this.isRoot = root;
         });
     }
-
+    private setSort() {
+        this.sort = this.sort === 'desc' ? 'esc' : 'desc';
+    }
     private getBoards() {
         this.api.getBoards().subscribe(boards => {
             this.boards = boards;
@@ -54,14 +58,12 @@ export class BoardsListComponent implements OnInit {
                 if (!el || !el.public_key) {
                     return;
                 }
-                let data = new FormData();
+                const data = new FormData();
                 data.append('board', el.public_key);
                 this.api.getSubscription(data).subscribe(res => {
-                    // if (res.config && res.config.secret_key) {
                     el.ui_options = { subscribe: true };
-                    // console.log('test get board:', el);
-                    // }
                 })
+                // this.common.loading.close();
             });
         });
     }
@@ -73,14 +75,16 @@ export class BoardsListComponent implements OnInit {
         this.modal.open(content, { size: 'lg' });
     }
     openAdd(content) {
+        this.addForm.reset();
         this.modal.open(content).result.then((result) => {
             if (result === true) {
-                let data = new FormData();
+                const data = new FormData();
                 data.append('name', this.addForm.get('name').value);
                 data.append('description', this.addForm.get('description').value);
                 data.append('seed', this.addForm.get('seed').value);
                 this.api.addBoard(data).subscribe(res => {
-                   this.getBoards();
+                    this.getBoards();
+                    this.common.showAlert('Added Successfully', 'success', 3000);
                 });
             }
         }, err => { });
@@ -94,7 +98,7 @@ export class BoardsListComponent implements OnInit {
                     this.common.showAlert('The Board Key Or Address can not be empty!!!', 'danger', 3000);
                     return;
                 }
-                let data = new FormData()
+                const data = new FormData()
                 data.append('address', this.subscribeForm.get('address').value);
                 data.append('board', this.subscribeForm.get('board').value)
                 this.api.subscribe(data).subscribe(isOk => {
@@ -110,7 +114,7 @@ export class BoardsListComponent implements OnInit {
     unSubscribe(ev: Event, boardKey: string) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
-        let data = new FormData();
+        const data = new FormData();
         data.append('board', boardKey);
         this.api.unSubscribe(data).subscribe(isOk => {
             if (isOk) {

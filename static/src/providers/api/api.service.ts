@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Http, Response } from "@angular/http";
-import { Board, Thread, ThreadPage, Post } from "./msg";
-import { CommonService } from "../common/common.service";
+import { Http, Response } from '@angular/http';
+import { Board, Thread, ThreadPage, Post } from './msg';
+import { CommonService } from '../common/common.service';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 
@@ -12,7 +12,7 @@ export class ApiService {
   }
 
   getSubscriptions() {
-    return this.common.handleGet(this.base_url + "get_subscriptions");
+    return this.common.handleGet(this.base_url + 'get_subscriptions');
   }
 
   getSubscription(data: FormData) {
@@ -28,7 +28,7 @@ export class ApiService {
     return this.common.handleGet(this.base_url + 'get_stats');
   }
 
-  getThreads(data:FormData) {
+  getThreads(data: FormData) {
     return this.common.handlePost(this.base_url + 'get_threads', data);
   }
 
@@ -36,7 +36,7 @@ export class ApiService {
     return this.common.handleGet(this.base_url + 'get_boards');
   }
 
-  getPosts(data:FormData) {
+  getPosts(data: FormData) {
     return this.common.handlePost(this.base_url + 'get_posts', data);
 
   }
@@ -44,7 +44,7 @@ export class ApiService {
   getBoardPage(data: FormData) {
     return this.common.handlePost(this.base_url + 'get_boardpage', data);
   }
-  getThreadpage(data:FormData) {
+  getThreadpage(data: FormData) {
     return this.common.handlePost(this.base_url + 'get_threadpage', data);
 
   }

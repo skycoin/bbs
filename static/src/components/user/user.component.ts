@@ -1,7 +1,7 @@
 import { Component, OnInit, HostBinding } from '@angular/core';
-import { UserService, User } from "../../providers";
-import { slideInLeftAnimation } from "../../animations/router.animations";
-import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { UserService, User } from '../../providers';
+import { slideInLeftAnimation } from '../../animations/router.animations';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 
 @Component({
@@ -14,7 +14,7 @@ export class UserComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
   private user: User = null;
-  private switchUserKey: string = '';
+  private switchUserKey = '';
   private switchUserList: Array<User> = [];
   constructor(private userService: UserService, private modal: NgbModal) { }
 
@@ -32,13 +32,13 @@ export class UserComponent implements OnInit {
     }
     this.modal.open(content).result.then((result) => {
       if (result) {
-        console.log('switchKey:',this.switchUserKey);
-        let data = new FormData();
+        console.log('switchKey:', this.switchUserKey);
+        const data = new FormData();
         data.append('user', this.switchUserKey);
         this.userService.setCurrent(data).subscribe(res => {
           location.reload();
         })
       }
-    },err => {})
+    }, err => {})
   }
 }

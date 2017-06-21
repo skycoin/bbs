@@ -1,6 +1,6 @@
-boards-list {
+app-boardslist {
   display: block;
-  width: 100vw;
+  width: 100%; // width: 100vw;
   .btn {
     margin: 0 .5rem;
   }
@@ -10,6 +10,16 @@ boards-list {
       text-align: center;
     }
     table {
+      thead {
+        tr {
+          .sortBtn {
+            cursor: pointer;
+            &:hover {
+              color: blue;
+            }
+          }
+        }
+      }
       tbody {
         tr {
           cursor: pointer;

@@ -47,7 +47,7 @@ var slideInLeftAnimation = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__an
 /***/ "./src/app/app.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<nav class=\"navbar fixed-top navbar-toggleable-md navbar-light bg-faded \">\n  <button class=\"navbar-toggler navbar-toggler-right\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarTogglerDemo01\"\n    aria-controls=\"navbarTogglerDemo01\" aria-expanded=\"false\" aria-label=\"Toggle navigation\">\n    <span class=\"navbar-toggler-icon\"></span>\n  </button>\n  <a class=\"navbar-brand\" href=\"#\" title=\"BBS\">\n    <img src=\"../favicon.ico\" width=\"60\" height=\"30\" alt=\"\">\n  </a>\n  <div class=\"collapse navbar-collapse\" id=\"navbarTogglerDemo01\">\n    <ul class=\"navbar-nav mr-auto\">\n      <li class=\"nav-item\">\n        <a class=\"nav-link\" routerLink=\"/\" routerLinkActive=\"active\">Board <span class=\"sr-only\">(current)</span></a>\n      </li>\n      <li class=\"nav-item\">\n        <a class=\"nav-link\" routerLink=\"/userlist\" routerLinkActive=\"active\">UserList</a>\n      </li>\n      <li class=\"nav-item\">\n        <a class=\"nav-link\" routerLink=\"/conn\" routerLinkActive=\"active\">Connections Manager</a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-name nav-link\" routerLink=\"/user\" routerLinkActive=\"active\"><i class=\"fa fa-user\" aria-hidden=\"true\"></i>{{name}}</a>\n      </li>\n    </ul>\n    <span class=\"navbar-text\">\n     <a class=\"nav-node nav-link\" href=\"javascript:void(0);\" *ngIf=\"isMasterNode\">Master Node</a>\n     <a class=\"nav-node nav-link\" href=\"javascript:void(0);\" *ngIf=\"!isMasterNode\">Client Node</a>\n    </span>\n  </div>\n</nav>\n\n<router-outlet></router-outlet>\n<button class=\"top-btn btn btn-primary \" *ngIf=\"common.topBtn\" (click)=\"common.scrollToTop()\">\n  <div class=\"top\"></div>\n  <span>top</span>\n</button>\n<div class=\"loading\" *ngIf=\"common.loading\"></div>\n<div class=\"app-pop\">\n  <ngb-alert type=\"{{common.alertType}}\" *ngIf=\"common.alert\" (click)=\"common.alert = false\">\n    {{common.alertMessage}}\n  </ngb-alert>\n</div>\n"
+module.exports = "<nav class=\"navbar fixed-top navbar-toggleable-md navbar-light bg-faded \">\n  <button class=\"navbar-toggler navbar-toggler-right\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarTogglerDemo01\"\n    aria-controls=\"navbarTogglerDemo01\" aria-expanded=\"false\" aria-label=\"Toggle navigation\">\n    <span class=\"navbar-toggler-icon\"></span>\n  </button>\n  <a class=\"navbar-brand\" href=\"#\" title=\"BBS\">\n    <img src=\"../favicon.ico\" width=\"60\" height=\"30\" alt=\"\">\n  </a>\n  <div class=\"collapse navbar-collapse\" id=\"navbarTogglerDemo01\">\n    <ul class=\"navbar-nav mr-auto\">\n      <li class=\"nav-item\">\n        <a class=\"nav-link\" routerLink=\"/\" routerLinkActive=\"active\">Board <span class=\"sr-only\">(current)</span></a>\n      </li>\n      <li class=\"nav-item\">\n        <a class=\"nav-link\" routerLink=\"/userlist\" routerLinkActive=\"active\">UserList</a>\n      </li>\n      <li class=\"nav-item\">\n        <a class=\"nav-link\" routerLink=\"/conn\" routerLinkActive=\"active\">Connections Manager</a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-name nav-link\" routerLink=\"/user\" routerLinkActive=\"active\"><i class=\"fa fa-user\" aria-hidden=\"true\"></i>{{name}}</a>\n      </li>\n    </ul>\n    <span class=\"navbar-text\">\n     <a class=\"nav-node nav-link\" href=\"javascript:void(0);\" *ngIf=\"isMasterNode\">Master Node</a>\n     <a class=\"nav-node nav-link\" href=\"javascript:void(0);\" *ngIf=\"!isMasterNode\">Client Node</a>\n    </span>\n  </div>\n</nav>\n\n<router-outlet></router-outlet>\n<app-loading></app-loading>\n<button class=\"top-btn btn btn-primary \" *ngIf=\"common.topBtn\" (click)=\"common.scrollToTop()\">\n  <div class=\"top\"></div>\n  <span>top</span>\n</button>\n<!--<div class=\"loading\" *ngIf=\"common.loading\"></div>-->\n<div class=\"app-pop\">\n  <ngb-alert type=\"{{common.alertType}}\" *ngIf=\"common.alert\" (click)=\"common.alert = false\">\n    {{common.alertMessage}}\n  </ngb-alert>\n</div>\n"
 
 /***/ }),
 
@@ -107,6 +107,7 @@ var AppComponent = (function () {
     }
     AppComponent.prototype.ngOnInit = function () {
         var _this = this;
+        this.common.loading = this.loading;
         this.user.getCurrent().subscribe(function (user) {
             _this.name = user.alias;
         });
@@ -120,27 +121,19 @@ var AppComponent = (function () {
     return AppComponent;
 }());
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_24" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_2__components__["a" /* BoardsListComponent */]),
-    __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_2__components__["a" /* BoardsListComponent */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__components__["a" /* BoardsListComponent */]) === "function" && _a || Object)
-], AppComponent.prototype, "boards", void 0);
-__decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_24" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_2__components__["b" /* ThreadsComponent */]),
-    __metadata("design:type", typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__components__["b" /* ThreadsComponent */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__components__["b" /* ThreadsComponent */]) === "function" && _b || Object)
-], AppComponent.prototype, "threads", void 0);
-__decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_24" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_2__components__["c" /* ThreadPageComponent */]),
-    __metadata("design:type", typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2__components__["c" /* ThreadPageComponent */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__components__["c" /* ThreadPageComponent */]) === "function" && _c || Object)
-], AppComponent.prototype, "threadPage", void 0);
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_24" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_2__components__["h" /* LoadingComponent */]),
+    __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_2__components__["h" /* LoadingComponent */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__components__["h" /* LoadingComponent */]) === "function" && _a || Object)
+], AppComponent.prototype, "loading", void 0);
 AppComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* Component */])({
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
         selector: 'app-root',
         template: __webpack_require__("./src/app/app.component.html"),
         styles: [__webpack_require__("./src/app/app.component.scss")]
     }),
-    __metadata("design:paramtypes", [typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1__providers__["ApiService"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__providers__["ApiService"]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_1__providers__["UserService"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__providers__["UserService"]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_3__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__angular_router__["a" /* Router */]) === "function" && _f || Object, typeof (_g = typeof __WEBPACK_IMPORTED_MODULE_1__providers__["CommonService"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__providers__["CommonService"]) === "function" && _g || Object])
+    __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1__providers__["ApiService"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__providers__["ApiService"]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1__providers__["UserService"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__providers__["UserService"]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_3__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__angular_router__["a" /* Router */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_1__providers__["CommonService"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__providers__["CommonService"]) === "function" && _e || Object])
 ], AppComponent);
 
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e;
 //# sourceMappingURL=app.component.js.map
 
 /***/ }),
@@ -207,7 +200,10 @@ AppModule = __decorate([
             __WEBPACK_IMPORTED_MODULE_10__components__["e" /* UserComponent */],
             __WEBPACK_IMPORTED_MODULE_10__components__["f" /* ConnectionComponent */],
             __WEBPACK_IMPORTED_MODULE_10__components__["g" /* AlertComponent */],
+            __WEBPACK_IMPORTED_MODULE_10__components__["h" /* LoadingComponent */],
+            // Pipe
             __WEBPACK_IMPORTED_MODULE_11__pipes__["a" /* SafeHTMLPipe */],
+            __WEBPACK_IMPORTED_MODULE_11__pipes__["b" /* OrderByPipe */],
         ],
         entryComponents: [__WEBPACK_IMPORTED_MODULE_10__components__["g" /* AlertComponent */]],
         providers: [__WEBPACK_IMPORTED_MODULE_6__providers__["CommonService"], __WEBPACK_IMPORTED_MODULE_6__providers__["ApiService"], __WEBPACK_IMPORTED_MODULE_6__providers__["UserService"], __WEBPACK_IMPORTED_MODULE_6__providers__["ConnectionService"]],
@@ -216,6 +212,13 @@ AppModule = __decorate([
 ], AppModule);
 
 //# sourceMappingURL=app.module.js.map
+
+/***/ }),
+
+/***/ "./src/assets/loading.svg":
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__.p + "loading.65f5c6fda306ecdd677a.svg";
 
 /***/ }),
 
@@ -272,7 +275,7 @@ var AlertComponent = (function () {
     return AlertComponent;
 }());
 AlertComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* Component */])({
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
         selector: 'app-alert',
         template: __webpack_require__("./src/components/alert/alert.component.html"),
         styles: [__webpack_require__("./src/components/alert/alert.component.scss")]
@@ -288,7 +291,7 @@ var _a;
 /***/ "./src/components/boards/boards-list.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class='boards'>\n  <div class='container-fluid'>\n    <!--<div class=\"page-header\">\n      <h1>All Boards</h1>\n    </div>-->\n    <p class=\"d-flex justify-content-end\"><button type=\"button\" class=\"btn btn-sm btn-danger\" (click)=\"subscribe($event,subscribeBox)\">Subscribe</button>\n      <button [class.disabled]=\"!isRoot\" type=\"button\" class=\"btn btn-sm btn-primary\" (click)=\"openAdd(add)\">New Board</button>\n    </p>\n    <table class=\"table table-hover\" *ngIf=\"boards.length > 0\">\n      <thead>\n        <tr>\n          <th>Board</th>\n          <th>Created</th>\n          <th>More</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr *ngFor=\"let board of boards;let i = index;trackBy:board.public_key\" (click)=\"openThreads($event,board?.public_key)\">\n          <td class=\"content\">\n            <h5>{{board?.name}}</h5>\n            <small class=\"text-muted\">{{board?.description}}</small>\n          </td>\n          <td>\n            <small class=\"text-muted\">{{board?.created / 1000000 | date: 'short'}}</small>\n          </td>\n          <td>\n            <a href=\"javascript:void(0);\" (click)=\"unSubscribe($event,board?.public_key)\"><i class=\"fa\" [class.fa-star-o]=\"!board?.ui_options?.subscribe\" [class.fa-star]=\"board?.ui_options?.subscribe\"></i></a>\n            <a href=\"javascript:void(0);\" (click)=\"openInfo($event,board,info)\"><i class=\"fa fa-info-circle\"></i></a>\n          </td>\n          <!--<td class=\"subscribe\" title=\"Unsubscribe\" ></td>\n          <td class=\"info\" title=\"Board Info\" ></td>-->\n        </tr>\n      </tbody>\n    </table>\n    <h3 class=\"boardNot\" *ngIf=\"boards?.length == 0\">Not Found Boards</h3>\n  </div>\n</div>\n\n<!-- Subscribe Box-->\n<ng-template #subscribeBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Subscribe</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"subscribeForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"subscribeAddress\">Address</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"address\" id=\"subscribeAddress\" formControlName=\"address\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"subscribeBoardKey\">Board Public Key</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"board Key\" id=\"subscribeBoardKey\" formControlName=\"board\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<!--New Board-->\n<ng-template #add let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Board</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"name\">Board name</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"name\" id=\"name\" formControlName=\"name\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"description\">Board description</label>\n        <textarea class=\"form-control\" rows=\"3\" id=\"description\" formControlName=\"description\"></textarea>\n      </div>\n      <div class=\"form-group\">\n        <label for=\"seed\">Board seed</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"seed\" id=\"seed\" formControlName=\"seed\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n\n<!--Board Info-->\n<ng-template #info let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Board</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <div class=\"form-group\">\n      <label for=\"tmpName\">Name</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpName\" [(ngModel)]=\"tmpBoard.name\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpDescription\">Description</label>\n      <textarea class=\"form-control\" rows=\"3\" id=\"tmpDescription\" [(ngModel)]=\"tmpBoard.description\"></textarea>\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpPublicKey\">Public Key</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpPublicKey\" [(ngModel)]=\"tmpBoard.public_key\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpUrl\">Url</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpUrl\" [(ngModel)]=\"tmpBoard.url\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpCreated\">Created</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpCreated\" [(ngModel)]=\"tmpBoard.created\">\n    </div>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">close</button>\n  </div>\n</ng-template>\n"
+module.exports = "<div class='boards'>\n  <div class='container-fluid'>\n    <!--<div class=\"page-header\">\n      <h1>All Boards</h1>\n    </div>-->\n    <p class=\"d-flex justify-content-end\"><button type=\"button\" class=\"btn btn-sm btn-danger\" (click)=\"subscribe($event,subscribeBox)\">Subscribe</button>\n      <button [class.disabled]=\"!isRoot\" type=\"button\" class=\"btn btn-sm btn-primary\" (click)=\"openAdd(add)\">New Board</button>\n    </p>\n    <table class=\"table table-hover\" *ngIf=\"boards.length > 0\">\n      <thead>\n        <tr>\n          <th>Board</th>\n          <th class=\"sortBtn\" (click)=\"setSort()\">Created <i class=\"fa  fa-sort\"></i></th>\n          <th><i class=\"fa fa-ellipsis-h\"></i></th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr *ngFor=\"let board of (boards | orderBy: sort);let i = index;trackBy:board.public_key\" (click)=\"openThreads($event,board?.public_key)\">\n          <td class=\"content\">\n            <h5>{{board?.name}}</h5>\n            <small class=\"text-muted\">{{board?.description}}</small>\n          </td>\n          <td>\n            <small class=\"text-muted\">{{board?.created / 1000000 | date: 'short'}}</small>\n          </td>\n          <td>\n            <a href=\"javascript:void(0);\" (click)=\"unSubscribe($event,board?.public_key)\"><i class=\"fa\" [class.fa-star-o]=\"!board?.ui_options?.subscribe\" [class.fa-star]=\"board?.ui_options?.subscribe\"></i></a>\n            <a href=\"javascript:void(0);\" (click)=\"openInfo($event,board,info)\"><i class=\"fa fa-info-circle\"></i></a>\n          </td>\n          <!--<td class=\"subscribe\" title=\"Unsubscribe\" ></td>\n          <td class=\"info\" title=\"Board Info\" ></td>-->\n        </tr>\n      </tbody>\n    </table>\n    <h3 class=\"boardNot\" *ngIf=\"boards?.length == 0\">Not Found Boards</h3>\n  </div>\n</div>\n\n<!-- Subscribe Box-->\n<ng-template #subscribeBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Subscribe</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"subscribeForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"subscribeAddress\">Address</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"address\" id=\"subscribeAddress\" formControlName=\"address\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"subscribeBoardKey\">Board Public Key</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"board Key\" id=\"subscribeBoardKey\" formControlName=\"board\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<!--New Board-->\n<ng-template #add let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Board</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"name\">Board name</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"name\" id=\"name\" formControlName=\"name\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"description\">Board description</label>\n        <textarea class=\"form-control\" rows=\"3\" id=\"description\" formControlName=\"description\"></textarea>\n      </div>\n      <div class=\"form-group\">\n        <label for=\"seed\">Board seed</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"seed\" id=\"seed\" formControlName=\"seed\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n\n<!--Board Info-->\n<ng-template #info let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Board</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <div class=\"form-group\">\n      <label for=\"tmpName\">Name</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpName\" [(ngModel)]=\"tmpBoard.name\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpDescription\">Description</label>\n      <textarea class=\"form-control\" rows=\"3\" id=\"tmpDescription\" [(ngModel)]=\"tmpBoard.description\"></textarea>\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpPublicKey\">Public Key</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpPublicKey\" [(ngModel)]=\"tmpBoard.public_key\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpUrl\">Url</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpUrl\" [(ngModel)]=\"tmpBoard.url\">\n    </div>\n    <div class=\"form-group\">\n      <label for=\"tmpCreated\">Created</label>\n      <input type=\"text\" class=\"form-control\" id=\"tmpCreated\" [(ngModel)]=\"tmpBoard.created\">\n    </div>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">close</button>\n  </div>\n</ng-template>\n"
 
 /***/ }),
 
@@ -329,6 +332,7 @@ var BoardsListComponent = (function () {
         this.display = 'block';
         this.position = 'absolute';
         this.board = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* EventEmitter */]();
+        this.sort = 'desc';
         this.isRoot = false;
         this.boards = [];
         this.subscribeForm = new __WEBPACK_IMPORTED_MODULE_4__angular_forms__["e" /* FormGroup */]({
@@ -344,10 +348,14 @@ var BoardsListComponent = (function () {
     }
     BoardsListComponent.prototype.ngOnInit = function () {
         var _this = this;
+        // this.common.loading.start();
         this.getBoards();
         this.api.getStats().subscribe(function (root) {
             _this.isRoot = root;
         });
+    };
+    BoardsListComponent.prototype.setSort = function () {
+        this.sort = this.sort === 'desc' ? 'esc' : 'desc';
     };
     BoardsListComponent.prototype.getBoards = function () {
         var _this = this;
@@ -360,11 +368,9 @@ var BoardsListComponent = (function () {
                 var data = new FormData();
                 data.append('board', el.public_key);
                 _this.api.getSubscription(data).subscribe(function (res) {
-                    // if (res.config && res.config.secret_key) {
                     el.ui_options = { subscribe: true };
-                    // console.log('test get board:', el);
-                    // }
                 });
+                // this.common.loading.close();
             });
         });
     };
@@ -376,6 +382,7 @@ var BoardsListComponent = (function () {
     };
     BoardsListComponent.prototype.openAdd = function (content) {
         var _this = this;
+        this.addForm.reset();
         this.modal.open(content).result.then(function (result) {
             if (result === true) {
                 var data = new FormData();
@@ -384,6 +391,7 @@ var BoardsListComponent = (function () {
                 data.append('seed', _this.addForm.get('seed').value);
                 _this.api.addBoard(data).subscribe(function (res) {
                     _this.getBoards();
+                    _this.common.showAlert('Added Successfully', 'success', 3000);
                 });
             }
         }, function (err) { });
@@ -439,24 +447,24 @@ var BoardsListComponent = (function () {
     return BoardsListComponent;
 }());
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('@routeAnimation'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('@routeAnimation'),
     __metadata("design:type", Object)
 ], BoardsListComponent.prototype, "routeAnimation", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('style.display'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('style.display'),
     __metadata("design:type", Object)
 ], BoardsListComponent.prototype, "display", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('style.position'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('style.position'),
     __metadata("design:type", Object)
 ], BoardsListComponent.prototype, "position", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Output */])(),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_2" /* Output */])(),
     __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* EventEmitter */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* EventEmitter */]) === "function" && _a || Object)
 ], BoardsListComponent.prototype, "board", void 0);
 BoardsListComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* Component */])({
-        selector: 'boards-list',
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
+        selector: 'app-boardslist',
         template: __webpack_require__("./src/components/boards/boards-list.component.html"),
         styles: [__webpack_require__("./src/components/boards/boards.scss")],
         encapsulation: __WEBPACK_IMPORTED_MODULE_0__angular_core__["q" /* ViewEncapsulation */].None,
@@ -478,7 +486,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "boards-list {\n  display: block;\n  width: 100vw; }\n  boards-list .btn {\n    margin: 0 .5rem; }\n  boards-list .boards .boardNot {\n    width: 100%;\n    text-align: center; }\n  boards-list .boards table tbody tr {\n    cursor: pointer; }\n    boards-list .boards table tbody tr .content {\n      min-width: 40rem; }\n    boards-list .boards table tbody tr td {\n      vertical-align: middle !important; }\n", ""]);
+exports.push([module.i, "app-boardslist {\n  display: block;\n  width: 100%; }\n  app-boardslist .btn {\n    margin: 0 .5rem; }\n  app-boardslist .boards .boardNot {\n    width: 100%;\n    text-align: center; }\n  app-boardslist .boards table thead tr .sortBtn {\n    cursor: pointer; }\n    app-boardslist .boards table thead tr .sortBtn:hover {\n      color: blue; }\n  app-boardslist .boards table tbody tr {\n    cursor: pointer; }\n    app-boardslist .boards table tbody tr .content {\n      min-width: 40rem; }\n    app-boardslist .boards table tbody tr td {\n      vertical-align: middle !important; }\n", ""]);
 
 // exports
 
@@ -580,7 +588,7 @@ var ConnectionComponent = (function () {
         var _this = this;
         var modalRef = this.modal.open(__WEBPACK_IMPORTED_MODULE_4__components__["g" /* AlertComponent */]);
         modalRef.componentInstance.title = 'Delete Connection';
-        modalRef.componentInstance.body = "Do you delete the connection?";
+        modalRef.componentInstance.body = 'Do you delete the connection?';
         modalRef.result.then(function (result) {
             if (result) {
                 var data = new FormData();
@@ -597,15 +605,15 @@ var ConnectionComponent = (function () {
     return ConnectionComponent;
 }());
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('@routeAnimation'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('@routeAnimation'),
     __metadata("design:type", Object)
 ], ConnectionComponent.prototype, "routeAnimation", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('style.display'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('style.display'),
     __metadata("design:type", Object)
 ], ConnectionComponent.prototype, "display", void 0);
 ConnectionComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* Component */])({
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
         selector: 'app-connection',
         template: __webpack_require__("./src/components/connection/connection.component.html"),
         styles: [__webpack_require__("./src/components/connection/connection.component.scss")],
@@ -638,6 +646,8 @@ var _a, _b, _c;
 /* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "f", function() { return __WEBPACK_IMPORTED_MODULE_5__connection_connection_component__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__alert_alert_component__ = __webpack_require__("./src/components/alert/alert.component.ts");
 /* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "g", function() { return __WEBPACK_IMPORTED_MODULE_6__alert_alert_component__["a"]; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__loading_loading_component__ = __webpack_require__("./src/components/loading/loading.component.ts");
+/* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "h", function() { return __WEBPACK_IMPORTED_MODULE_7__loading_loading_component__["a"]; });
 
 
 
@@ -646,14 +656,97 @@ var _a, _b, _c;
 
 // Modal
 
+
 //# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ "./src/components/loading/loading.component.html":
+/***/ (function(module, exports) {
+
+module.exports = "<div class=\"loading-content\">\n  <div class=\"inner\"></div>\n  <p class=\"loading-text\">{{loadingText}}<span class=\"dotting\"></span></p>\n</div>\n"
+
+/***/ }),
+
+/***/ "./src/components/loading/loading.component.scss":
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, ".loading-content {\n  width: 5rem;\n  height: 5rem;\n  margin: 22.5% auto; }\n  .loading-content .inner {\n    width: 80%;\n    height: 80%;\n    margin: 0 auto;\n    background-image: url(" + __webpack_require__("./src/assets/loading.svg") + ");\n    background-repeat: no-repeat;\n    background-size: 100% 100%; }\n  .loading-content .loading-text {\n    text-align: center;\n    font-weight: bold; }\n    .loading-content .loading-text .dotting {\n      display: inline-block;\n      width: 10px;\n      min-height: 2px;\n      border-left: 2px solid currentColor;\n      border-right: 2px solid currentColor;\n      background-color: currentColor;\n      background-clip: content-box;\n      box-sizing: border-box;\n      margin-left: .2rem;\n      padding-left: 2px;\n      padding-right: 2px;\n      -webkit-animation: dot 3s infinite step-start both;\n              animation: dot 3s infinite step-start both; }\n\n@-webkit-keyframes dot {\n  25% {\n    border-color: transparent;\n    background-color: transparent; }\n  50% {\n    border-right-color: transparent;\n    background-color: transparent; }\n  75% {\n    border-right-color: transparent; } }\n\n@keyframes dot {\n  25% {\n    border-color: transparent;\n    background-color: transparent; }\n  50% {\n    border-right-color: transparent;\n    background-color: transparent; }\n  75% {\n    border-right-color: transparent; } }\n", ""]);
+
+// exports
+
+
+/*** EXPORTS FROM exports-loader ***/
+module.exports = module.exports.toString();
+
+/***/ }),
+
+/***/ "./src/components/loading/loading.component.ts":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/@angular/core.es5.js");
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return LoadingComponent; });
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+var LoadingComponent = (function () {
+    function LoadingComponent() {
+        this.loadingText = 'Loading';
+        this.display = 'none';
+    }
+    LoadingComponent.prototype.ngOnInit = function () {
+    };
+    /**
+     * Show Loading And Return Promise
+     * @param loadingText Loading Text
+     */
+    LoadingComponent.prototype.start = function (loadingText) {
+        if (loadingText === void 0) { loadingText = 'Loading'; }
+        this.loadingText = loadingText;
+        this.display = 'block';
+        return Promise.resolve();
+    };
+    LoadingComponent.prototype.close = function () {
+        this.loadingText = '';
+        this.display = 'none';
+    };
+    return LoadingComponent;
+}());
+__decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('style.display'),
+    __metadata("design:type", Object)
+], LoadingComponent.prototype, "display", void 0);
+LoadingComponent = __decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
+        selector: 'app-loading',
+        template: __webpack_require__("./src/components/loading/loading.component.html"),
+        styles: [__webpack_require__("./src/components/loading/loading.component.scss")],
+        encapsulation: __WEBPACK_IMPORTED_MODULE_0__angular_core__["q" /* ViewEncapsulation */].None,
+    }),
+    __metadata("design:paramtypes", [])
+], LoadingComponent);
+
+//# sourceMappingURL=loading.component.js.map
 
 /***/ }),
 
 /***/ "./src/components/threadPage/threadPage.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"container-fluid\">\n  <div class=\"card thread\" *ngIf=\"data.thread.name != '' \">\n    <div class=\"card-block\">\n      <h3 class=\"card-title\">{{data?.thread?.name}}</h3>\n      <p class=\"card-text thread-description\">{{data?.thread?.description}}</p>\n      <button class=\"btn btn-primary\" (click)=\"openReply(addPost)\">Reply</button>\n    </div>\n  </div>\n  <div class=\"card post\" *ngFor=\"let item of data?.posts;trackBy:item.ref\">\n    <div class=\"card-block\">\n      <!--<h5 class=\"card-title\">{{item?.title}}</h5>-->\n      <p class=\"card-text author text-primary\" title=\"{{item?.author}}\" placement=\"top\" [ngbTooltip]=\"item?.author\">{{item?.author}}</p>\n      <p class=\"card-text\" [innerHTML]=\"item?.body | safeHtml\"></p>\n      <p class=\"card-text\"><small class=\"text-muted\">{{item?.created / 1000000 | date:'yMMMdjms'}}</small></p>\n    </div>\n  </div>\n</div>\n<!--<div class=\"loading\"></div>-->\n\n<ng-template #addPost let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Post</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n\n    <form [formGroup]=\"postForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"title\">Title</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"title\" id=\"title\" formControlName=\"title\">\n      </div>\n      <!--<div [froalaEditor]=\"editorOptions\"></div>-->\n      <div class=\"form-group\">\n        <label for=\"body\">Content</label>\n        <textarea [froalaEditor]=\"editorOptions\" formControlName=\"body\"></textarea>\n        <!--<textarea class=\"form-control\" rows=\"3\" id=\"body\" formControlName=\"body\"></textarea>-->\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-primary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
+module.exports = "<div class=\"container-fluid\">\n  <div class=\"card thread\" *ngIf=\"data?.thread?.name != '' \">\n    <div class=\"card-block\">\n      <h3 class=\"card-title\">{{data?.thread?.name}}</h3>\n      <p class=\"card-text thread-description\">{{data?.thread?.description}}</p>\n      <button class=\"btn btn-sm btn-primary\" (click)=\"openReply(addPost)\"><i class=\"fa fa-reply\"></i>Reply</button>\n    </div>\n  </div>\n  <div class=\"card post\" *ngFor=\"let item of (data?.posts | orderBy:sort);trackBy: item?.ref\">\n    <div class=\"card-block\">\n      <!--<h5 class=\"card-title\">{{item?.title}}</h5>-->\n      <p class=\"card-text author text-primary\" title=\"{{item?.author}}\" placement=\"top\" [ngbTooltip]=\"item?.author\">{{item?.author}}</p>\n      <p class=\"card-text\" [innerHTML]=\"item?.body | safeHtml\"></p>\n      <p class=\"card-text\"><small class=\"text-muted\">{{item?.created / 1000000 | date:'yMMMdjms'}}</small></p>\n    </div>\n  </div>\n</div>\n<!--<div class=\"loading\"></div>-->\n\n<ng-template #addPost let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Post</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n\n    <form [formGroup]=\"postForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"title\">Title</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"title\" id=\"title\" formControlName=\"title\">\n      </div>\n      <!--<div [froalaEditor]=\"editorOptions\"></div>-->\n      <div class=\"form-group\">\n        <label for=\"body\">Content</label>\n        <textarea [froalaEditor]=\"editorOptions\" formControlName=\"body\"></textarea>\n        <!--<textarea class=\"form-control\" rows=\"3\" id=\"body\" formControlName=\"body\"></textarea>-->\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-primary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
 
 /***/ }),
 
@@ -665,7 +758,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "threadPage {\n  width: 100vw; }\n  threadPage .btn {\n    float: right;\n    cursor: pointer; }\n  threadPage .thread .thread-description {\n    word-break: break-all; }\n  threadPage .post {\n    margin: .8rem 0; }\n    threadPage .post .author {\n      max-width: 20rem;\n      overflow: hidden;\n      text-overflow: ellipsis;\n      white-space: nowrap; }\n", ""]);
+exports.push([module.i, "app-threadpage .btn {\n  float: right;\n  cursor: pointer; }\n\napp-threadpage .thread .thread-description {\n  word-break: break-all; }\n\napp-threadpage .post {\n  margin: .8rem 0; }\n  app-threadpage .post .author {\n    max-width: 20rem;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap; }\n", ""]);
 
 // exports
 
@@ -710,6 +803,7 @@ var ThreadPageComponent = (function () {
         this.common = common;
         this.routeAnimation = true;
         this.display = 'block';
+        this.sort = 'desc';
         this.boardKey = '';
         this.threadKey = '';
         this.data = { posts: [], thread: { name: '', description: '' } };
@@ -719,8 +813,42 @@ var ThreadPageComponent = (function () {
         });
         this.editorOptions = {
             placeholderText: 'Edit Your Content Here!',
-            // toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', 'insertImage', 'insertVideo', 'insertFile', 'insertTable', '|', 'emoticons', 'specialCharacters', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
-            toolbarButtons: ['bold', 'italic', 'underline', 'strikeThrough', 'subscript', 'superscript', '|', 'fontFamily', 'fontSize', 'color', 'inlineStyle', 'paragraphStyle', '|', 'paragraphFormat', 'align', 'formatOL', 'formatUL', 'outdent', 'indent', 'quote', '-', 'insertLink', '|', 'insertHR', 'selectAll', 'clearFormatting', '|', 'print', 'spellChecker', 'help', 'html', '|', 'undo', 'redo'],
+            toolbarButtons: [
+                'bold',
+                'italic',
+                'underline',
+                'strikeThrough',
+                'subscript',
+                'superscript',
+                '|',
+                'fontFamily',
+                'fontSize',
+                'color',
+                'inlineStyle',
+                'paragraphStyle',
+                '|',
+                'paragraphFormat',
+                'align',
+                'formatOL',
+                'formatUL',
+                'outdent',
+                'indent',
+                'quote',
+                '-',
+                'insertLink',
+                '|',
+                'insertHR',
+                'selectAll',
+                'clearFormatting',
+                '|',
+                'print',
+                'spellChecker',
+                'help',
+                'html',
+                '|',
+                'undo',
+                'redo'
+            ],
             heightMin: 200,
             events: {},
         };
@@ -730,9 +858,11 @@ var ThreadPageComponent = (function () {
         this.route.params.subscribe(function (res) {
             _this.boardKey = res['board'];
             _this.threadKey = res['thread'];
-            _this.common.loading = true;
             _this.open(_this.boardKey, _this.threadKey);
         });
+    };
+    ThreadPageComponent.prototype.setSort = function () {
+        this.sort = this.sort === 'desc' ? 'esc' : 'desc';
     };
     ThreadPageComponent.prototype.openReply = function (content) {
         var _this = this;
@@ -770,9 +900,8 @@ var ThreadPageComponent = (function () {
         var data = new FormData();
         data.append('board', master);
         data.append('thread', ref);
-        this.api.getThreadpage(data).subscribe(function (data) {
-            _this.data = data;
-            _this.common.loading = false;
+        this.api.getThreadpage(data).subscribe(function (res) {
+            _this.data = res;
         });
     };
     ThreadPageComponent.prototype.windowScroll = function (event) {
@@ -781,11 +910,11 @@ var ThreadPageComponent = (function () {
     return ThreadPageComponent;
 }());
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('@routeAnimation'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('@routeAnimation'),
     __metadata("design:type", Object)
 ], ThreadPageComponent.prototype, "routeAnimation", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('style.display'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('style.display'),
     __metadata("design:type", Object)
 ], ThreadPageComponent.prototype, "display", void 0);
 __decorate([
@@ -795,8 +924,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ThreadPageComponent.prototype, "windowScroll", null);
 ThreadPageComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* Component */])({
-        selector: 'threadPage',
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
+        selector: 'app-threadpage',
         template: __webpack_require__("./src/components/threadPage/threadPage.html"),
         styles: [__webpack_require__("./src/components/threadPage/threadPage.scss")],
         encapsulation: __WEBPACK_IMPORTED_MODULE_0__angular_core__["q" /* ViewEncapsulation */].None,
@@ -813,7 +942,7 @@ var _a, _b, _c, _d, _e;
 /***/ "./src/components/threads/threads.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"threads\">\n  <div class=\"container-fluid\">\n    <div class=\"card\" *ngIf=\"board\">\n      <div class=\"card-block\">\n        <h5>{{board?.name}}</h5>\n        <p class=\"card-text text-muted\">{{board?.description}}</p>\n        <p class=\"card-text card-created\"><small class=\"text-muted\">{{board?.created / 1000000 | date: 'short'}}</small></p>\n        <p class=\"card-text d-flex justify-content-end\">\n          <button type=\"button\" [class.disabled]=\"!isRoot\" class=\"btn btn-primary\" (click)=\"openAdd(content)\">New Thread</button>\n        </p>\n      </div>\n    </div>\n    <table class=\"table table-hover\" *ngIf=\"threads.length > 0\">\n      <thead>\n        <tr>\n          <th>Thread</th>\n          <th>More</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr *ngFor=\"let thread of threads;trackBy:thread.ref\" (click)=\"open(thread?.master_board,thread?.ref)\">\n          <td title=\"{{thread.name}}\">\n            <h5>\n              <small class=\"tag\" *ngIf=\"thread.master_board != board.public_key\"><i class=\"fa fa-clone\"></i>(Imported)</small>{{thread.name}}\n            </h5>\n            <small class=\"text-muted\">\n              {{thread.description}}\n              </small>\n          </td>\n          <td>\n            <a href=\"javascript:void(0);\" (click)=\"openImport($event,thread.ref,importBox)\"><i [class.disabled]=\"isRoot\" title=\"Import Thread\" class=\"fa fa-exchange\"></i></a>\n            <a href=\"javascript:void(0);\" (click)=\"openInfo($event,thread,infoBox)\"><i class=\"fa fa-info-circle\"></i></a>\n          </td>\n          <!--<td class=\"board\" title=\"{{url}}\"><a href=\"javascript:void(0);\" >{{board.url}}</a></td>-->\n          <!--<td class=\"description\" title=\"{{thread.description}}\">{{thread.description}}</td>-->\n          <!--<td class=\"transfer\" ></td>\n          <td class=\"info\" title=\"Thread Info\"></td>-->\n        </tr>\n      </tbody>\n    </table>\n    <h3 class=\"not-found\" *ngIf=\"threads?.length == 0\">Not Found Threads</h3>\n  </div>\n</div>\n\n\n\n\n<!--Info Box-->\n<ng-template #infoBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"card\">\n    <div class=\"card-header\">\n      Thread Info\n    </div>\n    <div class=\"card-block\">\n      <p class=\"thread-item\">Name: <span>{{tmpThread.name}}</span></p>\n      <p class=\"thread-item\">Description: <span>{{tmpThread.description}}</span></p>\n      <p class=\"thread-item\">Master Board: <span>{{tmpThread.master_board}}</span></p>\n      <p class=\"thread-item\">Ref: <span>{{tmpThread.ref}}</span></p>\n    </div>\n  </div>\n</ng-template>\n\n<!--Add Thread-->\n<ng-template #content let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Thread</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"name\">Thread name</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"name\" id=\"name\" formControlName=\"name\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"description\">Thread description</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"description\" id=\"description\" formControlName=\"description\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<!--Import Box-->\n<ng-template #importBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Import Thread</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <div class=\"form-group\">\n      <label for=\"toBoard\">Choose to import</label>\n      <select class=\"form-control\" id=\"toBoard\" [(ngModel)]=\"importBoardKey\" placeholder=\"Choose to move\">\n        <option *ngFor=\"let board of importBoards\" value=\"{{board.public_key}}\">{{board.name}}</option>\n    </select>\n      <!--<input type=\"text\" class=\"form-control\" placeholder=\"toBoard\" id=\"toBoard\">-->\n    </div>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
+module.exports = "<div class=\"threads\">\n  <div class=\"container-fluid\">\n    <div class=\"card\" *ngIf=\"board\">\n      <div class=\"card-block\">\n        <h5>{{board?.name}}</h5>\n        <p class=\"card-text text-muted\">{{board?.description}}</p>\n        <p class=\"card-text card-created\"><small class=\"text-muted\">{{board?.created / 1000000 | date: 'short'}}</small></p>\n        <p class=\"card-text d-flex justify-content-end\">\n          <button type=\"button\" [class.disabled]=\"!isRoot\" class=\"btn btn-sm btn-primary\" (click)=\"openAdd(content)\">New Thread</button>\n        </p>\n      </div>\n    </div>\n    <table class=\"table table-hover\" *ngIf=\"threads.length > 0\">\n      <thead>\n        <tr>\n          <th>Thread</th>\n          <th>More</th>\n        </tr>\n      </thead>\n      <tbody>\n        <tr *ngFor=\"let thread of threads;trackBy:thread.ref\" (click)=\"open(thread?.master_board,thread?.ref)\">\n          <td title=\"{{thread.name}}\">\n            <h5>\n              <span class=\"badge badge-pill badge-primary\" *ngIf=\"thread.master_board != board.public_key\">Imported</span>{{thread.name}}\n            </h5>\n            <small class=\"text-muted\">\n              {{thread.description}}\n              </small>\n          </td>\n          <td>\n            <a href=\"javascript:void(0);\" (click)=\"openImport($event,thread.ref,importBox)\"><i [class.disabled]=\"isRoot\" title=\"Import Thread\" class=\"fa fa-exchange\"></i></a>\n            <a href=\"javascript:void(0);\" (click)=\"openInfo($event,thread,infoBox)\"><i class=\"fa fa-info-circle\"></i></a>\n          </td>\n          <!--<td class=\"board\" title=\"{{url}}\"><a href=\"javascript:void(0);\" >{{board.url}}</a></td>-->\n          <!--<td class=\"description\" title=\"{{thread.description}}\">{{thread.description}}</td>-->\n          <!--<td class=\"transfer\" ></td>\n          <td class=\"info\" title=\"Thread Info\"></td>-->\n        </tr>\n      </tbody>\n    </table>\n    <h3 class=\"not-found\" *ngIf=\"threads?.length == 0\">Not Found Threads</h3>\n  </div>\n</div>\n\n\n\n\n<!--Info Box-->\n<ng-template #infoBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"card\">\n    <div class=\"card-header\">\n      Thread Info\n    </div>\n    <div class=\"card-block\">\n      <p class=\"thread-item\">Name: <span>{{tmpThread.name}}</span></p>\n      <p class=\"thread-item\">Description: <span>{{tmpThread.description}}</span></p>\n      <p class=\"thread-item\">Master Board: <span>{{tmpThread.master_board}}</span></p>\n      <p class=\"thread-item\">Ref: <span>{{tmpThread.ref}}</span></p>\n    </div>\n  </div>\n</ng-template>\n\n<!--Add Thread-->\n<ng-template #content let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Thread</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"name\">Thread name</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"name\" id=\"name\" formControlName=\"name\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"description\">Thread description</label>\n        <input type=\"text\" class=\"form-control\" placeholder=\"description\" id=\"description\" formControlName=\"description\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<!--Import Box-->\n<ng-template #importBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Import Thread</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"d('Cross click')\">\n      <span aria-hidden=\"true\">&times;</span>\n    </button>\n  </div>\n  <div class=\"modal-body\">\n    <div class=\"form-group\">\n      <label for=\"toBoard\">Choose to import</label>\n      <select class=\"form-control\" id=\"toBoard\" [(ngModel)]=\"importBoardKey\" placeholder=\"Choose to move\">\n        <option *ngFor=\"let board of importBoards\" value=\"{{board.public_key}}\">{{board.name}}</option>\n    </select>\n      <!--<input type=\"text\" class=\"form-control\" placeholder=\"toBoard\" id=\"toBoard\">-->\n    </div>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
 
 /***/ }),
 
@@ -825,7 +954,7 @@ exports = module.exports = __webpack_require__("./node_modules/css-loader/lib/cs
 
 
 // module
-exports.push([module.i, "threads {\n  width: 100vw; }\n  threads .threads .btn-group {\n    float: right; }\n  threads .threads .card {\n    box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.3); }\n    threads .threads .card .card-block .card-text .btn {\n      margin: 0 .5rem; }\n  threads .threads table tbody tr td {\n    vertical-align: middle !important; }\n    threads .threads table tbody tr td h5 .tag {\n      color: blue; }\n", ""]);
+exports.push([module.i, "app-threads .threads .btn-group {\n  float: right; }\n\napp-threads .threads .card .card-block .card-text .btn {\n  margin: 0 .5rem; }\n\napp-threads .threads table tbody tr td {\n  vertical-align: middle !important; }\n  app-threads .threads table tbody tr td h5 .tag {\n    color: blue; }\n", ""]);
 
 // exports
 
@@ -870,7 +999,6 @@ var ThreadsComponent = (function () {
         this.common = common;
         this.routeAnimation = true;
         this.display = 'block';
-        this.thread = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* EventEmitter */]();
         this.threads = [];
         this.importBoards = [];
         this.importBoardKey = '';
@@ -882,6 +1010,7 @@ var ThreadsComponent = (function () {
             description: new __WEBPACK_IMPORTED_MODULE_3__angular_forms__["f" /* FormControl */](),
             name: new __WEBPACK_IMPORTED_MODULE_3__angular_forms__["f" /* FormControl */]()
         });
+        this.thread = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* EventEmitter */]();
     }
     ThreadsComponent.prototype.ngOnInit = function () {
         var _this = this;
@@ -905,9 +1034,9 @@ var ThreadsComponent = (function () {
         var _this = this;
         var data = new FormData();
         data.append('board', this.boardKey);
-        this.api.getBoardPage(data).subscribe(function (data) {
-            _this.board = data.board;
-            _this.threads = data.threads;
+        this.api.getBoardPage(data).subscribe(function (res) {
+            _this.board = res.board;
+            _this.threads = res.threads;
         });
     };
     ThreadsComponent.prototype.openInfo = function (ev, thread, content) {
@@ -967,20 +1096,20 @@ var ThreadsComponent = (function () {
     return ThreadsComponent;
 }());
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('@routeAnimation'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('@routeAnimation'),
     __metadata("design:type", Object)
 ], ThreadsComponent.prototype, "routeAnimation", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('style.display'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('style.display'),
     __metadata("design:type", Object)
 ], ThreadsComponent.prototype, "display", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Output */])(),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_2" /* Output */])(),
     __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* EventEmitter */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["F" /* EventEmitter */]) === "function" && _a || Object)
 ], ThreadsComponent.prototype, "thread", void 0);
 ThreadsComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* Component */])({
-        selector: 'threads',
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
+        selector: 'app-threads',
         template: __webpack_require__("./src/components/threads/threads.html"),
         styles: [__webpack_require__("./src/components/threads/threads.scss")],
         encapsulation: __WEBPACK_IMPORTED_MODULE_0__angular_core__["q" /* ViewEncapsulation */].None,
@@ -1079,15 +1208,15 @@ var UserComponent = (function () {
     return UserComponent;
 }());
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('@routeAnimation'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('@routeAnimation'),
     __metadata("design:type", Object)
 ], UserComponent.prototype, "routeAnimation", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('style.display'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('style.display'),
     __metadata("design:type", Object)
 ], UserComponent.prototype, "display", void 0);
 UserComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* Component */])({
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
         selector: 'app-user',
         template: __webpack_require__("./src/components/user/user.component.html"),
         styles: [__webpack_require__("./src/components/user/user.component.scss")],
@@ -1104,7 +1233,7 @@ var _a, _b;
 /***/ "./src/components/userlist/userlist.component.html":
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"user-list\">\n  <p class=\"d-flex justify-content-end\"><button type=\"button\" class=\"btn btn-primary\" (click)=\"openAdd(addBox)\">New Master</button></p>\n  <table class=\"table table-hover table-sm table-bordered\">\n    <thead>\n      <tr>\n        <th>Name</th>\n        <th>Master</th>\n        <th>Public Key</th>\n        <th>Edit</th>\n        <th>Remove</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr *ngFor=\"let user of userlist;trackBy:user.public_key\">\n        <td class=\"alias\" title=\"{{user.alias}}\">{{user.alias}}</td>\n        <td class=\"master\">{{user.master}}</td>\n        <td class=\"key\" title=\"{{user.public_key}}\">{{user.public_key}}</td>\n        <td class=\"edit\" (click)=\"openEdit(editBox,user.public_key)\"><i class=\"fa fa-pencil\" aria-hidden=\"true\"></i></td>\n        <td class=\"del\" (click)=\"remove($event,user.public_key)\"><i class=\"fa fa-trash\" aria-hidden=\"true\"></i></td>\n      </tr>\n    </tbody>\n  </table>\n</div>\n\n<ng-template #addBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Master</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"c(false)\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"alias\">Alias</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"alias\" id=\"alias\" formControlName=\"alias\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"seed\">Seed</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"seed\" id=\"seed\" formControlName=\"seed\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<ng-template #editBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Edit</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"c(false)\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n  </div>\n  <div class=\"modal-body\">\n    <input [(ngModel)]=\"editName\" type=\"text\" class=\"form-control\" placeholder=\"Username\" aria-describedby=\"basic-addon1\">\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
+module.exports = "<div class=\"user-list\">\n  <p class=\"d-flex justify-content-end\"><button type=\"button\" class=\"btn btn-sm btn-primary\" (click)=\"openAdd(addBox)\">New Master</button></p>\n  <table class=\"table table-hover table-sm table-bordered\">\n    <thead>\n      <tr>\n        <th>Name</th>\n        <th>Master</th>\n        <th>Public Key</th>\n        <th>Edit</th>\n        <th>Remove</th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr *ngFor=\"let user of userlist;trackBy:user.public_key\">\n        <td class=\"alias\" title=\"{{user.alias}}\">{{user.alias}}</td>\n        <td class=\"master\">{{user.master}}</td>\n        <td class=\"key\" title=\"{{user.public_key}}\">{{user.public_key}}</td>\n        <td class=\"edit\" (click)=\"openEdit(editBox,user.public_key)\"><i class=\"fa fa-pencil\" aria-hidden=\"true\"></i></td>\n        <td class=\"del\" (click)=\"remove($event,user.public_key)\"><i class=\"fa fa-trash\" aria-hidden=\"true\"></i></td>\n      </tr>\n    </tbody>\n  </table>\n</div>\n\n<ng-template #addBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">New Master</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"c(false)\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n  </div>\n  <div class=\"modal-body\">\n    <form [formGroup]=\"addForm\" novalidate>\n      <div class=\"form-group\">\n        <label for=\"alias\">Alias</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"alias\" id=\"alias\" formControlName=\"alias\">\n      </div>\n      <div class=\"form-group\">\n        <label for=\"seed\">Seed</label>\n        <input type=\"text\" class=\"form-control \" placeholder=\"seed\" id=\"seed\" formControlName=\"seed\">\n      </div>\n    </form>\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n\n<ng-template #editBox let-c=\"close\" let-d=\"dismiss\">\n  <div class=\"modal-header\">\n    <h4 class=\"modal-title\">Edit</h4>\n    <button type=\"button\" class=\"close\" aria-label=\"Close\" (click)=\"c(false)\">\n        <span aria-hidden=\"true\">&times;</span>\n      </button>\n  </div>\n  <div class=\"modal-body\">\n    <input [(ngModel)]=\"editName\" type=\"text\" class=\"form-control\" placeholder=\"Username\" aria-describedby=\"basic-addon1\">\n  </div>\n  <div class=\"modal-footer\">\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(false)\">cancel</button>\n    <button type=\"button\" class=\"btn btn-secondary\" (click)=\"c(true)\">submit</button>\n  </div>\n</ng-template>\n"
 
 /***/ }),
 
@@ -1239,11 +1368,11 @@ var UserlistComponent = (function () {
     return UserlistComponent;
 }());
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('@routeAnimation'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('@routeAnimation'),
     __metadata("design:type", Object)
 ], UserlistComponent.prototype, "routeAnimation", void 0);
 __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_11" /* HostBinding */])('style.display'),
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* HostBinding */])('style.display'),
     __metadata("design:type", Object)
 ], UserlistComponent.prototype, "display", void 0);
 __decorate([
@@ -1253,7 +1382,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserlistComponent.prototype, "windowScroll", null);
 UserlistComponent = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_0" /* Component */])({
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["_1" /* Component */])({
         selector: 'app-userlist',
         template: __webpack_require__("./src/components/userlist/userlist.component.html"),
         styles: [__webpack_require__("./src/components/userlist/userlist.component.scss")],
@@ -1311,8 +1440,73 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__safe_safe_html_pipe__ = __webpack_require__("./src/pipes/safe/safe-html.pipe.ts");
 /* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_0__safe_safe_html_pipe__["a"]; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__orderBy_order_by_pipe__ = __webpack_require__("./src/pipes/orderBy/order-by.pipe.ts");
+/* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_1__orderBy_order_by_pipe__["a"]; });
+
 
 //# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ "./src/pipes/orderBy/order-by.pipe.ts":
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__("./node_modules/@angular/core/@angular/core.es5.js");
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return OrderByPipe; });
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+var OrderByPipe = (function () {
+    function OrderByPipe() {
+    }
+    OrderByPipe.prototype.transform = function (values, args) {
+        if (args === void 0) { args = 'desc'; }
+        if (values.length < 1) {
+            return [];
+        }
+        if (!values[0].created) {
+            return values;
+        }
+        switch (args) {
+            case 'desc':
+                values.sort(function (a, b) {
+                    if (a.created > b.created) {
+                        return 1;
+                    }
+                    if (a.created < b.created) {
+                        return -1;
+                    }
+                    return 0;
+                });
+                break;
+            case 'esc':
+                values.sort(function (a, b) {
+                    if (a.created > b.created) {
+                        return -1;
+                    }
+                    if (a.created < b.created) {
+                        return 1;
+                    }
+                    return 0;
+                });
+                break;
+        }
+        return values;
+    };
+    return OrderByPipe;
+}());
+OrderByPipe = __decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Y" /* Pipe */])({
+        name: 'orderBy'
+    })
+], OrderByPipe);
+
+//# sourceMappingURL=order-by.pipe.js.map
 
 /***/ }),
 
@@ -1388,7 +1582,7 @@ var ApiService = (function () {
         this.base_url = 'http://127.0.0.1:7410/api/';
     }
     ApiService.prototype.getSubscriptions = function () {
-        return this.common.handleGet(this.base_url + "get_subscriptions");
+        return this.common.handleGet(this.base_url + 'get_subscriptions');
     };
     ApiService.prototype.getSubscription = function (data) {
         return this.common.handlePost(this.base_url + 'get_subscription', data);
@@ -1458,8 +1652,10 @@ var _a, _b;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_observable_throw___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_add_observable_throw__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_add_operator_filter__ = __webpack_require__("./node_modules/rxjs/add/operator/filter.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_add_operator_filter___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_add_operator_filter__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__ = __webpack_require__("./node_modules/rxjs/Observable.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_do__ = __webpack_require__("./node_modules/rxjs/add/operator/do.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_do___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_add_operator_do__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_Observable__ = __webpack_require__("./node_modules/rxjs/Observable.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_rxjs_Observable__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CommonService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1475,6 +1671,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 var CommonService = (function () {
     function CommonService(http) {
         this.http = http;
@@ -1482,26 +1679,40 @@ var CommonService = (function () {
         this.alertMessage = '';
         this.alert = false;
         this.topBtn = false;
-        this.loading = false;
+        this.loading = null;
     }
     CommonService.prototype.handleError = function (error) {
         console.error('Error:', error.json() || 'Server error', 'danger');
         this.showAlert((error.json() instanceof Object ? 'Server error' : error.json()) || 'Server error', 'danger', 3000);
-        return __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__["Observable"].throw(error.json() || 'Server error');
+        return __WEBPACK_IMPORTED_MODULE_5_rxjs_Observable__["Observable"].throw(error.json() || 'Server error');
     };
     CommonService.prototype.handleGet = function (url) {
         var _this = this;
         if (!url) {
-            return __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__["Observable"].throw('The connection is empty');
+            return __WEBPACK_IMPORTED_MODULE_5_rxjs_Observable__["Observable"].throw('The connection is empty');
         }
-        return this.http.get(url).filter(function (res) { return res.status === 200; }).map(function (res) { return res.json(); }).catch(function (err) { return _this.handleError(err); });
+        // if (this.loading) {
+        //   this.loading.start();
+        // }
+        return this.http.get(url).
+            filter(function (res) { return res.status === 200; }).
+            map(function (res) { return res.json(); }).
+            // do(() => { if (this.loading) { this.loading.close() } }).
+            catch(function (err) { return _this.handleError(err); });
     };
     CommonService.prototype.handlePost = function (url, data) {
         var _this = this;
         if (!url || !data) {
-            return __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__["Observable"].throw('Parameters and connections can not be empty');
+            return __WEBPACK_IMPORTED_MODULE_5_rxjs_Observable__["Observable"].throw('Parameters and connections can not be empty');
         }
-        return this.http.post(url, data).filter(function (res) { return res.status === 200; }).map(function (res) { return res.json(); }).catch(function (err) { return _this.handleError(err); });
+        // if (this.loading) {
+        //   this.loading.start();
+        // }
+        return this.http.post(url, data).
+            filter(function (res) { return res.status === 200; }).
+            map(function (res) { return res.json(); }).
+            // do(() => { if (this.loading) { this.loading.close() } }).
+            catch(function (err) { return _this.handleError(err); });
     };
     /**
      * Show Error Alert
@@ -1584,15 +1795,21 @@ var ConnectionService = (function () {
     }
     ConnectionService.prototype.getAllConnections = function () {
         var _this = this;
-        return this.http.get(this.base_url + 'get_all').map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.get(this.base_url + 'get_all').
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     ConnectionService.prototype.addConnection = function (data) {
         var _this = this;
-        return this.http.post(this.base_url + 'new', data).map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.post(this.base_url + 'new', data).
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     ConnectionService.prototype.removeConnection = function (data) {
         var _this = this;
-        return this.http.post(this.base_url + 'remove', data).map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.post(this.base_url + 'remove', data).
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     return ConnectionService;
 }());
@@ -1682,27 +1899,39 @@ var UserService = (function () {
     };
     UserService.prototype.getAllMasters = function () {
         var _this = this;
-        return this.http.get(this.base_url + 'get_masters').map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.get(this.base_url + 'get_masters').
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     UserService.prototype.getAll = function () {
         var _this = this;
-        return this.http.get(this.base_url + 'get_all').map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.get(this.base_url + 'get_all').
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     UserService.prototype.setCurrent = function (data) {
         var _this = this;
-        return this.http.post(this.base_url + 'set_current', data).map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.post(this.base_url + 'set_current', data).
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     UserService.prototype.newMaster = function (data) {
         var _this = this;
-        return this.http.post(this.base_url + 'new_master', data).map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.post(this.base_url + 'new_master', data).
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     UserService.prototype.newOrModifyUser = function (data) {
         var _this = this;
-        return this.http.post(this.base_url + 'new', data).map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.post(this.base_url + 'new', data).
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     UserService.prototype.remove = function (data) {
         var _this = this;
-        return this.http.post(this.base_url + 'remove', data).map(function (res) { return res.json(); }).catch(function (err) { return _this.common.handleError(err); });
+        return this.http.post(this.base_url + 'remove', data).
+            map(function (res) { return res.json(); }).
+            catch(function (err) { return _this.common.handleError(err); });
     };
     return UserService;
 }());

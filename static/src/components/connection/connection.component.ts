@@ -1,8 +1,8 @@
 import { Component, OnInit, HostBinding, ViewEncapsulation } from '@angular/core';
-import { ConnectionService, CommonService } from "../../providers";
-import { NgbModal, ModalDismissReasons } from "@ng-bootstrap/ng-bootstrap";
-import { slideInLeftAnimation } from "../../animations/router.animations";
-import { AlertComponent } from "../../components";
+import { ConnectionService, CommonService } from '../../providers';
+import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
+import { slideInLeftAnimation } from '../../animations/router.animations';
+import { AlertComponent } from '../../components';
 @Component({
   selector: 'app-connection',
   templateUrl: './connection.component.html',
@@ -15,7 +15,7 @@ export class ConnectionComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
   list: Array<string> = [];
-  addUrl: string = '';
+  addUrl = '';
   constructor(
     private conn: ConnectionService,
     private modal: NgbModal,
@@ -37,7 +37,7 @@ export class ConnectionComponent implements OnInit {
           this.common.showAlert('The link can not be empty', 'danger', 3000);
           return;
         }
-        let data = new FormData();
+        const data = new FormData();
         data.append('address', this.addUrl);
         this.conn.addConnection(data).subscribe(isOk => {
           if (isOk) {
@@ -51,10 +51,10 @@ export class ConnectionComponent implements OnInit {
   remove(address: string) {
     const modalRef = this.modal.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete Connection';
-    modalRef.componentInstance.body = "Do you delete the connection?"
+    modalRef.componentInstance.body = 'Do you delete the connection?'
     modalRef.result.then(result => {
       if (result) {
-        let data = new FormData();
+        const data = new FormData();
         data.append('address', address);
         this.conn.removeConnection(data).subscribe(isOk => {
           if (isOk) {

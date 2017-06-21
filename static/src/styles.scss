@@ -29,6 +29,9 @@ i {
 }
 .btn {
   cursor: pointer;
+  i {
+    margin-right: .5rem;
+  }
 }
 
 .thread-item {
@@ -40,4 +43,16 @@ i {
 .thread-item span {
   font-size: .9rem;
   font-weight: normal;
+}
+
+app-loading {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  // z-index: 20001;
+  display: block;
+  // background-color: hsla(0, 0%, 0%, 0.2);
 }

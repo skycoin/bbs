@@ -1,8 +1,8 @@
 import { Component, OnInit, HostBinding, HostListener } from '@angular/core';
-import { UserService, User, CommonService } from "../../providers";
-import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
-import { slideInLeftAnimation } from "../../animations/router.animations";
-import { AlertComponent } from "../alert/alert.component";
+import { UserService, User, CommonService } from '../../providers';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { slideInLeftAnimation } from '../../animations/router.animations';
+import { AlertComponent } from '../alert/alert.component';
 import { FormControl, FormGroup } from '@angular/forms';
 
 @Component({
@@ -16,7 +16,7 @@ export class UserlistComponent implements OnInit {
   @HostBinding('style.display') display = 'block';
   // @HostBinding('style.position') position = 'absolute';
   userlist: Array<User> = [];
-  editName: string = '';
+  editName = '';
   private addForm = new FormGroup({
     alias: new FormControl(),
     seed: new FormControl()
@@ -37,7 +37,7 @@ export class UserlistComponent implements OnInit {
   openAdd(content: any) {
     this.modal.open(content).result.then((result) => {
       if (result) {
-        let data = new FormData();
+        const data = new FormData();
         data.append('alias', this.addForm.get('alias').value);
         data.append('seed', this.addForm.get('seed').value);
         this.user.newMaster(data).subscribe(user => {
@@ -47,7 +47,7 @@ export class UserlistComponent implements OnInit {
     })
   }
   edit(name, key: string) {
-    let data = new FormData();
+    const data = new FormData();
     data.append('alias', name);
     data.append('user', key);
     this.user.newOrModifyUser(data).subscribe(res => {
@@ -61,7 +61,7 @@ export class UserlistComponent implements OnInit {
   remove(ev: Event, key: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
-    let data = new FormData();
+    const data = new FormData();
     data.append('user', key);
     const modalRef = this.modal.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete User';

@@ -6,7 +6,7 @@
         <p class="card-text text-muted">{{board?.description}}</p>
         <p class="card-text card-created"><small class="text-muted">{{board?.created / 1000000 | date: 'short'}}</small></p>
         <p class="card-text d-flex justify-content-end">
-          <button type="button" [class.disabled]="!isRoot" class="btn btn-primary" (click)="openAdd(content)">New Thread</button>
+          <button type="button" [class.disabled]="!isRoot" class="btn btn-sm btn-primary" (click)="openAdd(content)">New Thread</button>
         </p>
       </div>
     </div>
@@ -21,7 +21,7 @@
         <tr *ngFor="let thread of threads;trackBy:thread.ref" (click)="open(thread?.master_board,thread?.ref)">
           <td title="{{thread.name}}">
             <h5>
-              <small class="tag" *ngIf="thread.master_board != board.public_key"><i class="fa fa-clone"></i>(Imported)</small>{{thread.name}}
+              <span class="badge badge-pill badge-primary" *ngIf="thread.master_board != board.public_key">Imported</span>{{thread.name}}
             </h5>
             <small class="text-muted">
               {{thread.description}}

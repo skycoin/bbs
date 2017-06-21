@@ -7,6 +7,7 @@ export interface Post {
 }
 
 export interface ThreadPage {
+  board?: Board;
   thread?: Thread;
   posts?: Array<Post>;
 }
@@ -18,6 +19,7 @@ export interface BoardPage {
 
 export interface Stats {
   node_is_master: boolean;
+  node_cxo_address: string;
 }
 
 export interface Thread {
