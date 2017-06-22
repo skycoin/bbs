@@ -38,11 +38,10 @@ export class BoardsListComponent implements OnInit {
         private router: Router,
         private modal: NgbModal,
         private common: CommonService) {
-
     }
 
     ngOnInit(): void {
-        // this.common.loading.start();
+        this.common.loading.start();
         this.getBoards();
         this.api.getStats().subscribe(root => {
             this.isRoot = root;
@@ -63,7 +62,7 @@ export class BoardsListComponent implements OnInit {
                 this.api.getSubscription(data).subscribe(res => {
                     el.ui_options = { subscribe: true };
                 })
-                // this.common.loading.close();
+                this.common.loading.close();
             });
         });
     }

@@ -1,8 +1,7 @@
 import { Component, OnInit, HostBinding } from '@angular/core';
-import { UserService, User } from '../../providers';
+import { UserService, User, CommonService } from '../../providers';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-
 
 @Component({
   selector: 'app-user',
@@ -16,13 +15,21 @@ export class UserComponent implements OnInit {
   private user: User = null;
   private switchUserKey = '';
   private switchUserList: Array<User> = [];
-  constructor(private userService: UserService, private modal: NgbModal) { }
+  constructor(private userService: UserService, private modal: NgbModal, private common: CommonService) { }
 
   ngOnInit() {
     this.userService.getCurrent().subscribe(user => {
       this.user = user;
     })
   }
+  copy(ev) {
+    if (ev) {
+      this.common.showSucceedAlert('Successful copy of the key');
+    } else {
+      this.common.showErrorAlert('Failed to copy of the key');
+    }
+  }
+
   switchUser(content: any) {
     if (this.switchUserList.length <= 0) {
       this.userService.getAll().subscribe(users => {
@@ -39,6 +46,6 @@ export class UserComponent implements OnInit {
           location.reload();
         })
       }
-    }, err => {})
+    }, err => { })
   }
 }

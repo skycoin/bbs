@@ -31,11 +31,10 @@
 
 <router-outlet></router-outlet>
 <app-loading></app-loading>
-<button class="top-btn btn btn-primary " *ngIf="common.topBtn" (click)="common.scrollToTop()">
+<button class="top-btn btn btn-sm btn-primary " *ngIf="common.topBtn" (click)="common.scrollToTop()">
   <div class="top"></div>
   <span>top</span>
 </button>
-<!--<div class="loading" *ngIf="common.loading"></div>-->
 <div class="app-pop">
   <ngb-alert type="{{common.alertType}}" *ngIf="common.alert" (click)="common.alert = false">
     {{common.alertMessage}}

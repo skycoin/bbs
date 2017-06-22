@@ -13,4 +13,10 @@
       margin-right: 5px;
     }
   }
+  .clip {
+    cursor: pointer;
+    &:hover {
+      color: blue;
+    }
+  }
 }

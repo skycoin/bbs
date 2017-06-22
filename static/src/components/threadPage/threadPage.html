@@ -1,17 +1,33 @@
 <div class="container-fluid">
-  <div class="card thread" *ngIf="data?.thread?.name != '' ">
+  <!--<nav class="breadcrumb">
+    <a class="breadcrumb-item" href="#">{{data?.board?.name}}</a>
+    <span class="breadcrumb-item active">{{data?.thread?.name}}</span>
+  </nav>-->
+  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.thread?.name != '' ">
     <div class="card-block">
-      <h3 class="card-title">{{data?.thread?.name}}</h3>
-      <p class="card-text thread-description">{{data?.thread?.description}}</p>
-      <button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Reply</button>
+      <div class="content">
+        <h4 class="card-title">{{data?.thread?.name}}</h4>
+        <p class="card-text thread-description text-muted">{{data?.thread?.description}}</p>
+      </div>
+      <div class="other">
+        <small class="text-muted"><i class="fa fa-users"></i><span>{{data?.posts?.length}}</span></small>
+      </div>
+    </div>
+    <div class="card-block">
+      <p class="d-flex justify-content-end"><button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Reply</button></p>
     </div>
   </div>
-  <div class="card post" *ngFor="let item of (data?.posts | orderBy:sort);trackBy: item?.ref">
+  <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.posts | orderBy:sort);let i = index;trackBy: item?.ref">
     <div class="card-block">
-      <!--<h5 class="card-title">{{item?.title}}</h5>-->
-      <p class="card-text author text-primary" title="{{item?.author}}" placement="top" [ngbTooltip]="item?.author">{{item?.author}}</p>
-      <p class="card-text" [innerHTML]="item?.body | safeHtml"></p>
-      <p class="card-text"><small class="text-muted">{{item?.created / 1000000 | date:'yMMMdjms'}}</small></p>
+      <div class="content">
+        <h6 class="card-text">{{item?.title}}</h6>
+        <p class="card-text text-primary" title="{{item?.author}}" placement="top" ><small class="author" [ngbTooltip]="item?.author">{{item?.author}}</small></p>
+        <p class="card-text text-muted" [innerHTML]="item?.body | safeHtml"></p>
+        <p class="card-text"><small class="text-muted">Posted:<span class="created">{{item?.created / 1000000 | date:'yMMMdjms'}}</span></small></p>
+      </div>
+      <div class="other">
+        <small class="card-text text-muted index">#{{i+1}}</small>
+      </div>
     </div>
   </div>
 </div>

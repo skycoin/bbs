@@ -1,9 +1,10 @@
 /* You can add global styles to this file, and also import other style files */
+
 @import 'variables';
 @import '../node_modules/bootstrap/scss/bootstrap';
 @import '../node_modules/font-awesome/scss/font-awesome';
-
-html,body {
+html,
+body {
   height: 100%;
 }
 
@@ -14,10 +15,12 @@ body {
 i {
   margin-left: 5px;
 }
+
 .not-found {
   text-align: center;
   margin: 1rem 0;
 }
+
 .loading {
   position: absolute;
   top: 45%;
@@ -27,6 +30,7 @@ i {
   background-image: url('./assets/loading.svg');
   background-size: 100% 100%;
 }
+
 .btn {
   cursor: pointer;
   i {
@@ -40,6 +44,7 @@ i {
   border-radius: .25rem;
   font-weight: bold;
 }
+
 .thread-item span {
   font-size: .9rem;
   font-weight: normal;
@@ -52,7 +57,20 @@ app-loading {
   left: 0;
   right: 0;
   width: 100%;
-  // z-index: 20001;
-  display: block;
-  // background-color: hsla(0, 0%, 0%, 0.2);
+  // display: block;
+}
+
+
+$tableHover-color: hsla(235, 100%, 74%, 0.075);
+
+// Table Hover
+.table-hover {
+  tbody {
+    tr {
+      cursor: pointer;
+      &:hover {
+        background-color: $tableHover-color;
+      }
+    }
+  }
 }

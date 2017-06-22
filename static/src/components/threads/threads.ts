@@ -51,11 +51,13 @@ export class ThreadsComponent implements OnInit {
     });
   }
   init() {
+    this.common.loading.start();
     const data = new FormData();
     data.append('board', this.boardKey);
     this.api.getBoardPage(data).subscribe(res => {
       this.board = res.board;
       this.threads = res.threads;
+      this.common.loading.close();
     })
   }
   openInfo(ev: Event, thread: Thread, content: any) {
@@ -91,8 +93,13 @@ export class ThreadsComponent implements OnInit {
     }
     if (this.importBoards.length <= 0) {
       this.api.getBoards().subscribe(boards => {
+        boards.forEach((el, index) => {
+          if (el.public_key === this.boardKey) {
+            boards.splice(index, 1);
+          }
+        });
         this.importBoards = boards;
-        this.importBoardKey = this.boardKey;
+        this.importBoardKey = boards[0].public_key;
       });
     }
     this.modal.open(content, { size: 'lg' }).result.then(result => {

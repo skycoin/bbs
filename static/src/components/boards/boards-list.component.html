@@ -95,35 +95,16 @@
 
 <!--Board Info-->
 <ng-template #info let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">Board</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </div>
-  <div class="modal-body">
-    <div class="form-group">
-      <label for="tmpName">Name</label>
-      <input type="text" class="form-control" id="tmpName" [(ngModel)]="tmpBoard.name">
+  <div class="card">
+    <div class="card-header">
+      Board Info
     </div>
-    <div class="form-group">
-      <label for="tmpDescription">Description</label>
-      <textarea class="form-control" rows="3" id="tmpDescription" [(ngModel)]="tmpBoard.description"></textarea>
+    <div class="card-block">
+      <p class="thread-item">Name: <span>{{tmpBoard?.name}}</span></p>
+      <p class="thread-item">Description: <span>{{tmpBoard?.description}}</span></p>
+      <p class="thread-item">Public Key: <span>{{tmpBoard?.public_key}}</span></p>
+      <p class="thread-item">Url: <span>{{tmpBoard?.url}}</span></p>
+      <p class="thread-item">Created: <span>{{tmpBoard?.created / 1000000 | date: 'short'}}</span></p>
     </div>
-    <div class="form-group">
-      <label for="tmpPublicKey">Public Key</label>
-      <input type="text" class="form-control" id="tmpPublicKey" [(ngModel)]="tmpBoard.public_key">
-    </div>
-    <div class="form-group">
-      <label for="tmpUrl">Url</label>
-      <input type="text" class="form-control" id="tmpUrl" [(ngModel)]="tmpBoard.url">
-    </div>
-    <div class="form-group">
-      <label for="tmpCreated">Created</label>
-      <input type="text" class="form-control" id="tmpCreated" [(ngModel)]="tmpBoard.created">
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="c(false)">close</button>
   </div>
 </ng-template>

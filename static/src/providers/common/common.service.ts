@@ -55,10 +55,12 @@ export class CommonService {
    * @param message Error Text
    * @param timeout
    */
-  showErrorAlert(message: string, timeout?: number) {
+  showErrorAlert(message: string, timeout: number = 3000) {
     this.showAlert(message, 'danger', timeout);
   }
-
+  showSucceedAlert(message: string, timeout: number = 3000) {
+    this.showAlert(message, 'success', timeout);
+  }
   showAlert(message: string, type?: string, timeout?: number) {
     this.alert = false;
     this.alertMessage = message;
@@ -73,11 +75,14 @@ export class CommonService {
     this.alert = true;
   }
 
-
-  showOrHideToTopBtn() {
+  /**
+   * Show Or Hide Top Button
+   * @param multiple Take the maximum percentage
+   */
+  showOrHideToTopBtn(multiple: number = 3) {
     const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
     const max = document.documentElement.scrollHeight;
-    if (pos > (max / 3)) {
+    if (pos > (max / multiple)) {
       this.topBtn = true;
     } else {
       this.topBtn = false;

@@ -1,21 +1,52 @@
 app-threadpage {
-  // width: 100vw;
-  .btn {
-    float: right;
-    cursor: pointer;
-  }
   .thread {
     .thread-description {
+      display: block;
       word-break: break-all;
+    }
+  }
+  .card {
+    .card-block {
+      .content,
+      .other {
+        float: left;
+      }
+      .content {
+        width: 90%;
+      }
+      .other {
+        text-align: right;
+        width: 10%;
+      }
     }
   }
   .post {
     margin: .8rem 0;
-    .author {
-      max-width: 20rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .card-block {
+      .content {
+        .card-text {
+          .text-muted {
+            .created {
+              margin: 0 .25rem;
+              text-decoration: underline;
+            }
+          }
+        }
+        .author {
+          display: inline-block;
+          max-width: 20rem;
+          cursor: pointer;
+          text-decoration: underline;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+      .other {
+        .index {
+          color: red;
+        }
+      }
     }
   }
 }

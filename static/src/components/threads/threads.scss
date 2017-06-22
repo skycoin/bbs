@@ -17,6 +17,11 @@ app-threads {
     table {
       tbody {
         tr {
+          .more {
+            width: 8rem;
+            // min-width: 2rem;
+            // max-width: 2rem;
+          }
           td {
             vertical-align: middle !important;
             h5 {

@@ -21,6 +21,7 @@ import {
   LoadingComponent
 } from '../components';
 import { SafeHTMLPipe, OrderByPipe } from '../pipes';
+import { ClipDirective } from '../directives/index';
 
 @NgModule({
   imports: [
@@ -44,9 +45,12 @@ import { SafeHTMLPipe, OrderByPipe } from '../pipes';
     ConnectionComponent,
     AlertComponent,
     LoadingComponent,
-    // Pipe
+    // Pipes
     SafeHTMLPipe,
     OrderByPipe,
+
+    // Directives
+    ClipDirective
   ],
   entryComponents: [AlertComponent],
   providers: [CommonService, ApiService, UserService, ConnectionService],

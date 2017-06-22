@@ -1,6 +1,6 @@
 <div class="threads">
   <div class="container-fluid">
-    <div class="card" *ngIf="board">
+    <div class="card border-left-0 border-right-0" *ngIf="board">
       <div class="card-block">
         <h5>{{board?.name}}</h5>
         <p class="card-text text-muted">{{board?.description}}</p>
@@ -14,12 +14,12 @@
       <thead>
         <tr>
           <th>Thread</th>
-          <th>More</th>
+          <th><i class="fa fa-ellipsis-h"></i></th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let thread of threads;trackBy:thread.ref" (click)="open(thread?.master_board,thread?.ref)">
-          <td title="{{thread.name}}">
+          <td title="{{thread.name}} {{thread.description}}">
             <h5>
               <span class="badge badge-pill badge-primary" *ngIf="thread.master_board != board.public_key">Imported</span>{{thread.name}}
             </h5>
@@ -27,14 +27,10 @@
               {{thread.description}}
               </small>
           </td>
-          <td>
-            <a href="javascript:void(0);" (click)="openImport($event,thread.ref,importBox)"><i [class.disabled]="isRoot" title="Import Thread" class="fa fa-exchange"></i></a>
+          <td class="more">
+            <a href="javascript:void(0);" (click)="openImport($event,thread.ref,importBox)"><i title="Import Thread" class="fa fa-exchange"></i></a>
             <a href="javascript:void(0);" (click)="openInfo($event,thread,infoBox)"><i class="fa fa-info-circle"></i></a>
           </td>
-          <!--<td class="board" title="{{url}}"><a href="javascript:void(0);" >{{board.url}}</a></td>-->
-          <!--<td class="description" title="{{thread.description}}">{{thread.description}}</td>-->
-          <!--<td class="transfer" ></td>
-          <td class="info" title="Thread Info"></td>-->
         </tr>
       </tbody>
     </table>

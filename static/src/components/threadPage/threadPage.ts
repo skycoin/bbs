@@ -96,9 +96,11 @@ export class ThreadPageComponent implements OnInit {
         data.append('title', this.postForm.get('title').value);
         data.append('body', this.postForm.get('body').value);
         console.log('test data:', this.postForm.get('title').value);
+        this.common.loading.start();
         this.api.addPost(data).subscribe(post => {
           if (post) {
             this.data.posts.unshift(post);
+            this.common.loading.close();
             this.common.showAlert('Added successfully', 'success', 3000);
           }
         })
@@ -115,17 +117,18 @@ export class ThreadPageComponent implements OnInit {
     this.router.navigate(['/add', { exec: 'post', board: this.boardKey, thread: this.threadKey }]);
   }
   open(master, ref: string) {
+    this.common.loading.start();
     const data = new FormData();
     data.append('board', master);
     data.append('thread', ref);
     this.api.getThreadpage(data).subscribe(res => {
       this.data = res;
+      this.common.loading.close();
     });
   }
 
   @HostListener('window:scroll', ['$event'])
   windowScroll(event) {
-    this.common.showOrHideToTopBtn();
+    this.common.showOrHideToTopBtn(50);
   }
-
 }
