@@ -1,20 +1,21 @@
 <div class="threads">
-  <div class="container-fluid">
-    <div class="card border-left-0 border-right-0" *ngIf="board">
+  <div class="container">
+    <!--border-top-0 border-left-0 border-right-0-->
+    <div class="card" *ngIf="board">
       <div class="card-block">
         <h5>{{board?.name}}</h5>
-        <p class="card-text text-muted">{{board?.description}}</p>
-        <p class="card-text card-created"><small class="text-muted">{{board?.created / 1000000 | date: 'short'}}</small></p>
+        <p class="card-text text-muted description">{{board?.description}}</p>
+        <!--<p class="card-text card-created"><small class="text-muted">{{board?.created / 1000000 | date: 'short'}}</small></p>-->
         <p class="card-text d-flex justify-content-end">
           <button type="button" [class.disabled]="!isRoot" class="btn btn-sm btn-primary" (click)="openAdd(content)">New Thread</button>
         </p>
       </div>
     </div>
-    <table class="table table-hover" *ngIf="threads.length > 0">
+    <table class="table table-hover">
       <thead>
         <tr>
           <th>Thread</th>
-          <th><i class="fa fa-ellipsis-h"></i></th>
+          <th class="more"><i class="fa fa-ellipsis-h"></i></th>
         </tr>
       </thead>
       <tbody>
@@ -34,7 +35,7 @@
         </tr>
       </tbody>
     </table>
-    <h3 class="not-found" *ngIf="threads?.length == 0">Not Found Threads</h3>
+    <h5 class="not-found" *ngIf="threads?.length == 0">Not Found Threads</h5>
   </div>
 </div>
 

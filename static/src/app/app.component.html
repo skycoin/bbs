@@ -1,4 +1,4 @@
-<nav class="navbar fixed-top navbar-toggleable-md navbar-light bg-faded ">
+<nav class="navbar fixed-top navbar-toggleable-md bg-faded bg-primary">
   <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01"
     aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -9,7 +9,7 @@
   <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
     <ul class="navbar-nav mr-auto">
       <li class="nav-item">
-        <a class="nav-link" routerLink="/" routerLinkActive="active">Board <span class="sr-only">(current)</span></a>
+        <a class="nav-link" routerLink="/" routerLinkActive="active" >Board <span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
         <a class="nav-link" routerLink="/userlist" routerLinkActive="active">UserList</a>
@@ -31,7 +31,7 @@
 
 <router-outlet></router-outlet>
 <app-loading></app-loading>
-<button class="top-btn btn btn-sm btn-primary " *ngIf="common.topBtn" (click)="common.scrollToTop()">
+<button class="top-btn btn btn-primary " *ngIf="common.topBtn" (click)="common.scrollToTop()">
   <div class="top"></div>
   <span>top</span>
 </button>

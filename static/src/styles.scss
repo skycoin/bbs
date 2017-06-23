@@ -9,7 +9,7 @@ body {
 }
 
 body {
-  padding-top: 80px;
+  padding-top: 70px;
 }
 
 i {
@@ -21,15 +21,6 @@ i {
   margin: 1rem 0;
 }
 
-.loading {
-  position: absolute;
-  top: 45%;
-  left: 45%;
-  width: 10%;
-  height: 10%;
-  background-image: url('./assets/loading.svg');
-  background-size: 100% 100%;
-}
 
 .btn {
   cursor: pointer;
@@ -56,13 +47,35 @@ app-loading {
   bottom: 0;
   left: 0;
   right: 0;
-  width: 100%;
-  // display: block;
+  width: 100%; // display: block;
 }
 
+table {
+  thead {
+    th {
+      color: #b3b3b3;
+      border-bottom: 2px solid #d8d8d8 !important;
+    }
+    .more {
+      text-align: center;
+    }
+  }
+  tbody {
+    .more {
+      text-align: center;
+    }
+  }
+  td,
+  th {
+    border-top: none !important;
+    border-bottom: 1px solid #eceeef;
+  }
+}
 
-$tableHover-color: hsla(235, 100%, 74%, 0.075);
-
+$tableHover-color: hsla(235,
+100%,
+74%,
+0.075);
 // Table Hover
 .table-hover {
   tbody {
@@ -73,4 +86,19 @@ $tableHover-color: hsla(235, 100%, 74%, 0.075);
       }
     }
   }
+}
+
+// Font Icon
+.fa {
+  margin-right: 5px;
+}
+.fa-star {
+  color: #ffb700;
+}
+.fa-exchange {
+  color: #486b4b;
+}
+.fa-files-o {
+  cursor: pointer;
+  color: blue;
 }

@@ -1,38 +1,35 @@
+<div class="btn-box">
+  <p class="container d-flex justify-content-end"><button type="button" class="btn btn-sm btn-danger" (click)="subscribe($event,subscribeBox)">Subscribe</button>
+    <button [class.disabled]="!isRoot" type="button" class="btn btn-sm btn-primary" (click)="openAdd(add)">New Board</button>
+  </p>
+</div>
 <div class='boards'>
-  <div class='container-fluid'>
-    <!--<div class="page-header">
-      <h1>All Boards</h1>
-    </div>-->
-    <p class="d-flex justify-content-end"><button type="button" class="btn btn-sm btn-danger" (click)="subscribe($event,subscribeBox)">Subscribe</button>
-      <button [class.disabled]="!isRoot" type="button" class="btn btn-sm btn-primary" (click)="openAdd(add)">New Board</button>
-    </p>
+  <div class='container'>
     <table class="table table-hover" *ngIf="boards.length > 0">
       <thead>
         <tr>
           <th>Board</th>
           <th class="sortBtn" (click)="setSort()">Created <i class="fa  fa-sort"></i></th>
-          <th><i class="fa fa-ellipsis-h"></i></th>
+          <th class="more"><i class="fa fa-ellipsis-h"></i></th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let board of (boards | orderBy: sort);let i = index;trackBy:board.public_key" (click)="openThreads($event,board?.public_key)">
           <td class="content">
-            <h5>{{board?.name}}</h5>
+            <h6>{{board?.name}}</h6>
             <small class="text-muted">{{board?.description}}</small>
           </td>
           <td>
             <small class="text-muted">{{board?.created / 1000000 | date: 'short'}}</small>
           </td>
-          <td>
-            <a href="javascript:void(0);" (click)="unSubscribe($event,board?.public_key)"><i class="fa" [class.fa-star-o]="!board?.ui_options?.subscribe" [class.fa-star]="board?.ui_options?.subscribe"></i></a>
+          <td class="more">
+            <a href="javascript:void(0);" (click)="unSubscribe($event,board?.public_key)"><i class="fa" [class.fa-star-o]="!board?.ui_options?.subscribe" [class.fa-star]="board?.ui_options?.subscribe" aria-hidden="true" aria-label="subscribe"></i></a>
             <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info-circle"></i></a>
           </td>
-          <!--<td class="subscribe" title="Unsubscribe" ></td>
-          <td class="info" title="Board Info" ></td>-->
         </tr>
       </tbody>
     </table>
-    <h3 class="boardNot" *ngIf="boards?.length == 0">Not Found Boards</h3>
+    <h5 class="boardNot" *ngIf="boards?.length == 0">Not Found Boards</h5>
   </div>
 </div>
 
@@ -102,7 +99,7 @@
     <div class="card-block">
       <p class="thread-item">Name: <span>{{tmpBoard?.name}}</span></p>
       <p class="thread-item">Description: <span>{{tmpBoard?.description}}</span></p>
-      <p class="thread-item">Public Key: <span>{{tmpBoard?.public_key}}</span></p>
+      <p class="thread-item">Public Key: <span>{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="copy($event)"></i></span></p>
       <p class="thread-item">Url: <span>{{tmpBoard?.url}}</span></p>
       <p class="thread-item">Created: <span>{{tmpBoard?.created / 1000000 | date: 'short'}}</span></p>
     </div>

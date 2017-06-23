@@ -67,6 +67,7 @@ export class ThreadsComponent implements OnInit {
     this.modal.open(content, { size: 'lg' });
   }
   openAdd(content) {
+    this.addForm.reset();
     this.modal.open(content).result.then((result) => {
       if (result) {
         const data = new FormData();

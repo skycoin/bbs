@@ -1,11 +1,11 @@
 <div class="connection">
-  <div class="container-fluid">
+  <div class="container">
     <div class="page-header">
       <p class="d-flex justify-content-end">
-        <button type="button" class="btn btn-outline-primary" disabled (click)="openAdd(form)">New Connection</button>
+        <button type="button" class="btn btn-outline-primary" (click)="openAdd(form)">New Connection</button>
       </p>
     </div>
-    <table class="table table-bordered" *ngIf="list.length > 0">
+    <table class="table" *ngIf="list.length > 0">
       <thead>
         <tr>
           <th></th>

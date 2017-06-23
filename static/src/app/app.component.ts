@@ -4,7 +4,6 @@ import { LoadingComponent } from '../components';
 import { UserService, User, CommonService } from '../providers';
 import { Router, NavigationStart } from '@angular/router';
 import 'rxjs/add/operator/filter';
-
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -23,6 +22,8 @@ export class AppComponent implements OnInit {
     public common: CommonService) {
   }
   ngOnInit() {
+    // const el = document.querySelector('.container');
+    // Ps.initialize(el);
     this.common.loading = this.loading;
     this.user.getCurrent().subscribe(user => {
       this.name = user.alias;

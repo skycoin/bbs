@@ -7,6 +7,9 @@ app-threads {
     .card {
       // box-shadow: 0 0.2rem 0.5rem hsla(0, 0%, 0%, 0.3);
       .card-block {
+        .description {
+          margin: 0;
+        }
         .card-text {
           .btn {
             margin: 0 .5rem;
@@ -19,11 +22,9 @@ app-threads {
         tr {
           .more {
             width: 8rem;
-            // min-width: 2rem;
-            // max-width: 2rem;
           }
           td {
-            vertical-align: middle !important;
+            vertical-align: middle;
             h5 {
               .tag {
                 color: blue;

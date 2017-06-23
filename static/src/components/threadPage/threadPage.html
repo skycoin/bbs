@@ -17,6 +17,7 @@
       <p class="d-flex justify-content-end"><button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Reply</button></p>
     </div>
   </div>
+  
   <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.posts | orderBy:sort);let i = index;trackBy: item?.ref">
     <div class="card-block">
       <div class="content">

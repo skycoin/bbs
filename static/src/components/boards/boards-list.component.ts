@@ -66,7 +66,11 @@ export class BoardsListComponent implements OnInit {
             });
         });
     }
-
+    copy(ev) {
+        if (ev) {
+            this.common.showSucceedAlert('Copy Successful');
+        }
+    }
     openInfo(ev: Event, board: Board, content: any) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
