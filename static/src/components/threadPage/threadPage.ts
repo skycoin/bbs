@@ -16,15 +16,15 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
 export class ThreadPageComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  private sort = 'desc';
-  private boardKey = '';
-  private threadKey = '';
-  private data: ThreadPage = { posts: [], thread: { name: '', description: '' } };
-  private postForm = new FormGroup({
+  public sort = 'desc';
+  public boardKey = '';
+  public threadKey = '';
+  public data: ThreadPage = { posts: [], thread: { name: '', description: '' } };
+  public postForm = new FormGroup({
     title: new FormControl('', Validators.required),
     body: new FormControl('', Validators.required)
   });
-  private editorOptions = {
+  public editorOptions = {
     placeholderText: 'Edit Your Content Here!',
     toolbarButtons: [
       'bold',
@@ -70,7 +70,7 @@ export class ThreadPageComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private modal: NgbModal,
-    public common: CommonService) { }
+    private common: CommonService) { }
 
   ngOnInit() {
     this.route.params.subscribe(res => {
@@ -79,7 +79,7 @@ export class ThreadPageComponent implements OnInit {
       this.open(this.boardKey, this.threadKey);
     })
   }
-  private setSort() {
+  public setSort() {
     this.sort = this.sort === 'desc' ? 'esc' : 'desc';
   }
   openReply(content) {
@@ -95,7 +95,6 @@ export class ThreadPageComponent implements OnInit {
         data.append('thread', this.threadKey);
         data.append('title', this.postForm.get('title').value);
         data.append('body', this.postForm.get('body').value);
-        console.log('test data:', this.postForm.get('title').value);
         this.common.loading.start();
         this.api.addPost(data).subscribe(post => {
           if (post) {
@@ -107,14 +106,6 @@ export class ThreadPageComponent implements OnInit {
       }
     }, err => { });
 
-  }
-
-  reply() {
-    if (!this.boardKey || !this.threadKey) {
-      alert('Will not be able to post');
-      return;
-    }
-    this.router.navigate(['/add', { exec: 'post', board: this.boardKey, thread: this.threadKey }]);
   }
   open(master, ref: string) {
     this.common.loading.start();

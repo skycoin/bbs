@@ -21,7 +21,6 @@ i {
   margin: 1rem 0;
 }
 
-
 .btn {
   cursor: pointer;
   i {
@@ -50,6 +49,20 @@ app-loading {
   width: 100%; // display: block;
 }
 
+.table_fixed {
+  table-layout: fixed;
+}
+
+.single-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.break-line {
+  word-break: break-all;
+}
+
 table {
   thead {
     th {
@@ -72,10 +85,7 @@ table {
   }
 }
 
-$tableHover-color: hsla(235,
-100%,
-74%,
-0.075);
+$tableHover-color: hsla(235, 100%, 74%, 0.075);
 // Table Hover
 .table-hover {
   tbody {
@@ -92,12 +102,15 @@ $tableHover-color: hsla(235,
 .fa {
   margin-right: 5px;
 }
+
 .fa-star {
   color: #ffb700;
 }
+
 .fa-exchange {
   color: #486b4b;
 }
+
 .fa-files-o {
   cursor: pointer;
   color: blue;

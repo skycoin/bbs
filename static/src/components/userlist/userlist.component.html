@@ -1,24 +1,27 @@
 <div class="user-list container">
   <p class="d-flex justify-content-end"><button type="button" class="btn btn-sm btn-primary" (click)="openAdd(addBox)">New Master</button></p>
-  <table class="table table-hover table-sm">
+  <table class="table table_fixed table-hover">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Public Key</th>
-        <th>Edit</th>
-        <th>Remove</th>
+        <th scope="col" width="40%">Name</th>
+        <th scope="col" width="40%">Public Key</th>
+        <th scope="col" width="20%" class="more"><i class="fa fa-ellipsis-h"></i></th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let user of userlist;trackBy:user.public_key">
-        <td class="alias" title="{{user.alias}}"><span *ngIf="user?.master" class="badge badge-pill badge-info" >Master</span>{{user?.alias}}</td>
-        <td class="key" title="{{user.public_key}}">{{user?.public_key}}</td>
-        <td class="edit" (click)="openEdit(editBox,user.public_key)"><i class="fa fa-pencil" aria-hidden="true"></i></td>
-        <td class="del" (click)="remove($event,user.public_key)"><i class="fa fa-trash" aria-hidden="true"></i></td>
+      <!--trackBy:user.public_key-->
+      <tr *ngFor="let user of userlist;">
+        <td class="single-line" title="{{user.alias}}"><span *ngIf="user?.master" class="badge badge-pill badge-info">Master</span>{{user?.alias}}</td>
+        <td class="single-line" title="{{user.public_key}}">{{user?.public_key}}</td>
+        <td class="more">
+          <a href="javascript:void(0);" class="edit" (click)="openEdit(editBox,user.public_key)"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+          <a href="javascript:void(0);" class="del" (click)="remove($event,user.public_key)"><i class="fa fa-trash" aria-hidden="true"></i></a>
+        </td>
       </tr>
     </tbody>
   </table>
 </div>
+
 
 <ng-template #addBox let-c="close" let-d="dismiss">
   <div class="modal-header">

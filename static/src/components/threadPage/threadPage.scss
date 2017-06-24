@@ -1,10 +1,4 @@
 app-threadpage {
-  .thread {
-    .thread-description {
-      display: block;
-      word-break: break-all;
-    }
-  }
   .card {
     .card-block {
       .content,
@@ -31,15 +25,6 @@ app-threadpage {
               text-decoration: underline;
             }
           }
-        }
-        .author {
-          display: inline-block;
-          max-width: 20rem;
-          cursor: pointer;
-          text-decoration: underline;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
         }
       }
       .other {

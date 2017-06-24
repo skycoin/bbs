@@ -1,8 +1,5 @@
 .navbar {
-  .nav-link {
-    color: hsla(0, 0%, 100%, 0.6);
-  }
-  .active {
+  .test-toggler-icon {
     color: #fff;
   }
   .nav-node {
@@ -10,7 +7,6 @@
     padding: 0;
   }
   .nav-name {
-    // color: #d21b1b !important;
     span {
       margin: 0 5px;
     }
@@ -23,9 +19,11 @@
 .app-pop {
   position: fixed;
   bottom: 0;
-  width: 50%;
-  left: 25%;
-  right: 25%;
+  left: 0;
+  right: 0;
+  // width: 50%;
+  // left: 25%;
+  // right: 25%;
 }
 
 .top-btn {

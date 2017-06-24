@@ -24,7 +24,9 @@
       ],
       "scripts": [
         "../node_modules/jquery/dist/jquery.min.js",
-        "../node_modules/froala-editor/js/froala_editor.pkgd.min.js"
+        "../node_modules/froala-editor/js/froala_editor.pkgd.min.js",
+        "../node_modules/tether/dist/js/tether.min.js",
+        "../node_modules/bootstrap/dist/js/bootstrap.min.js"
       ],
       "addons": [
         "../node_modules/font-awesome/fonts/*.+(otf|eot|svg|ttf|woff|woff2)"

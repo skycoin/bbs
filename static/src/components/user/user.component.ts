@@ -12,10 +12,10 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 export class UserComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  private user: User = null;
-  private switchUserKey = '';
-  private switchUserList: Array<User> = [];
-  constructor(private userService: UserService, private modal: NgbModal, private common: CommonService) { }
+  user: User = null;
+  switchUserKey = '';
+  switchUserList: Array<User> = [];
+  constructor(private userService: UserService, private modal: NgbModal, public common: CommonService) { }
 
   ngOnInit() {
     this.userService.getCurrent().subscribe(user => {
@@ -24,12 +24,11 @@ export class UserComponent implements OnInit {
   }
   copy(ev) {
     if (ev) {
-      this.common.showSucceedAlert('Successful copy of the key');
+      this.common.showSucceedAlert('Copy Successful');
     } else {
-      this.common.showErrorAlert('Failed to copy of the key');
+      this.common.showErrorAlert('Copy Failed')
     }
   }
-
   switchUser(content: any) {
     if (this.switchUserList.length <= 0) {
       this.userService.getAll().subscribe(users => {

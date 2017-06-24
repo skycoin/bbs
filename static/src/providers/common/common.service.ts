@@ -2,20 +2,23 @@ import { Http, Response } from '@angular/http';
 import { Injectable } from '@angular/core';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/filter';
-import 'rxjs/add/operator/do';
 import { Observable } from 'rxjs/Observable';
 import { LoadingComponent } from '../../components';
 
 @Injectable()
 export class CommonService {
-  private alertType = 'info';
-  private alertMessage = '';
-  private alert = false;
-  topBtn = false;
-  loading: LoadingComponent = null;
+  public alertType = 'info';
+  public alertMessage = 'test alert';
+  public alert = false;
+  public topBtn = false;
+  public loading: LoadingComponent = null;
+  // public sortBy = 'desc';
   constructor(private http: Http) { }
 
   handleError(error: Response) {
+    if (this.loading) {
+      this.loading.close();
+    }
     console.error('Error:', error.json() || 'Server error', 'danger');
     this.showAlert((error.json() instanceof Object ? 'Server error' : error.json()) || 'Server error', 'danger', 3000);
     return Observable.throw(error.json() || 'Server error');
@@ -24,13 +27,9 @@ export class CommonService {
     if (!url) {
       return Observable.throw('The connection is empty');
     }
-    // if (this.loading) {
-    //   this.loading.start();
-    // }
     return this.http.get(url).
       filter((res: Response) => res.status === 200).
       map((res: Response) => res.json()).
-      // do(() => { if (this.loading) { this.loading.close() } }).
       catch(err => this.handleError(err));
   }
 
@@ -38,17 +37,19 @@ export class CommonService {
     if (!url || !data) {
       return Observable.throw('Parameters and connections can not be empty');
     }
-    // if (this.loading) {
-    //   this.loading.start();
-    // }
     return this.http.post(url, data).
       filter((res: Response) => res.status === 200).
       map((res: Response) => res.json()).
-      // do(() => { if (this.loading) { this.loading.close() } }).
       catch(err => this.handleError(err));
   }
 
-
+  copy(ev) {
+    if (ev) {
+      this.showSucceedAlert('Copy Successful');
+    } else {
+      this.showErrorAlert('Copy Failed')
+    }
+  }
 
   /**
    * Show Error Alert

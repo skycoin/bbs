@@ -24,7 +24,7 @@
           <a href="javascript:void(0);" (click)="switchUser(switch)">switch</a>
         </p>
         <p class="item"><i class="fa fa-suitcase" aria-hidden="true"></i>Master:<span class="master">{{user?.master}}</span></p>
-        <p class="item">
+        <p class="item break-line">
           <i class="fa fa-key" aria-hidden="true"></i>Key:<span class="key">{{user?.public_key}}</span>
           <i class="fa fa-files-o clip" title="copy" appClip [clipText]="user?.public_key" (onClip)="copy($event)"></i>
         </p>

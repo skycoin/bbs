@@ -1,42 +1,42 @@
-<nav class="navbar fixed-top navbar-toggleable-md bg-faded bg-primary">
-  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01"
-    aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+  <nav class="navbar navbar-toggleable-md bg-faded fixed-top navbar-inverse bg-primary">
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo02"
+      aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon test-toggler-icon"></span>
   </button>
-  <a class="navbar-brand" href="#" title="BBS">
+    <a class="navbar-brand" href="#" title="BBS">
     <img src="../favicon.ico" width="60" height="30" alt="">
   </a>
-  <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
-    <ul class="navbar-nav mr-auto">
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/" routerLinkActive="active" >Board <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/userlist" routerLinkActive="active">UserList</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/conn" routerLinkActive="active">Connections Manager</a>
-      </li>
 
-      <li class="nav-item">
-        <a class="nav-name nav-link" routerLink="/user" routerLinkActive="active"><i class="fa fa-user" aria-hidden="true"></i>{{name}}</a>
-      </li>
-    </ul>
-    <span class="navbar-text">
+    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+      <ul class="navbar-nav mr-auto mt-2 mt-md-0">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active">Board <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/userlist" routerLinkActive="active">UserList</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/conn" routerLinkActive="active">Connections Manager</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-name nav-link" routerLink="/user" routerLinkActive="active"><i class="fa fa-user" aria-hidden="true"></i>{{name}}</a>
+        </li>
+      </ul>
+      <span class="navbar-text">
      <a class="nav-node nav-link" href="javascript:void(0);" *ngIf="isMasterNode">Master Node</a>
      <a class="nav-node nav-link" href="javascript:void(0);" *ngIf="!isMasterNode">Client Node</a>
     </span>
-  </div>
-</nav>
-
-<router-outlet></router-outlet>
-<app-loading></app-loading>
-<button class="top-btn btn btn-primary " *ngIf="common.topBtn" (click)="common.scrollToTop()">
+    </div>
+  </nav>
+  <router-outlet></router-outlet>
+  <app-loading></app-loading>
+  <button class="top-btn btn btn-primary " *ngIf="common.topBtn" (click)="common.scrollToTop()">
   <div class="top"></div>
   <span>top</span>
 </button>
-<div class="app-pop">
-  <ngb-alert type="{{common.alertType}}" *ngIf="common.alert" (click)="common.alert = false">
-    {{common.alertMessage}}
-  </ngb-alert>
-</div>
+  <div class="app-pop container">
+    <ngb-alert type="{{common.alertType}}" *ngIf="common.alert" (click)="common.alert = false">
+      {{common.alertMessage}}
+    </ngb-alert>
+  </div>

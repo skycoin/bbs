@@ -5,7 +5,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --prod",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -27,7 +27,9 @@
     "clipboard": "^1.7.1",
     "core-js": "^2.4.1",
     "font-awesome": "^4.7.0",
+    "iscroll": "^5.2.0",
     "rxjs": "^5.1.0",
+    "tether": "^1.4.0",
     "zone.js": "^0.8.4"
   },
   "devDependencies": {

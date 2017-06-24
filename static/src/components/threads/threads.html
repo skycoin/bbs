@@ -3,25 +3,27 @@
     <!--border-top-0 border-left-0 border-right-0-->
     <div class="card" *ngIf="board">
       <div class="card-block">
-        <h5>{{board?.name}}</h5>
-        <p class="card-text text-muted description">{{board?.description}}</p>
-        <!--<p class="card-text card-created"><small class="text-muted">{{board?.created / 1000000 | date: 'short'}}</small></p>-->
+        <h5 class="single-line">{{board?.name}}</h5>
+        <p class="card-text text-muted description single-line">{{board?.description}}</p>
+      </div>
+      <div class="card-block">
         <p class="card-text d-flex justify-content-end">
           <button type="button" [class.disabled]="!isRoot" class="btn btn-sm btn-primary" (click)="openAdd(content)">New Thread</button>
         </p>
       </div>
     </div>
-    <table class="table table-hover">
+    <table class="table table_fixed table-hover">
       <thead>
         <tr>
-          <th>Thread</th>
-          <th class="more"><i class="fa fa-ellipsis-h"></i></th>
+          <th scope="col" width="85%">Thread</th>
+          <th scope="col" width="15%" class="more"><i class="fa fa-ellipsis-h"></i></th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let thread of threads;trackBy:thread.ref" (click)="open(thread?.master_board,thread?.ref)">
-          <td title="{{thread.name}} {{thread.description}}">
-            <h5>
+        <!--trackBy:thread.ref-->
+        <tr *ngFor="let thread of threads;" (click)="open(thread?.master_board,thread?.ref)">
+          <td class="break-line" title="{{board?.name}} {{board?.description}}">
+            <h5 class="single-line">
               <span class="badge badge-pill badge-primary" *ngIf="thread.master_board != board.public_key">Imported</span>{{thread.name}}
             </h5>
             <small class="text-muted">

@@ -1,13 +1,10 @@
 <div class="container-fluid">
-  <!--<nav class="breadcrumb">
-    <a class="breadcrumb-item" href="#">{{data?.board?.name}}</a>
-    <span class="breadcrumb-item active">{{data?.thread?.name}}</span>
-  </nav>-->
+
   <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.thread?.name != '' ">
     <div class="card-block">
       <div class="content">
-        <h4 class="card-title">{{data?.thread?.name}}</h4>
-        <p class="card-text thread-description text-muted">{{data?.thread?.description}}</p>
+        <h4 class="card-title single-line">{{data?.thread?.name}}</h4>
+        <p class="card-text break-line text-muted">{{data?.thread?.description}}</p>
       </div>
       <div class="other">
         <small class="text-muted"><i class="fa fa-users"></i><span>{{data?.posts?.length}}</span></small>
@@ -17,14 +14,14 @@
       <p class="d-flex justify-content-end"><button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Reply</button></p>
     </div>
   </div>
-  
-  <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.posts | orderBy:sort);let i = index;trackBy: item?.ref">
+  <!--trackBy: item?.ref-->
+  <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.posts | orderBy:sort);let i = index;">
     <div class="card-block">
       <div class="content">
-        <h6 class="card-text">{{item?.title}}</h6>
-        <p class="card-text text-primary" title="{{item?.author}}" placement="top" ><small class="author" [ngbTooltip]="item?.author">{{item?.author}}</small></p>
-        <p class="card-text text-muted" [innerHTML]="item?.body | safeHtml"></p>
-        <p class="card-text"><small class="text-muted">Posted:<span class="created">{{item?.created / 1000000 | date:'yMMMdjms'}}</span></small></p>
+        <h6 class="card-text single-line">{{item?.title}}</h6>
+        <p class="card-text text-primary single-line" title="{{item?.author}}" placement="top" ><small [ngbTooltip]="item?.author">{{item?.author}}</small></p>
+        <p class="card-text text-muted break-line" [innerHTML]="item?.body | safeHtml"></p>
+        <p class="card-text single-line"><small class="text-muted">Posted:<span class="created">{{item?.created / 1000000 | date:'yMMMdjms'}}</span></small></p>
       </div>
       <div class="other">
         <small class="card-text text-muted index">#{{i+1}}</small>

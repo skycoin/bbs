@@ -14,10 +14,9 @@ import { FormControl, FormGroup } from '@angular/forms';
 export class UserlistComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  // @HostBinding('style.position') position = 'absolute';
   userlist: Array<User> = [];
   editName = '';
-  private addForm = new FormGroup({
+  public addForm = new FormGroup({
     alias: new FormControl(),
     seed: new FormControl()
   });

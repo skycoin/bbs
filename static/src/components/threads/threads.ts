@@ -16,14 +16,14 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
 export class ThreadsComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  private threads: Array<Thread> = [];
-  private importBoards: Array<Board> = [];
-  private importBoardKey = '';
-  private boardKey = '';
-  private board: Board = null;
-  private isRoot = false;
-  private tmpThread: Thread = null;
-  private addForm = new FormGroup({
+  threads: Array<Thread> = [];
+  importBoards: Array<Board> = [];
+  importBoardKey = '';
+  boardKey = '';
+  board: Board = null;
+  isRoot = false;
+  tmpThread: Thread = null;
+  public addForm = new FormGroup({
     description: new FormControl(),
     name: new FormControl()
   });

@@ -10,7 +10,7 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
 @Component({
     selector: 'app-boardslist',
     templateUrl: 'boards-list.component.html',
-    styleUrls: ['boards.scss'],
+    styleUrls: ['boards-list.scss'],
     encapsulation: ViewEncapsulation.None,
     animations: [slideInLeftAnimation],
 })
@@ -19,25 +19,25 @@ export class BoardsListComponent implements OnInit {
     @HostBinding('style.display') display = 'block';
     @HostBinding('style.position') position = 'absolute';
     @Output() board: EventEmitter<string> = new EventEmitter();
-    private sort = 'desc';
-    private isRoot = false;
-    private boards: Array<Board> = [];
-    private subscribeForm = new FormGroup({
+    public sort = 'desc';
+    public isRoot = false;
+    public boards: Array<Board> = [];
+    public subscribeForm = new FormGroup({
         address: new FormControl('', Validators.required),
         board: new FormControl('', Validators.required)
     });
-    private addForm = new FormGroup({
+    public addForm = new FormGroup({
         name: new FormControl(),
         description: new FormControl(),
         seed: new FormControl()
     });
-    private tmpBoard: Board = null;
+    public tmpBoard: Board = null;
     constructor(
         private api: ApiService,
         private user: UserService,
         private router: Router,
         private modal: NgbModal,
-        private common: CommonService) {
+        public common: CommonService) {
     }
 
     ngOnInit(): void {
@@ -47,12 +47,16 @@ export class BoardsListComponent implements OnInit {
             this.isRoot = root;
         });
     }
-    private setSort() {
+    setSort() {
         this.sort = this.sort === 'desc' ? 'esc' : 'desc';
     }
-    private getBoards() {
+    getBoards() {
         this.api.getBoards().subscribe(boards => {
             this.boards = boards;
+            if (boards.length <= 0) {
+                this.common.loading.close();
+                return;
+            }
             this.boards.forEach(el => {
                 if (!el || !el.public_key) {
                     return;
@@ -65,11 +69,6 @@ export class BoardsListComponent implements OnInit {
                 this.common.loading.close();
             });
         });
-    }
-    copy(ev) {
-        if (ev) {
-            this.common.showSucceedAlert('Copy Successful');
-        }
     }
     openInfo(ev: Event, board: Board, content: any) {
         ev.stopImmediatePropagation();
@@ -134,9 +133,5 @@ export class BoardsListComponent implements OnInit {
             return;
         }
         this.router.navigate(['/threads', { board: key }])
-        // this.board.emit(this.boards[0].public_key);
-    }
-    private getDismissReason(reason: any) {
-        console.log('get dismiss reason:', reason);
     }
 }
