@@ -26,6 +26,7 @@ export class ThreadPageComponent implements OnInit {
   });
   public editorOptions = {
     placeholderText: 'Edit Your Content Here!',
+    quickInsertButtons: ['table', 'ul', 'ol', 'hr'],
     toolbarButtons: [
       'bold',
       'italic',
@@ -48,6 +49,7 @@ export class ThreadPageComponent implements OnInit {
       'indent',
       'quote',
       '-',
+      'emoticons',
       'insertLink',
       '|',
       'insertHR',

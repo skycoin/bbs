@@ -53,8 +53,8 @@
     <div class="card-block">
       <p class="thread-item">Name: <span>{{tmpThread.name}}</span></p>
       <p class="thread-item">Description: <span>{{tmpThread.description}}</span></p>
-      <p class="thread-item">Master Board: <span>{{tmpThread.master_board}}</span></p>
-      <p class="thread-item">Ref: <span>{{tmpThread.ref}}</span></p>
+      <p class="thread-item">Master Board: <span>{{tmpThread.master_board}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.master_board" (onClip)="common.copy($event)"></i></span></p>
+      <p class="thread-item">Ref: <span>{{tmpThread.ref}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.ref" (onClip)="common.copy($event)"></i></span></p>
     </div>
   </div>
 </ng-template>
