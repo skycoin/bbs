@@ -27,6 +27,10 @@ export class UserlistComponent implements OnInit {
     })
   }
   openEdit(content: any, key: string) {
+    if (key === '') {
+      this.common.showErrorAlert('Parameter error!!!');
+      return;
+    }
     const modalRef = this.modal.open(content).result.then(result => {
       if (result) {
         this.edit(this.editName, key);

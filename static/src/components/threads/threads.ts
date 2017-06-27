@@ -44,6 +44,10 @@ export class ThreadsComponent implements OnInit {
     })
   }
   initThreads(key) {
+    if (key === '') {
+      this.common.showErrorAlert('Parameter error!!!');
+      return;
+    }
     const data = new FormData();
     data.append('board', key);
     this.api.getThreads(data).subscribe(threads => {
@@ -83,6 +87,10 @@ export class ThreadsComponent implements OnInit {
   }
 
   open(master, ref: string) {
+    if (master === '' || ref === '') {
+      this.common.showErrorAlert('Parameter error!!!');
+      return;
+    }
     this.router.navigate(['p', { board: master, thread: ref }], { relativeTo: this.route });
   }
   openImport(ev: Event, threadKey: string, content: any) {

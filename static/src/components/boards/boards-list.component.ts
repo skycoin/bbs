@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, HostBinding } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, HostBinding } from '@angular/core';
 import { ApiService, UserService, CommonService } from '../../providers';
 import { Board, UIOptions } from '../../providers/api/msg';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -17,8 +17,6 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
 export class BoardsListComponent implements OnInit {
     @HostBinding('@routeAnimation') routeAnimation = true;
     @HostBinding('style.display') display = 'block';
-    @HostBinding('style.position') position = 'absolute';
-    @Output() board: EventEmitter<string> = new EventEmitter();
     public sort = 'desc';
     public isRoot = false;
     public boards: Array<Board> = [];
@@ -52,11 +50,11 @@ export class BoardsListComponent implements OnInit {
     }
     getBoards() {
         this.api.getBoards().subscribe(boards => {
-            this.boards = boards;
-            if (boards.length <= 0) {
+            if (!boards || boards.length <= 0) {
                 this.common.loading.close();
                 return;
             }
+            this.boards = boards;
             this.boards.forEach(el => {
                 if (!el || !el.public_key) {
                     return;
@@ -73,6 +71,10 @@ export class BoardsListComponent implements OnInit {
     openInfo(ev: Event, board: Board, content: any) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
+        if (!board) {
+            this.common.showErrorAlert('Failed to get info!!')
+            return;
+        }
         this.tmpBoard = board;
         this.modal.open(content, { size: 'lg' });
     }
@@ -86,7 +88,7 @@ export class BoardsListComponent implements OnInit {
                 data.append('seed', this.addForm.get('seed').value);
                 this.api.addBoard(data).subscribe(res => {
                     this.getBoards();
-                    this.common.showAlert('Added Successfully', 'success', 3000);
+                    this.common.showSucceedAlert('Added Successfully');
                 });
             }
         }, err => { });
@@ -97,7 +99,7 @@ export class BoardsListComponent implements OnInit {
         this.modal.open(content).result.then(result => {
             if (result) {
                 if (!this.subscribeForm.valid) {
-                    this.common.showAlert('The Board Key Or Address can not be empty!!!', 'danger', 3000);
+                    this.common.showErrorAlert('The Board Key Or Address can not be empty!!!');
                     return;
                 }
                 const data = new FormData()
@@ -105,7 +107,7 @@ export class BoardsListComponent implements OnInit {
                 data.append('board', this.subscribeForm.get('board').value)
                 this.api.subscribe(data).subscribe(isOk => {
                     if (isOk) {
-                        this.common.showAlert('Subscribe successfully', 'success', 3000);
+                        this.common.showSucceedAlert('Subscribe successfully');
                         this.getBoards();
                     }
                 })
@@ -116,11 +118,15 @@ export class BoardsListComponent implements OnInit {
     unSubscribe(ev: Event, boardKey: string) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
+        if (boardKey === '') {
+            this.common.showErrorAlert('UnSubscribe failed');
+            return;
+        }
         const data = new FormData();
         data.append('board', boardKey);
         this.api.unSubscribe(data).subscribe(isOk => {
             if (isOk) {
-                this.common.showAlert('Unsubscribe successfully', 'success', 3000);
+                this.common.showSucceedAlert('Unsubscribe successfully');
                 this.getBoards();
             }
         })

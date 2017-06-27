@@ -14,8 +14,10 @@
       <p class="d-flex justify-content-end"><button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Reply</button></p>
     </div>
   </div>
+  <p class="text-muted text-center" *ngIf="data?.posts?.length <= 0">You can preempt the first <a href="javascript:void(0);" (click)="openReply(addPost)"><i class="fa fa-reply"></i>reply</a></p>
   <!--trackBy: item?.ref-->
-  <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.posts | orderBy:sort);let i = index;">
+  <!--(data.posts | orderBy:sort)-->
+  <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data.posts | orderBy:sort);let i = index;">
     <div class="card-block">
       <div class="content">
         <h6 class="card-text single-line">{{item?.title}}</h6>
@@ -45,11 +47,9 @@
         <label for="title">Title</label>
         <input type="text" class="form-control " placeholder="title" id="title" formControlName="title">
       </div>
-      <!--<div [froalaEditor]="editorOptions"></div>-->
       <div class="form-group">
         <label for="body">Content</label>
         <textarea [froalaEditor]="editorOptions" formControlName="body"></textarea>
-        <!--<textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>-->
       </div>
     </form>
   </div>

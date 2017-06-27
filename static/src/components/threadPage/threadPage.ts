@@ -10,7 +10,7 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
   templateUrl: 'threadPage.html',
   styleUrls: ['threadPage.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation]
+  animations: [slideInLeftAnimation],
 })
 
 export class ThreadPageComponent implements OnInit {
@@ -100,7 +100,11 @@ export class ThreadPageComponent implements OnInit {
         this.common.loading.start();
         this.api.addPost(data).subscribe(post => {
           if (post) {
-            this.data.posts.unshift(post);
+            if (this.data.posts.length > 0) {
+              this.data.posts.unshift(post);
+            } else {
+              this.data.posts = this.data.posts.concat(post);
+            }
             this.common.loading.close();
             this.common.showAlert('Added successfully', 'success', 3000);
           }
@@ -110,6 +114,10 @@ export class ThreadPageComponent implements OnInit {
 
   }
   open(master, ref: string) {
+    if (master === '' || ref === '') {
+      this.common.showErrorAlert('Parameter error!!!');
+      return;
+    }
     this.common.loading.start();
     const data = new FormData();
     data.append('board', master);

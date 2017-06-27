@@ -1,18 +1,3 @@
-<ng-template #content let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">Edit</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </div>
-  <div class="modal-body">
-    <input type="text" class="form-control" placeholder="Name" aria-describedby="basic-addon1">
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="edit()">Close</button>
-    <button type="button" class="btn btn-secondary" (click)="edit()">Edit</button>
-  </div>
-</ng-template>
 <div class="user-box">
   <div class="container">
     <div class="card">
@@ -20,12 +5,12 @@
         User Info
       </div>
       <div class="card-block">
-        <p class="item"><i class="fa fa-user" aria-hidden="true"></i>Name:<span class="name" (click)="copy($event)">{{user?.alias}}</span>
+        <p class="item"><i class="fa fa-user" aria-hidden="true"></i><strong>Name:</strong><span class="name text-muted" (click)="copy($event)">{{user?.alias}}</span>
           <a href="javascript:void(0);" (click)="switchUser(switch)">switch</a>
         </p>
-        <p class="item"><i class="fa fa-suitcase" aria-hidden="true"></i>Master:<span class="master">{{user?.master}}</span></p>
+        <p class="item"><i class="fa fa-suitcase" aria-hidden="true"></i><strong>Master:</strong><span class="master text-muted">{{user?.master}}</span></p>
         <p class="item break-line">
-          <i class="fa fa-key" aria-hidden="true"></i>Key:<span class="key">{{user?.public_key}}</span>
+          <i class="fa fa-key" aria-hidden="true"></i><strong>Key:</strong><span class="key text-muted">{{user?.public_key}}</span>
           <i class="fa fa-files-o clip" title="copy" appClip [clipText]="user?.public_key" (onClip)="copy($event)"></i>
         </p>
       </div>
@@ -50,5 +35,21 @@
   <div class="modal-footer">
     <button type="button" class="btn btn-secondary" (click)="c(false)">cancel</button>
     <button type="button" class="btn btn-secondary" (click)="c(true)">switch</button>
+  </div>
+</ng-template>
+
+<ng-template #content let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">Edit</h4>
+    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <input type="text" class="form-control" placeholder="Name" aria-describedby="basic-addon1">
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="edit()">Close</button>
+    <button type="button" class="btn btn-secondary" (click)="edit()">Edit</button>
   </div>
 </ng-template>
