@@ -100,17 +100,23 @@ export class ThreadsComponent implements OnInit {
       this.common.showErrorAlert('Only Master Nodes Can Import', 3000);
       return;
     }
+    let tmp: Array<Board> = [];
     if (this.importBoards.length <= 0) {
       this.api.getBoards().subscribe(boards => {
-        boards.forEach((el, index) => {
-          if (el.public_key === this.boardKey) {
-            boards.splice(index, 1);
-          }
-        });
-        this.importBoards = boards;
-        this.importBoardKey = boards[0].public_key;
+        tmp = boards;
       });
     }
+    tmp.forEach((el, index) => {
+      if (el.public_key === this.boardKey) {
+        tmp.splice(index, 1);
+      }
+    });
+    if (tmp.length <= 0) {
+      this.common.showErrorAlert('None are suitable');
+      return;
+    }
+    this.importBoards = tmp;
+    this.importBoardKey = tmp[0].public_key;
     this.modal.open(content, { size: 'lg' }).result.then(result => {
       if (result) {
         if (this.importBoardKey) {

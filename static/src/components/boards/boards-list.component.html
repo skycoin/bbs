@@ -38,7 +38,7 @@
   <!-- Subscribe Box-->
   <ng-template #subscribeBox let-c="close" let-d="dismiss">
     <div class="modal-header">
-      <h4 class="modal-title">Subscribe</h4>
+      <h4 class="modal-title text-muted">Subscribe</h4>
       <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
       <span aria-hidden="true">&times;</span>
     </button>
@@ -46,18 +46,18 @@
     <div class="modal-body">
       <form [formGroup]="subscribeForm" novalidate>
         <div class="form-group">
-          <label for="subscribeAddress">Address</label>
+          <label for="subscribeAddress" class="text-muted">Address</label>
           <input type="text" class="form-control" placeholder="address" id="subscribeAddress" formControlName="address">
         </div>
         <div class="form-group">
-          <label for="subscribeBoardKey">Board Public Key</label>
+          <label for="subscribeBoardKey" class="text-muted">Board Public Key</label>
           <input type="text" class="form-control" placeholder="board Key" id="subscribeBoardKey" formControlName="board">
         </div>
       </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="c(false)">cancel</button>
-      <button type="button" class="btn btn-secondary" (click)="c(true)">submit</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+        <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+      </div>
     </div>
   </ng-template>
 
@@ -86,8 +86,8 @@
       </form>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="c(false)">cancel</button>
-      <button type="button" class="btn btn-secondary" (click)="c(true)">submit</button>
+      <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+      <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
     </div>
   </ng-template>
 

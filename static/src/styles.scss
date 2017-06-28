@@ -115,3 +115,28 @@ $tableHover-color: hsla(235, 100%, 74%, 0.075);
   cursor: pointer;
   color: blue;
 }
+
+// Modal
+.modal-content {
+  border: none;
+  box-shadow: 0.1rem 0.2rem 0.8rem hsla(0, 0%, 100%, 0.4);
+  .form-group {
+    .form-control {
+      border: 1px solid hsla(0, 0%, 80%, 0.45);
+    }
+    input[type="text"] {
+      padding: .75rem 1rem;
+      border-radius: 2rem;
+      &:focus {
+        border: 1px solid hsla(208, 98%, 68%, 0.5);
+        box-shadow: 0.1rem 0.1rem 1rem hsla(208, 98%, 68%, 0.5);
+      }
+    }
+  }
+  .btn {
+    border-radius: 2rem;
+    padding: .5rem 2rem;
+    font-weight: bold;
+    color: #fff;
+  }
+}
