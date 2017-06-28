@@ -8,9 +8,18 @@ import 'rxjs/add/operator/catch';
 @Injectable()
 export class ApiService {
   private base_url = 'http://127.0.0.1:7410/api/'
+  private submissionAddressUrl = this.base_url + 'boardmeta/';
   constructor(private http: Http, private common: CommonService) {
   }
-
+  getSubmissionAddresses(data: FormData) {
+    return this.common.handlePost(this.submissionAddressUrl + 'get_submissionaddresses', data);
+  }
+  addSubmissionAddress(data: FormData) {
+    return this.common.handlePost(this.submissionAddressUrl + 'add_submissionaddress', data);
+  }
+  removeSubmissionAddress(data:FormData) {
+    return this.common.handlePost(this.submissionAddressUrl + 'remove_submissionaddress', data);
+  }
   getSubscriptions() {
     return this.common.handleGet(this.base_url + 'get_subscriptions');
   }

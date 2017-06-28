@@ -33,7 +33,7 @@ export interface Board {
   name?: string;
   description?: string;
   public_key?: string;
-  url?: string;
+  address?: Array<string>;
   created?: number;
   ui_options?: UIOptions;
 }

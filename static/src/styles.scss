@@ -116,6 +116,12 @@ $tableHover-color: hsla(235, 100%, 74%, 0.075);
   color: blue;
 }
 
+.multi-modal {
+  .modal-content {
+    box-shadow: 0.1rem 0.2rem 0.8rem hsla(0, 0%, 0%, 0.5);
+  }
+}
+
 // Modal
 .modal-content {
   border: none;

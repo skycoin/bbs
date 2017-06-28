@@ -83,6 +83,10 @@
           <label for="seed">Board seed</label>
           <input type="text" class="form-control" placeholder="seed" id="seed" formControlName="seed">
         </div>
+        <div class="form-group">
+          <label for="addresses">Board Addresses(Optional)</label>
+          <textarea class="form-control" rows="3" id="addresses" formControlName="addresses" placeholder="Multiple addresses are separated by commmas"></textarea>
+        </div>
       </form>
     </div>
     <div class="modal-footer">
@@ -91,7 +95,25 @@
     </div>
   </ng-template>
 
-
+  <!--Add Address-->
+  <ng-template #addressBox let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <h4 class="modal-title">Add Submission Address</h4>
+      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    </div>
+    <div class="modal-body">
+      <form  class="form-inline" [formGroup]="addressForm" novalidate>
+        <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="url" formControlName="url">
+        <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="port" formControlName="port">
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+      <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
+  </ng-template>
   <!--Board Info-->
   <ng-template #info let-c="close" let-d="dismiss">
     <div class="card">
@@ -99,11 +121,11 @@
         Board Info
       </div>
       <div class="card-block">
-        <p class="thread-item">Name: <span>{{tmpBoard?.name}}</span></p>
-        <p class="thread-item">Description: <span>{{tmpBoard?.description}}</span></p>
-        <p class="thread-item">Public Key: <span>{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="common.copy($event)"></i></span></p>
-        <p class="thread-item">Url: <span>{{tmpBoard?.url}}</span></p>
-        <p class="thread-item">Created: <span>{{tmpBoard?.created / 1000000 | date: 'short'}}</span></p>
+        <p class="thread-item">Name: <span class="break-line text-muted">{{tmpBoard?.name}}</span></p>
+        <p class="thread-item">Description: <span class="break-line text-muted">{{tmpBoard?.description}}</span></p>
+        <p class="thread-item">Public Key: <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="common.copy($event)"></i></span></p>
+        <p class="thread-item">Address: <span class="text-muted"><li class="info-address-li" *ngFor="let address of tmpBoard?.address">{{address}}<i class="fa fa-times address-close" aria-hidden="true" (click)="delAddress($event,tmpBoard?.public_key,address)"></i></li><li class="info-address-li add-li" (click)="addAddress(addressBox,tmpBoard?.public_key)">Add...</li></span></p>
+        <p class="thread-item">Created: <span class="text-muted">{{tmpBoard?.created / 1000000 | date: 'short'}}</span></p>
       </div>
     </div>
   </ng-template>

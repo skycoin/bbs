@@ -3,7 +3,7 @@ import { UserService, User, CommonService } from '../../providers';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { AlertComponent } from '../alert/alert.component';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-userlist',
@@ -17,8 +17,8 @@ export class UserlistComponent implements OnInit {
   userlist: Array<User> = [];
   editName = '';
   public addForm = new FormGroup({
-    alias: new FormControl(),
-    seed: new FormControl()
+    alias: new FormControl('', Validators.required),
+    seed: new FormControl('', Validators.required)
   });
   constructor(private user: UserService, private modal: NgbModal, private common: CommonService) { }
   ngOnInit() {
@@ -38,8 +38,13 @@ export class UserlistComponent implements OnInit {
     });
   }
   openAdd(content: any) {
+    this.addForm.reset();
     this.modal.open(content).result.then((result) => {
       if (result) {
+        if (!this.addForm.valid) {
+          this.common.showErrorAlert('Alias and Seed can not be empty');
+          return;
+        }
         const data = new FormData();
         data.append('alias', this.addForm.get('alias').value);
         data.append('seed', this.addForm.get('seed').value);
@@ -50,6 +55,10 @@ export class UserlistComponent implements OnInit {
     })
   }
   edit(name, key: string) {
+    if (name === '') {
+      this.common.showErrorAlert('UserName can not be empty');
+      return;
+    }
     const data = new FormData();
     data.append('alias', name);
     data.append('user', key);

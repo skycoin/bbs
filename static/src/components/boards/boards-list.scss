@@ -5,3 +5,18 @@ app-boardslist {
     margin: 0 .5rem;
   }
 }
+.info-address-li {
+  margin-left: 4rem;
+}
+.add-li {
+  cursor: pointer;
+  list-style: none;
+  color: blue;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+.address-close {
+  color: red;
+  cursor: pointer;
+}

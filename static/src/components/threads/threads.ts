@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, HostBinding } from '@angular/core';
 import { ApiService, Thread, CommonService, Board } from '../../providers';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 
@@ -24,8 +24,8 @@ export class ThreadsComponent implements OnInit {
   isRoot = false;
   tmpThread: Thread = null;
   public addForm = new FormGroup({
-    description: new FormControl(),
-    name: new FormControl()
+    description: new FormControl('', Validators.required),
+    name: new FormControl('', Validators.required)
   });
   @Output() thread: EventEmitter<{ master: string, ref: string }> = new EventEmitter();
   constructor(
@@ -74,6 +74,10 @@ export class ThreadsComponent implements OnInit {
     this.addForm.reset();
     this.modal.open(content).result.then((result) => {
       if (result) {
+        if (!this.addForm.valid) {
+          this.common.showErrorAlert('Parameter error!!!');
+          return;
+        }
         const data = new FormData();
         data.append('board', this.boardKey);
         data.append('description', this.addForm.get('description').value);
@@ -101,36 +105,34 @@ export class ThreadsComponent implements OnInit {
       return;
     }
     let tmp: Array<Board> = [];
-    if (this.importBoards.length <= 0) {
-      this.api.getBoards().subscribe(boards => {
-        tmp = boards;
-      });
-    }
-    tmp.forEach((el, index) => {
-      if (el.public_key === this.boardKey) {
-        tmp.splice(index, 1);
-      }
-    });
-    if (tmp.length <= 0) {
-      this.common.showErrorAlert('None are suitable');
-      return;
-    }
-    this.importBoards = tmp;
-    this.importBoardKey = tmp[0].public_key;
-    this.modal.open(content, { size: 'lg' }).result.then(result => {
-      if (result) {
-        if (this.importBoardKey) {
-          const data = new FormData();
-          data.append('from_board', this.boardKey);
-          data.append('thread', threadKey);
-          data.append('to_board', this.importBoardKey);
-          this.api.importThread(data).subscribe(res => {
-            console.log('transfer thread:', res);
-            this.common.showAlert('successfully', 'success', 3000);
-            this.initThreads(this.boardKey);
-          })
+    this.api.getBoards().subscribe(boards => {
+      tmp = boards;
+      tmp.forEach((el, index) => {
+        if (el.public_key === this.boardKey) {
+          tmp.splice(index, 1);
         }
+      });
+      if (tmp.length <= 0) {
+        this.common.showErrorAlert('None are suitable');
+        return;
       }
-    }, err => { });
+      this.importBoards = tmp;
+      this.importBoardKey = tmp[0].public_key;
+      this.modal.open(content, { size: 'lg' }).result.then(result => {
+        if (result) {
+          if (this.importBoardKey) {
+            const data = new FormData();
+            data.append('from_board', this.boardKey);
+            data.append('thread', threadKey);
+            data.append('to_board', this.importBoardKey);
+            this.api.importThread(data).subscribe(res => {
+              console.log('transfer thread:', res);
+              this.common.showAlert('successfully', 'success', 3000);
+              this.initThreads(this.boardKey);
+            })
+          }
+        }
+      }, err => { });
+    });
   }
 }

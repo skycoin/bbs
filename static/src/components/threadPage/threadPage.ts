@@ -89,7 +89,7 @@ export class ThreadPageComponent implements OnInit {
     this.modal.open(content, { backdrop: 'static', size: 'lg', keyboard: false }).result.then((result) => {
       if (result) {
         if (!this.postForm.valid) {
-          this.common.showErrorAlert('Parameter error', 3000);
+          this.common.showErrorAlert('Can not reply,title and content can not be empty');
           return;
         }
         const data = new FormData();
