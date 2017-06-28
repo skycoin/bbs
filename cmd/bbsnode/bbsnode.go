@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/skycoin/bbs/cmd/bbsnode/args"
-	"github.com/skycoin/bbs/extern/dev"
-	"github.com/skycoin/bbs/extern/gui"
-	"github.com/skycoin/bbs/extern/rpc"
-	"github.com/skycoin/bbs/intern/cxo"
-	"github.com/skycoin/bbs/intern/store"
-	"github.com/skycoin/bbs/intern/store/msg"
+	"github.com/skycoin/bbs/src/dev"
+	"github.com/skycoin/bbs/src/gui"
+	"github.com/skycoin/bbs/src/rpc"
+	"github.com/skycoin/bbs/src/store/cxo"
+	"github.com/skycoin/bbs/src/store"
+	"github.com/skycoin/bbs/src/store/msg"
 	"github.com/skycoin/skycoin/src/util"
 	"log"
 	"os"

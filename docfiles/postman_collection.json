@@ -8,6 +8,87 @@
 	},
 	"item": [
 		{
+			"name": "Board Meta",
+			"description": "",
+			"item": [
+				{
+					"name": "Get Submission Addresses",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/boardmeta/get_submissionaddresses",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Board's  public key.",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Add Submission Address",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/boardmeta/add_submissionaddress",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Board's public key.",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "192.168.20.5:6420",
+									"description": "Submission address.",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Submission Address",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/boardmeta/remove_submissionaddress",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Board's public key.",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "192.168.20.5:6420",
+									"description": "Submission address.",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Boards, Theads & Posts",
 			"description": "",
 			"item": [
@@ -34,16 +115,25 @@
 								{
 									"key": "name",
 									"value": "Board of Life",
-									"type": "text"
+									"type": "text",
+									"description": "Name of board."
 								},
 								{
 									"key": "description",
 									"value": "All about life.",
-									"type": "text"
+									"type": "text",
+									"description": "Description of board."
 								},
 								{
 									"key": "seed",
-									"value": "a",
+									"value": "b",
+									"type": "text",
+									"description": "Seed to generate public key of board."
+								},
+								{
+									"key": "submission_addresses",
+									"value": "",
+									"description": "(Optional) Specify submission addresses of board. If not specified, current node's submission address will be used.",
 									"type": "text"
 								}
 							]

@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/skycoin/bbs/misc"
+	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/skycoin/src/util"
 	"os"
 	"path/filepath"
