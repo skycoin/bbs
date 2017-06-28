@@ -1,8 +1,8 @@
 package msg
 
 import (
-	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/misc"
+	"github.com/skycoin/bbs/src/rpc"
 	"time"
 )
 

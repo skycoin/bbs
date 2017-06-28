@@ -3,8 +3,8 @@ package cxo
 import (
 	"github.com/pkg/errors"
 	"github.com/skycoin/bbs/cmd/bbsnode/args"
-	"github.com/skycoin/bbs/src/store/typ"
 	"github.com/skycoin/bbs/src/misc"
+	"github.com/skycoin/bbs/src/store/typ"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/skyobject"

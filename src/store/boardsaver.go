@@ -3,8 +3,8 @@ package store
 import (
 	"github.com/pkg/errors"
 	"github.com/skycoin/bbs/cmd/bbsnode/args"
-	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/misc"
+	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util"
@@ -155,15 +155,15 @@ func (bs *BoardSaver) service() {
 // Helper function. Check's the URL's of the boards which this node is master over.
 func (bs *BoardSaver) checkMasterURLs() {
 	//for bpk, bi := range bs.store {
-		//if bi.Config.Master {
-		//	b, e := bs.c.GetBoard(bpk)
-		//	if e != nil {
-		//		continue
-		//	}
-			//if b.URL != bs.config.RPCRemAdr() {
-			//	bs.c.ChangeBoardURL(bpk, bi.Config.GetSK(), bs.config.RPCRemAdr())
-			//}
-		//}
+	//if bi.Config.Master {
+	//	b, e := bs.c.GetBoard(bpk)
+	//	if e != nil {
+	//		continue
+	//	}
+	//if b.URL != bs.config.RPCRemAdr() {
+	//	bs.c.ChangeBoardURL(bpk, bi.Config.GetSK(), bs.config.RPCRemAdr())
+	//}
+	//}
 	//}
 }
 

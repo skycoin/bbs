@@ -3,8 +3,8 @@ package rpc
 import (
 	"github.com/pkg/errors"
 	"github.com/skycoin/bbs/cmd/bbsnode/args"
-	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store"
+	"github.com/skycoin/bbs/src/store/cxo"
 	"log"
 )
 
