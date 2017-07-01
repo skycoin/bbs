@@ -137,70 +137,72 @@ func main() {
 			Name:   "new_board",
 			Usage:  "creates a new board that is hosted on the node",
 			Flags:  []cli.Flag{BoardNameFlag, BoardDescriptionFlag, BoardSubmissionAddressesFlag, SeedFlag},
-			Action: try(gui.NewBoard(BoardName, BoardDescription, BoardSubmissionAddresses, Seed)),
+			Action: try(gui.NewBoard(&BoardName, &BoardDescription, &BoardSubmissionAddresses, &Seed)),
 		},
 		{
 			Name:   "remove_board",
 			Usage:  "removes a board that is hosted on the node",
 			Flags:  []cli.Flag{BoardFlag},
-			Action: try(gui.RemoveBoard(Board)),
+			Action: try(gui.RemoveBoard(&Board)),
 		},
 		{
 			Name:   "get_boardpage",
 			Usage:  "obtains the board page - a page of board information and threads",
 			Flags:  []cli.Flag{BoardFlag},
-			Action: try(gui.GetBoardPage(Board)),
+			Action: try(gui.GetBoardPage(&Board)),
 		},
 		{
 			Name:   "get_threads",
 			Usage:  "obtains threads of a specified board of public key",
 			Flags:  []cli.Flag{BoardFlag},
-			Action: try(gui.GetThreads(Board)),
+			Action: try(gui.GetThreads(&Board)),
 		},
 		{
 			Name:   "new_thread",
 			Usage:  "creates a new thread on specified board of public key",
 			Flags:  []cli.Flag{BoardFlag, ThreadNameFlag, ThreadDescriptionFlag},
-			Action: try(gui.NewThread(Board, ThreadName, ThreadDescription)),
+			Action: try(gui.NewThread(&Board, &ThreadName, &ThreadDescription)),
 		},
 		{
 			Name:   "remove_thread",
 			Usage:  "removes a thread from specified board of public key",
 			Flags:  []cli.Flag{BoardFlag, ThreadFlag},
-			Action: try(gui.RemoveThread(Board, Thread)),
+			Action: try(gui.RemoveThread(&Board, &Thread)),
 		},
 		{
 			Name:   "get_threadpage",
 			Usage:  "obtains the thread page of specified board and thread",
 			Flags:  []cli.Flag{BoardFlag, ThreadFlag},
-			Action: try(gui.GetThreadPage(Board, Thread)),
+			Action: try(gui.GetThreadPage(&Board, &Thread)),
 		},
 		{
 			Name:   "get_posts",
 			Usage:  "obtains the posts of a thread of specified board and thread",
 			Flags:  []cli.Flag{BoardFlag, ThreadFlag},
-			Action: try(gui.GetPosts(Board, Thread)),
+			Action: try(gui.GetPosts(&Board, &Thread)),
 		},
 		{
 			Name:   "new_post",
 			Usage:  "creates a new post on specified board and thread",
 			Flags:  []cli.Flag{BoardFlag, ThreadFlag, PostTitleFlag, PostBodyFlag},
-			Action: try(gui.NewPost(Board, Thread, PostTitle, PostBody)),
+			Action: try(gui.NewPost(&Board, &Thread, &PostTitle, &PostBody)),
 		},
 		{
 			Name:   "remove_post",
 			Usage:  "removes a post from specified board and thread",
 			Flags:  []cli.Flag{BoardFlag, ThreadFlag, PostFlag},
-			Action: try(gui.RemovePost(Board, Thread, Post)),
+			Action: try(gui.RemovePost(&Board, &Thread, &Post)),
 		},
 		{
 			Name:   "import_thread",
 			Usage:  "imports a thread from one board to another",
 			Flags:  []cli.Flag{FromBoardFlag, ThreadFlag, ToBoardFlag},
-			Action: try(gui.ImportThread(FromBoard, Thread, ToBoard)),
+			Action: try(gui.ImportThread(&FromBoard, &Thread, &ToBoard)),
 		},
 	}
-	app.Run(os.Args)
+	if e := app.Run(os.Args); e != nil {
+		panic(e)
+	}
 }
 
 func try(f func(ctx context.Context, port int) ([]byte, error)) cli.ActionFunc {
