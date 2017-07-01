@@ -392,7 +392,7 @@ func (a *API) NewPost(w http.ResponseWriter, r *http.Request) {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	// Get post values.
+	// Get request values.
 	post := &typ.Post{
 		Title: r.FormValue("title"),
 		Body:  r.FormValue("body"),
@@ -417,7 +417,7 @@ func (a *API) RemovePost(w http.ResponseWriter, r *http.Request) {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	// // Get post reference.
+	// // Get request reference.
 	pRef, e := misc.GetReference(r.FormValue("post"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
@@ -491,8 +491,8 @@ func (a *API) GetVotesForPost(w http.ResponseWriter, r *http.Request) {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	// Get post reference.
-	pRef, e := misc.GetReference(r.FormValue("post"))
+	// Get request reference.
+	pRef, e := misc.GetReference(r.FormValue("request"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -541,8 +541,8 @@ func (a *API) AddVoteForPost(w http.ResponseWriter, r *http.Request) {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	// Get post reference.
-	pRef, e := misc.GetReference(r.FormValue("post"))
+	// Get request reference.
+	pRef, e := misc.GetReference(r.FormValue("request"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
@@ -638,7 +638,7 @@ func (a *API) NewPostWithHex(w http.ResponseWriter, r *http.Request) {
 		sendResponse(w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	// Get post data.
+	// Get request data.
 	pData, e := misc.GetBytes(r.FormValue("raw_post"))
 	if e != nil {
 		sendResponse(w, e.Error(), http.StatusBadRequest)

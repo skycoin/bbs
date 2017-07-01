@@ -424,9 +424,9 @@ func (g *Gateway) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.
 	return g.container.GetPosts(bpk, tRef)
 }
 
-// NewPost creates a new post in specified board and thread.
+// NewPost creates a new request in specified board and thread.
 func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) (e error) {
-	// Check post.
+	// Check request.
 	uc := g.userSaver.GetCurrent()
 	if e = post.Sign(uc.GetPK(), uc.GetSK()); e != nil {
 		return
@@ -447,7 +447,7 @@ func (g *Gateway) NewPost(bpk cipher.PubKey, tRef skyobject.Reference, post *typ
 	}
 }
 
-// RemovePost removes a post in specified board and thread.
+// RemovePost removes a request in specified board and thread.
 func (g *Gateway) RemovePost(bpk cipher.PubKey, tRef, pRef skyobject.Reference) (e error) {
 	// Check board.
 	bi, has := g.boardSaver.Get(bpk)
@@ -456,7 +456,7 @@ func (g *Gateway) RemovePost(bpk cipher.PubKey, tRef, pRef skyobject.Reference) 
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
-		log.Println("[GUI GW] Master, remove the post!")
+		log.Println("[GUI GW] Master, remove the request!")
 		if e = g.container.RemovePost(bpk, bi.Config.GetSK(), tRef, pRef); e != nil {
 			fmt.Println(e)
 			return e
@@ -670,7 +670,7 @@ func (g *Gateway) TestNewFilledBoard(seed string, threads, minPosts, maxPosts in
 
 			p := &typ.Post{
 				Title: fmt.Sprintf("Post %d", j),
-				Body:  fmt.Sprintf("This is post %d on thread %d.", j, i),
+				Body:  fmt.Sprintf("This is request %d on thread %d.", j, i),
 			}
 			if e := g.NewPost(bpk, t.GetRef(), p); e != nil {
 				return e
