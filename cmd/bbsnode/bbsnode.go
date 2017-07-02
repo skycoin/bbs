@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/skycoin/bbs/cmd/bbsnode/args"
-	"github.com/skycoin/bbs/src/dev"
 	"github.com/skycoin/bbs/src/gui"
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
@@ -43,10 +42,8 @@ func main() {
 
 	var rpcServer *rpc.Server
 	if config.Master() {
-		rpcGateway := rpc.NewGateway(
-			config, container, boardSaver, userSaver)
-
-		rpcServer, e = rpc.NewServer(rpcGateway, config.RPCPort())
+		rpcServer, e = rpc.NewServer(
+			rpc.NewGateway(config, container, boardSaver, userSaver))
 		CatchError(e, "unable to start rpc server")
 		defer rpcServer.Close()
 
@@ -61,7 +58,7 @@ func main() {
 	defer gui.Close()
 
 	if config.TestMode() {
-		tester, e := dev.NewTester(config, gateway)
+		tester, e := gui.NewTester(config, gateway)
 		CatchError(e, "unable to start tester")
 		defer tester.Close()
 	}

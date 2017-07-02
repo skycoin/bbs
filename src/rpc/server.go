@@ -15,12 +15,12 @@ type Server struct {
 	waiter sync.WaitGroup
 }
 
-func NewServer(g *Gateway, port int) (*Server, error) {
+func NewServer(g *Gateway) (*Server, error) {
 	s := &Server{
 		rpc: rpc.NewServer(),
 		g:   g,
 	}
-	if e := s.open(":" + strconv.Itoa(port)); e != nil {
+	if e := s.open(":" + strconv.Itoa(g.config.RPCPort())); e != nil {
 		return nil, e
 	}
 	return s, nil

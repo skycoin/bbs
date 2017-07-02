@@ -1,80 +1,84 @@
-import { Injectable } from '@angular/core';
-import { Http, Response } from '@angular/http';
-import { Board, Thread, ThreadPage, Post } from './msg';
-import { CommonService } from '../common/common.service';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
+import {Injectable} from "@angular/core";
+import {Http} from "@angular/http";
+import {CommonService} from "../common/common.service";
+import "rxjs/add/operator/map";
+import "rxjs/add/operator/catch";
 
 @Injectable()
 export class ApiService {
-  private base_url = 'http://127.0.0.1:7410/api/'
-  private submissionAddressUrl = this.base_url + 'boardmeta/';
+  private baseUrl = 'http://127.0.0.1:7410/api/';
+  private statsUrl = this.baseUrl + 'stats/';
+  private subscriptionsUrl = this.baseUrl + 'subscriptions/';
+  private boardsUrl = this.baseUrl + 'boards/';
+  private submissionAddressUrl = this.boardsUrl + 'meta/submission_addresses/';
+  private threadsUrl = this.baseUrl + 'threads/';
+  private postsUrl = this.baseUrl + 'posts/';
   constructor(private http: Http, private common: CommonService) {
   }
   getSubmissionAddresses(data: FormData) {
-    return this.common.handlePost(this.submissionAddressUrl + 'get_submissionaddresses', data);
+    return this.common.handlePost(this.submissionAddressUrl + 'get', data);
   }
   addSubmissionAddress(data: FormData) {
-    return this.common.handlePost(this.submissionAddressUrl + 'add_submissionaddress', data);
+    return this.common.handlePost(this.submissionAddressUrl + 'add', data);
   }
   removeSubmissionAddress(data:FormData) {
-    return this.common.handlePost(this.submissionAddressUrl + 'remove_submissionaddress', data);
+    return this.common.handlePost(this.submissionAddressUrl + 'remove', data);
   }
   getSubscriptions() {
-    return this.common.handleGet(this.base_url + 'get_subscriptions');
+    return this.common.handleGet(this.subscriptionsUrl + 'get_all');
   }
 
   getSubscription(data: FormData) {
-    return this.common.handlePost(this.base_url + 'get_subscription', data);
+    return this.common.handlePost(this.subscriptionsUrl + 'get', data);
   }
   subscribe(data: FormData) {
-    return this.common.handlePost(this.base_url + 'subscribe', data);
+    return this.common.handlePost(this.subscriptionsUrl + 'add', data);
   }
   unSubscribe(data: FormData) {
-    return this.common.handlePost(this.base_url + 'unsubscribe', data);
+    return this.common.handlePost(this.subscriptionsUrl + 'remove', data);
   }
   getStats() {
-    return this.common.handleGet(this.base_url + 'get_stats');
+    return this.common.handleGet(this.statsUrl + 'get');
   }
 
   getThreads(data: FormData) {
-    return this.common.handlePost(this.base_url + 'get_threads', data);
+    return this.common.handlePost(this.threadsUrl + 'get_all', data);
   }
 
   getBoards() {
-    return this.common.handleGet(this.base_url + 'get_boards');
+    return this.common.handleGet(this.boardsUrl + 'get_all');
   }
 
   getPosts(data: FormData) {
-    return this.common.handlePost(this.base_url + 'get_posts', data);
+    return this.common.handlePost(this.postsUrl + 'get_all', data);
 
   }
 
   getBoardPage(data: FormData) {
-    return this.common.handlePost(this.base_url + 'get_boardpage', data);
+    return this.common.handlePost(this.boardsUrl + 'page/get', data);
   }
   getThreadpage(data: FormData) {
-    return this.common.handlePost(this.base_url + 'get_threadpage', data);
+    return this.common.handlePost(this.threadsUrl + 'page/get', data);
 
   }
 
   addBoard(data: FormData) {
-    return this.common.handlePost(this.base_url + 'new_board', data);
+    return this.common.handlePost(this.boardsUrl + 'add', data);
 
   }
 
   addThread(data: FormData) {
-    return this.common.handlePost(this.base_url + 'new_thread', data);
+    return this.common.handlePost(this.threadsUrl + 'add', data);
 
   }
 
   addPost(data: FormData) {
-    return this.common.handlePost(this.base_url + 'new_post', data);
+    return this.common.handlePost(this.postsUrl + 'add', data);
 
   }
 
   importThread(data: FormData) {
-    return this.common.handlePost(this.base_url + 'import_thread', data);
+    return this.common.handlePost(this.threadsUrl + 'import', data);
 
   }
 }

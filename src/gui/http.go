@@ -86,65 +86,65 @@ func Close() {
 }
 
 // NewServeMux creates a http.ServeMux with handlers registered.
-func NewServeMux(g *Gateway, appLoc string) *http.ServeMux {
-	// Register objects.
-	api := NewAPI(g)
-
+func NewServeMux(api *Gateway, appLoc string) *http.ServeMux {
 	// Prepare mux.
 	mux := http.NewServeMux()
 
-	if g.config.WebGUIEnable() {
+	if api.config.WebGUIEnable() {
 		fileServe(mux, appLoc)
 	}
 
 	mux.HandleFunc("/api/quit", api.Quit)
 
-	mux.HandleFunc("/api/get_stats", api.GetStats)
-	mux.HandleFunc("/api/connections/get_all", api.GetConnections)
-	mux.HandleFunc("/api/connections/new", api.AddConnection)
-	mux.HandleFunc("/api/connections/remove", api.RemoveConnection)
+	mux.HandleFunc("/api/stats/get", api.Stats.Get)
 
-	mux.HandleFunc("/api/get_subscription", api.GetSubscription)
-	mux.HandleFunc("/api/get_subscriptions", api.GetSubscriptions)
-	mux.HandleFunc("/api/subscribe", api.Subscribe)
-	mux.HandleFunc("/api/unsubscribe", api.Unsubscribe)
+	mux.HandleFunc("/api/connections/get_all", api.Connections.GetAll)
+	mux.HandleFunc("/api/connections/add", api.Connections.Add)
+	mux.HandleFunc("/api/connections/remove", api.Connections.Remove)
 
-	mux.HandleFunc("/api/users/get_current", api.GetCurrentUser)
-	mux.HandleFunc("/api/users/set_current", api.SetCurrentUser)
-	mux.HandleFunc("/api/users/get_masters", api.GetMasterUsers)
-	mux.HandleFunc("/api/users/new_master", api.NewMasterUser)
-	mux.HandleFunc("/api/users/get_all", api.GetUsers)
-	mux.HandleFunc("/api/users/new", api.NewUser)
-	mux.HandleFunc("/api/users/remove", api.RemoveUser)
+	mux.HandleFunc("/api/subscriptions/get_all", api.Subscriptions.GetAll)
+	mux.HandleFunc("/api/subscriptions/get", api.Subscriptions.Get)
+	mux.HandleFunc("/api/subscriptions/add", api.Subscriptions.Add)
+	mux.HandleFunc("/api/subscriptions/remove", api.Subscriptions.Remove)
 
-	mux.HandleFunc("/api/boardmeta/get_submissionaddresses", api.GetSubmissionAddresses)
-	mux.HandleFunc("/api/boardmeta/add_submissionaddress", api.AddSubmissionAddress)
-	mux.HandleFunc("/api/boardmeta/remove_submissionaddress", api.RemoveSubmissionAddress)
+	mux.HandleFunc("/api/users/get_all", api.Users.GetAll)
+	mux.HandleFunc("/api/users/add", api.Users.Add)
+	mux.HandleFunc("/api/users/remove", api.Users.Remove)
+	mux.HandleFunc("/api/users/masters/get_all", api.Users.Masters.GetAll)
+	mux.HandleFunc("/api/users/masters/add", api.Users.Masters.Add)
+	mux.HandleFunc("/api/users/masters/current/get", api.Users.Masters.Current.Get)
+	mux.HandleFunc("/api/users/masters/current/set", api.Users.Masters.Current.Set)
 
-	mux.HandleFunc("/api/get_boards", api.GetBoards)
-	mux.HandleFunc("/api/new_board", api.NewBoard)
-	mux.HandleFunc("/api/remove_board", api.RemoveBoard)
-	mux.HandleFunc("/api/get_boardpage", api.GetBoardPage)
-	mux.HandleFunc("/api/get_threads", api.GetThreads)
-	mux.HandleFunc("/api/new_thread", api.NewThread)
-	mux.HandleFunc("/api/remove_thread", api.RemoveThread)
-	mux.HandleFunc("/api/get_threadpage", api.GetThreadPage)
-	mux.HandleFunc("/api/get_posts", api.GetPosts)
-	mux.HandleFunc("/api/new_post", api.NewPost)
-	mux.HandleFunc("/api/remove_post", api.RemovePost)
-	mux.HandleFunc("/api/import_thread", api.ImportThread)
+	mux.HandleFunc("/api/boards/get_all", api.Boards.GetAll)
+	mux.HandleFunc("/api/boards/get", api.Boards.Get)
+	mux.HandleFunc("/api/boards/add", api.Boards.Add)
+	mux.HandleFunc("/api/boards/remove", api.Boards.Remove)
+	mux.HandleFunc("/api/boards/meta/get", api.Boards.Meta.Get)
+	mux.HandleFunc("/api/boards/meta/submission_addresses/get", api.Boards.Meta.SubmissionAddresses.GetAll)
+	mux.HandleFunc("/api/boards/meta/submission_addresses/add", api.Boards.Meta.SubmissionAddresses.Add)
+	mux.HandleFunc("/api/boards/meta/submission_addresses/remove", api.Boards.Meta.SubmissionAddresses.Remove)
+	mux.HandleFunc("/api/boards/page/get", api.Boards.Page.Get)
 
-	mux.HandleFunc("/api/get_thread_votes", api.GetVotesForThread)
-	mux.HandleFunc("/api/get_post_votes", api.GetVotesForPost)
-	mux.HandleFunc("/api/add_thread_vote", api.AddVoteForThread)
-	mux.HandleFunc("/api/add_post_vote", api.AddVoteForPost)
+	mux.HandleFunc("/api/threads/get_all", api.Threads.GetAll)
+	mux.HandleFunc("/api/threads/add", api.Threads.Add)
+	mux.HandleFunc("/api/threads/remove", api.Threads.Remove)
+	mux.HandleFunc("/api/threads/import", api.Threads.Import)
+	mux.HandleFunc("/api/threads/page/get", api.Threads.Page.Get)
+	mux.HandleFunc("/api/threads/votes/get", api.Threads.Votes.Get)
+	mux.HandleFunc("/api/threads/votes/add", api.Threads.Votes.Add)
 
-	mux.HandleFunc("/api/hex/get_threadpage", api.GetThreadPageAsHex)
-	mux.HandleFunc("/api/hex/get_threadpage/tp_ref", api.GetThreadPageWithTpRefAsHex)
-	mux.HandleFunc("/api/hex/new_thread", api.NewThreadWithHex)
-	mux.HandleFunc("/api/hex/new_post", api.NewPostWithHex)
+	mux.HandleFunc("/api/posts/get_all", api.Posts.Get)
+	mux.HandleFunc("/api/posts/add", api.Posts.Add)
+	mux.HandleFunc("/api/posts/remove", api.Posts.Remove)
+	mux.HandleFunc("/api/posts/votes/get", api.Posts.Votes.Get)
+	mux.HandleFunc("/api/posts/votes/add", api.Posts.Votes.Add)
 
-	mux.HandleFunc("/api/tests/new_filled_board", api.TestNewFilledBoard)
+	//mux.HandleFunc("/api/hex/get_thread_page", api.GetThreadPageAsHex)
+	//mux.HandleFunc("/api/hex/get_thread_page/tp_ref", api.GetThreadPageWithTpRefAsHex)
+	//mux.HandleFunc("/api/hex/add_thread", api.NewThreadWithHex)
+	//mux.HandleFunc("/api/hex/add_post", api.NewPostWithHex)
+
+	mux.HandleFunc("/api/tests/add_filled_board", api.Tests.AddFilledBoard)
 
 	return mux
 }

@@ -37,7 +37,7 @@
         </tr>
       </tbody>
     </table>
-    <h5 class="not-found" *ngIf="threads?.length == 0">Not Found Threads</h5>
+    <h5 class="not-found" *ngIf="threads?.length == 0">No Threads Found</h5>
   </div>
 </div>
 
@@ -95,7 +95,7 @@
   </div>
   <div class="modal-body">
     <div class="form-group">
-      <label for="toBoard">Choose to import</label>
+      <label for="toBoard">Destination board</label>
       <select class="form-control" id="toBoard" [(ngModel)]="importBoardKey" placeholder="Choose to move">
         <option *ngFor="let board of importBoards" value="{{board.public_key}}">{{board.name}}</option>
     </select>

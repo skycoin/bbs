@@ -185,7 +185,7 @@ func (c *Container) Unsubscribe(addr string, pk cipher.PubKey) error {
 	return nil
 }
 
-// GetConnections gets connections.
+// ConnectionsGetAll gets connections.
 func (c *Container) GetConnections() []string {
 	c.Lock(c.GetConnections)
 	defer c.Unlock()

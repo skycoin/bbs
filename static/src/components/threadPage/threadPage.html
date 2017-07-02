@@ -11,10 +11,10 @@
       </div>
     </div>
     <div class="card-block">
-      <p class="d-flex justify-content-end"><button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Reply</button></p>
+      <p class="d-flex justify-content-end"><button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Post</button></p>
     </div>
   </div>
-  <p class="text-muted text-center" *ngIf="data?.posts?.length <= 0">You can preempt the first <a href="javascript:void(0);" (click)="openReply(addPost)"><i class="fa fa-reply"></i>reply</a></p>
+  <p class="text-muted text-center" *ngIf="data?.posts?.length <= 0">Add the first <a href="javascript:void(0);" (click)="openReply(addPost)"><i class="fa fa-reply"></i>post</a></p>
   <!--trackBy: item?.ref-->
   <!--(data.posts | orderBy:sort)-->
   <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data.posts | orderBy:sort);let i = index;">

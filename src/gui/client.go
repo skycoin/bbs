@@ -17,9 +17,36 @@ type (
 	// ClientFunc is a client function.
 	ClientFunc func(ctx context.Context, port int) ([]byte, error)
 
-	// Values represents key/value pairs.
+	// Values represents key/value pairs of form.
 	Values map[string]*string
 )
+
+/*
+	<<< FOR BOARD META >>>
+*/
+
+// GetSubmissionAddresses obtains the submission addresses of specified board.
+func GetSubmissionAddresses(board *string) ClientFunc {
+	return gen("board_meta/get_submission_addresses", Values{
+		"board": board,
+	})
+}
+
+// AddSubmissionAddress adds a submission address to specified board.
+func AddSubmissionAddress(board, address *string) ClientFunc {
+	return gen("board_meta/add_submission_address", Values{
+		"board":   board,
+		"address": address,
+	})
+}
+
+// RemoveSubmissionAddress removes a submission address from specified board.
+func RemoveSubmissionAddress(board, address *string) ClientFunc {
+	return gen("board_meta/remove_submission_address", Values{
+		"board":   board,
+		"address": address,
+	})
+}
 
 /*
 	<<< FOR BOARDS, THREADS & POSTS >>>
@@ -30,9 +57,9 @@ func GetBoards() ClientFunc {
 	return gen("get_boards", nil)
 }
 
-// NewBoard creates a new board.
-func NewBoard(boardName, boardDescription, boardSubmissionAddresses, seed *string) ClientFunc {
-	return gen("new_board", Values{
+// AddBoard adds a new board.
+func AddBoard(boardName, boardDescription, boardSubmissionAddresses, seed *string) ClientFunc {
+	return gen("add_board", Values{
 		"name":                 boardName,
 		"description":          boardDescription,
 		"submission_addresses": boardSubmissionAddresses,
@@ -49,7 +76,7 @@ func RemoveBoard(board *string) ClientFunc {
 
 // GetBoardPage obtains the board page of specified board of public key.
 func GetBoardPage(board *string) ClientFunc {
-	return gen("get_boardpage", Values{
+	return gen("get_board_page", Values{
 		"board": board,
 	})
 }
@@ -61,16 +88,16 @@ func GetThreads(board *string) ClientFunc {
 	})
 }
 
-// NewThread creates a new thread on specified board.
-func NewThread(board, threadName, threadDescription *string) ClientFunc {
-	return gen("new_thread", Values{
+// AddThread adds a new thread on the specified board.
+func AddThread(board, threadName, threadDescription *string) ClientFunc {
+	return gen("add_thread", Values{
 		"board":       board,
 		"name":        threadName,
 		"description": threadDescription,
 	})
 }
 
-// RemoveThread removes a thread on specified board.
+// RemoveThread removes a thread from the specified board.
 func RemoveThread(board, thread *string) ClientFunc {
 	return gen("remove_thread", Values{
 		"board":  board,
@@ -80,7 +107,7 @@ func RemoveThread(board, thread *string) ClientFunc {
 
 // GetThreadPage obtains a thread page of specified board and thread.
 func GetThreadPage(board, thread *string) ClientFunc {
-	return gen("get_threadpage", Values{
+	return gen("get_thread_page", Values{
 		"board":  board,
 		"thread": thread,
 	})
@@ -94,9 +121,9 @@ func GetPosts(board, thread *string) ClientFunc {
 	})
 }
 
-// NewPost creates a new post on specified board and thread.
-func NewPost(board, thread, postTitle, postBody *string) ClientFunc {
-	return gen("new_post", Values{
+// AddPost adds a new post on specified board and thread.
+func AddPost(board, thread, postTitle, postBody *string) ClientFunc {
+	return gen("add_post", Values{
 		"board":  board,
 		"thread": thread,
 		"title":  postTitle,
@@ -119,6 +146,46 @@ func ImportThread(fromBoard, thread, toBoard *string) ClientFunc {
 		"from_board": fromBoard,
 		"thread":     thread,
 		"to_board":   toBoard,
+	})
+}
+
+/*
+	<<< FOR VOTES >>>
+*/
+
+// GetThreadVotes obtains votes for specified board and thread.
+func GetThreadVotes(board, thread *string) ClientFunc {
+	return gen("get_thread_votes", Values{
+		"board":  board,
+		"thread": thread,
+	})
+}
+
+// GetPostVotes obtains votes for specified board and post.
+func GetPostVotes(board, post *string) ClientFunc {
+	return gen("get_post_votes", Values{
+		"board": board,
+		"post":  post,
+	})
+}
+
+// AddThreadVote adds a vote to a thread of specified board.
+func AddThreadVote(board, thread, voteMode, voteTag *string) ClientFunc {
+	return gen("add_thread_vote", Values{
+		"board":  board,
+		"thread": thread,
+		"mode":   voteMode,
+		"tag":    voteTag,
+	})
+}
+
+// AddPostVote adds a vote to post of specified board.
+func AddPostVote(board, post, voteMode, voteTag *string) ClientFunc {
+	return gen("add_post_vote", Values{
+		"board": board,
+		"post":  post,
+		"mode":  voteMode,
+		"tag":   voteTag,
 	})
 }
 
@@ -153,12 +220,16 @@ func request(port int, path string, data url.Values) (chan []byte, chan error) {
 // Generates a method of requesting data from api.
 func gen(path string, values Values) ClientFunc {
 	return func(ctx context.Context, port int) ([]byte, error) {
-		// Get values.
+		// Get form values.
 		urlValues := url.Values{}
 		for k, v := range values {
 			urlValues[k] = []string{*v}
 		}
+
+		// Send request.
 		bChan, eChan := request(port, path, urlValues)
+
+		// Await reply.
 		select {
 		case <-ctx.Done():
 			return nil, ErrTimeout

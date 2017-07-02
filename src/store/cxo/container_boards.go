@@ -363,6 +363,8 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 	c.Lock(c.GetPosts)
 	defer c.Unlock()
 
+	var reverse = true
+
 	w := c.c.LastFullRoot(bpk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
@@ -373,16 +375,30 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 		return nil, e
 	}
 	posts := make([]*typ.Post, len(tp.Posts))
-	for i, pRef := range tp.Posts {
+	obtainPost := func(i int, pRef skyobject.Reference) error {
 		pData, has := c.c.Get(pRef)
 		if has == false {
-			continue
+			return nil
 		}
 		posts[i] = new(typ.Post)
 		if e := encoder.DeserializeRaw(pData, posts[i]); e != nil {
-			return nil, e
+			return e
 		}
 		posts[i].Ref = cipher.SHA256(pRef).Hex()
+		return nil
+	}
+	if reverse {
+		for i := len(tp.Posts) - 1; i >= 0; i-- {
+			if e := obtainPost(i, tp.Posts[i]); e != nil {
+				return nil, e
+			}
+		}
+	} else {
+		for i, pRef := range tp.Posts {
+			if e := obtainPost(i, pRef); e != nil {
+				return nil, e
+			}
+		}
 	}
 	return posts, nil
 }

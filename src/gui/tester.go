@@ -1,9 +1,8 @@
-package dev
+package gui
 
 import (
 	"fmt"
 	"github.com/skycoin/bbs/cmd/bbsnode/args"
-	"github.com/skycoin/bbs/src/gui"
 	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/typ"
@@ -17,7 +16,7 @@ import (
 // It autonomously creates threads and posts.
 type Tester struct {
 	config *args.Config
-	g      *gui.Gateway
+	g      *Gateway
 	bpk    cipher.PubKey
 	tRefs  skyobject.References
 	users  []store.UserConfig
@@ -28,7 +27,7 @@ type Tester struct {
 }
 
 // NewTester creates a new tester.
-func NewTester(config *args.Config, gateway *gui.Gateway) (*Tester, error) {
+func NewTester(config *args.Config, gateway *Gateway) (*Tester, error) {
 	t := &Tester{
 		config: config,
 		g:      gateway,
@@ -49,11 +48,11 @@ func NewTester(config *args.Config, gateway *gui.Gateway) (*Tester, error) {
 func (t *Tester) setupUsers() error {
 	log.Println("[TESTER] Setting up users...")
 	nGoal := t.config.TestModeUsers()
-	nNow := len(t.g.GetMasterUsers())
+	nNow := len(t.g.Users.Masters.getAll())
 	for i := 0; i < nGoal-nNow; i++ {
-		t.g.NewMasterUser(misc.MakeRandomAlias(), misc.MakeTimeStampedRandomID(100).Hex())
+		t.g.Users.Masters.add(misc.MakeRandomAlias(), misc.MakeTimeStampedRandomID(100).Hex())
 	}
-	t.users = t.g.GetMasterUsers()
+	t.users = t.g.Users.Masters.getAll()
 	log.Printf("[TESTER] \t- Users: %v", t.users)
 	return nil
 }
@@ -62,12 +61,12 @@ func (t *Tester) setupBoard() error {
 	log.Println("[TESTER] Setting up test board...")
 	seed := misc.MakeTimeStampedRandomID(100).Hex()
 	pk, _ := cipher.GenerateDeterministicKeyPair([]byte(seed))
-	if e := t.g.TestNewFilledBoard(seed, t.config.TestModeThreads(), 1, 1); e != nil {
+	if e := t.g.Tests.addFilledBoard(seed, t.config.TestModeThreads(), 1, 1); e != nil {
 		return e
 	}
 	t.bpk = pk
 	log.Printf("[TESTER] \t- Board: '%s'", t.bpk.Hex())
-	threads := t.g.GetThreads(t.bpk)
+	threads := t.g.Threads.getAll(t.bpk)
 	log.Printf("[TESTER] \t- Threads(%d):", len(threads))
 	t.tRefs = make(skyobject.References, len(threads))
 	for i, thread := range threads {
@@ -166,7 +165,7 @@ func (t *Tester) getPostCount() int {
 }
 
 func (t *Tester) getRandomPostRef(tRef skyobject.Reference) (skyobject.Reference, bool) {
-	posts, e := t.g.GetPosts(t.bpk, tRef)
+	posts, e := t.g.Posts.get(t.bpk, tRef)
 	if e != nil {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 		return skyobject.Reference{}, false
@@ -193,7 +192,7 @@ func (t *Tester) actionChangeUser() {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 		return
 	}
-	if e := t.g.SetCurrentUser(t.users[i].GetPK()); e != nil {
+	if e := t.g.Users.Masters.Current.set(t.users[i].GetPK()); e != nil {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 		return
 	}
@@ -204,7 +203,7 @@ func (t *Tester) actionNewPost() {
 		log.Println("[TESTER] \t- Post cap reached. Continuing...")
 		return
 	}
-	user := t.g.GetCurrentUser()
+	user := t.g.Users.Masters.Current.get()
 	log.Printf("[TESTER] \t- User: %s '%s'", user.Alias, user.PubKey)
 	tRef := t.getRandomThreadRef()
 	log.Printf("[TESTER] \t- Thread: '%s'", tRef.String())
@@ -217,7 +216,7 @@ func (t *Tester) actionNewPost() {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 		return
 	}
-	if e := t.g.NewPost(t.bpk, tRef, post); e != nil {
+	if e := t.g.Posts.add(t.bpk, tRef, post); e != nil {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 	}
 }
@@ -232,13 +231,13 @@ func (t *Tester) actionDeletePost() {
 	} else {
 		log.Printf("[TESTER] \t- Post: '%s'", pRef.String())
 	}
-	if e := t.g.RemovePost(t.bpk, tRef, pRef); e != nil {
+	if e := t.g.Posts.remove(t.bpk, tRef, pRef); e != nil {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 	}
 }
 
 func (t *Tester) actionVotePost() {
-	user := t.g.GetCurrentUser()
+	user := t.g.Users.Masters.Current.get()
 	log.Printf("[TESTER] \t- User: %s '%s'", user.Alias, user.PubKey)
 	pRef, has := t.getRandomPostRef(t.getRandomThreadRef())
 	if !has {
@@ -258,14 +257,14 @@ func (t *Tester) actionVotePost() {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 		return
 	}
-	if e := t.g.VoteForPost(t.bpk, pRef, vote); e != nil {
+	if e := t.g.Posts.Votes.add(t.bpk, pRef, vote); e != nil {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 		return
 	}
 }
 
 func (t *Tester) actionVoteThread() {
-	user := t.g.GetCurrentUser()
+	user := t.g.Users.Masters.Current.get()
 	log.Printf("[TESTER] \t- User: %s '%s'", user.Alias, user.PubKey)
 	tRef := t.getRandomThreadRef()
 	log.Printf("[TESTER] \t- Thread: '%s'", tRef.String())
@@ -280,7 +279,7 @@ func (t *Tester) actionVoteThread() {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
 		return
 	}
-	if e := t.g.VoteForThread(t.bpk, tRef, vote); e != nil {
+	if e := t.g.Threads.Votes.add(t.bpk, tRef, vote); e != nil {
 		log.Printf("[TESTER] !!! Error: %s !!!", e.Error())
 	}
 }
