@@ -12,10 +12,14 @@ import (
 
 // Thread represents a thread stored in cxo.
 type Thread struct {
-	Name        string `json:"name"`
-	Desc        string `json:"description"`
-	MasterBoard string `json:"master_board"`
-	Ref         string `json:"ref" enc:"-"`
+	Name        string     `json:"name"`         //
+	Desc        string     `json:"description"`  //
+	Author      string     `json:"author"`       // TODO: Make use of.
+	Created     int64      `json:"created"`      // TODO: Make use of.
+	Sig         cipher.Sig `json:"-"`            // TODO: Make use of.
+	Ref         string     `json:"ref" enc:"-"`  //
+	Meta        []byte     `json:"-"`            // TODO: Make use of.
+	MasterBoard string     `json:"master_board"` //
 }
 
 func (t *Thread) Check() error {

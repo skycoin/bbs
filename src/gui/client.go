@@ -21,45 +21,139 @@ type (
 	Values map[string]*string
 )
 
+// Quit exits the node.
+func Quit() ClientFunc {
+	return gen("quit", Values{})
+}
+
 /*
-	<<< FOR BOARD META >>>
+	<<< FOR STATS >>>
 */
 
-// GetSubmissionAddresses obtains the submission addresses of specified board.
-func GetSubmissionAddresses(board *string) ClientFunc {
-	return gen("board_meta/get_submission_addresses", Values{
+// StatsGet obtains stats.
+func StatsGet() ClientFunc {
+	return gen("stats/get", Values{})
+}
+
+/*
+	<<< FOR CONNECTIONS >>>
+*/
+
+// ConnectionsGetAll gets all connections.
+func ConnectionsGetAll() ClientFunc {
+	return gen("connections/get_all", Values{})
+}
+
+// ConnectionsAdd adds a connection.
+func ConnectionsAdd(address *string) ClientFunc {
+	return gen("connections/add", Values{
+		"address": address,
+	})
+}
+
+// ConnectionsRemove removes a connections.
+func ConnectionsRemove(address *string) ClientFunc {
+	return gen("connections/remove", Values{
+		"address": address,
+	})
+}
+
+/*
+	<<< FOR SUBSCRIPTIONS >>>
+*/
+
+// SubscriptionsGetAll gets all subscriptions.
+func SubscriptionsGetAll() ClientFunc {
+	return gen("subscriptions/get_all", Values{})
+}
+
+// SubscriptionsGet obtains a subscription of board.
+func SubscriptionsGet(board *string) ClientFunc {
+	return gen("subscriptions/get", Values{
 		"board": board,
 	})
 }
 
-// AddSubmissionAddress adds a submission address to specified board.
-func AddSubmissionAddress(board, address *string) ClientFunc {
-	return gen("board_meta/add_submission_address", Values{
+// SubscriptionsAdd adds a subscription of board and address.
+func SubscriptionsAdd(board, address *string) ClientFunc {
+	return gen("subscriptions/add", Values{
 		"board":   board,
 		"address": address,
 	})
 }
 
-// RemoveSubmissionAddress removes a submission address from specified board.
-func RemoveSubmissionAddress(board, address *string) ClientFunc {
-	return gen("board_meta/remove_submission_address", Values{
-		"board":   board,
-		"address": address,
+// SubscriptionsRemove removes a subscription of board.
+func SubscriptionsRemove(board *string) ClientFunc {
+	return gen("subscriptions/remove", Values{
+		"board": board,
 	})
 }
 
 /*
-	<<< FOR BOARDS, THREADS & POSTS >>>
+	<<< FOR USERS >>>
 */
 
-// GetBoards obtains boards in which the bbsnode is subscribed.
-func GetBoards() ClientFunc {
-	return gen("get_boards", nil)
+// UsersGetAll gets all users.
+func UsersGetAll() ClientFunc {
+	return gen("users/get_all", Values{})
 }
 
-// AddBoard adds a new board.
-func AddBoard(boardName, boardDescription, boardSubmissionAddresses, seed *string) ClientFunc {
-	return gen("add_board", Values{
+// UsersAdd adds a user in which we are not master.
+func UsersAdd(user, alias *string) ClientFunc {
+	return gen("users/add", Values{
+		"user":  user,
+		"alias": alias,
+	})
+}
+
+// UsersRemove removes a user.
+func UsersRemove(user *string) ClientFunc {
+	return gen("users/remove", Values{
+		"user": user,
+	})
+}
+
+// UsersMastersGetAll gets all master users.
+func UsersMastersGetAll() ClientFunc {
+	return gen("users/masters/get_all", Values{})
+}
+
+// UsersMastersAdd adds a master user.
+func UsersMastersAdd(alias, seed *string) ClientFunc {
+	return gen("users/masters/add", Values{
+		"alias": alias,
+		"seed":  seed,
+	})
+}
+
+// UsersMastersCurrentGet gets the current master user.
+func UsersMastersCurrentGet() ClientFunc {
+	return gen("users/masters/current/get", Values{})
+}
+
+// UsersMastersCurrentSet sets the current master user.
+func UsersMastersCurrentSet(user *string) ClientFunc {
+	return gen("users/masters/current/set", Values{
+		"user": user,
+	})
+}
+
+/*
+	<<< FOR BOARDS >>>
+*/
+
+func BoardsGetAll() ClientFunc {
+	return gen("boards/get_all", Values{})
+}
+
+func BoardsGet(board *string) ClientFunc {
+	return gen("boards/get", Values{
+		"board": board,
+	})
+}
+
+func BoardsAdd(boardName, boardDescription, boardSubmissionAddresses, seed *string) ClientFunc {
+	return gen("boards/add", Values{
 		"name":                 boardName,
 		"description":          boardDescription,
 		"submission_addresses": boardSubmissionAddresses,
@@ -67,111 +161,93 @@ func AddBoard(boardName, boardDescription, boardSubmissionAddresses, seed *strin
 	})
 }
 
-// RemoveBoard removes a board.
-func RemoveBoard(board *string) ClientFunc {
-	return gen("remove_board", Values{
+func BoardsRemove(board *string) ClientFunc {
+	return gen("boards/remove", Values{
 		"board": board,
 	})
 }
 
-// GetBoardPage obtains the board page of specified board of public key.
-func GetBoardPage(board *string) ClientFunc {
-	return gen("get_board_page", Values{
+func BoardsMetaGet(board *string) ClientFunc {
+	return gen("boards/meta/get", Values{
 		"board": board,
 	})
 }
 
-// GetThreads obtains threads of a specified board of public key.
-func GetThreads(board *string) ClientFunc {
-	return gen("get_threads", Values{
+func BoardsMetaSubmissionAddressesGetAll(board *string) ClientFunc {
+	return gen("boards/meta/submission_addresses/get_all", Values{
 		"board": board,
 	})
 }
 
-// AddThread adds a new thread on the specified board.
-func AddThread(board, threadName, threadDescription *string) ClientFunc {
-	return gen("add_thread", Values{
+func BoardsMetaSubmissionAddressesAdd(board, address *string) ClientFunc {
+	return gen("boards/meta/submission_addresses/add", Values{
+		"board":   board,
+		"address": address,
+	})
+}
+
+func BoardsMetaSubmissionAddressesRemove(board, address *string) ClientFunc {
+	return gen("boards/meta/submission_addresses/remove", Values{
+		"board":   board,
+		"address": address,
+	})
+}
+
+func BoardsPageGet(board *string) ClientFunc {
+	return gen("boards/page/get", Values{
+		"board": board,
+	})
+}
+
+/*
+	<<< FOR THREADS >>>
+*/
+
+func ThreadsGetAll(board *string) ClientFunc {
+	return gen("threads/get_all", Values{
+		"board": board,
+	})
+}
+
+func ThreadsAdd(board, threadName, threadDescription *string) ClientFunc {
+	return gen("threads/add", Values{
 		"board":       board,
 		"name":        threadName,
 		"description": threadDescription,
 	})
 }
 
-// RemoveThread removes a thread from the specified board.
-func RemoveThread(board, thread *string) ClientFunc {
-	return gen("remove_thread", Values{
+func ThreadsRemove(board, thread *string) ClientFunc {
+	return gen("threads/remove", Values{
 		"board":  board,
 		"thread": thread,
 	})
 }
 
-// GetThreadPage obtains a thread page of specified board and thread.
-func GetThreadPage(board, thread *string) ClientFunc {
-	return gen("get_thread_page", Values{
-		"board":  board,
-		"thread": thread,
-	})
-}
-
-// GetPosts obtains the posts of a thread of specified board and thread.
-func GetPosts(board, thread *string) ClientFunc {
-	return gen("get_posts", Values{
-		"board":  board,
-		"thread": thread,
-	})
-}
-
-// AddPost adds a new post on specified board and thread.
-func AddPost(board, thread, postTitle, postBody *string) ClientFunc {
-	return gen("add_post", Values{
-		"board":  board,
-		"thread": thread,
-		"title":  postTitle,
-		"body":   postBody,
-	})
-}
-
-// RemovePost removes a post in specified board, thread and post reference.
-func RemovePost(board, thread, post *string) ClientFunc {
-	return gen("remove_post", Values{
-		"board":  board,
-		"thread": thread,
-		"post":   post,
-	})
-}
-
-// ImportThread imports a thread from a board to another.
-func ImportThread(fromBoard, thread, toBoard *string) ClientFunc {
-	return gen("import_thread", Values{
+func ThreadsImport(fromBoard, thread, toBoard *string) ClientFunc {
+	return gen("threads/import", Values{
 		"from_board": fromBoard,
 		"thread":     thread,
 		"to_board":   toBoard,
 	})
 }
 
-/*
-	<<< FOR VOTES >>>
-*/
-
-// GetThreadVotes obtains votes for specified board and thread.
-func GetThreadVotes(board, thread *string) ClientFunc {
-	return gen("get_thread_votes", Values{
+func ThreadsPageGet(board, thread *string) ClientFunc {
+	return gen("threads/page/get", Values{
 		"board":  board,
 		"thread": thread,
 	})
 }
 
-// GetPostVotes obtains votes for specified board and post.
-func GetPostVotes(board, post *string) ClientFunc {
-	return gen("get_post_votes", Values{
-		"board": board,
-		"post":  post,
+func ThreadsVotesGet(board, thread *string) ClientFunc {
+	return gen("threads/votes/get", Values{
+		"board":  board,
+		"thread": thread,
 	})
 }
 
-// AddThreadVote adds a vote to a thread of specified board.
-func AddThreadVote(board, thread, voteMode, voteTag *string) ClientFunc {
-	return gen("add_thread_vote", Values{
+func ThreadsVotesAdd(board, thread, voteMode, voteTag *string) ClientFunc {
+	return gen("threads/votes/add", Values{
 		"board":  board,
 		"thread": thread,
 		"mode":   voteMode,
@@ -179,13 +255,60 @@ func AddThreadVote(board, thread, voteMode, voteTag *string) ClientFunc {
 	})
 }
 
-// AddPostVote adds a vote to post of specified board.
-func AddPostVote(board, post, voteMode, voteTag *string) ClientFunc {
-	return gen("add_post_vote", Values{
+/*
+	<<< FOR POSTS >>>
+*/
+
+func PostsGetAll(board, thread *string) ClientFunc {
+	return gen("posts/get_all", Values{
+		"board":  board,
+		"thread": thread,
+	})
+}
+
+func PostsAdd(board, thread, postTitle, postBody *string) ClientFunc {
+	return gen("posts/add", Values{
+		"board":  board,
+		"thread": thread,
+		"title":  postTitle,
+		"body":   postBody,
+	})
+}
+
+func PostsRemove(board, thread, post *string) ClientFunc {
+	return gen("posts/remove", Values{
+		"board":  board,
+		"thread": thread,
+		"post":   post,
+	})
+}
+
+func PostsVotesGet(board, post *string) ClientFunc {
+	return gen("posts/votes/get", Values{
+		"board": board,
+		"post":  post,
+	})
+}
+
+func PostsVotesAdd(board, post, voteMode, voteTag *string) ClientFunc {
+	return gen("posts/votes/add", Values{
 		"board": board,
 		"post":  post,
 		"mode":  voteMode,
 		"tag":   voteTag,
+	})
+}
+
+/*
+	<<< FOR TESTS >>>
+*/
+
+func TestsAddFilledBoard(seed, threads, minPosts, maxPosts *string) ClientFunc {
+	return gen("tests/add_filled_board", Values{
+		"seed":      seed,
+		"threads":   threads,
+		"min_posts": minPosts,
+		"max_posts": maxPosts,
 	})
 }
 

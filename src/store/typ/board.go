@@ -17,8 +17,8 @@ type Board struct {
 	Name    string `json:"name"`
 	Desc    string `json:"description"`
 	PubKey  string `json:"public_key"`
-	Meta    []byte `json:"-"`
 	Created int64  `json:"created"`
+	Meta    []byte `json:"-"`
 }
 
 // Check checks the validity of the board, outputs it's public key and updates it's fields.

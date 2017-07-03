@@ -16,7 +16,7 @@ export class ApiService {
   constructor(private http: Http, private common: CommonService) {
   }
   getSubmissionAddresses(data: FormData) {
-    return this.common.handlePost(this.submissionAddressUrl + 'get', data);
+    return this.common.handlePost(this.submissionAddressUrl + 'get_all', data);
   }
   addSubmissionAddress(data: FormData) {
     return this.common.handlePost(this.submissionAddressUrl + 'add', data);

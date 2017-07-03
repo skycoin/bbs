@@ -19,21 +19,21 @@ var (
 		cli.IntFlag{
 			Name:        "port, p",
 			EnvVar:      "CLI_PORT",
-			Usage:       "http port of bbsnode where json api is served",
+			Usage:       "Http port of bbsnode where json api is served",
 			Destination: &Port,
 			Value:       Port,
 		},
 		cli.IntFlag{
 			Name:        "timeout, t",
 			EnvVar:      "CLI_TIMEOUT",
-			Usage:       "operation timeout in seconds, negative to disable",
+			Usage:       "Operation timeout in seconds, negative to disable",
 			Destination: &Timeout,
 			Value:       Timeout,
 		},
 		cli.BoolFlag{
 			Name:        "indent, i",
 			EnvVar:      "CLI_INDENT",
-			Usage:       "indent json output",
+			Usage:       "Indent json output",
 			Destination: &Indent,
 		},
 	}
@@ -41,241 +41,466 @@ var (
 	Board     = ""
 	BoardFlag = cli.StringFlag{
 		Name:        "board, b",
-		Usage:       "reference/public key of board",
+		Usage:       "Reference/public key of board",
 		Destination: &Board,
 	}
 	BoardName     = ""
 	BoardNameFlag = cli.StringFlag{
 		Name:        "board_name, bn",
-		Usage:       "name of board",
+		Usage:       "Name of board",
 		Destination: &BoardName,
 	}
 	BoardDescription     = ""
 	BoardDescriptionFlag = cli.StringFlag{
 		Name:        "board_description, bd",
-		Usage:       "description of board",
+		Usage:       "Description of board",
 		Destination: &BoardDescription,
 	}
 	BoardSubmissionAddresses     = ""
 	BoardSubmissionAddressesFlag = cli.StringFlag{
 		Name:        "board_submission_addresses, bsa",
-		Usage:       "submission addresses of the board, separated with commas ','",
+		Usage:       "Submission addresses of the board, separated with commas ','",
 		Destination: &BoardSubmissionAddresses,
 	}
 
 	Thread     = ""
 	ThreadFlag = cli.StringFlag{
 		Name:        "thread, t",
-		Usage:       "reference/public key of thread",
+		Usage:       "Reference/public key of thread",
 		Destination: &Thread,
 	}
 	ThreadName     = ""
 	ThreadNameFlag = cli.StringFlag{
 		Name:        "thread_name, tn",
-		Usage:       "name of thread",
+		Usage:       "Name of thread",
 		Destination: &ThreadName,
 	}
 	ThreadDescription     = ""
 	ThreadDescriptionFlag = cli.StringFlag{
 		Name:        "thread_description, td",
-		Usage:       "description of thread",
+		Usage:       "Description of thread",
 		Destination: &ThreadDescription,
 	}
 
 	Post     = ""
 	PostFlag = cli.StringFlag{
 		Name:        "post, p",
-		Usage:       "reference/public key of post",
+		Usage:       "Reference/public key of post",
 		Destination: &Post,
 	}
 	PostTitle     = ""
 	PostTitleFlag = cli.StringFlag{
 		Name:        "post_title, pt",
-		Usage:       "title of post",
+		Usage:       "Title of post",
 		Destination: &PostTitle,
 	}
 	PostBody     = ""
 	PostBodyFlag = cli.StringFlag{
 		Name:        "post_body, pb",
-		Usage:       "body of post",
+		Usage:       "Body of post",
 		Destination: &PostBody,
 	}
 
 	VoteMode     = ""
 	VoteModeFlag = cli.StringFlag{
 		Name:        "vote_mode, vm",
-		Usage:       "mode of vote, valid values are -1, 0, +1",
+		Usage:       "Mode of vote, valid values are -1, 0, +1",
 		Destination: &VoteMode,
 	}
-
 	VoteTag     = ""
 	VoteTagFlag = cli.StringFlag{
 		Name:        "vote_tag, vt",
-		Usage:       "aditional tag information of vote",
+		Usage:       "Additional tag information of vote",
 		Destination: &VoteTag,
+	}
+
+	User     = ""
+	UserFlag = cli.StringFlag{
+		Name:        "user, u",
+		Usage:       "Reference/public key of user",
+		Destination: &User,
+	}
+	UserAlias     = ""
+	UserAliasFlag = cli.StringFlag{
+		Name:        "user_alias, ua",
+		Usage:       "User alias of user",
+		Destination: &UserAlias,
 	}
 
 	FromBoard     = ""
 	FromBoardFlag = cli.StringFlag{
 		Name:        "from_board, fb",
-		Usage:       "reference/public key of board to import thread from",
+		Usage:       "Reference/public key of board to import thread from",
 		Destination: &FromBoard,
 	}
 	ToBoard     = ""
 	ToBoardFlag = cli.StringFlag{
 		Name:        "to_board, tb",
-		Usage:       "reference/public key of board to import thread to",
+		Usage:       "Reference/public key of board to import thread to",
 		Destination: &ToBoard,
 	}
 
+	ConnectionAddress     = ""
+	ConnectionAddressFlag = cli.StringFlag{
+		Name:        "connection_address, ca",
+		Usage:       "Connection address of external node",
+		Destination: &ConnectionAddress,
+	}
 	SubmissionAddress     = ""
 	SubmissionAddressFlag = cli.StringFlag{
 		Name:        "submission_address, sa",
-		Usage:       "submission address of a board",
+		Usage:       "Submission address of a board",
 		Destination: &SubmissionAddress,
 	}
 
 	Seed     = ""
 	SeedFlag = cli.StringFlag{
 		Name:        "seed, s",
-		Usage:       "random collection of charactors used to generate public/private key pair",
+		Usage:       "Random collection of characters used to generate public/private key pair",
 		Destination: &Seed,
+	}
+
+	ThreadCount     = ""
+	ThreadCountFlag = cli.StringFlag{
+		Name:        "thread_count, tc",
+		Usage:       "Number of threads to generate",
+		Destination: &ThreadCount,
+	}
+	PostCountMin     = ""
+	PostCountMinFlag = cli.StringFlag{
+		Name:        "post_count_min, pc_min",
+		Usage:       "Minimum number of posts to generate for a thread",
+		Destination: &PostCountMin,
+	}
+	PostCountMax     = ""
+	PostCountMaxFlag = cli.StringFlag{
+		Name:        "post_count_max, pc_max",
+		Usage:       "Maximum number of posts to generate for a thread",
+		Destination: &PostCountMax,
 	}
 )
 
 func main() {
 	app := cli.NewApp()
-	app.Usage = "command line interface for configuring bbsnode"
+	app.Usage = "Command line interface for configuring bbsnode"
 	app.EnableBashCompletion = true
 	app.Flags = GlobalFlags
 	app.Commands = []cli.Command{
-		/*
-			<<< FOR BOARD META >>>
-		*/
 		{
-			Name:  "board_meta",
-			Usage: "actions regarding a board's meta data",
+			Name:   "quit",
+			Usage:  "Quits the node",
+			Action: try(gui.Quit()),
+		},
+		{
+			Name:  "stats",
+			Usage: "Actions regarding node stats",
 			Subcommands: []cli.Command{
 				{
-					Name:   "get_submission_addresses",
-					Usage:  "obtain the submission addresses of specified board",
-					Flags:  []cli.Flag{BoardFlag},
-					Action: try(gui.GetSubmissionAddresses(&Board)),
-				},
-				{
-					Name:   "add_submission_address",
-					Usage:  "add a submission address to specified board",
-					Flags:  []cli.Flag{BoardFlag, SubmissionAddressFlag},
-					Action: try(gui.AddSubmissionAddress(&Board, &SubmissionAddress)),
-				},
-				{
-					Name:   "remove_submission_address",
-					Usage:  "removes a submission address from specified board",
-					Flags:  []cli.Flag{BoardFlag, SubmissionAddressFlag},
-					Action: try(gui.RemoveSubmissionAddress(&Board, &SubmissionAddress)),
+					Name:   "get",
+					Usage:  "Obtains node stats",
+					Action: try(gui.StatsGet()),
 				},
 			},
 		},
-		/*
-			<<< FOR BOARDS, THREADS & POSTS >>>
-		*/
 		{
-			Name:   "get_boards",
-			Usage:  "lists boards in which the node is subscribed to",
-			Action: try(gui.GetBoards()),
+			Name:  "connections",
+			Usage: "Actions regarding node connections",
+			Subcommands: []cli.Command{
+				{
+					Name:   "get_all",
+					Usage:  "Gets all addresses of nodes this node is connected to",
+					Action: try(gui.ConnectionsGetAll()),
+				},
+				{
+					Name:   "add",
+					Usage:  "Connects node to provided address",
+					Flags:  []cli.Flag{ConnectionAddressFlag},
+					Action: try(gui.ConnectionsAdd(&ConnectionAddress)),
+				},
+				{
+					Name:   "remove",
+					Usage:  "Removes connection to node of provided address",
+					Flags:  []cli.Flag{ConnectionAddressFlag},
+					Action: try(gui.ConnectionsRemove(&ConnectionAddress)),
+				},
+			},
 		},
 		{
-			Name:   "add_board",
-			Usage:  "creates a new board that is hosted on the node",
-			Flags:  []cli.Flag{BoardNameFlag, BoardDescriptionFlag, BoardSubmissionAddressesFlag, SeedFlag},
-			Action: try(gui.AddBoard(&BoardName, &BoardDescription, &BoardSubmissionAddresses, &Seed)),
+			Name:  "subscriptions",
+			Usage: "Actions regarding board subscriptions of this node",
+			Subcommands: []cli.Command{
+				{
+					Name:   "get_all",
+					Usage:  "Gets a list of all board subscriptions",
+					Action: try(gui.SubscriptionsGetAll()),
+				},
+				{
+					Name:   "get",
+					Usage:  "Gets subscription information of a provided board",
+					Flags:  []cli.Flag{BoardFlag},
+					Action: try(gui.SubscriptionsGet(&Board)),
+				},
+				{
+					Name:   "add",
+					Usage:  "Adds a board subscription",
+					Flags:  []cli.Flag{BoardFlag, ConnectionAddressFlag},
+					Action: try(gui.SubscriptionsAdd(&Board, &ConnectionAddress)),
+				},
+				{
+					Name:   "remove",
+					Usage:  "Removes a board subscription",
+					Flags:  []cli.Flag{BoardFlag},
+					Action: try(gui.SubscriptionsRemove(&Board)),
+				},
+			},
 		},
 		{
-			Name:   "remove_board",
-			Usage:  "removes a board that is hosted on the node",
-			Flags:  []cli.Flag{BoardFlag},
-			Action: try(gui.RemoveBoard(&Board)),
+			Name:  "users",
+			Usage: "Actions regarding user management of this node",
+			Subcommands: []cli.Command{
+				{
+					Name:   "get_all",
+					Usage:  "Gets all saved users on the node",
+					Action: try(gui.UsersGetAll()),
+				},
+				{
+					Name:   "add",
+					Usage:  "Saves a non-master user to the node",
+					Flags:  []cli.Flag{UserFlag, UserAliasFlag},
+					Action: try(gui.UsersAdd(&User, &UserAlias)),
+				},
+				{
+					Name:   "remove",
+					Usage:  "Removes a user from the node",
+					Flags:  []cli.Flag{UserFlag},
+					Action: try(gui.UsersRemove(&User)),
+				},
+				{
+					Name:  "masters",
+					Usage: "Actions regarding master users saved on this node",
+					Subcommands: []cli.Command{
+						{
+							Name:   "get_all",
+							Usage:  "Gets all master users saved on this node",
+							Action: try(gui.UsersMastersGetAll()),
+						},
+						{
+							Name:   "add",
+							Usage:  "Saves a new master user to this node",
+							Flags:  []cli.Flag{UserAliasFlag, SeedFlag},
+							Action: try(gui.UsersMastersAdd(&UserAlias, &Seed)),
+						},
+						{
+							Name:  "current",
+							Usage: "Actions regarding the currently active master user",
+							Subcommands: []cli.Command{
+								{
+									Name:   "get",
+									Usage:  "Gets the currently active master user",
+									Action: try(gui.UsersMastersCurrentGet()),
+								},
+								{
+									Name:   "set",
+									Usage:  "Sets the currently active master user",
+									Flags:  []cli.Flag{UserFlag},
+									Action: try(gui.UsersMastersCurrentSet(&User)),
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		{
-			Name:   "get_board_page",
-			Usage:  "obtains the board page - a page of board information and threads",
-			Flags:  []cli.Flag{BoardFlag},
-			Action: try(gui.GetBoardPage(&Board)),
+			Name:  "boards",
+			Usage: "Actions regarding boards",
+			Subcommands: []cli.Command{
+				{
+					Name:   "get_all",
+					Usage:  "Gets all boards",
+					Action: try(gui.BoardsGetAll()),
+				},
+				{
+					Name:   "get",
+					Usage:  "Gets a specified board",
+					Flags:  []cli.Flag{BoardFlag},
+					Action: try(gui.BoardsGet(&Board)),
+				},
+				{
+					Name:   "add",
+					Usage:  "Adds a board to host on this node",
+					Flags:  []cli.Flag{BoardNameFlag, BoardDescriptionFlag, BoardSubmissionAddressesFlag, SeedFlag},
+					Action: try(gui.BoardsAdd(&BoardName, &BoardDescription, &BoardSubmissionAddresses, &Seed)),
+				},
+				{
+					Name:   "remove",
+					Usage:  "Removes a specified board",
+					Flags:  []cli.Flag{BoardFlag},
+					Action: try(gui.BoardsRemove(&Board)),
+				},
+				{
+					Name:  "meta",
+					Usage: "Actions regarding board meta data",
+					Subcommands: []cli.Command{
+						{
+							Name:   "get",
+							Usage:  "Gets the entire board meta data object",
+							Flags:  []cli.Flag{BoardFlag},
+							Action: try(gui.BoardsMetaGet(&Board)),
+						},
+						{
+							Name:  "submission_addresses",
+							Usage: "Actions regarding the submission addresses of the board",
+							Subcommands: []cli.Command{
+								{
+									Name:   "get_all",
+									Usage:  "Gets all the submission addresses of the board",
+									Flags:  []cli.Flag{BoardFlag},
+									Action: try(gui.BoardsMetaSubmissionAddressesGetAll(&Board)),
+								},
+								{
+									Name:   "add",
+									Usage:  "Adds a submission address to the board",
+									Flags:  []cli.Flag{BoardFlag, SubmissionAddressFlag},
+									Action: try(gui.BoardsMetaSubmissionAddressesAdd(&Board, &SubmissionAddress)),
+								},
+								{
+									Name:   "remove",
+									Usage:  "Removes a submission address from the board",
+									Flags:  []cli.Flag{BoardFlag, SubmissionAddressFlag},
+									Action: try(gui.BoardsMetaSubmissionAddressesRemove(&Board, &SubmissionAddress)),
+								},
+							},
+						},
+					},
+				},
+				{
+					Name:  "page",
+					Usage: "Actions regarding the board represented as a page",
+					Subcommands: []cli.Command{
+						{
+							Name:   "get",
+							Usage:  "Gets the board represented as a page",
+							Flags:  []cli.Flag{BoardFlag},
+							Action: try(gui.BoardsPageGet(&Board)),
+						},
+					},
+				},
+			},
 		},
 		{
-			Name:   "get_threads",
-			Usage:  "obtains threads of a specified board of public key",
-			Flags:  []cli.Flag{BoardFlag},
-			Action: try(gui.GetThreads(&Board)),
+			Name:  "threads",
+			Usage: "Actions regarding threads",
+			Subcommands: []cli.Command{
+				{
+					Name:   "get_all",
+					Usage:  "Gets all threads under the specified board",
+					Flags:  []cli.Flag{BoardFlag},
+					Action: try(gui.ThreadsGetAll(&Board)),
+				},
+				{
+					Name:   "add",
+					Usage:  "Adds a new thread to specified board",
+					Flags:  []cli.Flag{BoardFlag, ThreadNameFlag, ThreadDescriptionFlag},
+					Action: try(gui.ThreadsAdd(&Board, &ThreadName, &ThreadDescription)),
+				},
+				{
+					Name:   "remove",
+					Usage:  "Removes a thread from specified board",
+					Flags:  []cli.Flag{BoardFlag, ThreadFlag},
+					Action: try(gui.ThreadsRemove(&Board, &Thread)),
+				},
+				{
+					Name:   "import",
+					Usage:  "Imports a thread from one board to another",
+					Flags:  []cli.Flag{FromBoardFlag, ThreadFlag, ToBoardFlag},
+					Action: try(gui.ThreadsImport(&FromBoard, &Thread, &ToBoard)),
+				},
+				{
+					Name:  "page",
+					Usage: "Actions regarding the thread represented as a page",
+					Subcommands: []cli.Command{
+						{
+							Name:   "get",
+							Usage:  "Gets the thread represented as a page",
+							Flags:  []cli.Flag{BoardFlag, ThreadFlag},
+							Action: try(gui.ThreadsPageGet(&Board, &Thread)),
+						},
+					},
+				},
+				{
+					Name:  "votes",
+					Usage: "Actions regarding votes of a thread",
+					Subcommands: []cli.Command{
+						{
+							Name:   "get",
+							Usage:  "Gets the votes of the specified thread",
+							Flags:  []cli.Flag{BoardFlag, ThreadFlag},
+							Action: try(gui.ThreadsVotesGet(&Board, &Thread)),
+						},
+						{
+							Name:   "add",
+							Usage:  "Adds a vote to the specified thread",
+							Flags:  []cli.Flag{BoardFlag, ThreadFlag, VoteModeFlag, VoteTagFlag},
+							Action: try(gui.ThreadsVotesAdd(&Board, &Thread, &VoteMode, &VoteTag)),
+						},
+					},
+				},
+			},
 		},
 		{
-			Name:   "add_thread",
-			Usage:  "creates a new thread on specified board of public key",
-			Flags:  []cli.Flag{BoardFlag, ThreadNameFlag, ThreadDescriptionFlag},
-			Action: try(gui.AddThread(&Board, &ThreadName, &ThreadDescription)),
+			Name:  "posts",
+			Usage: "Actions regarding posts",
+			Subcommands: []cli.Command{
+				{
+					Name:   "get_all",
+					Usage:  "Gets all posts under specified board and thread",
+					Flags:  []cli.Flag{BoardFlag, ThreadFlag},
+					Action: try(gui.PostsGetAll(&Board, &Thread)),
+				},
+				{
+					Name:   "add",
+					Usage:  "Adds a post to specified thread under specified board",
+					Flags:  []cli.Flag{BoardFlag, ThreadFlag, PostTitleFlag, PostBodyFlag},
+					Action: try(gui.PostsAdd(&Board, &Thread, &PostTitle, &PostBody)),
+				},
+				{
+					Name:   "remove",
+					Usage:  "Removes a specified post from a specified thread under a specified board",
+					Flags:  []cli.Flag{BoardFlag, ThreadFlag, PostFlag},
+					Action: try(gui.PostsRemove(&Board, &Thread, &Post)),
+				},
+				{
+					Name:  "votes",
+					Usage: "Actions regarding votes of a post",
+					Subcommands: []cli.Command{
+						{
+							Name:   "get",
+							Usage:  "Gets the votes of a specified post",
+							Flags:  []cli.Flag{BoardFlag, PostFlag},
+							Action: try(gui.PostsVotesGet(&Board, &Post)),
+						},
+						{
+							Name:   "add",
+							Usage:  "Adds a vote to the specified post",
+							Flags:  []cli.Flag{BoardFlag, PostFlag, VoteModeFlag, VoteTagFlag},
+							Action: try(gui.PostsVotesAdd(&Board, &Post, &VoteMode, &VoteTag)),
+						},
+					},
+				},
+			},
 		},
 		{
-			Name:   "remove_thread",
-			Usage:  "removes a thread from specified board of public key",
-			Flags:  []cli.Flag{BoardFlag, ThreadFlag},
-			Action: try(gui.RemoveThread(&Board, &Thread)),
-		},
-		{
-			Name:   "get_thread_page",
-			Usage:  "obtains the thread page of specified board and thread",
-			Flags:  []cli.Flag{BoardFlag, ThreadFlag},
-			Action: try(gui.GetThreadPage(&Board, &Thread)),
-		},
-		{
-			Name:   "get_posts",
-			Usage:  "obtains the posts of a thread of specified board and thread",
-			Flags:  []cli.Flag{BoardFlag, ThreadFlag},
-			Action: try(gui.GetPosts(&Board, &Thread)),
-		},
-		{
-			Name:   "add_post",
-			Usage:  "creates a new post on specified board and thread",
-			Flags:  []cli.Flag{BoardFlag, ThreadFlag, PostTitleFlag, PostBodyFlag},
-			Action: try(gui.AddPost(&Board, &Thread, &PostTitle, &PostBody)),
-		},
-		{
-			Name:   "remove_post",
-			Usage:  "removes a post from specified board and thread",
-			Flags:  []cli.Flag{BoardFlag, ThreadFlag, PostFlag},
-			Action: try(gui.RemovePost(&Board, &Thread, &Post)),
-		},
-		{
-			Name:   "import_thread",
-			Usage:  "imports a thread from one board to another",
-			Flags:  []cli.Flag{FromBoardFlag, ThreadFlag, ToBoardFlag},
-			Action: try(gui.ImportThread(&FromBoard, &Thread, &ToBoard)),
-		},
-		/*
-			<<< FOR VOTES >>>
-		*/
-		{
-			Name:   "get_thread_votes",
-			Usage:  "obtain votes of specified thread",
-			Flags:  []cli.Flag{BoardFlag, ThreadFlag},
-			Action: try(gui.GetThreadVotes(&Board, &Thread)),
-		},
-		{
-			Name:   "get_post_votes",
-			Usage:  "obtain votes of specified post",
-			Flags:  []cli.Flag{BoardFlag, PostFlag},
-			Action: try(gui.GetPostVotes(&Board, &Post)),
-		},
-		{
-			Name:   "add_thread_vote",
-			Usage:  "adds a vote for specified thread of board",
-			Flags:  []cli.Flag{BoardFlag, ThreadFlag, VoteModeFlag, VoteTagFlag},
-			Action: try(gui.AddThreadVote(&Board, &Thread, &VoteMode, &VoteTag)),
-		},
-		{
-			Name:   "add_post_vote",
-			Usage:  "adds a vote for specified post of board",
-			Flags:  []cli.Flag{BoardFlag, PostFlag, VoteModeFlag, VoteTagFlag},
-			Action: try(gui.AddPostVote(&Board, &Post, &VoteMode, &VoteTag)),
+			Name:  "tests",
+			Usage: "Actions regarding tests for the node",
+			Subcommands: []cli.Command{
+				{
+					Name:   "add_filled_board",
+					Usage:  "Adds a board, hosted on the node, filled with random threads and posts",
+					Flags:  []cli.Flag{SeedFlag, ThreadCountFlag, PostCountMinFlag, PostCountMaxFlag},
+					Action: try(gui.TestsAddFilledBoard(&Seed, &ThreadCount, &PostCountMin, &PostCountMax)),
+				},
+			},
 		},
 	}
 	if e := app.Run(os.Args); e != nil {
@@ -293,7 +518,7 @@ func try(f func(ctx context.Context, port int) ([]byte, error)) cli.ActionFunc {
 		data, e := f(ctx, Port)
 		if e != nil {
 			fmt.Println(e.Error())
-			return nil
+			return e
 		}
 		if Indent {
 			var prettyJSON bytes.Buffer

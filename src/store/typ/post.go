@@ -11,12 +11,13 @@ import (
 
 // Post represents a post as stored in cxo.
 type Post struct {
-	Title     string     `json:"title"`
-	Body      string     `json:"body"`
-	Author    string     `json:"author"`
-	Created   int64      `json:"created"`
-	Signature cipher.Sig `json:"-"`
-	Ref       string     `json:"ref" enc:"-"`
+	Title   string     `json:"title"`
+	Body    string     `json:"body"`
+	Author  string     `json:"author"`
+	Created int64      `json:"created"`
+	Sig     cipher.Sig `json:"-"`
+	Ref     string     `json:"ref" enc:"-"`
+	Meta    []byte     `json:"-"` // TODO: Make use of.
 }
 
 func (p *Post) checkContent() error {
@@ -42,8 +43,8 @@ func (p *Post) Sign(pk cipher.PubKey, sk cipher.SecKey) error {
 	}
 	p.Author = pk.Hex()
 	p.Created = 0
-	p.Signature = cipher.Sig{}
-	p.Signature = cipher.SignHash(cipher.SumSHA256(encoder.Serialize(*p)), sk)
+	p.Sig = cipher.Sig{}
+	p.Sig = cipher.SignHash(cipher.SumSHA256(encoder.Serialize(*p)), sk)
 	return nil
 }
 
@@ -59,8 +60,8 @@ func (p Post) Verify() error {
 		return e
 	}
 	// Check signature.
-	sig := p.Signature
-	p.Signature = cipher.Sig{}
+	sig := p.Sig
+	p.Sig = cipher.Sig{}
 	p.Created = 0
 
 	return cipher.VerifySignature(

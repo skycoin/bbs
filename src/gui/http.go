@@ -120,7 +120,7 @@ func NewServeMux(api *Gateway, appLoc string) *http.ServeMux {
 	mux.HandleFunc("/api/boards/add", api.Boards.Add)
 	mux.HandleFunc("/api/boards/remove", api.Boards.Remove)
 	mux.HandleFunc("/api/boards/meta/get", api.Boards.Meta.Get)
-	mux.HandleFunc("/api/boards/meta/submission_addresses/get", api.Boards.Meta.SubmissionAddresses.GetAll)
+	mux.HandleFunc("/api/boards/meta/submission_addresses/get_all", api.Boards.Meta.SubmissionAddresses.GetAll)
 	mux.HandleFunc("/api/boards/meta/submission_addresses/add", api.Boards.Meta.SubmissionAddresses.Add)
 	mux.HandleFunc("/api/boards/meta/submission_addresses/remove", api.Boards.Meta.SubmissionAddresses.Remove)
 	mux.HandleFunc("/api/boards/page/get", api.Boards.Page.Get)
