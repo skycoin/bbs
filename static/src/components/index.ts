@@ -3,7 +3,7 @@ export * from './threads/threads';
 export * from './threadPage/threadPage';
 export * from './userlist/userlist.component';
 export * from './user/user.component';
-export * from './connection/connection.component'
+export * from './connection/connection.component';
 
 
 // Modal

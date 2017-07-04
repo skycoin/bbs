@@ -1,18 +1,18 @@
-import { Component, OnInit, ViewEncapsulation, HostBinding } from '@angular/core';
-import { ApiService, UserService, CommonService } from '../../providers';
-import { Board, UIOptions } from '../../providers/api/msg';
-import { Router, ActivatedRoute } from '@angular/router';
-import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { AlertComponent } from '../alert/alert.component';
-import { slideInLeftAnimation } from '../../animations/router.animations';
+import {Component, HostBinding, OnInit, ViewEncapsulation} from '@angular/core';
+import {ApiService, CommonService, UserService} from '../../providers';
+import {Board} from '../../providers/api/msg';
+import {Router} from '@angular/router';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {FormControl, FormGroup, Validators} from '@angular/forms';
+import {AlertComponent} from '../alert/alert.component';
+import {slideInLeftAnimation} from '../../animations/router.animations';
 
 @Component({
     selector: 'app-boardslist',
     templateUrl: 'boards-list.component.html',
     styleUrls: ['boards-list.scss'],
     encapsulation: ViewEncapsulation.None,
-    animations: [slideInLeftAnimation],
+    animations: [slideInLeftAnimation]
 })
 export class BoardsListComponent implements OnInit {
     @HostBinding('@routeAnimation') routeAnimation = true;
@@ -27,7 +27,7 @@ export class BoardsListComponent implements OnInit {
     public addressForm = new FormGroup({
         url: new FormControl('', Validators.required),
         port: new FormControl('', Validators.required)
-    })
+    });
     public addForm = new FormGroup({
         name: new FormControl('', Validators.required),
         description: new FormControl('', Validators.required),
@@ -35,12 +35,12 @@ export class BoardsListComponent implements OnInit {
         addresses: new FormControl('')
     });
     public tmpBoard: Board = null;
-    constructor(
-        private api: ApiService,
-        private user: UserService,
-        private router: Router,
-        private modal: NgbModal,
-        public common: CommonService) {
+
+    constructor(private api: ApiService,
+                private user: UserService,
+                private router: Router,
+                private modal: NgbModal,
+                public common: CommonService) {
     }
 
     ngOnInit(): void {
@@ -50,9 +50,11 @@ export class BoardsListComponent implements OnInit {
             this.isRoot = root;
         });
     }
+
     setSort() {
         this.sort = this.sort === 'desc' ? 'esc' : 'desc';
     }
+
     getBoards() {
         this.api.getBoards().subscribe(boards => {
             if (!boards || boards.length <= 0) {
@@ -67,24 +69,25 @@ export class BoardsListComponent implements OnInit {
                 const data = new FormData();
                 data.append('board', el.public_key);
                 this.api.getSubscription(data).subscribe(res => {
-                    el.ui_options = { subscribe: true };
-                })
+                    el.ui_options = {subscribe: true};
+                });
                 this.common.loading.close();
             });
         });
     }
+
     addAddress(content: any, key: string) {
         this.addressForm.reset();
         if (key === '') {
             this.common.showErrorAlert('The Public Key can not be empty!!!');
             return;
         }
-        this.modal.open(content, { windowClass: 'multi-modal' }).result.then((reslut) => {
+        this.modal.open(content, {windowClass: 'multi-modal'}).result.then((reslut) => {
             if (reslut) {
                 if (!this.addressForm.valid) {
                     this.common.showErrorAlert('The Port Or Url can not be empty!!!');
                     return;
-                };
+                }
                 let data = new FormData();
                 data.append('board', key);
                 data.append('address', this.addressForm.get('url').value + ':' + this.addressForm.get('port').value);
@@ -97,15 +100,16 @@ export class BoardsListComponent implements OnInit {
                         });
                         this.common.showSucceedAlert('successfully added');
                     }
-                })
+                });
             }
         });
     }
+
     openInfo(ev: Event, board: Board, content: any) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
         if (!board) {
-            this.common.showErrorAlert('Failed to get info!!')
+            this.common.showErrorAlert('Failed to get info!!');
             return;
         }
         this.tmpBoard = board;
@@ -113,9 +117,10 @@ export class BoardsListComponent implements OnInit {
         data.append('board', this.tmpBoard.public_key);
         this.api.getSubmissionAddresses(data).subscribe(address => {
             this.tmpBoard.address = address;
-        })
-        this.modal.open(content, { size: 'lg' });
+        });
+        this.modal.open(content, {size: 'lg'});
     }
+
     openAdd(content) {
         this.addForm.reset();
         this.modal.open(content).result.then((result) => {
@@ -123,19 +128,21 @@ export class BoardsListComponent implements OnInit {
                 if (!this.addForm.valid) {
                     this.common.showErrorAlert('Parameter error');
                     return;
-                };
+                }
                 const data = new FormData();
                 data.append('name', this.addForm.get('name').value);
                 data.append('description', this.addForm.get('description').value);
                 data.append('seed', this.addForm.get('seed').value);
-                data.append('submission_addresses', this.addForm.get('addresses').value)
+                data.append('submission_addresses', this.addForm.get('addresses').value);
                 this.api.addBoard(data).subscribe(res => {
                     this.getBoards();
                     this.common.showSucceedAlert('Added Successfully');
                 });
             }
-        }, err => { });
+        }, err => {
+        });
     }
+
     delAddress(ev: Event, key: string, address: string) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
@@ -146,7 +153,7 @@ export class BoardsListComponent implements OnInit {
         let data = new FormData();
         data.append('board', key);
         data.append('address', address);
-        const modalRef = this.modal.open(AlertComponent, { windowClass: 'multi-modal' });
+        const modalRef = this.modal.open(AlertComponent, {windowClass: 'multi-modal'});
         modalRef.componentInstance.title = 'Delete Address';
         modalRef.componentInstance.body = 'Do you delete the address?';
         modalRef.result.then(result => {
@@ -162,10 +169,11 @@ export class BoardsListComponent implements OnInit {
                     } else {
                         this.common.showErrorAlert('failed to delete');
                     }
-                })
+                });
             }
-        })
+        });
     }
+
     subscribe(ev: Event, content: any) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
@@ -175,19 +183,20 @@ export class BoardsListComponent implements OnInit {
                     this.common.showErrorAlert('The Board Key Or Address can not be empty!!!');
                     return;
                 }
-                const data = new FormData()
+                const data = new FormData();
                 data.append('address', this.subscribeForm.get('address').value);
-                data.append('board', this.subscribeForm.get('board').value)
+                data.append('board', this.subscribeForm.get('board').value);
                 this.api.subscribe(data).subscribe(isOk => {
                     if (isOk) {
                         this.common.showSucceedAlert('Subscribe successfully');
                         this.getBoards();
                     }
-                })
+                });
             }
-        })
+        });
 
     }
+
     unSubscribe(ev: Event, boardKey: string) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
@@ -202,8 +211,9 @@ export class BoardsListComponent implements OnInit {
                 this.common.showSucceedAlert('Unsubscribe successfully');
                 this.getBoards();
             }
-        })
+        });
     }
+
     openThreads(ev: Event, key: string) {
         ev.stopImmediatePropagation();
         ev.stopPropagation();
@@ -211,6 +221,6 @@ export class BoardsListComponent implements OnInit {
             this.common.showErrorAlert('Abnormal parameters!!!', 3000);
             return;
         }
-        this.router.navigate(['/threads', { board: key }])
+        this.router.navigate(['/threads', {board: key}]);
     }
 }
