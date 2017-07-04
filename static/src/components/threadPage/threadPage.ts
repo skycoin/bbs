@@ -1,9 +1,9 @@
-import { Component, OnInit, HostListener, HostBinding, ViewEncapsulation } from '@angular/core';
-import { ApiService, ThreadPage, CommonService } from '../../providers';
-import { Router, ActivatedRoute } from '@angular/router';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
-import { slideInLeftAnimation } from '../../animations/router.animations';
+import {Component, HostBinding, HostListener, OnInit, ViewEncapsulation} from "@angular/core";
+import {ApiService, CommonService, ThreadPage} from "../../providers";
+import {ActivatedRoute, Router} from "@angular/router";
+import {FormControl, FormGroup, Validators} from "@angular/forms";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {slideInLeftAnimation} from "../../animations/router.animations";
 
 @Component({
   selector: 'app-threadpage',
@@ -16,7 +16,7 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
 export class ThreadPageComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  public sort = 'desc';
+  public sort = 'esc';
   public boardKey = '';
   public threadKey = '';
   public data: ThreadPage = { posts: [], thread: { name: '', description: '' } };
@@ -66,7 +66,7 @@ export class ThreadPageComponent implements OnInit {
     heightMin: 200,
     events: {
     },
-  }
+  };
   constructor(
     private api: ApiService,
     private router: Router,

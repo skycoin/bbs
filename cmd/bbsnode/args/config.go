@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/skycoin/bbs/src/misc"
-	"github.com/skycoin/skycoin/src/util"
+	"github.com/skycoin/skycoin/src/util/file"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -208,7 +208,7 @@ func (c *Config) PostProcess() (*Config, error) {
 	if c.saveConfig {
 		// Action on BBS configuration files.
 		if c.configDir == "" {
-			c.configDir = filepath.Join(util.UserHome(), configSubDir)
+			c.configDir = filepath.Join(file.UserHome(), configSubDir)
 		}
 		// Action on CXO configuration files.
 		if c.cxoDir == "" {

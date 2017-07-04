@@ -9,7 +9,7 @@ import (
 	"github.com/skycoin/bbs/src/store/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/skycoin/src/util"
+	"github.com/skycoin/skycoin/src/util/file"
 	"log"
 	"os"
 	"path/filepath"
@@ -54,7 +54,7 @@ func (qs *QueueSaver) load() error {
 	if !qs.config.SaveConfig() {
 		return nil
 	}
-	if e := util.LoadJSON(qs.absConfigDir(), &qs.queue); e != nil {
+	if e := file.LoadJSON(qs.absConfigDir(), &qs.queue); e != nil {
 		return e
 	}
 	return nil
@@ -65,7 +65,7 @@ func (qs *QueueSaver) save() error {
 	if !qs.config.SaveConfig() {
 		return nil
 	}
-	return util.SaveJSON(qs.absConfigDir(), qs.queue, os.FileMode(0700))
+	return file.SaveJSON(qs.absConfigDir(), qs.queue, os.FileMode(0700))
 }
 
 func (qs *QueueSaver) serve() {

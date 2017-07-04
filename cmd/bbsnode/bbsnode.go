@@ -7,7 +7,8 @@ import (
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/msg"
-	"github.com/skycoin/skycoin/src/util"
+	"github.com/skycoin/skycoin/src/util/browser"
+	"github.com/skycoin/skycoin/src/util/file"
 	"log"
 	"os"
 	"os/signal"
@@ -20,7 +21,7 @@ func main() {
 	if e != nil {
 		panic(e)
 	}
-	util.InitDataDir(config.ConfigDir())
+	file.InitDataDir(config.ConfigDir())
 	log.Println("[CONFIG] Master mode:", config.Master())
 	defer log.Println("Goodbye.")
 
@@ -35,6 +36,9 @@ func main() {
 
 	userSaver, e := store.NewUserSaver(config, container)
 	CatchError(e, "unable to create user saver")
+
+	_, e = store.NewFirstRunSaver(config, boardSaver)
+	CatchError(e, "unable to create first run saver")
 
 	queueSaver, e := msg.NewQueueSaver(config, container)
 	CatchError(e, "unable to create queue saver")
@@ -69,7 +73,7 @@ func main() {
 		go func() {
 			time.Sleep(time.Millisecond * 100)
 			log.Println("Opening web browser...")
-			util.OpenBrowser(serveAddr)
+			browser.Open(serveAddr)
 		}()
 	}
 

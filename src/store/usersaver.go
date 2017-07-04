@@ -6,7 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/skycoin/src/util"
+	"github.com/skycoin/skycoin/src/util/file"
 	"log"
 	"os"
 	"path/filepath"
@@ -96,7 +96,7 @@ func (us *UserSaver) load() *UsersConfigFile {
 	}
 	log.Println("[USERSAVER] Loading configuration file...")
 	// Load users from file.
-	if e := util.LoadJSON(us.absConfigDir(), ucf); e != nil {
+	if e := file.LoadJSON(us.absConfigDir(), ucf); e != nil {
 		log.Println("[USERSAVER]", e)
 	}
 	return ucf
@@ -156,7 +156,7 @@ func (us *UserSaver) save() error {
 	for _, uc := range us.store {
 		ucf.Users = append(ucf.Users, uc)
 	}
-	return util.SaveJSON(us.absConfigDir(), ucf, os.FileMode(0700))
+	return file.SaveJSON(us.absConfigDir(), ucf, os.FileMode(0700))
 }
 
 func (us *UserSaver) autoSetCurrent() error {

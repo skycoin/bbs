@@ -7,7 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/skycoin/src/util"
+	"github.com/skycoin/skycoin/src/util/file"
 	"log"
 	"os"
 	"path/filepath"
@@ -52,29 +52,29 @@ func NewBoardSaver(config *args.Config, container *cxo.Container) (*BoardSaver, 
 	return &bs, nil
 }
 
-func (bs *BoardSaver) Close() {
+func (s *BoardSaver) Close() {
 	for {
 		select {
-		case bs.quit <- struct{}{}:
+		case s.quit <- struct{}{}:
 		default:
 			return
 		}
 	}
 }
 
-func (bs *BoardSaver) absConfigDir() string {
-	return filepath.Join(bs.config.ConfigDir(), BoardSaverFileName)
+func (s *BoardSaver) absConfigDir() string {
+	return filepath.Join(s.config.ConfigDir(), BoardSaverFileName)
 }
 
 // Helper function. Loads and checks boards' configuration file to memory.
-func (bs *BoardSaver) load() error {
+func (s *BoardSaver) load() error {
 	// Don't load if specified not to.
-	if bs.config.SaveConfig() {
+	if s.config.SaveConfig() {
 
 		log.Println("[BOARDSAVER] Loading configuration file...")
 		// Load boards from file.
 		bcf := BoardSaverFile{}
-		if e := util.LoadJSON(bs.absConfigDir(), &bcf); e != nil {
+		if e := file.LoadJSON(s.absConfigDir(), &bcf); e != nil {
 			log.Println("[BOARDSAVER]", e)
 		}
 		// Check loaded boards and intern in memory.
@@ -85,106 +85,106 @@ func (bs *BoardSaver) load() error {
 				log.Println("\t\t config file check:", e)
 				continue
 			}
-			bs.store[bpk] = &BoardInfo{Config: *bc}
-			bs.c.Subscribe(bc.Address, bpk)
+			s.store[bpk] = &BoardInfo{Config: *bc}
+			s.c.Subscribe(bc.Address, bpk)
 			log.Println("\t\t loaded in memory")
 		}
 	}
-	bs.checkSynced()
-	if bs.config.Master() {
-		bs.checkMasterURLs()
-		bs.checkMasterDeps()
-		go bs.service()
+	s.checkSynced()
+	if s.config.Master() {
+		s.checkMasterURLs()
+		s.checkMasterDeps()
+		go s.service()
 	}
 	return nil
 }
 
 // Helper function. Saves boards into configuration file.
-func (bs *BoardSaver) save() error {
+func (s *BoardSaver) save() error {
 	// Don't save if specified.
-	if !bs.config.SaveConfig() {
+	if !s.config.SaveConfig() {
 		return nil
 	}
 	// Load from memory.
 	bcf := BoardSaverFile{}
-	for _, bi := range bs.store {
+	for _, bi := range s.store {
 		bcf.Boards = append(bcf.Boards, &bi.Config)
 	}
-	return util.SaveJSON(bs.absConfigDir(), bcf, os.FileMode(0700))
+	return file.SaveJSON(s.absConfigDir(), bcf, os.FileMode(0700))
 }
 
 // Keeps imported threads synced.
-func (bs *BoardSaver) service() {
+func (s *BoardSaver) service() {
 	log.Println("[BOARDSAVER] Sync service started.")
-	msgs := bs.c.GetUpdatesChan()
+	msgs := s.c.GetUpdatesChan()
 	for {
 		select {
 		case msg := <-msgs:
 			switch msg.Mode() {
 			case cxo.RootFilled:
-				bs.Lock()
+				s.Lock()
 				log.Printf("[BOARDSAVER] Checking dependencies for board '%s'", msg.PubKey().Hex())
-				bs.checkSingleDep(msg.PubKey())
-				bs.Unlock()
+				s.checkSingleDep(msg.PubKey())
+				s.Unlock()
 			case cxo.SubAccepted:
-				bs.Lock()
-				if bi, got := bs.store[msg.PubKey()]; got {
+				s.Lock()
+				if bi, got := s.store[msg.PubKey()]; got {
 					bi.Accepted = true
 				}
-				bs.Unlock()
+				s.Unlock()
 			case cxo.SubRejected:
-				bs.Lock()
-				if bi, got := bs.store[msg.PubKey()]; got {
+				s.Lock()
+				if bi, got := s.store[msg.PubKey()]; got {
 					bi.Accepted = false
 					bi.RejectedCount += 1
 				}
-				bs.Unlock()
+				s.Unlock()
 			case cxo.ConnCreated:
-				bs.Lock()
-				bs.Unlock()
+				s.Lock()
+				s.Unlock()
 			case cxo.ConnClosed:
-				bs.Lock()
-				bs.Unlock()
+				s.Lock()
+				s.Unlock()
 			}
-		case <-bs.quit:
+		case <-s.quit:
 			return
 		}
 	}
 }
 
 // Helper function. Check's the URL's of the boards which this node is master over.
-func (bs *BoardSaver) checkMasterURLs() {
-	//for bpk, bi := range bs.store {
+func (s *BoardSaver) checkMasterURLs() {
+	//for bpk, bi := range s.store {
 	//if bi.Config.Master {
-	//	b, e := bs.c.GetBoard(bpk)
+	//	b, e := s.c.GetBoard(bpk)
 	//	if e != nil {
 	//		continue
 	//	}
-	//if b.URL != bs.config.RPCRemAdr() {
-	//	bs.c.ChangeBoardURL(bpk, bi.Config.GetSK(), bs.config.RPCRemAdr())
+	//if b.URL != s.config.RPCRemAdr() {
+	//	s.c.ChangeBoardURL(bpk, bi.Config.GetSK(), s.config.RPCRemAdr())
 	//}
 	//}
 	//}
 }
 
 // Helper function. Checks whether boards are synced.
-func (bs *BoardSaver) checkSynced() {
-	for _, bi := range bs.store {
+func (s *BoardSaver) checkSynced() {
+	for _, bi := range s.store {
 		bi.Accepted = false
 	}
-	feeds := bs.c.Feeds()
+	feeds := s.c.Feeds()
 	for _, f := range feeds {
-		bi, has := bs.store[f]
+		bi, has := s.store[f]
 		if has {
 			bi.Accepted = true
 		}
 	}
-	log.Printf("[BOARDSAVER] Accepted boards: (%d/%d)\n", len(feeds), len(bs.store))
+	log.Printf("[BOARDSAVER] Accepted boards: (%d/%d)\n", len(feeds), len(s.store))
 }
 
 // Helper function. Checks whether single dependency is valid.
-func (bs *BoardSaver) checkSingleDep(bpkDep cipher.PubKey) {
-	for _, bi := range bs.store {
+func (s *BoardSaver) checkSingleDep(bpkDep cipher.PubKey) {
+	for _, bi := range s.store {
 		for _, dep := range bi.Config.Deps {
 			if dep.Board != bpkDep.Hex() {
 				continue
@@ -199,7 +199,7 @@ func (bs *BoardSaver) checkSingleDep(bpkDep cipher.PubKey) {
 				}
 				// Sync.
 				go func() {
-					e = bs.c.ImportThread(bpkDep, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
+					e = s.c.ImportThread(bpkDep, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
 					if e != nil {
 						log.Println("[BOARDSAVER] sync failed for thread of reference:", t)
 						log.Println("\t- cause:", e)
@@ -211,8 +211,8 @@ func (bs *BoardSaver) checkSingleDep(bpkDep cipher.PubKey) {
 }
 
 // Helper function. Checks whether dependencies are valid.
-func (bs *BoardSaver) checkMasterDeps() {
-	for _, bi := range bs.store {
+func (s *BoardSaver) checkMasterDeps() {
+	for _, bi := range s.store {
 		for j, dep := range bi.Config.Deps {
 			fromBpk, e := misc.GetPubKey(dep.Board)
 			if e != nil {
@@ -222,7 +222,7 @@ func (bs *BoardSaver) checkMasterDeps() {
 				continue
 			}
 			// Subscribe internally.
-			bs.c.Subscribe("", fromBpk)
+			s.c.Subscribe("", fromBpk)
 
 			for _, t := range dep.Threads {
 				tRef, e := misc.GetReference(t)
@@ -233,7 +233,7 @@ func (bs *BoardSaver) checkMasterDeps() {
 					continue
 				}
 				// Sync.
-				e = bs.c.ImportThread(fromBpk, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
+				e = s.c.ImportThread(fromBpk, bi.Config.GetPK(), bi.Config.GetSK(), tRef)
 				if e != nil {
 					log.Println("[BOARDSAVER] sync failed for thread of reference:", t)
 					log.Println("\t- cause:", e)
@@ -245,12 +245,12 @@ func (bs *BoardSaver) checkMasterDeps() {
 }
 
 // List returns a list of boards that are in configuration.
-func (bs *BoardSaver) List() []BoardInfo {
-	bs.Lock()
-	defer bs.Unlock()
-	//bs.checkSynced()
-	list, i := make([]BoardInfo, len(bs.store)), 0
-	for _, bi := range bs.store {
+func (s *BoardSaver) List() []BoardInfo {
+	s.Lock()
+	defer s.Unlock()
+	//s.checkSynced()
+	list, i := make([]BoardInfo, len(s.store)), 0
+	for _, bi := range s.store {
 		list[i] = *bi
 		i += 1
 	}
@@ -258,11 +258,11 @@ func (bs *BoardSaver) List() []BoardInfo {
 }
 
 // ListKeys returns list of public keys of boards we are subscribed to.
-func (bs *BoardSaver) ListKeys() []cipher.PubKey {
-	bs.Lock()
-	defer bs.Unlock()
-	keys, i := make([]cipher.PubKey, len(bs.store)), 0
-	for k := range bs.store {
+func (s *BoardSaver) ListKeys() []cipher.PubKey {
+	s.Lock()
+	defer s.Unlock()
+	keys, i := make([]cipher.PubKey, len(s.store)), 0
+	for k := range s.store {
 		keys[i] = k
 		i += 1
 	}
@@ -270,10 +270,10 @@ func (bs *BoardSaver) ListKeys() []cipher.PubKey {
 }
 
 // Get gets a subscription of specified board.
-func (bs *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
-	bs.Lock()
-	defer bs.Unlock()
-	bi, has := bs.store[bpk]
+func (s *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
+	s.Lock()
+	defer s.Unlock()
+	bi, has := s.store[bpk]
 	if has == false {
 		return BoardInfo{}, has
 	}
@@ -281,9 +281,9 @@ func (bs *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
 }
 
 // GetOfAddress obtains board information of boards of specified address.
-func (bs *BoardSaver) GetOfAddress(addr string) []BoardInfo {
+func (s *BoardSaver) GetOfAddress(addr string) []BoardInfo {
 	boards := []BoardInfo{}
-	for _, bi := range bs.store {
+	for _, bi := range s.store {
 		if bi.Config.Address == addr {
 			boards = append(boards, *bi)
 		}
@@ -292,33 +292,33 @@ func (bs *BoardSaver) GetOfAddress(addr string) []BoardInfo {
 }
 
 // Add adds a board to configuration.
-func (bs *BoardSaver) Add(addr string, bpk cipher.PubKey) {
-	bs.Lock()
-	defer bs.Unlock()
+func (s *BoardSaver) Add(addr string, bpk cipher.PubKey) {
+	s.Lock()
+	defer s.Unlock()
 
-	if _, has := bs.store[bpk]; has {
+	if _, has := s.store[bpk]; has {
 		return
 	}
 
 	bc := BoardConfig{Master: false, Address: addr, PubKey: bpk.Hex()}
-	bs.c.Subscribe(addr, bpk)
+	s.c.Subscribe(addr, bpk)
 
-	bs.store[bpk] = &BoardInfo{Config: bc}
-	bs.save()
+	s.store[bpk] = &BoardInfo{Config: bc}
+	s.save()
 }
 
 // Remove removes a board from configuration.
-func (bs *BoardSaver) Remove(bpk cipher.PubKey) {
-	bs.Lock()
-	defer bs.Unlock()
-	bs.c.Unsubscribe("", bpk)
-	delete(bs.store, bpk)
-	bs.save()
+func (s *BoardSaver) Remove(bpk cipher.PubKey) {
+	s.Lock()
+	defer s.Unlock()
+	s.c.Unsubscribe("", bpk)
+	delete(s.store, bpk)
+	s.save()
 }
 
 // MasterAdd adds a board to configuration as master. Returns error if not master.
-func (bs *BoardSaver) MasterAdd(bpk cipher.PubKey, bsk cipher.SecKey) error {
-	if bs.config.Master() == false {
+func (s *BoardSaver) MasterAdd(bpk cipher.PubKey, bsk cipher.SecKey) error {
+	if s.config.Master() == false {
 		return errors.New("bbs node is not in master mode")
 	}
 	bc := BoardConfig{Master: true, PubKey: bpk.Hex(), SecKey: bsk.Hex()}
@@ -326,43 +326,43 @@ func (bs *BoardSaver) MasterAdd(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	if e != nil {
 		return e
 	}
-	bs.c.Subscribe("", bpk)
+	s.c.Subscribe("", bpk)
 
-	bs.Lock()
-	defer bs.Unlock()
-	bs.store[bpk] = &BoardInfo{Accepted: true, Config: bc}
-	bs.save()
+	s.Lock()
+	defer s.Unlock()
+	s.store[bpk] = &BoardInfo{Accepted: true, Config: bc}
+	s.save()
 	return nil
 }
 
 // AddBoardDep adds a dependency to a board.
-func (bs *BoardSaver) AddBoardDep(bpk, depBpk cipher.PubKey, deptRef skyobject.Reference) error {
-	bs.Lock()
-	defer bs.Unlock()
+func (s *BoardSaver) AddBoardDep(bpk, depBpk cipher.PubKey, deptRef skyobject.Reference) error {
+	s.Lock()
+	defer s.Unlock()
 	// Check if we are subscribed to board of `depBpk`.
-	if _, has := bs.store[depBpk]; !has {
+	if _, has := s.store[depBpk]; !has {
 		return errors.New("failed to add board dependency: not subscribed to board " + depBpk.Hex())
 	}
 	// Retrieve board info for board of `bpk`.
 	var bi *BoardInfo
 	var has bool
-	if bi, has = bs.store[bpk]; !has {
+	if bi, has = s.store[bpk]; !has {
 		return errors.New("failed to add board dependency: not subscribed to board " + bpk.Hex())
 	}
 	// Add dependency.
 	if e := bi.Config.AddDep(depBpk, deptRef); e != nil {
 		return errors.Wrap(e, "failed to add board dependency")
 	}
-	bs.save()
+	s.save()
 	return nil
 }
 
 // RemoveBoardDep removes a dependency from a board.
-func (bs *BoardSaver) RemoveBoardDep(bpk, depBpk cipher.PubKey, deptRef skyobject.Reference) error {
-	bs.Lock()
-	defer bs.Unlock()
+func (s *BoardSaver) RemoveBoardDep(bpk, depBpk cipher.PubKey, deptRef skyobject.Reference) error {
+	s.Lock()
+	defer s.Unlock()
 	// Retrieve board info for board of `bpk`.
-	bi, has := bs.store[bpk]
+	bi, has := s.store[bpk]
 	if !has {
 		return errors.New("not subscribed of board")
 	}
@@ -370,6 +370,6 @@ func (bs *BoardSaver) RemoveBoardDep(bpk, depBpk cipher.PubKey, deptRef skyobjec
 	if e := bi.Config.RemoveDep(depBpk, deptRef); e != nil {
 		return e
 	}
-	bs.save()
+	s.save()
 	return nil
 }
