@@ -1,5 +1,5 @@
 {
-  "name": "quick",
+  "name": "skycoin-bbs",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
@@ -28,7 +28,7 @@
     "core-js": "^2.4.1",
     "font-awesome": "^4.7.0",
     "iscroll": "^5.2.0",
-    "rxjs": "^5.1.0",
+    "rxjs": "^5.4.2",
     "tether": "^1.4.0",
     "zone.js": "^0.8.4"
   },
@@ -43,7 +43,7 @@
     "jasmine-core": "~2.6.2",
     "jasmine-spec-reporter": "~4.1.0",
     "ts-node": "~3.0.4",
-    "tslint": "~5.3.2",
-    "typescript": "~2.3.3"
+    "tslint": "^5.5.0",
+    "typescript": "^2.4.1"
   }
 }

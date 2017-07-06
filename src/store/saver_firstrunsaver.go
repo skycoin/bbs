@@ -1,7 +1,6 @@
 package store
 
 import (
-	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/skycoin/src/util/file"
 	"os"
@@ -21,12 +20,12 @@ type FirstRunFile struct {
 
 // FirstRunSaver manages first run actions.
 type FirstRunSaver struct {
-	config *args.Config
+	config *Config
 	bs     *BoardSaver
 	data   *FirstRunFile
 }
 
-func NewFirstRunSaver(config *args.Config, boardSaver *BoardSaver) (*FirstRunSaver, error) {
+func NewFirstRunSaver(config *Config, boardSaver *BoardSaver) (*FirstRunSaver, error) {
 	frs := FirstRunSaver{
 		config: config,
 		bs:     boardSaver,
@@ -46,12 +45,12 @@ func NewFirstRunSaver(config *args.Config, boardSaver *BoardSaver) (*FirstRunSav
 }
 
 func (s *FirstRunSaver) absConfigDir() string {
-	return filepath.Join(s.config.ConfigDir(), FirstRunSaverFileName)
+	return filepath.Join(s.config.ConfigDir, FirstRunSaverFileName)
 }
 
 func (s *FirstRunSaver) load() {
 	s.data = &FirstRunFile{FirstRun: true}
-	if s.config.SaveConfig() {
+	if s.config.MemoryMode {
 		if e := file.LoadJSON(s.absConfigDir(), s.data); e != nil {
 			s.data.FirstRun = true
 		}
@@ -62,7 +61,7 @@ func (s *FirstRunSaver) load() {
 
 func (s *FirstRunSaver) save(done bool) {
 	// Don't save if specified.
-	if !s.config.SaveConfig() {
+	if !s.config.MemoryMode {
 		return
 	}
 	// If done, save first run as false, else true.

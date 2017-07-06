@@ -2,7 +2,6 @@ package gui
 
 import (
 	"fmt"
-	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/typ"
@@ -12,10 +11,20 @@ import (
 	"time"
 )
 
+// TesterConfig represents configuration for a Tester.
+type TesterConfig struct {
+	ThreadCount int // Number of threads to use/create for test mode.
+	UsersCount  int // Number of master users to use for test mode.
+	PostCap     int // Maximum number of posts allowed (negative to disable).
+	MinInterval int // Minimum interval between simulated activity (in seconds).
+	MaxInterval int // Maximum interval between simulated activity (in seconds).
+	Timeout     int // Will stop simulated activity after this time (in seconds, negative to disable).
+}
+
 // Tester represents a tester.
 // It autonomously creates threads and posts.
 type Tester struct {
-	config *args.Config
+	config *TesterConfig
 	g      *Gateway
 	bpk    cipher.PubKey
 	tRefs  skyobject.References
@@ -27,11 +36,11 @@ type Tester struct {
 }
 
 // NewTester creates a new tester.
-func NewTester(config *args.Config, gateway *Gateway) (*Tester, error) {
+func NewTester(config *TesterConfig, gateway *Gateway) (*Tester, error) {
 	t := &Tester{
 		config: config,
 		g:      gateway,
-		pCap:   config.TestModePostCap() >= 0,
+		pCap:   config.PostCap >= 0,
 		pNum:   1,
 		quit:   make(chan struct{}),
 	}
@@ -47,7 +56,7 @@ func NewTester(config *args.Config, gateway *Gateway) (*Tester, error) {
 
 func (t *Tester) setupUsers() error {
 	log.Println("[TESTER] Setting up users...")
-	nGoal := t.config.TestModeUsers()
+	nGoal := t.config.UsersCount
 	nNow := len(t.g.Users.Masters.getAll())
 	for i := 0; i < nGoal-nNow; i++ {
 		t.g.Users.Masters.add(misc.MakeRandomAlias(), misc.MakeTimeStampedRandomID(100).Hex())
@@ -61,7 +70,7 @@ func (t *Tester) setupBoard() error {
 	log.Println("[TESTER] Setting up test board...")
 	seed := misc.MakeTimeStampedRandomID(100).Hex()
 	pk, _ := cipher.GenerateDeterministicKeyPair([]byte(seed))
-	if e := t.g.Tests.addFilledBoard(seed, t.config.TestModeThreads(), 1, 1); e != nil {
+	if e := t.g.Tests.addFilledBoard(seed, t.config.ThreadCount, 1, 1); e != nil {
 		return e
 	}
 	t.bpk = pk
@@ -77,10 +86,10 @@ func (t *Tester) setupBoard() error {
 }
 
 func (t *Tester) service() {
-	if t.config.TestModeTimeOut() >= 0 {
-		log.Printf("[TESTER] Test mode timeout set as %ds.", t.config.TestModeTimeOut())
+	if t.config.Timeout >= 0 {
+		log.Printf("[TESTER] Test mode timeout set as %ds.", t.config.Timeout)
 		go func() {
-			timer := time.NewTimer(time.Duration(t.config.TestModeTimeOut()) * time.Second)
+			timer := time.NewTimer(time.Duration(t.config.Timeout) * time.Second)
 			for {
 				select {
 				case <-t.quit:
@@ -126,7 +135,7 @@ func (t *Tester) service() {
 }
 
 func (t *Tester) Close() {
-	timer := time.NewTimer(time.Duration(t.config.TestModeMaxInterval()) * time.Second)
+	timer := time.NewTimer(time.Duration(t.config.MaxInterval) * time.Second)
 	select {
 	case t.quit <- struct{}{}:
 		log.Println("[TESTER] Sent quit signal.")
@@ -136,8 +145,8 @@ func (t *Tester) Close() {
 
 func (t *Tester) getInterval() time.Duration {
 	i, e := misc.MakeIntBetween(
-		t.config.TestModeMinInterval(),
-		t.config.TestModeMaxInterval(),
+		t.config.MinInterval,
+		t.config.MaxInterval,
 	)
 	if e != nil {
 		log.Printf("[TESTER] \t- (ERROR) '%s'.", e)
@@ -199,7 +208,7 @@ func (t *Tester) actionChangeUser() {
 }
 
 func (t *Tester) actionNewPost() {
-	if t.pCap && t.pCount >= t.config.TestModePostCap() {
+	if t.pCap && t.pCount >= t.config.PostCap {
 		log.Println("[TESTER] \t- Post cap reached. Continuing...")
 		return
 	}

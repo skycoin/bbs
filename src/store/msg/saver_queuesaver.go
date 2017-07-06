@@ -2,10 +2,9 @@ package msg
 
 import (
 	"github.com/pkg/errors"
-	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/bbs/src/rpc"
-	"github.com/skycoin/bbs/src/store/cxo"
+	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -22,15 +21,15 @@ const QueueSaverFileName = "bbs_queue.json"
 
 type QueueSaver struct {
 	sync.Mutex
-	config   *args.Config
-	c        *cxo.Container
+	config   *store.Config
+	c        *store.CXO
 	subIndex map[string]int
 	queue    []*QueueItem
 	done     []*QueueItem
 	quit     chan struct{}
 }
 
-func NewQueueSaver(config *args.Config, container *cxo.Container) (*QueueSaver, error) {
+func NewQueueSaver(config *store.Config, container *store.CXO) (*QueueSaver, error) {
 	qs := QueueSaver{
 		config:   config,
 		c:        container,
@@ -46,12 +45,12 @@ func NewQueueSaver(config *args.Config, container *cxo.Container) (*QueueSaver, 
 }
 
 func (qs *QueueSaver) absConfigDir() string {
-	return filepath.Join(qs.config.ConfigDir(), QueueSaverFileName)
+	return filepath.Join(qs.config.ConfigDir, QueueSaverFileName)
 }
 
 func (qs *QueueSaver) load() error {
 	// Don't load if specified not to.
-	if !qs.config.SaveConfig() {
+	if qs.config.MemoryMode {
 		return nil
 	}
 	if e := file.LoadJSON(qs.absConfigDir(), &qs.queue); e != nil {
@@ -62,7 +61,7 @@ func (qs *QueueSaver) load() error {
 
 func (qs *QueueSaver) save() error {
 	// Don't save if specified.
-	if !qs.config.SaveConfig() {
+	if qs.config.MemoryMode {
 		return nil
 	}
 	return file.SaveJSON(qs.absConfigDir(), qs.queue, os.FileMode(0700))

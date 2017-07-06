@@ -22,5 +22,5 @@ export const slideInLeftAnimation: AnimationEntryMetadata =
         transform: 'translateX(100%)'
       }))
     ])
-  ])
+  ]);
 

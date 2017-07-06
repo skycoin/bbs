@@ -2,9 +2,7 @@ package store
 
 import (
 	"github.com/pkg/errors"
-	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/src/misc"
-	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util/file"
@@ -31,14 +29,14 @@ type BoardInfo struct {
 // BoardSaver manages boards.
 type BoardSaver struct {
 	sync.Mutex
-	config *args.Config
-	c      *cxo.Container
+	config *Config
+	c      *CXO
 	store  map[cipher.PubKey]*BoardInfo
 	quit   chan struct{}
 }
 
 // NewBoardSaver creates a new BoardSaver.
-func NewBoardSaver(config *args.Config, container *cxo.Container) (*BoardSaver, error) {
+func NewBoardSaver(config *Config, container *CXO) (*BoardSaver, error) {
 	bs := BoardSaver{
 		config: config,
 		c:      container,
@@ -63,13 +61,13 @@ func (s *BoardSaver) Close() {
 }
 
 func (s *BoardSaver) absConfigDir() string {
-	return filepath.Join(s.config.ConfigDir(), BoardSaverFileName)
+	return filepath.Join(s.config.ConfigDir, BoardSaverFileName)
 }
 
 // Helper function. Loads and checks boards' configuration file to memory.
 func (s *BoardSaver) load() error {
 	// Don't load if specified not to.
-	if s.config.SaveConfig() {
+	if !s.config.MemoryMode {
 
 		log.Println("[BOARDSAVER] Loading configuration file...")
 		// Load boards from file.
@@ -91,7 +89,7 @@ func (s *BoardSaver) load() error {
 		}
 	}
 	s.checkSynced()
-	if s.config.Master() {
+	if s.config.Master {
 		s.checkMasterURLs()
 		s.checkMasterDeps()
 		go s.service()
@@ -102,7 +100,7 @@ func (s *BoardSaver) load() error {
 // Helper function. Saves boards into configuration file.
 func (s *BoardSaver) save() error {
 	// Don't save if specified.
-	if !s.config.SaveConfig() {
+	if s.config.MemoryMode {
 		return nil
 	}
 	// Load from memory.
@@ -121,28 +119,28 @@ func (s *BoardSaver) service() {
 		select {
 		case msg := <-msgs:
 			switch msg.Mode() {
-			case cxo.RootFilled:
+			case RootFilled:
 				s.Lock()
 				log.Printf("[BOARDSAVER] Checking dependencies for board '%s'", msg.PubKey().Hex())
 				s.checkSingleDep(msg.PubKey())
 				s.Unlock()
-			case cxo.SubAccepted:
+			case SubAccepted:
 				s.Lock()
 				if bi, got := s.store[msg.PubKey()]; got {
 					bi.Accepted = true
 				}
 				s.Unlock()
-			case cxo.SubRejected:
+			case SubRejected:
 				s.Lock()
 				if bi, got := s.store[msg.PubKey()]; got {
 					bi.Accepted = false
 					bi.RejectedCount += 1
 				}
 				s.Unlock()
-			case cxo.ConnCreated:
+			case ConnCreated:
 				s.Lock()
 				s.Unlock()
-			case cxo.ConnClosed:
+			case ConnClosed:
 				s.Lock()
 				s.Unlock()
 			}
@@ -318,7 +316,7 @@ func (s *BoardSaver) Remove(bpk cipher.PubKey) {
 
 // MasterAdd adds a board to configuration as master. Returns error if not master.
 func (s *BoardSaver) MasterAdd(bpk cipher.PubKey, bsk cipher.SecKey) error {
-	if s.config.Master() == false {
+	if s.config.Master == false {
 		return errors.New("bbs node is not in master mode")
 	}
 	bc := BoardConfig{Master: true, PubKey: bpk.Hex(), SecKey: bsk.Hex()}

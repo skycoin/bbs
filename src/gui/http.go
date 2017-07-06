@@ -17,12 +17,20 @@ var (
 	quit     chan struct{}
 )
 
-func OpenWebInterface(g *Gateway) (string, error) {
+// HTTPConfig contains configurations for HTTP Server.
+type HTTPConfig struct {
+	RPCRemoteAddr string
+	Port          int
+	StaticDir     string
+	EnableGUI     bool
+}
+
+func OpenWebInterface(config *HTTPConfig, g *Gateway) (string, error) {
 	// Get host.
-	host := fmt.Sprintf("127.0.0.1:%d", g.config.WebGUIPort())
+	host := fmt.Sprintf("127.0.0.1:%d", config.Port)
 
 	quit = make(chan struct{})
-	appLoc, e := filepath.Abs(g.config.WebGUIDir())
+	appLoc, e := filepath.Abs(config.StaticDir)
 	if e != nil {
 		return "", e
 	}
@@ -31,7 +39,7 @@ func OpenWebInterface(g *Gateway) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	go serve(listener, NewServeMux(g, appLoc), quit)
+	go serve(listener, NewServeMux(g, appLoc, config.EnableGUI), quit)
 	return fmt.Sprintf("%s://%s", "http", host), nil
 }
 
@@ -86,11 +94,11 @@ func Close() {
 }
 
 // NewServeMux creates a http.ServeMux with handlers registered.
-func NewServeMux(api *Gateway, appLoc string) *http.ServeMux {
+func NewServeMux(api *Gateway, appLoc string, enableGUI bool) *http.ServeMux {
 	// Prepare mux.
 	mux := http.NewServeMux()
 
-	if api.config.WebGUIEnable() {
+	if enableGUI {
 		fileServe(mux, appLoc)
 	}
 

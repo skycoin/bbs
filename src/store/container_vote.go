@@ -1,4 +1,4 @@
-package cxo
+package store
 
 import (
 	"github.com/pkg/errors"
@@ -8,7 +8,7 @@ import (
 )
 
 // GetVotesForThread obtains the votes for specified thread present in specified board.
-func (c *Container) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) ([]typ.Vote, error) {
+func (c *CXO) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) ([]typ.Vote, error) {
 	c.Lock(c.GetVotesForThread)
 	defer c.Unlock()
 
@@ -31,7 +31,7 @@ func (c *Container) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Referenc
 }
 
 // GetVotesForPost obtains the votes for specified post present in specified board.
-func (c *Container) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) ([]typ.Vote, error) {
+func (c *CXO) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) ([]typ.Vote, error) {
 	c.Lock(c.GetVotesForPost)
 	defer c.Unlock()
 
@@ -54,7 +54,7 @@ func (c *Container) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference)
 }
 
 // VoteForThread adds a vote for a thread on a specified board.
-func (c *Container) AddVoteForThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, newVote *typ.Vote) error {
+func (c *CXO) AddVoteForThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, newVote *typ.Vote) error {
 	c.Lock(c.AddVoteForThread)
 	defer c.Unlock()
 
@@ -88,7 +88,7 @@ SaveThreadVotesContainer:
 }
 
 // VoteForPost adds a vote for a post on a specified board.
-func (c *Container) AddVoteForPost(bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference, newVote *typ.Vote) error {
+func (c *CXO) AddVoteForPost(bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference, newVote *typ.Vote) error {
 	c.Lock(c.AddVoteForPost)
 	defer c.Unlock()
 
@@ -122,7 +122,7 @@ SavePostVotesContainer:
 }
 
 // RemoveVoteForThread removes a vote completely for a thread and specified user.
-func (c *Container) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
+func (c *CXO) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
 	c.Lock(c.RemoveVoteForThread)
 	defer c.Unlock()
 
@@ -147,7 +147,7 @@ func (c *Container) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKe
 			voteRefs.Votes[i], voteRefs.Votes[len(voteRefs.Votes)-1] =
 				voteRefs.Votes[len(voteRefs.Votes)-1], voteRefs.Votes[i]
 			voteRefs.Votes = voteRefs.Votes[:len(voteRefs.Votes)-1]
-			// Save.
+			// MemoryMode.
 			return w.ReplaceCurrent(*vc)
 		}
 	}
@@ -155,7 +155,7 @@ func (c *Container) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKe
 }
 
 // RemoveVoteForPost removes a vote completely for a post and specified user.
-func (c *Container) RemoveVoteForPost(upk, bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference) error {
+func (c *CXO) RemoveVoteForPost(upk, bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobject.Reference) error {
 	c.Lock(c.RemoveVoteForPost)
 	defer c.Unlock()
 
@@ -180,7 +180,7 @@ func (c *Container) RemoveVoteForPost(upk, bpk cipher.PubKey, bsk cipher.SecKey,
 			voteRefs.Votes[i], voteRefs.Votes[len(voteRefs.Votes)-1] =
 				voteRefs.Votes[len(voteRefs.Votes)-1], voteRefs.Votes[i]
 			voteRefs.Votes = voteRefs.Votes[:len(voteRefs.Votes)-1]
-			// Save.
+			// MemoryMode.
 			return w.ReplaceCurrent(*vc)
 		}
 	}

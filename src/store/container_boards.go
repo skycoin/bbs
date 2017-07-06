@@ -1,4 +1,4 @@
-package cxo
+package store
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 // ChangeBoardURL changes the board's URL of given public key.
-func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url string) error {
+func (c *CXO) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url string) error {
 	c.Lock(c.ChangeBoardURL)
 	defer c.Unlock()
 
@@ -35,7 +35,7 @@ func (c *Container) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url str
 }
 
 // ChangeBoardMeta changes the board meta data.
-func (c *Container) ChangeBoardMeta(bpk cipher.PubKey, bsk cipher.SecKey, bm *typ.BoardMeta) error {
+func (c *CXO) ChangeBoardMeta(bpk cipher.PubKey, bsk cipher.SecKey, bm *typ.BoardMeta) error {
 	c.Lock(c.ChangeBoardMeta)
 	defer c.Unlock()
 
@@ -58,7 +58,7 @@ func (c *Container) ChangeBoardMeta(bpk cipher.PubKey, bsk cipher.SecKey, bm *ty
 }
 
 // GetSubmissionAddresses attempts to obtain all submission addresses from board meta.
-func (c *Container) GetSubmissionAddresses(bpk cipher.PubKey) ([]string, error) {
+func (c *CXO) GetSubmissionAddresses(bpk cipher.PubKey) ([]string, error) {
 	c.Lock(c.GetSubmissionAddresses)
 	defer c.Unlock()
 
@@ -79,7 +79,7 @@ func (c *Container) GetSubmissionAddresses(bpk cipher.PubKey) ([]string, error) 
 }
 
 // AddSubmissionAddress attempts to add a submission address to board meta.
-func (c *Container) AddSubmissionAddress(bpk cipher.PubKey, bsk cipher.SecKey, address string) error {
+func (c *CXO) AddSubmissionAddress(bpk cipher.PubKey, bsk cipher.SecKey, address string) error {
 	c.Lock(c.AddSubmissionAddress)
 	defer c.Unlock()
 
@@ -109,7 +109,7 @@ func (c *Container) AddSubmissionAddress(bpk cipher.PubKey, bsk cipher.SecKey, a
 }
 
 // RemoveSubmissionAddress attempts to remove a submission address from board meta.
-func (c *Container) RemoveSubmissionAddress(bpk cipher.PubKey, bsk cipher.SecKey, address string) error {
+func (c *CXO) RemoveSubmissionAddress(bpk cipher.PubKey, bsk cipher.SecKey, address string) error {
 	c.Lock(c.RemoveSubmissionAddress)
 	defer c.Unlock()
 
@@ -139,7 +139,7 @@ func (c *Container) RemoveSubmissionAddress(bpk cipher.PubKey, bsk cipher.SecKey
 }
 
 // GetBoard attempts to obtain the board of a given public key.
-func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
+func (c *CXO) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
 	c.Lock(c.GetBoard)
 	defer c.Unlock()
 
@@ -154,7 +154,7 @@ func (c *Container) GetBoard(bpk cipher.PubKey) (*typ.Board, error) {
 }
 
 // GetBoards attempts to obtain a list of boards from the given public keys.
-func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
+func (c *CXO) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 	c.Lock(c.GetBoards)
 	defer c.Unlock()
 
@@ -172,7 +172,7 @@ func (c *Container) GetBoards(bpks ...cipher.PubKey) []*typ.Board {
 }
 
 // NewBoard attempts to create a new board from a given board and seed.
-func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKey) error {
+func (c *CXO) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKey) error {
 	c.Lock(c.NewBoard)
 	defer c.Unlock()
 
@@ -200,7 +200,7 @@ func (c *Container) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKe
 }
 
 // RemoveBoard attempts to remove a board by a given public key.
-func (c *Container) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
+func (c *CXO) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	c.Lock(c.RemoveBoard)
 	defer c.Unlock()
 
@@ -214,7 +214,7 @@ func (c *Container) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
 }
 
 // GetThread obtains a single thread via reference.
-func (c *Container) GetThread(tRef skyobject.Reference) (*typ.Thread, error) {
+func (c *CXO) GetThread(tRef skyobject.Reference) (*typ.Thread, error) {
 	c.Lock(c.GetThread)
 	defer c.Unlock()
 
@@ -231,7 +231,7 @@ func (c *Container) GetThread(tRef skyobject.Reference) (*typ.Thread, error) {
 }
 
 // GetThreads attempts to obtain a list of threads from a board of public key.
-func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
+func (c *CXO) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 	c.Lock(c.GetThreads)
 	defer c.Unlock()
 
@@ -256,7 +256,7 @@ func (c *Container) GetThreads(bpk cipher.PubKey) ([]*typ.Thread, error) {
 }
 
 // NewThread attempts to create a new thread from a board of given public key.
-func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.Thread) error {
+func (c *CXO) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.Thread) error {
 	c.Lock(c.NewThread)
 	defer c.Unlock()
 
@@ -289,7 +289,7 @@ func (c *Container) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.
 }
 
 // RemoveThread attempts to remove a thread from a board of given public key.
-func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
+func (c *CXO) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
 	c.Lock(c.RemoveThread)
 	defer c.Unlock()
 
@@ -319,7 +319,7 @@ func (c *Container) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyo
 }
 
 // GetThreadPage requests a page from a thread
-func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*typ.Thread, []*typ.Post, error) {
+func (c *CXO) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (*typ.Thread, []*typ.Post, error) {
 	c.Lock(c.GetThreadPage)
 	defer c.Unlock()
 
@@ -377,7 +377,7 @@ func (c *Container) GetThreadPage(bpk cipher.PubKey, tRef skyobject.Reference) (
 }
 
 // GetPosts attempts to obtain posts from a specified board and thread.
-func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.Post, error) {
+func (c *CXO) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*typ.Post, error) {
 	c.Lock(c.GetPosts)
 	defer c.Unlock()
 
@@ -424,7 +424,7 @@ func (c *Container) GetPosts(bpk cipher.PubKey, tRef skyobject.Reference) ([]*ty
 }
 
 // NewPost attempts to create a new post in a given board and thread.
-func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, post *typ.Post) error {
+func (c *CXO) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, post *typ.Post) error {
 	c.Lock(c.NewPost)
 	defer c.Unlock()
 
@@ -465,7 +465,7 @@ func (c *Container) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject
 }
 
 // RemovePost attempts to remove a post in a given board and thread.
-func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef skyobject.Reference) error {
+func (c *CXO) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef skyobject.Reference) error {
 	c.Lock(c.RemovePost)
 	defer c.Unlock()
 
@@ -496,7 +496,7 @@ func (c *Container) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef 
 }
 
 // ImportThread imports a thread from a board to another board (which this node owns). If already imported replaces it.
-func (c *Container) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tRef skyobject.Reference) error {
+func (c *CXO) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tRef skyobject.Reference) error {
 	c.Lock(c.ImportThread)
 	defer c.Unlock()
 

@@ -14,7 +14,7 @@ func (g *Stats) Get(w http.ResponseWriter, r *http.Request) {
 
 func (g *Stats) get() *StatsView {
 	return &StatsView{
-		NodeIsMaster:   g.config.Master(),
+		NodeIsMaster:   g.container.IsMaster(),
 		NodeCXOAddress: g.container.GetAddress(),
 	}
 }

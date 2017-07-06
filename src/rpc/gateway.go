@@ -4,25 +4,22 @@ import (
 	"github.com/pkg/errors"
 	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/src/store"
-	"github.com/skycoin/bbs/src/store/cxo"
 	"log"
 )
 
 type Gateway struct {
 	config     *args.Config
-	container  *cxo.Container
+	container  *store.CXO
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
 }
 
 func NewGateway(
-	config *args.Config,
-	container *cxo.Container,
+	container *store.CXO,
 	boardSaver *store.BoardSaver,
 	userSaver *store.UserSaver,
 ) *Gateway {
 	return &Gateway{
-		config:     config,
 		container:  container,
 		boardSaver: boardSaver,
 		userSaver:  userSaver,

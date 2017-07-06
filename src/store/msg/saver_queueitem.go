@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// QueueItem represents an incomplete action in queue.
 type QueueItem struct {
 	ID              string             `json:"id"`
 	Submitted       int64              `json:"submitted"`
@@ -17,6 +18,7 @@ type QueueItem struct {
 	ReqVoteThread   *rpc.ReqVoteThread `json:"vote_thread_request,omitempty"`
 }
 
+// NewQueueItem creates a new QueueItem.
 func NewQueueItem() *QueueItem {
 	return &QueueItem{
 		ID:        misc.MakeTimeStampedRandomID(100).Hex(),
@@ -24,7 +26,8 @@ func NewQueueItem() *QueueItem {
 	}
 }
 
-func (qi *QueueItem) ClearReq() {
+// Clear clears all fields of QueueItem.
+func (qi *QueueItem) Clear() {
 	qi.ReqNewPost = nil
 	qi.ReqNewThread = nil
 	qi.ReqVotePost = nil

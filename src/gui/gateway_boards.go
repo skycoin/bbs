@@ -76,7 +76,7 @@ func (g *Boards) add(board *typ.Board, seed string) (bi store.BoardInfo, e error
 		return
 	}
 	if len(bm.SubmissionAddresses) == 0 {
-		bm.AddSubmissionAddress(g.config.RPCRemAdr())
+		bm.AddSubmissionAddress(g.config.RPCRemoteAddr)
 		if e = board.SetMeta(bm); e != nil {
 			e = errors.Wrap(e, "failed to re-set board meta")
 			return
@@ -120,7 +120,7 @@ func (g *Boards) remove(bpk cipher.PubKey) error {
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
-		// Via Container.
+		// Via CXO.
 		return g.container.RemoveBoard(bpk, bi.Config.GetSK())
 	} else {
 		// threads and posts are only to be deleted from master.

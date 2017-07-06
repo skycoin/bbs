@@ -100,7 +100,7 @@ func (g *Threads) add(bpk cipher.PubKey, thread *typ.Thread) error {
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
-		// Via Container.
+		// Via CXO.
 		return g.container.NewThread(bpk, bi.Config.GetSK(), thread)
 	} else {
 		// Via RPC Client.
@@ -138,7 +138,7 @@ func (g *Threads) remove(bpk cipher.PubKey, tRef skyobject.Reference) error {
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
-		// Via Container.
+		// Via CXO.
 
 		// Obtain thread.
 		thread, e := g.container.GetThread(tRef)
@@ -344,7 +344,7 @@ func (g *ThreadVotes) add(bpk cipher.PubKey, tRef skyobject.Reference, vote *typ
 	}
 	// Check if this node owns the board.
 	if bi.Config.Master {
-		// Via Container.
+		// Via CXO.
 		switch vote.Mode {
 		case 0:
 			return g.container.RemoveVoteForThread(uc.GetPK(), bpk, bi.Config.GetSK(), tRef)

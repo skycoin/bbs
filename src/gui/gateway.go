@@ -2,9 +2,7 @@ package gui
 
 import (
 	"encoding/json"
-	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/src/store"
-	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/msg"
 	"github.com/skycoin/bbs/src/store/typ"
 	"net/http"
@@ -14,8 +12,8 @@ import (
 // Gateway represents the intermediate between External calls and internal processing.
 // It can be seen as a security layer.
 type Gateway struct {
-	config     *args.Config
-	container  *cxo.Container
+	config     *HTTPConfig
+	container  *store.CXO
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
 	queueSaver *msg.QueueSaver
@@ -33,7 +31,7 @@ type Gateway struct {
 
 // NewGateway creates a new Gateway.
 func NewGateway(
-	cf *args.Config, ct *cxo.Container,
+	cf *HTTPConfig, ct *store.CXO,
 	bs *store.BoardSaver, us *store.UserSaver, qs *msg.QueueSaver,
 	q chan int,
 ) *Gateway {

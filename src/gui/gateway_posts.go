@@ -87,7 +87,7 @@ func (g *Posts) add(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post)
 	}
 	// Check if this BBS Node owns the board.
 	if bi.Config.Master == true {
-		// Via Container.
+		// Via CXO.
 		return g.container.NewPost(bpk, bi.Config.GetSK(), tRef, post)
 	} else {
 		// Via RPC Client.
@@ -237,7 +237,7 @@ func (g *PostVotes) add(bpk cipher.PubKey, pRef skyobject.Reference, vote *typ.V
 	}
 	// Check if this node owns the board.
 	if bi.Config.Master {
-		// Via Container.
+		// Via CXO.
 		switch vote.Mode {
 		case 0:
 			return g.container.RemoveVoteForPost(uc.GetPK(), bpk, bi.Config.GetSK(), pRef)

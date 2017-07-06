@@ -2,9 +2,7 @@ package store
 
 import (
 	"github.com/pkg/errors"
-	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/src/misc"
-	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util/file"
 	"log"
@@ -22,54 +20,18 @@ type UsersConfigFile struct {
 	Users   []*UserConfig `json:"users"`
 }
 
-// UserConfig represents the config of a user.
-type UserConfig struct {
-	Alias  string `json:"alias,omitempty"`
-	Master bool   `json:"master"`
-	PubKey string `json:"public_key"`
-	SecKey string `json:"secret_key,omitempty"`
-}
-
-func (uc *UserConfig) GetPK() cipher.PubKey {
-	pk, _ := misc.GetPubKey(uc.PubKey)
-	return pk
-}
-
-func (uc *UserConfig) GetSK() cipher.SecKey {
-	sk, _ := misc.GetSecKey(uc.SecKey)
-	return sk
-}
-
-// Check checks the validity of the UserConfig.
-func (uc *UserConfig) Check() (cipher.PubKey, error) {
-	pk, e := misc.GetPubKey(uc.PubKey)
-	if e != nil {
-		return pk, e
-	}
-	if uc.Master {
-		sk, e := misc.GetSecKey(uc.SecKey)
-		if e != nil {
-			return pk, e
-		}
-		if pk != cipher.PubKeyFromSecKey(sk) {
-			return pk, errors.New("invalid public-secret pair")
-		}
-	}
-	return pk, nil
-}
-
 // UserSaver manages users.
 type UserSaver struct {
 	sync.Mutex
-	config  *args.Config
-	c       *cxo.Container
+	config  *Config
+	c       *CXO
 	store   map[cipher.PubKey]*UserConfig // All UserConfigs.
 	masters map[cipher.PubKey]*UserConfig // UserConfigs of users we own.
 	current cipher.PubKey                 // Currently active user.
 }
 
 // NewUserSaver creates a new UserSaver.
-func NewUserSaver(config *args.Config, container *cxo.Container) (*UserSaver, error) {
+func NewUserSaver(config *Config, container *CXO) (*UserSaver, error) {
 	us := UserSaver{
 		config:  config,
 		c:       container,
@@ -85,13 +47,13 @@ func NewUserSaver(config *args.Config, container *cxo.Container) (*UserSaver, er
 }
 
 func (us *UserSaver) absConfigDir() string {
-	return filepath.Join(us.config.ConfigDir(), UserSaverFileName)
+	return filepath.Join(us.config.ConfigDir, UserSaverFileName)
 }
 
 func (us *UserSaver) load() *UsersConfigFile {
 	ucf := &UsersConfigFile{}
 	// Don't load if specified not to.
-	if !us.config.SaveConfig() {
+	if us.config.MemoryMode {
 		return ucf
 	}
 	log.Println("[USERSAVER] Loading configuration file...")
@@ -148,7 +110,7 @@ func (us *UserSaver) checkUsers(ucf *UsersConfigFile) {
 
 func (us *UserSaver) save() error {
 	// Don't save if specified.
-	if !us.config.SaveConfig() {
+	if us.config.MemoryMode {
 		return nil
 	}
 	ucf := UsersConfigFile{}

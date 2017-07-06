@@ -1,4 +1,4 @@
-package cxo
+package store
 
 import (
 	"encoding/hex"
@@ -22,7 +22,7 @@ type ThreadPageHex struct {
 }
 
 // GetThreadPageAsHex retrieves a ThreadPage with data as hex.
-func (c *Container) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Reference) (tph *ThreadPageHex, e error) {
+func (c *CXO) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Reference) (tph *ThreadPageHex, e error) {
 	c.Lock(c.GetThreadPageAsHex)
 	defer c.Unlock()
 
@@ -68,7 +68,7 @@ func (c *Container) GetThreadPageAsHex(bpk cipher.PubKey, tRef skyobject.Referen
 
 // GetThreadPageWithTpRefAsHex retrieves a ThreadPage with data as hex.
 // This function uses the reference of a ThreadPage.
-func (c *Container) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (tph *ThreadPageHex, e error) {
+func (c *CXO) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (tph *ThreadPageHex, e error) {
 	c.Lock(c.GetThreadPageWithTpRefAsHex)
 	defer c.Unlock()
 
@@ -105,7 +105,7 @@ func (c *Container) GetThreadPageWithTpRefAsHex(tpRef skyobject.Reference) (tph 
 }
 
 // NewThreadWithHex attempts to creates a new thread in a board with hex data of thread.
-func (c *Container) NewThreadWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tData []byte) (e error) {
+func (c *CXO) NewThreadWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tData []byte) (e error) {
 	c.Lock(c.NewThreadWithHex)
 	defer c.Unlock()
 
@@ -115,7 +115,7 @@ func (c *Container) NewThreadWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tData
 		return
 	}
 	t.MasterBoard = bpk.Hex()
-	// Save to board.
+	// MemoryMode to board.
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e = w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
@@ -132,7 +132,7 @@ func (c *Container) NewThreadWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tData
 
 // NewPostWithHex attempts to create a new post in a given board and thread with hex data of post.
 // The post better be properly signed otherwise other nodes will not accept it.
-func (c *Container) NewPostWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, pData []byte) error {
+func (c *CXO) NewPostWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference, pData []byte) error {
 	c.Lock(c.NewPostWithHex)
 	defer c.Unlock()
 
@@ -141,7 +141,7 @@ func (c *Container) NewPostWithHex(bpk cipher.PubKey, bsk cipher.SecKey, tRef sk
 	if e := p.Deserialize(pData); e != nil {
 		return e
 	}
-	// Save.
+	// MemoryMode.
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {

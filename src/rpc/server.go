@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// Server represents a RPC server to receive submissions from external nodes.
 type Server struct {
 	l      net.Listener
 	rpc    *rpc.Server
@@ -15,12 +16,13 @@ type Server struct {
 	waiter sync.WaitGroup
 }
 
-func NewServer(g *Gateway) (*Server, error) {
+// NewServer creates a new RPC Server.
+func NewServer(g *Gateway, port int) (*Server, error) {
 	s := &Server{
 		rpc: rpc.NewServer(),
 		g:   g,
 	}
-	if e := s.open(":" + strconv.Itoa(g.config.RPCPort())); e != nil {
+	if e := s.open(":" + strconv.Itoa(port)); e != nil {
 		return nil, e
 	}
 	return s, nil

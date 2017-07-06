@@ -1,4 +1,4 @@
-package cxo
+package store
 
 import (
 	"github.com/skycoin/bbs/src/store/typ"
