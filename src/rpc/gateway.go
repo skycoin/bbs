@@ -2,13 +2,11 @@ package rpc
 
 import (
 	"github.com/pkg/errors"
-	"github.com/skycoin/bbs/cmd/bbsnode/args"
 	"github.com/skycoin/bbs/src/store"
 	"log"
 )
 
 type Gateway struct {
-	config     *args.Config
 	container  *store.CXO
 	boardSaver *store.BoardSaver
 	userSaver  *store.UserSaver
