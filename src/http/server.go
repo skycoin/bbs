@@ -10,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const (
@@ -49,8 +50,25 @@ func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 	if server.l, e = net.Listen("tcp", host); e != nil {
 		return nil, e
 	}
-
+	if e := server.prepareMux(); e != nil {
+		return nil, e
+	}
+	go server.serve()
 	return server, nil
+}
+
+func (s *Server) serve() {
+	for {
+		if e := http.Serve(s.l, s.mux); e != nil {
+			select {
+			case <-s.quit:
+				return
+			default:
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+		}
+	}
 }
 
 func (s *Server) prepareMux() error {
@@ -80,7 +98,7 @@ func (s *Server) prepareStatic() error {
 	})
 
 	return filepath.Walk(*s.config.StaticDir, func(path string, info os.FileInfo, e error) error {
-		if info.IsDir() {
+		if info == nil || info.IsDir() {
 			return nil
 		}
 		httpPath := strings.TrimPrefix(path, *s.config.StaticDir)
