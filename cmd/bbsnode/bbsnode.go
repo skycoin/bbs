@@ -71,8 +71,6 @@ func NewConfig() *Config {
 		CXOPort:    8998,
 		CXORPCPort: 8997,
 
-
-
 		WebGUIEnable:      true,
 		WebGUIPort:        7410,
 		WebGUIDir:         "",

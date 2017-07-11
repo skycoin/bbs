@@ -6,9 +6,9 @@ import (
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/typ"
 	"github.com/skycoin/skycoin/src/cipher"
+	"log"
 	"net/http"
 	"strings"
-	"log"
 )
 
 // Boards represents the boards endpoint group.

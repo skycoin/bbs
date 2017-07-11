@@ -6,9 +6,9 @@ import (
 	"github.com/skycoin/bbs/src/store/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"log"
 	"net/http"
 	"strconv"
-	"log"
 )
 
 // Threads represents the threads endpoint group.
