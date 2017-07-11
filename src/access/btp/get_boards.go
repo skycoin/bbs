@@ -1,9 +1,9 @@
 package btp
 
 import (
-	"github.com/skycoin/bbs/src/store/view"
-	"github.com/skycoin/bbs/src/misc"
 	"fmt"
+	"github.com/skycoin/bbs/src/misc"
+	"github.com/skycoin/bbs/src/store/view"
 )
 
 type GetBoardsInput struct {

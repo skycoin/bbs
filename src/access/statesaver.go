@@ -1,12 +1,12 @@
 package access
 
 import (
+	"github.com/skycoin/bbs/src/boo"
+	"github.com/skycoin/bbs/src/store/view"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
-	"github.com/skycoin/bbs/src/store/view"
-	"github.com/skycoin/bbs/src/boo"
 )
 
 // StateSaver saves the internal exposed data structure.

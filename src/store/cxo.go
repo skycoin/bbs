@@ -92,7 +92,7 @@ func (c *CXO) Close() error {
 	return nil
 }
 
-func (c *CXO) GetRoot(pk cipher.PubKey) (*node.Root) {
+func (c *CXO) GetRoot(pk cipher.PubKey) *node.Root {
 	return c.node.Container().LastFullRoot(pk)
 }
 
