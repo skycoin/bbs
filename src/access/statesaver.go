@@ -1,0 +1,53 @@
+package access
+
+import (
+	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
+	"sync"
+)
+
+// StateSaver saves the internal exposed data structure.
+type StateSaver struct {
+	mux    sync.Mutex
+	boards map[cipher.PubKey]*State
+}
+
+func NewStateSaver() *StateSaver {
+	return &StateSaver{
+		boards: make(map[cipher.PubKey]*State),
+	}
+}
+
+func (s *StateSaver) lock() func() {
+	s.mux.Lock()
+	return s.mux.Unlock
+}
+
+// Update updates a board state of StateSaver.
+func (s *StateSaver) Update(r *node.Root) {
+	defer s.lock()()
+	s.update(r.Root)
+}
+
+// UpdateLocal updates a board state of StateSaver as local.
+func (s *StateSaver) UpdateLocal(r *skyobject.Root) {
+	defer s.lock()()
+	s.update(r)
+}
+
+// Remove removes a board state of public key.
+func (s *StateSaver) Remove(pk cipher.PubKey) {
+	defer s.lock()()
+	delete(s.boards, pk)
+}
+
+func (s *StateSaver) update(r *skyobject.Root) {
+	bpk := r.Pub()
+	state, has := s.boards[bpk]
+	if !has {
+		state = NewState()
+		s.boards[bpk] = state
+	}
+	state.PushNewBoardRoot(r)
+}

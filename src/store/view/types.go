@@ -3,25 +3,31 @@ package view
 import "github.com/skycoin/bbs/src/store/obj"
 
 type Board struct {
-	*obj.Board
-	Ref             string    `json:"reference"`
-	ContentVotesRef string    `json:"content_votes_reference"`
-	UserVotesRef    string    `json:"user_votes_reference"`
-	Threads         []*Thread `json:"thread"`
+	obj.Board
+	PublicKey     string         `json:"public_key"`
+	ExternalRoots []ExternalRoot `json:"external_roots"`
+	Threads       []Thread       `json:"threads"`
 	// TODO: BoardMeta part.
 }
 
+type ExternalRoot struct {
+	obj.ExternalRoot
+	PublicKey string `json:"public_key"`
+}
+
 type Thread struct {
-	*obj.Thread
-	AuthorRef      string  `json:"author_reference,omitempty"`
-	AuthorAlias    string  `json:"author_alias,omitempty"`
-	MasterBoardRef string  `json:"master_board_reference"`
-	Posts          []*Post `json:"posts"`
+	obj.Thread
+	Ref            string `json:"reference"`
+	AuthorRef      string `json:"author_reference,omitempty"`
+	AuthorAlias    string `json:"author_alias,omitempty"`
+	MasterBoardRef string `json:"master_board_reference"`
+	Posts          []Post `json:"posts"`
 	// TODO: ThreadMeta part.
 }
 
 type Post struct {
-	*obj.Post
+	obj.Post
+	Ref         string `json:"reference"`
 	AuthorRef   string `json:"author_reference,omitempty"`
 	AuthorAlias string `json:"author_alias,omitempty"`
 	// TODO: PostMeta part.

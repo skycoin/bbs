@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/skycoin/bbs/src/access"
+	"github.com/skycoin/bbs/src/access/btp"
 	"github.com/skycoin/bbs/src/http"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/skycoin/src/util/file"
@@ -116,7 +118,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		quit := CatchInterrupt()
 		defer log.Println("Goodbye.")
 
-		stateSaver := store.NewStateSaver()
+		stateSaver := access.NewStateSaver()
 
 		cxoConfig := &store.CXOConfig{
 			Master:       &c.Master,
@@ -132,7 +134,15 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		CatchError(e, "failed to create cxo")
 		defer cxo.Close()
 
-		httpGateway := http.NewGateway()
+		boardAccessorConfig := &btp.BoardAccessorConfig{
+			MemoryMode: &c.Memory,
+			ConfigDir:  &c.ConfigDir,
+		}
+
+		boardAccessor := btp.NewBoardAccessor(boardAccessorConfig, cxo, stateSaver)
+		defer boardAccessor.Close()
+
+		httpGateway := http.NewGateway(boardAccessor)
 
 		httpServerConfig := &http.ServerConfig{
 			Port:      &c.HTTPPort,

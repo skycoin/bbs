@@ -1,6 +1,7 @@
 package store
 
 import (
+	"github.com/skycoin/bbs/src/boo"
 	"github.com/skycoin/bbs/src/store/obj"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
@@ -55,6 +56,7 @@ func (c *CXO) setupCXO(updateFunc func(root *node.Root)) error {
 	r.Register("Post", obj.Post{})
 	r.Register("ThreadPage", obj.ThreadPage{})
 	r.Register("BoardPage", obj.BoardPage{})
+	r.Register("ExternalRoot", obj.ExternalRoot{})
 	r.Done()
 
 	// Setup CXO Configurations.
@@ -90,14 +92,26 @@ func (c *CXO) Close() error {
 	return nil
 }
 
+// NewRoot creates a new root.
+func (c *CXO) NewRoot(seed []byte, modifier RootModifier) (cipher.PubKey, cipher.SecKey, error) {
+	pk, sk := cipher.GenerateDeterministicKeyPair(seed)
+	c.Lock()
+	defer c.Unlock()
+	root, e := c.node.Container().NewRoot(pk, sk)
+	if e != nil {
+		return pk, sk, boo.New(boo.Internal, "failed to create root:", e.Error())
+	}
+	return pk, sk, modifier(root)
+}
+
 // RootModifier modifies the root.
-type RootModifier func(w *node.RootWalker) error
+type RootModifier func(r *node.Root) error
 
 // GetMasterWalker obtains walker of root that node can edit.
 func (c *CXO) ModifyRoot(pk cipher.PubKey, sk cipher.SecKey, modifier RootModifier) error {
 	c.Lock()
 	defer c.Unlock()
-	return modifier(c.node.Container().LastRootSk(pk, sk).Walker())
+	return modifier(c.node.Container().LastRootSk(pk, sk))
 }
 
 // IsMaster returns whether master or not.

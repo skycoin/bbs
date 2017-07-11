@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -77,12 +76,7 @@ func (s *Server) prepareMux() error {
 			return e
 		}
 	}
-	s.mux.HandleFunc("/api/greet", func(w http.ResponseWriter, r *http.Request) {
-		data, _ := json.Marshal("Hello, World!")
-		w.WriteHeader(http.StatusOK)
-		w.Write(data)
-	})
-	return nil
+	return s.api.prepare(s.mux)
 }
 
 func (s *Server) prepareStatic() error {
