@@ -213,6 +213,33 @@
 					"response": []
 				},
 				{
+                  "name": "Remove Thread",
+                  "request": {
+                    "url": "http://127.0.0.1:7410/api/threads/remove",
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "formdata",
+                      "formdata": [
+                        {
+                          "key": "board",
+                          "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
+                          "description": "",
+                          "type": "text"
+                        },
+                        {
+                          "key": "thread",
+                          "value": "8755f49db460fe6c5b474b14832381c779986f95b6c67dbf99a0bb84c5b87481",
+                          "description": "",
+                          "type": "text"
+                        }
+                      ]
+                    },
+                    "description": ""
+                  },
+                  "response": []
+                },
+              {
 					"name": "Get ThreadPage",
 					"request": {
                       "url": "http://127.0.0.1:7410/api/threads/page/get",
@@ -290,6 +317,39 @@
 									"key": "body",
 									"value": "It's a very healthy fruit!",
 									"type": "text"
+                                }
+                            ]
+                        },
+                      "description": ""
+                    },
+                  "response": []
+                },
+              {
+                "name": "Remove Post",
+                "request": {
+                  "url": "http://127.0.0.1:7410/api/posts/remove",
+                  "method": "POST",
+                  "header": [],
+                  "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                      {
+                        "key": "board",
+                        "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
+                        "description": "",
+                        "type": "text"
+                      },
+                      {
+                        "key": "thread",
+                        "value": "0fe7cb2f850c8d42088aa1d87497581552214b8df49416b2b52775fdcfc7027a",
+                        "description": "",
+                        "type": "text"
+                      },
+                      {
+                        "key": "post",
+                        "value": "24775b899ee328d5766273eb99965b716bd98443e42cf865daa0b8a5ae3ac14f",
+                        "description": "",
+                        "type": "text"
 								}
 							]
 						},
