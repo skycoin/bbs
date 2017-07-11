@@ -1,7 +1,11 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"github.com/pkg/errors"
 	"github.com/skycoin/bbs/src/gui"
+	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/msg"
@@ -10,13 +14,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"time"
-	"flag"
 	"path/filepath"
-	"github.com/skycoin/bbs/src/misc"
 	"strconv"
-	"fmt"
-	"github.com/pkg/errors"
+	"time"
 )
 
 const configSubDir = ".skybbs"
@@ -118,7 +118,7 @@ func (c *Config) Parse() *Config {
 	*/
 
 	flag.BoolVar(&c.Master,
-		"Master", c.Master,
+		"master", c.Master,
 		"whether to enable bbs node to host boards")
 
 	flag.StringVar(&c.ConfigDir,
@@ -270,6 +270,11 @@ func main() {
 		defer rpcServer.Close()
 
 		log.Println("[RPCSERVER] Serving on address:", rpcServer.Address())
+	}
+
+	// Final initiation of savers.
+	{
+		container.InitStateSaver()
 	}
 
 	httpConfig := &gui.HTTPConfig{

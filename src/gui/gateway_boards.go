@@ -272,7 +272,18 @@ func (g *BoardPage) get(bpk cipher.PubKey) (*BoardPageView, error) {
 	if e != nil {
 		return nil, errors.Wrap(e, "unable to obtain threads")
 	}
-	return &BoardPageView{board, threads}, nil
+	threadViews := make([]*ThreadView, len(threads))
+	for i := range threadViews {
+		votesView, e := g.Threads.Votes.get(bpk, threads[i].GetRef())
+		if e != nil {
+			return nil, errors.Wrap(e, "unable to obtain votes for thread")
+		}
+		threadViews[i] = &ThreadView{
+			Thread: threads[i],
+			Votes:  votesView,
+		}
+	}
+	return &BoardPageView{board, threadViews}, nil
 }
 
 // TODO: Implement.
