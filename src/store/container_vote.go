@@ -11,46 +11,48 @@ import (
 func (c *CXO) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) ([]typ.Vote, error) {
 	c.Lock(c.GetVotesForThread)
 	defer c.Unlock()
+	return c.ss.GetThreadVotes(bpk, tRef)
 
-	w := c.c.LastFullRoot(bpk).Walker()
-	vc := &typ.ThreadVotesContainer{}
-	if e := w.AdvanceFromRoot(vc, makeThreadVotesContainerFinder(w.Root())); e != nil {
-		return nil, e
-	}
-	threadVotes, e := vc.GetThreadVotes(tRef)
-	if e != nil {
-		return nil, e
-	}
-	votes := make([]typ.Vote, len(threadVotes.Votes))
-	for i, ref := range threadVotes.Votes {
-		if e := w.DeserializeFromRef(ref, &votes[i]); e != nil {
-			return nil, errors.Errorf("failed to obtain vote '%s'", ref.String())
-		}
-	}
-	return votes, nil
+	//w := c.c.LastFullRoot(bpk).Walker()
+	//vc := &typ.ThreadVotesContainer{}
+	//if e := w.AdvanceFromRoot(vc, makeThreadVotesContainerFinder(w.Root())); e != nil {
+	//	return nil, e
+	//}
+	//threadVotes, e := vc.GetThreadVotes(tRef)
+	//if e != nil {
+	//	return nil, e
+	//}
+	//votes := make([]typ.Vote, len(threadVotes.Votes))
+	//for i, ref := range threadVotes.Votes {
+	//	if e := w.DeserializeFromRef(ref, &votes[i]); e != nil {
+	//		return nil, errors.Errorf("failed to obtain vote '%s'", ref.String())
+	//	}
+	//}
+	//return votes, nil
 }
 
 // GetVotesForPost obtains the votes for specified post present in specified board.
 func (c *CXO) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) ([]typ.Vote, error) {
 	c.Lock(c.GetVotesForPost)
 	defer c.Unlock()
+	return c.ss.GetPostVotes(bpk, pRef)
 
-	w := c.c.LastFullRoot(bpk).Walker()
-	vc := &typ.PostVotesContainer{}
-	if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
-		return nil, e
-	}
-	postVotes, e := vc.GetPostVotes(pRef)
-	if e != nil {
-		return nil, e
-	}
-	votes := make([]typ.Vote, len(postVotes.Votes))
-	for i, ref := range postVotes.Votes {
-		if e := w.DeserializeFromRef(ref, &votes[i]); e != nil {
-			return nil, errors.Errorf("failed to obtain vote '%s'", ref.String())
-		}
-	}
-	return votes, nil
+	//w := c.c.LastFullRoot(bpk).Walker()
+	//vc := &typ.PostVotesContainer{}
+	//if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
+	//	return nil, e
+	//}
+	//postVotes, e := vc.GetPostVotes(pRef)
+	//if e != nil {
+	//	return nil, e
+	//}
+	//votes := make([]typ.Vote, len(postVotes.Votes))
+	//for i, ref := range postVotes.Votes {
+	//	if e := w.DeserializeFromRef(ref, &votes[i]); e != nil {
+	//		return nil, errors.Errorf("failed to obtain vote '%s'", ref.String())
+	//	}
+	//}
+	//return votes, nil
 }
 
 // VoteForThread adds a vote for a thread on a specified board.
@@ -84,6 +86,7 @@ func (c *CXO) AddVoteForThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobj
 	voteRefs.Votes = append(voteRefs.Votes, w.Root().Save(*newVote))
 
 SaveThreadVotesContainer:
+	c.ss.Fill(w.Root()) // TODO: Optimise.
 	return w.ReplaceCurrent(*vc)
 }
 
@@ -118,6 +121,7 @@ func (c *CXO) AddVoteForPost(bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobjec
 	voteRefs.Votes = append(voteRefs.Votes, w.Root().Save(*newVote))
 
 SavePostVotesContainer:
+	c.ss.Fill(w.Root()) // TODO: Optimise.
 	return w.ReplaceCurrent(*vc)
 }
 
@@ -148,9 +152,11 @@ func (c *CXO) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKey, tRe
 				voteRefs.Votes[len(voteRefs.Votes)-1], voteRefs.Votes[i]
 			voteRefs.Votes = voteRefs.Votes[:len(voteRefs.Votes)-1]
 			// MemoryMode.
+			c.ss.Fill(w.Root()) // TODO: Optimise.
 			return w.ReplaceCurrent(*vc)
 		}
 	}
+	c.ss.Fill(w.Root()) // TODO: Optimise.
 	return nil
 }
 
@@ -181,8 +187,10 @@ func (c *CXO) RemoveVoteForPost(upk, bpk cipher.PubKey, bsk cipher.SecKey, pRef 
 				voteRefs.Votes[len(voteRefs.Votes)-1], voteRefs.Votes[i]
 			voteRefs.Votes = voteRefs.Votes[:len(voteRefs.Votes)-1]
 			// MemoryMode.
+			c.ss.Fill(w.Root()) // TODO: Optimise.
 			return w.ReplaceCurrent(*vc)
 		}
 	}
+	c.ss.Fill(w.Root()) // TODO: Optimise.
 	return nil
 }

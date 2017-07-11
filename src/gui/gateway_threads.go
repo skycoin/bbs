@@ -245,7 +245,27 @@ func (g *ThreadPage) get(bpk cipher.PubKey, tRef skyobject.Reference) (*ThreadPa
 	if e != nil {
 		return nil, errors.Wrap(e, "unable to obtain threadpage")
 	}
-	return &ThreadPageView{b, thread, posts}, nil
+	threadVotes, e := g.Threads.Votes.get(bpk, tRef)
+	if e != nil {
+		return nil, errors.Wrap(e, "unable to obtain votes for thread")
+	}
+	threadView := &ThreadView{
+		Thread: thread,
+		Votes:  threadVotes,
+	}
+	postViews := make([]*PostView, len(posts))
+	for i := range postViews {
+		pRef, _ := misc.GetReference(posts[i].Ref)
+		pVotes, e := g.Posts.Votes.get(bpk, pRef)
+		if e != nil {
+			return nil, errors.Wrap(e, "unable to get post votes")
+		}
+		postViews[i] = &PostView{
+			Post:  posts[i],
+			Votes: pVotes,
+		}
+	}
+	return &ThreadPageView{b, threadView, postViews}, nil
 }
 
 // ThreadVotes represents the thread votes endpoint group.

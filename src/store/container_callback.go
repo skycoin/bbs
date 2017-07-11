@@ -36,7 +36,10 @@ func (c *CXO) GetUpdatesChan() chan *Msg {
 
 func (c *CXO) rootFilledInternalCB(root *node.Root) {
 	log.Printf("[CONTAINER] Recieved filled board '%s'", root.Pub().Hex())
-	go c.sendRootMsg(root.Pub(), RootFilled)
+	c.ss.Fill(root)
+	if c.config.Master {
+		go c.sendRootMsg(root.Pub(), RootFilled)
+	}
 }
 
 func (c *CXO) subAcceptedInternalCB(conn *gnet.Conn, feed cipher.PubKey) {

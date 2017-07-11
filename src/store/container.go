@@ -19,6 +19,7 @@ type CXO struct {
 	misc.PrintMux
 	c    *node.Container
 	node *node.Node
+	ss   *StateSaver
 
 	config *Config
 	msgs   chan *Msg
@@ -28,6 +29,7 @@ type CXO struct {
 
 func NewCXO(config *Config) (*CXO, error) {
 	c := &CXO{
+		ss:     NewStateSaver(),
 		config: config,
 		msgs:   make(chan *Msg),
 	}
@@ -70,9 +72,9 @@ func (c *CXO) setupCXONode() error {
 
 	// Setup CXO Callbacks.
 	if c.config.Master {
-		nc.OnRootFilled = c.rootFilledInternalCB
 		nc.PublicServer = true
 	}
+	nc.OnRootFilled = c.rootFilledInternalCB
 	nc.OnSubscriptionAccepted = c.subAcceptedInternalCB
 	nc.OnSubscriptionRejected = c.subRejectedInternalCB
 	nc.OnCreateConnection = c.connCreatedInternalCB
@@ -220,4 +222,9 @@ func (c *CXO) Disconnect(addr string) error {
 		return nil
 	}
 	return conn.Close()
+}
+
+// InitStateSaver initiates StateSaver.
+func (c *CXO) InitStateSaver() {
+	c.ss.Init(c, c.Feeds()...)
 }

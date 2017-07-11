@@ -88,14 +88,24 @@ type StatsView struct {
 // BoardPageView represents a board page as json as displayed to end user.
 type BoardPageView struct {
 	Board   *typ.Board    `json:"board"`
-	Threads []*typ.Thread `json:"threads"`
+	Threads []*ThreadView `json:"threads"`
 }
 
 // ThreadPageView represents a thread page as json when displayed to end user,
 type ThreadPageView struct {
 	Board  *typ.Board  `json:"board"`
-	Thread *typ.Thread `json:"thread"`
-	Posts  []*typ.Post `json:"posts"`
+	Thread *ThreadView `json:"thread"`
+	Posts  []*PostView `json:"posts"`
+}
+
+type ThreadView struct {
+	*typ.Thread
+	Votes *VotesView `json:"votes"`
+}
+
+type PostView struct {
+	*typ.Post
+	Votes *VotesView `json:"posts"`
 }
 
 // VotesView represents a votes view as json when displayed to end user.
