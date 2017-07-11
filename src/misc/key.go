@@ -11,10 +11,10 @@ func GetPubKey(s string) (cipher.PubKey, error) {
 	b, e := hex.DecodeString(s)
 	if e != nil {
 		return cipher.PubKey{}, boo.New(boo.InvalidInput,
-			"invalid hex string:", e.Error())
+			"invalid public key hex string:", e.Error())
 	} else if len(b) != len(cipher.PubKey{}) {
 		return cipher.PubKey{}, boo.New(boo.InvalidInput,
-			"invalid hex string length")
+			"invalid public key hex string length")
 	}
 	return cipher.NewPubKey(b), nil
 }
@@ -24,10 +24,10 @@ func GetSecKey(s string) (cipher.SecKey, error) {
 	b, e := hex.DecodeString(s)
 	if e != nil {
 		return cipher.SecKey{}, boo.New(boo.InvalidInput,
-			"invalid hex string:", e.Error())
+			"invalid secret key hex string:", e.Error())
 	} else if len(b) != len(cipher.SecKey{}) {
 		return cipher.SecKey{}, boo.New(boo.InvalidInput,
-			"invalid hex string length")
+			"invalid secret key hex string length")
 	}
 	return cipher.NewSecKey(b), nil
 }

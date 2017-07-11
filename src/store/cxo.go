@@ -92,6 +92,10 @@ func (c *CXO) Close() error {
 	return nil
 }
 
+func (c *CXO) GetRoot(pk cipher.PubKey) (*node.Root) {
+	return c.node.Container().LastFullRoot(pk)
+}
+
 // NewRoot creates a new root.
 func (c *CXO) NewRoot(seed []byte, modifier RootModifier) (cipher.PubKey, cipher.SecKey, error) {
 	pk, sk := cipher.GenerateDeterministicKeyPair(seed)

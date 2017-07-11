@@ -46,6 +46,7 @@ func NewBoardAccessor(config *BoardAccessorConfig, cxo *store.CXO, stateSaver *a
 	return boardAccessor
 }
 
+// Close closes the BoardAccessor.
 func (a *BoardAccessor) Close() {
 	go func() { a.quit <- struct{}{} }()
 	a.wg.Wait()
@@ -91,6 +92,7 @@ func (a *BoardAccessor) prepareBoardsFile(loc *string) error {
 		if e := a.cxo.Subscribe(bInfo.Connection, pk); e != nil {
 			fmt.Printf("Failed to subscribe to '[%s] (%s)'\n", bInfo.Connection, pk.Hex())
 		}
+		a.stateSaver.Update(a.cxo.GetRoot(pk))
 	}
 	for pkStr := range a.bFile.MasterBoards {
 		pk, e := misc.GetPubKey(pkStr)
@@ -101,6 +103,7 @@ func (a *BoardAccessor) prepareBoardsFile(loc *string) error {
 		if e := a.cxo.Subscribe("", pk); e != nil {
 			fmt.Printf("Failed to subscribe to '[localhost] (%s)'\n", pk.Hex())
 		}
+		a.stateSaver.Update(a.cxo.GetRoot(pk))
 	}
 	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
+	"github.com/skycoin/bbs/src/store/view"
+	"github.com/skycoin/bbs/src/boo"
 )
 
 // StateSaver saves the internal exposed data structure.
@@ -13,6 +15,7 @@ type StateSaver struct {
 	boards map[cipher.PubKey]*State
 }
 
+// NewStateSaver creates a new state saver.
 func NewStateSaver() *StateSaver {
 	return &StateSaver{
 		boards: make(map[cipher.PubKey]*State),
@@ -22,6 +25,23 @@ func NewStateSaver() *StateSaver {
 func (s *StateSaver) lock() func() {
 	s.mux.Lock()
 	return s.mux.Unlock
+}
+
+// Close closes the StateSaver.
+func (s *StateSaver) Close() {
+	for _, state := range s.boards {
+		state.Close()
+	}
+}
+
+func (s *StateSaver) Get(pk cipher.PubKey) (view.Board, error) {
+	defer s.lock()()
+	state, has := s.boards[pk]
+	if !has {
+		return view.Board{}, boo.Newf(boo.ObjectNotFound,
+			"board of public key '%s' not found in internal state", pk.Hex())
+	}
+	return state.GetView(), nil
 }
 
 // Update updates a board state of StateSaver.

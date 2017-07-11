@@ -119,6 +119,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		defer log.Println("Goodbye.")
 
 		stateSaver := access.NewStateSaver()
+		defer stateSaver.Close()
 
 		cxoConfig := &store.CXOConfig{
 			Master:       &c.Master,
@@ -142,7 +143,11 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		boardAccessor := btp.NewBoardAccessor(boardAccessorConfig, cxo, stateSaver)
 		defer boardAccessor.Close()
 
-		httpGateway := http.NewGateway(boardAccessor)
+		httpGateway := &http.Gateway{
+			BoardAccessor: boardAccessor,
+			CXO:           cxo,
+			Quit:          quit,
+		}
 
 		httpServerConfig := &http.ServerConfig{
 			Port:      &c.HTTPPort,

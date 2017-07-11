@@ -6,7 +6,6 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util/file"
 	"os"
-	"sync"
 )
 
 // BoardInfo represents a board configuration.
@@ -22,7 +21,6 @@ type MasterBoardInfo struct {
 
 // BoardsFile saves configurations of boards.
 type BoardsFile struct {
-	mux          sync.Mutex                  `json:"-"`
 	unsaved      bool                        `json:"-"`
 	Boards       map[string]*BoardInfo       `json:"boards,omitempty"`
 	MasterBoards map[string]*MasterBoardInfo `json:"master_boards,omitempty"`
