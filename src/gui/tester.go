@@ -292,3 +292,11 @@ func (t *Tester) actionVoteThread() {
 		log.Printf("[TESTER] !!! Error: %s !!!", e.Error())
 	}
 }
+
+//func (t *Tester) actionVoteUser() {
+//	i, e := misc.MakeIntBetween(0, len(t.users)-1)
+//	if e != nil {
+//
+//	}
+//	t.users[i].GetPK()
+//}

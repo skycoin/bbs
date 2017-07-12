@@ -43,6 +43,7 @@ func NewGateway(
 	g.Users.Gateway = g
 	g.Users.Masters.Gateway = g
 	g.Users.Masters.Current.Gateway = g
+	g.Users.Votes.Gateway = g
 	g.Boards.Gateway = g
 	g.Boards.Meta.Gateway = g
 	g.Boards.Meta.SubmissionAddresses.Gateway = g
@@ -138,6 +139,11 @@ type ThreadView struct {
 type PostView struct {
 	*typ.Post
 	Votes *VotesView `json:"votes"`
+}
+
+type UserView struct {
+	PubKey string     `json:"public_key"`
+	Votes  *VotesView `json:"votes"`
 }
 
 // VotesView represents a votes view as json when displayed to end user.

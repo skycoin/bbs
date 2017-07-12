@@ -47,6 +47,11 @@ func (c *Client) VoteThread(req *ReqVoteThread) (ok bool, e error) {
 	return
 }
 
+func (c *Client) VoteUser(req *ReqVoteUser) (ok bool, e error) {
+	e = c.result(c.rpc.Go("Gateway.VoteUser", req, &ok, nil))
+	return
+}
+
 func (c *Client) result(call *rpc.Call) error {
 	timer := time.NewTimer(c.wait)
 	select {

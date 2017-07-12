@@ -8,17 +8,23 @@ import (
 )
 
 // GetVotesForThread obtains the votes for specified thread present in specified board.
-func (c *CXO) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) ([]typ.Vote, error) {
+func (c *CXO) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) []typ.Vote {
 	c.Lock(c.GetVotesForThread)
 	defer c.Unlock()
 	return c.ss.GetThreadVotes(bpk, tRef)
 }
 
 // GetVotesForPost obtains the votes for specified post present in specified board.
-func (c *CXO) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) ([]typ.Vote, error) {
+func (c *CXO) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) []typ.Vote {
 	c.Lock(c.GetVotesForPost)
 	defer c.Unlock()
 	return c.ss.GetPostVotes(bpk, pRef)
+}
+
+func (c *CXO) GetVotesForUser(bpk, upk cipher.PubKey) []typ.Vote {
+	c.Lock(c.GetVotesForUser)
+	defer c.Unlock()
+	return c.ss.GetUserVotes(bpk, upk)
 }
 
 // VoteForThread adds a vote for a thread on a specified board.
@@ -52,7 +58,7 @@ func (c *CXO) AddVoteForThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobj
 	voteRefs.Votes = append(voteRefs.Votes, w.Root().Save(*newVote))
 
 SaveThreadVotesContainer:
-	c.ss.Fill(w.Root()) // TODO: Optimise.
+	defer c.ss.Fill(w.Root()) // TODO: Optimise.
 	return w.ReplaceCurrent(*vc)
 }
 
@@ -87,7 +93,38 @@ func (c *CXO) AddVoteForPost(bpk cipher.PubKey, bsk cipher.SecKey, pRef skyobjec
 	voteRefs.Votes = append(voteRefs.Votes, w.Root().Save(*newVote))
 
 SavePostVotesContainer:
-	c.ss.Fill(w.Root()) // TODO: Optimise.
+	defer c.ss.Fill(w.Root()) // TODO: Optimise.
+	return w.ReplaceCurrent(*vc)
+}
+
+func (c *CXO) AddVoteForUser(bpk, upk cipher.PubKey, bsk cipher.SecKey, newVote *typ.Vote) error {
+	c.Lock(c.AddVoteForUser)
+	defer c.Unlock()
+
+	w := c.c.LastRootSk(bpk, bsk).Walker()
+	vc := &typ.UserVotesContainer{}
+	if e := w.AdvanceFromRoot(vc, makeUserVotesContainerFinder(w.Root())); e != nil {
+		return e
+	}
+	// Obtain vote references.
+	voteRefs := vc.GetUser(upk)
+	// Loop through votes to see if user has already voted.
+	for i, vRef := range voteRefs.Votes {
+		tempVote := &typ.Vote{}
+		if e := w.DeserializeFromRef(vRef, tempVote); e != nil {
+			return errors.Wrap(e, "failed to obtain vote")
+		}
+		// Replace vote if already voted.
+		if tempVote.User == newVote.User {
+			voteRefs.Votes[i] = w.Root().Save(*newVote)
+			goto SaveUserVotesContainer
+		}
+	}
+	// If user has not already voted - add a new vote.
+	voteRefs.Votes = append(voteRefs.Votes, w.Root().Save(*newVote))
+
+SaveUserVotesContainer:
+	defer c.ss.Fill(w.Root()) // TODO: Optimise.
 	return w.ReplaceCurrent(*vc)
 }
 
@@ -114,15 +151,12 @@ func (c *CXO) RemoveVoteForThread(upk, bpk cipher.PubKey, bsk cipher.SecKey, tRe
 		}
 		if tempVote.User == upk {
 			// Delete of index i.
-			voteRefs.Votes[i], voteRefs.Votes[len(voteRefs.Votes)-1] =
-				voteRefs.Votes[len(voteRefs.Votes)-1], voteRefs.Votes[i]
-			voteRefs.Votes = voteRefs.Votes[:len(voteRefs.Votes)-1]
-			// MemoryMode.
-			c.ss.Fill(w.Root()) // TODO: Optimise.
+			voteRefs.Votes[i], voteRefs.Votes[0] = voteRefs.Votes[0], voteRefs.Votes[i]
+			voteRefs.Votes = voteRefs.Votes[1:]
+			defer c.ss.Fill(w.Root()) // TODO: Optimise.
 			return w.ReplaceCurrent(*vc)
 		}
 	}
-	c.ss.Fill(w.Root()) // TODO: Optimise.
 	return nil
 }
 
@@ -149,14 +183,39 @@ func (c *CXO) RemoveVoteForPost(upk, bpk cipher.PubKey, bsk cipher.SecKey, pRef 
 		}
 		if tempVote.User == upk {
 			// Delete of index i.
-			voteRefs.Votes[i], voteRefs.Votes[len(voteRefs.Votes)-1] =
-				voteRefs.Votes[len(voteRefs.Votes)-1], voteRefs.Votes[i]
-			voteRefs.Votes = voteRefs.Votes[:len(voteRefs.Votes)-1]
-			// MemoryMode.
-			c.ss.Fill(w.Root()) // TODO: Optimise.
+			voteRefs.Votes[i], voteRefs.Votes[0] = voteRefs.Votes[0], voteRefs.Votes[i]
+			voteRefs.Votes = voteRefs.Votes[1:]
+			defer c.ss.Fill(w.Root()) // TODO: Optimise.
 			return w.ReplaceCurrent(*vc)
 		}
 	}
-	c.ss.Fill(w.Root()) // TODO: Optimise.
+	return nil
+}
+
+func (c *CXO) RemoveVoteForUser(currentUPK, bpk, upk cipher.PubKey, bsk cipher.SecKey) error {
+	c.Lock(c.RemoveVoteForUser)
+	defer c.Unlock()
+
+	w := c.c.LastRootSk(bpk, bsk).Walker()
+	vc := &typ.UserVotesContainer{}
+	if e := w.AdvanceFromRoot(vc, makeUserVotesContainerFinder(w.Root())); e != nil {
+		return e
+	}
+	// Obtain vote references.
+	voteRefs := vc.GetUser(upk)
+	// Loop through votes to see what to remove.
+	for i, vRef := range voteRefs.Votes {
+		tempVote := &typ.Vote{}
+		if e := w.DeserializeFromRef(vRef, tempVote); e != nil {
+			return errors.Wrap(e, "failed to obtain vote")
+		}
+		if tempVote.User == currentUPK {
+			// Delete of index i.
+			voteRefs.Votes[i], voteRefs.Votes[0] = voteRefs.Votes[0], voteRefs.Votes[i]
+			voteRefs.Votes = voteRefs.Votes[1:]
+			defer c.ss.Fill(w.Root()) // TODO: Optimise.
+			return w.ReplaceCurrent(*vc)
+		}
+	}
 	return nil
 }

@@ -178,21 +178,28 @@ func (c *CXO) NewBoard(board *typ.Board, pk cipher.PubKey, sk cipher.SecKey) err
 	}
 	bRef := r.Save(*board)
 	// Prepare board container.
-	bCont := typ.BoardContainer{Board: bRef}
-	if _, _, e = r.Inject("BoardContainer", bCont); e != nil {
+	bcRef, e := r.Dynamic("BoardContainer", typ.BoardContainer{Board: bRef})
+	if e != nil {
 		return e
 	}
 	// Prepare thread vote container.
-	tvCont := typ.ThreadVotesContainer{}
-	if _, _, e := r.Inject("ThreadVotesContainer", tvCont); e != nil {
+	tvcRef, e := r.Dynamic("ThreadVotesContainer", typ.ThreadVotesContainer{})
+	if e != nil {
 		return e
 	}
 	// Prepare post vote container.
-	pvCont := typ.PostVotesContainer{}
-	if _, _, e := r.Inject("PostVotesContainer", pvCont); e != nil {
+	pvcRef, e := r.Dynamic("PostVotesContainer", typ.PostVotesContainer{})
+	if e != nil {
 		return e
 	}
-	return nil
+	// Prepare user vote container.
+	uvcRef, e := r.Dynamic("UserVotesContainer", typ.UserVotesContainer{})
+	if e != nil {
+		return e
+	}
+	// Append all containers.
+	_, e = r.Append(bcRef, tvcRef, pvcRef, uvcRef)
+	return e
 }
 
 // RemoveBoard attempts to remove a board by a given public key.
@@ -447,7 +454,7 @@ func (c *CXO) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Refer
 	if pRef, e = w.AppendToRefsField("Posts", *post); e != nil {
 		return e
 	}
-	post.Ref = cipher.SHA256(pRef).Hex()
+	(*post).Ref = cipher.SHA256(pRef).Hex()
 
 	// Prepare post vote container.
 	w.Clear()
@@ -508,6 +515,7 @@ func (c *CXO) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tR
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return errors.Wrap(e, "import thread failed: failed to obtain board "+fromBpk.Hex())
 	}
+	//c.ss.Fill(w.Root())
 
 	// Obtain thread and thread page.
 	tp := &typ.ThreadPage{}
@@ -534,7 +542,9 @@ func (c *CXO) ImportThread(fromBpk, toBpk cipher.PubKey, toBsk cipher.SecKey, tR
 		if _, e := w.AppendToRefsField("ThreadPages", *tp); e != nil {
 			return e
 		}
+		//c.ss.Fill(w.Root())
 		return nil
 	}
+	//c.ss.Fill(w.Root())
 	return nil
 }

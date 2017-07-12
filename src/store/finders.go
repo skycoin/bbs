@@ -36,6 +36,16 @@ func makePostVotesContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynam
 	}
 }
 
+func makeUserVotesContainerFinder(r *node.Root) func(_ int, dRef skyobject.Dynamic) bool {
+	return func(_ int, dRef skyobject.Dynamic) bool {
+		schema, e := r.SchemaByReference(dRef.Schema)
+		if e != nil {
+			return false
+		}
+		return schema.Name() == "UserVotesContainer"
+	}
+}
+
 func makeThreadPageFinder(w *node.RootWalker, tRef skyobject.Reference) func(i int, ref skyobject.Reference) bool {
 	return func(_ int, ref skyobject.Reference) bool {
 		threadPage := &typ.ThreadPage{}

@@ -30,3 +30,9 @@ type ReqVoteThread struct {
 	ThreadRef   skyobject.Reference `json:"thread_ref,string"`
 	Vote        *typ.Vote           `json:"vote"`
 }
+
+type ReqVoteUser struct {
+	BoardPubKey cipher.PubKey `json:"board_public_key,string"`
+	UserPubKey  cipher.PubKey `json:"user_public_key,string"`
+	Vote        *typ.Vote     `json:"vote"`
+}

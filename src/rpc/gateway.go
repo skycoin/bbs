@@ -145,3 +145,37 @@ func (g *Gateway) VoteThread(req *ReqVoteThread, ok *bool) error {
 		return errors.Errorf("invalid vote mode '%d'", vote.Mode)
 	}
 }
+
+func (g *Gateway) VoteUser(req *ReqVoteUser, ok *bool) error {
+	log.Println("[RPCGATEWAY] VoteUser request recieved. Processing...")
+	if req == nil || ok == nil {
+		return errors.New("nil error")
+	}
+	// Check vote.
+	vote := req.Vote
+	if e := vote.Verify(); e != nil {
+		return e
+	}
+	// Check board.
+	bi, has := g.boardSaver.Get(req.BoardPubKey)
+	if !has {
+		return errors.Errorf("not subscribed to board '%s'",
+			req.BoardPubKey.Hex())
+	}
+	// Check if this BBS Node owns the board.
+	if !bi.Config.Master {
+		return errors.Errorf("not master of board '%s'",
+			req.BoardPubKey.Hex())
+	}
+	// Do vote.
+	switch vote.Mode {
+	case 0:
+		return g.container.RemoveVoteForUser(
+			vote.User, req.BoardPubKey, req.UserPubKey, bi.Config.GetSK())
+	case -1, +1:
+		return g.container.AddVoteForUser(
+			req.BoardPubKey, req.UserPubKey, bi.Config.GetSK(), vote)
+	default:
+		return errors.Errorf("invalid vote mode '%d'", vote.Mode)
+	}
+}
