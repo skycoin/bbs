@@ -16,7 +16,7 @@ type QueueItem struct {
 	ReqNewThread    *rpc.ReqNewThread  `json:"new_thread_request,omitempty"`
 	ReqVotePost     *rpc.ReqVotePost   `json:"vote_post_request,omitempty"`
 	ReqVoteThread   *rpc.ReqVoteThread `json:"vote_thread_request,omitempty"`
-	ReqVoteUser     *rpc.ReqVoteUser `json:"vote_user_request,omitempty"`
+	ReqVoteUser     *rpc.ReqVoteUser   `json:"vote_user_request,omitempty"`
 }
 
 // NewQueueItem creates a new QueueItem.
