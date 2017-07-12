@@ -137,7 +137,7 @@ type ThreadView struct {
 
 type PostView struct {
 	*typ.Post
-	Votes *VotesView `json:"posts"`
+	Votes *VotesView `json:"votes"`
 }
 
 // VotesView represents a votes view as json when displayed to end user.

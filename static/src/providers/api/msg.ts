@@ -1,9 +1,17 @@
+export interface VotesSummary {
+  up_votes?: number; // Total number of up-votes.
+  down_votes?: number; // Total number of down-votes.
+  current_user_voted?: boolean; // Whether current user has voted on this thread/post.
+  current_user_vote_mode?: number; // (1: current user up-voted) | (-1: current user down-voted)
+}
+
 export interface Post {
   title?: string;
   body?: string;
   author?: string;
   created?: number;
   ref?: string;
+  votes?: VotesSummary; // Posts now have vote summary here.
 }
 
 export interface ThreadPage {
@@ -27,6 +35,7 @@ export interface Thread {
   description?: string;
   master_board?: string;
   ref?: string;
+  votes?: VotesSummary; // Threads now have vote summary here.
 }
 
 export interface Board {
@@ -43,14 +52,14 @@ export interface UIOptions {
 }
 
 
-export interface SubScription {
+export interface Subscription {
   synced?: boolean;
   accepted?: boolean;
   rejected_count?: number;
-  config?: SubScriptionOptions;
+  config?: SubscriptionOption;
 }
 
-export interface SubScriptionOptions {
+export interface SubscriptionOption {
   master?: boolean;
   public_key?: string;
   secret_key?: string;
