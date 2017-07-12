@@ -50,8 +50,8 @@ func serve(listener net.Listener, mux *http.ServeMux, q chan struct{}) {
 			case <-q:
 				return
 			default:
+				continue
 			}
-			continue
 		}
 	}
 }
@@ -155,6 +155,7 @@ func NewServeMux(api *Gateway, appLoc string, enableGUI bool) *http.ServeMux {
 	//mux.HandleFunc("/api/hex/add_post", api.NewPostWithHex)
 
 	mux.HandleFunc("/api/tests/add_filled_board", api.Tests.AddFilledBoard)
+	mux.HandleFunc("/api/tests/panic", api.Tests.Panic)
 
 	return mux
 }

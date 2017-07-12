@@ -221,12 +221,7 @@ func (c *Config) PostProcess() (*Config, error) {
 	return c, nil
 }
 
-func main() {
-	quit := CatchInterrupt()
-	config, e := NewConfig().Parse().PostProcess()
-	if e != nil {
-		panic(e)
-	}
+func run(config *Config, quit chan int) {
 	file.InitDataDir(config.ConfigDir)
 	log.Println("[CONFIG] Master mode:", config.Master)
 	defer log.Println("Goodbye.")
@@ -319,6 +314,16 @@ func main() {
 	defer log.Println("Shutting down...")
 	<-quit
 	time.Sleep(time.Second)
+
+}
+
+func main() {
+	quit := CatchInterrupt()
+	config, e := NewConfig().Parse().PostProcess()
+	if e != nil {
+		panic(e)
+	}
+	run(config, quit)
 }
 
 // CatchInterrupt catches Ctrl+C behaviour.
