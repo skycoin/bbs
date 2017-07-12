@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/store/typ"
 	"net/http"
 	"time"
+	"github.com/skycoin/skycoin/src/cipher/go-bip39"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.
@@ -71,8 +72,39 @@ func (g *Gateway) quit() bool {
 }
 
 // PingSubmissionAddress pings a submission address.
+func (g *Gateway) PingSubmissionAddress(w http.ResponseWriter, r *http.Request) {
+	e := g.pingSubmissionAddress(r.FormValue("address"))
+	if e != nil {
+		send(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	send(w, true, http.StatusOK)
+}
+
 func (g *Gateway) pingSubmissionAddress(address string) error {
 	return g.queueSaver.Ping(address)
+}
+
+// GenerateSeed generates a seed.
+func (g *Gateway) GenerateSeed(w http.ResponseWriter, r *http.Request) {
+	seed, e := g.generateSeed()
+	if e != nil {
+		send(w, e.Error(), http.StatusInternalServerError)
+		return
+	}
+	send(w, seed, http.StatusOK)
+}
+
+func (g *Gateway) generateSeed() (string, error) {
+	entropy, e := bip39.NewEntropy(128)
+	if e != nil {
+		return "", e
+	}
+	mnemonic, e := bip39.NewMnemonic(entropy)
+	if e != nil {
+		return "", e
+	}
+	return mnemonic, nil
 }
 
 /*

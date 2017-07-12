@@ -24,10 +24,6 @@ func (c *CXO) ChangeBoardURL(bpk cipher.PubKey, bsk cipher.SecKey, url string) e
 	if e := w.AdvanceFromRefField("Board", b); e != nil {
 		return e
 	}
-	//b.URL = url // .......
-	//w.Retreat()
-	//_, e := w.ReplaceInRefField("Board", *b)
-	//return e
 	if e := w.ReplaceCurrent(b); e != nil {
 		return e
 	}
@@ -210,6 +206,7 @@ func (c *CXO) RemoveBoard(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	if e := w.AdvanceFromRoot(bc, makeBoardContainerFinder(w.Root())); e != nil {
 		return e
 	}
+
 	return w.RemoveCurrent()
 }
 
@@ -292,6 +289,7 @@ func (c *CXO) NewThread(bpk cipher.PubKey, bsk cipher.SecKey, thread *typ.Thread
 func (c *CXO) RemoveThread(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Reference) error {
 	c.Lock(c.RemoveThread)
 	defer c.Unlock()
+	defer c.ss.RemoveThreadVotes(bpk, tRef)
 
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}
@@ -468,6 +466,7 @@ func (c *CXO) NewPost(bpk cipher.PubKey, bsk cipher.SecKey, tRef skyobject.Refer
 func (c *CXO) RemovePost(bpk cipher.PubKey, bsk cipher.SecKey, tRef, pRef skyobject.Reference) error {
 	c.Lock(c.RemovePost)
 	defer c.Unlock()
+	defer c.ss.RemovePostVotes(bpk, pRef)
 
 	w := c.c.LastRootSk(bpk, bsk).Walker()
 	bc := &typ.BoardContainer{}

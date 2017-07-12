@@ -103,6 +103,8 @@ func NewServeMux(api *Gateway, appLoc string, enableGUI bool) *http.ServeMux {
 	}
 
 	mux.HandleFunc("/api/quit", api.Quit)
+	mux.HandleFunc("/api/ping_submission_address", api.PingSubmissionAddress)
+	mux.HandleFunc("/api/generate_seed", api.GenerateSeed)
 
 	mux.HandleFunc("/api/stats/get", api.Stats.Get)
 

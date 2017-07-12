@@ -12,11 +12,9 @@ echo "[ STARTING BBS NODE 'A' ]"
 
 go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
     --master=true \
-    --save-config=false \
+    --memory-mode=true \
     --cxo-port=$a_cxod \
     --cxo-rpc-port=$a_cxorpc \
-    --cxo-memory-mode=true \
-    --cxo-dir=bbs_a \
     --rpc-port=$a_bbsrpc \
     --rpc-remote-address=127.0.0.1:$a_bbsrpc \
     --web-gui-port=$a_bbsgui \

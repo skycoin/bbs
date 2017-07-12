@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/store/typ"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -247,7 +248,7 @@ func (g *ThreadPage) get(bpk cipher.PubKey, tRef skyobject.Reference) (*ThreadPa
 	}
 	threadVotes, e := g.Threads.Votes.get(bpk, tRef)
 	if e != nil {
-		return nil, errors.Wrap(e, "unable to obtain votes for thread")
+		log.Println("[GATEWAY] Error:", e.Error())
 	}
 	threadView := &ThreadView{
 		Thread: thread,
@@ -258,7 +259,7 @@ func (g *ThreadPage) get(bpk cipher.PubKey, tRef skyobject.Reference) (*ThreadPa
 		pRef, _ := misc.GetReference(posts[i].Ref)
 		pVotes, e := g.Posts.Votes.get(bpk, pRef)
 		if e != nil {
-			return nil, errors.Wrap(e, "unable to get post votes")
+			log.Println("[GATEWAY] Error:", e.Error())
 		}
 		postViews[i] = &PostView{
 			Post:  posts[i],

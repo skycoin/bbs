@@ -52,12 +52,11 @@ RunNode() {
     OPEN_GUI=$5
     go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
         --master=true \
-        --save-config=false \
+        --memory-mode=true \
         --rpc-port=$PORT_BBS_RPC \
         --rpc-remote-address=127.0.0.1:$PORT_BBS_RPC \
         --cxo-port=$PORT_CXO_SERVER \
         --cxo-rpc-port=$PORT_CXO_RPC \
-        --cxo-memory-mode=true \
         --web-gui-port=$PORT_BBS_GUI \
         --web-gui-open-browser=$OPEN_GUI \
         --web-gui-dir=$GOPATH/src/github.com/skycoin/bbs/static/dist \
@@ -77,7 +76,7 @@ InjectFilledBoard() {
         -F "threads=${3}" \
         -F "min_posts=${4}" \
         -F "max_posts=${5}" \
-        -sS "http://127.0.0.1:${1}/api/tests/new_filled_board" | jq
+        -sS "http://127.0.0.1:${1}/api/tests/add_filled_board" | jq
 #    sleep 1
 }
 
@@ -92,7 +91,7 @@ SubscribeToBoard() {
         -X POST \
         -F "address=127.0.0.1:${2}" \
         -F "board=${3}" \
-        -sS "http://127.0.0.1:${1}/api/subscribe" | jq
+        -sS "http://127.0.0.1:${1}/api/subscriptions/add" | jq
     sleep 1
 }
 

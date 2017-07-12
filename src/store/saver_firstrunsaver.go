@@ -50,7 +50,7 @@ func (s *FirstRunSaver) absConfigDir() string {
 
 func (s *FirstRunSaver) load() {
 	s.data = &FirstRunFile{FirstRun: true}
-	if s.config.MemoryMode {
+	if !s.config.MemoryMode {
 		if e := file.LoadJSON(s.absConfigDir(), s.data); e != nil {
 			s.data.FirstRun = true
 		}
@@ -61,7 +61,7 @@ func (s *FirstRunSaver) load() {
 
 func (s *FirstRunSaver) save(done bool) {
 	// Don't save if specified.
-	if !s.config.MemoryMode {
+	if s.config.MemoryMode {
 		return
 	}
 	// If done, save first run as false, else true.

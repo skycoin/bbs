@@ -12,21 +12,7 @@ There are many configurations for running a Skycoin BBS Node.
 
 ## Installing Skycoin BBS
 
-### As a snap
-
-***Warning: There is currently a bug with Skycoin BBS packaged as a snap where files aren't saving.***
-
-Skycoin BBS can be installed on some Linux distributions as a [snap package](https://snapcraft.io/).
-```bash
-# Install.
-sudo snap install skycoin-bbs --edge --devmode
-
-# Run.
-skycoin-bbs.bbsnode
-```
-Configuration files will be stored in `$HOME/snap/skycoin-bbs/common`.
-
-### Building from source
+First ensure that `go` is installed and the `GOPATH` environment variable is set.
 
 Get the source code, dependencies and build BBS Node:
 ```bash
@@ -80,8 +66,7 @@ This mode is ideal for testing, or if you don't wish to save anything to disk.
 
 ```bash
 bbsnode \
-    -save-config=false \
-    -cxo-memory-mode=true
+    -memory-mode=true
 ```
 
 The `save-config` flag determines whether or not to save the Skycoin BBS configuration files for boards, users and messages. Here, it is set as false.

@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/typ"
 	"github.com/skycoin/skycoin/src/cipher"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -276,7 +277,7 @@ func (g *BoardPage) get(bpk cipher.PubKey) (*BoardPageView, error) {
 	for i := range threadViews {
 		votesView, e := g.Threads.Votes.get(bpk, threads[i].GetRef())
 		if e != nil {
-			return nil, errors.Wrap(e, "unable to obtain votes for thread")
+			log.Println("[GATEWAY] Error:", e.Error())
 		}
 		threadViews[i] = &ThreadView{
 			Thread: threads[i],

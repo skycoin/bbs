@@ -62,15 +62,14 @@ func NewConfig() *Config {
 		TestModeTimeOut:     -1,
 		TestModePostCap:     -1,
 
-		Master:    false,
-		ConfigDir: "",
-		RPCPort:   6421,
-		RPCRemAdr: "",
+		Master:     false,
+		ConfigDir:  "",
+		MemoryMode: false,
+		RPCPort:    6421,
+		RPCRemAdr:  "",
 
 		CXOPort:    8998,
 		CXORPCPort: 8997,
-
-		MemoryMode: false,
 
 		WebGUIEnable:      true,
 		WebGUIPort:        7410,
@@ -125,6 +124,10 @@ func (c *Config) Parse() *Config {
 		"config-dir", c.ConfigDir,
 		"configuration directory - set to $HOME/.skycoin/bbs if left empty")
 
+	flag.BoolVar(&c.MemoryMode,
+		"memory-mode", c.MemoryMode,
+		"whether to use in-memory database")
+
 	flag.IntVar(&c.RPCPort,
 		"rpc-port", c.RPCPort,
 		"port of rpc server for Master node")
@@ -144,10 +147,6 @@ func (c *Config) Parse() *Config {
 	flag.IntVar(&c.CXORPCPort,
 		"cxo-rpc-port", c.CXORPCPort,
 		"port of cxo daemon rpc to connect to")
-
-	flag.BoolVar(&c.MemoryMode,
-		"cxo-memory-mode", c.MemoryMode,
-		"whether to use in-memory database")
 
 	/*
 		<<< WEB GUI FLAGS >>>
