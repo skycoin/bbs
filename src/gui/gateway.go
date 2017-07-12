@@ -5,9 +5,9 @@ import (
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/msg"
 	"github.com/skycoin/bbs/src/store/typ"
+	"github.com/skycoin/skycoin/src/cipher/go-bip39"
 	"net/http"
 	"time"
-	"github.com/skycoin/skycoin/src/cipher/go-bip39"
 )
 
 // Gateway represents the intermediate between External calls and internal processing.

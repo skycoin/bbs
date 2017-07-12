@@ -44,14 +44,12 @@ func OpenWebInterface(config *HTTPConfig, g *Gateway) (string, error) {
 }
 
 func serve(listener net.Listener, mux *http.ServeMux, q chan struct{}) {
-	for {
-		if e := http.Serve(listener, mux); e != nil {
-			select {
-			case <-q:
-				return
-			default:
-			}
-			continue
+	if e := http.Serve(listener, mux); e != nil {
+		select {
+		case <-q:
+			return
+		default:
+			log.Panic(e)
 		}
 	}
 }
@@ -155,6 +153,7 @@ func NewServeMux(api *Gateway, appLoc string, enableGUI bool) *http.ServeMux {
 	//mux.HandleFunc("/api/hex/add_post", api.NewPostWithHex)
 
 	mux.HandleFunc("/api/tests/add_filled_board", api.Tests.AddFilledBoard)
+	mux.HandleFunc("/api/tests/panic", api.Tests.Panic)
 
 	return mux
 }

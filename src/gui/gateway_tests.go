@@ -82,3 +82,8 @@ func (g *Gateway) addFilledBoard(seed string, threads, minPosts, maxPosts int) e
 	}
 	return nil
 }
+
+// Panic tests panic
+func (g *Gateway) Panic(w http.ResponseWriter, r *http.Request) {
+	panic("testing panic")
+}
