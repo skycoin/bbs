@@ -44,12 +44,14 @@ func OpenWebInterface(config *HTTPConfig, g *Gateway) (string, error) {
 }
 
 func serve(listener net.Listener, mux *http.ServeMux, q chan struct{}) {
-	if e := http.Serve(listener, mux); e != nil {
-		select {
-		case <-q:
-			return
-		default:
-			log.Panic(e)
+	for {
+		if e := http.Serve(listener, mux); e != nil {
+			select {
+			case <-q:
+				return
+			default:
+				continue
+			}
 		}
 	}
 }
