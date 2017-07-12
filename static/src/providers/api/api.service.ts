@@ -17,6 +17,10 @@ export class ApiService {
   constructor(private http: Http, private common: CommonService) {
   }
 
+  generateSeed() {
+    return this.common.handleGet(this.baseUrl + 'generate_seed');
+  }
+
   getSubmissionAddresses(data: FormData) {
     return this.common.handlePost(this.submissionAddressUrl + 'get_all', data);
   }
