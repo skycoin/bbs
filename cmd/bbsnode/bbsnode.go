@@ -19,8 +19,10 @@ import (
 	"time"
 )
 
-const configSubDir = ".skybbs"
-const webSubDir = "src/github.com/skycoin/bbs/static/dist"
+const webDir = "static/dist"
+
+const correctionConfigSubDir = ".skybbs"
+const correctionWebSubDir = "src/github.com/skycoin/bbs/static/dist"
 
 // Config represents commandline arguments.
 type Config struct {
@@ -73,7 +75,7 @@ func NewConfig() *Config {
 
 		WebGUIEnable:      true,
 		WebGUIPort:        7410,
-		WebGUIDir:         "",
+		WebGUIDir:         webDir,
 		WebGUIOpenBrowser: true,
 	}
 }
@@ -201,7 +203,7 @@ func (c *Config) PostProcess() (*Config, error) {
 	if !c.MemoryMode {
 		// Action on BBS configuration files.
 		if c.ConfigDir == "" {
-			c.ConfigDir = filepath.Join(file.UserHome(), configSubDir)
+			c.ConfigDir = filepath.Join(file.UserHome(), correctionConfigSubDir)
 		}
 		// Ensure directories exist.
 		if e := os.MkdirAll(c.ConfigDir, os.FileMode(0700)); e != nil {
@@ -215,7 +217,7 @@ func (c *Config) PostProcess() (*Config, error) {
 	}
 	// Web interface.
 	if c.WebGUIDir == "" {
-		c.WebGUIDir = filepath.Join(os.Getenv("GOPATH"), webSubDir)
+		c.WebGUIDir = filepath.Join(os.Getenv("GOPATH"), correctionWebSubDir)
 		fmt.Println("Web Dir:", c.WebGUIDir)
 	}
 	return c, nil

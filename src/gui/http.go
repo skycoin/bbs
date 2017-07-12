@@ -3,13 +3,10 @@ package gui
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
-	"os"
 	"path"
 	"path/filepath"
-	"strings"
 )
 
 var (
@@ -57,30 +54,20 @@ func serve(listener net.Listener, mux *http.ServeMux, q chan struct{}) {
 }
 
 // Allows serving Angular.JS content swiftly.
-func fileServe(mux *http.ServeMux, appLoc string) error {
+func fileServe(mux *http.ServeMux, appLoc string) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data, e := ioutil.ReadFile(path.Join(appLoc, "index.html"))
-		if e != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(e.Error()))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write(data)
+		page := path.Join(appLoc, "index.html")
+		http.ServeFile(w, r, page)
 	})
 
-	return filepath.Walk(appLoc, func(path string, info os.FileInfo, err error) error {
-		// Skip directories.
-		if info.IsDir() {
-			return nil
+	fInfos, _ := ioutil.ReadDir(appLoc)
+	for _, fInfo := range fInfos {
+		route := fmt.Sprintf("/%s", fInfo.Name())
+		if fInfo.IsDir() {
+			route += "/"
 		}
-		httpPath := strings.TrimPrefix(path, appLoc)
-		log.Printf("[WEBGUI] Found path: '%s'.", httpPath)
-		mux.HandleFunc(httpPath, func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path)
-		})
-		return nil
-	})
+		mux.Handle(route, http.FileServer(http.Dir(appLoc)))
+	}
 }
 
 // Close closes the http service.
