@@ -50,31 +50,46 @@ func (s *StateSaver) getState(bpk cipher.PubKey) *State {
 }
 
 // GetThreadVotes obtains thread votes.
-func (s *StateSaver) GetThreadVotes(bpk cipher.PubKey, tRef skyobject.Reference) []typ.Vote {
+func (s *StateSaver) GetThreadVotes(cxo *CXO, bpk cipher.PubKey, tRef skyobject.Reference) []typ.Vote {
 	votes, has := s.getState(bpk).GetThreadVotes(tRef)
 	if !has {
-		log.Printf("thread of reference '%s:%s' not found in state saver", bpk.Hex(), tRef.String())
-		return nil
+		s.Fill(cxo.c.LastFullRoot(bpk))
+		votes, has := s.getState(bpk).GetThreadVotes(tRef)
+		if !has {
+			log.Printf("thread of reference '%s:%s' not found in state saver", bpk.Hex(), tRef.String())
+			return nil
+		}
+		return votes
 	}
 	return votes
 }
 
 // GetPostVotes obtains post votes.
-func (s *StateSaver) GetPostVotes(bpk cipher.PubKey, pRef skyobject.Reference) []typ.Vote {
+func (s *StateSaver) GetPostVotes(cxo *CXO, bpk cipher.PubKey, pRef skyobject.Reference) []typ.Vote {
 	votes, has := s.getState(bpk).GetPostVotes(pRef)
 	if !has {
-		log.Printf("post of reference '%s:%s' not found in state saver", bpk.Hex(), pRef.String())
-		return nil
+		s.Fill(cxo.c.LastFullRoot(bpk))
+		votes, has := s.getState(bpk).GetPostVotes(pRef)
+		if !has {
+			log.Printf("post of reference '%s:%s' not found in state saver", bpk.Hex(), pRef.String())
+			return nil
+		}
+		return votes
 	}
 	return votes
 }
 
 // GetUserVotes obtains user votes.
-func (s *StateSaver) GetUserVotes(bpk, upk cipher.PubKey) []typ.Vote {
+func (s *StateSaver) GetUserVotes(cxo *CXO, bpk, upk cipher.PubKey) []typ.Vote {
 	votes, has := s.getState(bpk).GetUserVotes(upk)
 	if !has {
-		log.Printf("user of reference '%s:%s' not found in state saver", bpk.Hex(), upk.Hex())
-		return nil
+		s.Fill(cxo.c.LastFullRoot(bpk))
+		votes, has := s.getState(bpk).GetUserVotes(upk)
+		if !has {
+			log.Printf("user of reference '%s:%s' not found in state saver", bpk.Hex(), upk.Hex())
+			return nil
+		}
+		return votes
 	}
 	return votes
 }
@@ -182,7 +197,7 @@ func (s *State) Fill(r *node.Root) *State {
 	tvsMap, e := s.fillThreadVotes(r.Walker())
 	if e != nil {
 		log.Printf(
-			"[CONTAINER : INTERNAL STATE] Failed for board '%s'. Error: '%s'",
+			"[CONTAINER : INTERNAL STATE] fillThreadVotes failed for board '%s'. Error: '%s'",
 			r.Pub().Hex(), e.Error(),
 		)
 	} else {
@@ -195,7 +210,7 @@ func (s *State) Fill(r *node.Root) *State {
 	pvsMap, e := s.fillPostVotes(r.Walker())
 	if e != nil {
 		log.Printf(
-			"[CONTAINER : INTERNAL STATE] Failed for board '%s'. Error: '%s'",
+			"[CONTAINER : INTERNAL STATE] fillPostVotes failed for board '%s'. Error: '%s'",
 			r.Pub().Hex(), e.Error(),
 		)
 	} else {
@@ -208,7 +223,7 @@ func (s *State) Fill(r *node.Root) *State {
 	uvsMap, e := s.fillUserVotes(r.Walker())
 	if e != nil {
 		log.Printf(
-			"[CONTAINER : INTERNAL STATE] Failed for user '%s'. Error: '%s'",
+			"[CONTAINER : INTERNAL STATE] fillUserVotes failed for board '%s'. Error: '%s'",
 			r.Pub().Hex(), e.Error(),
 		)
 	} else {
@@ -259,7 +274,7 @@ func (s *State) fillPostVotes(w *node.RootWalker) (map[skyobject.Reference][]typ
 
 func (s *State) fillUserVotes(w *node.RootWalker) (map[cipher.PubKey][]typ.Vote, error) {
 	vc := &typ.UserVotesContainer{}
-	if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
+	if e := w.AdvanceFromRoot(vc, makeUserVotesContainerFinder(w.Root())); e != nil {
 		return nil, e
 	}
 	userVotesMap := make(map[cipher.PubKey][]typ.Vote)

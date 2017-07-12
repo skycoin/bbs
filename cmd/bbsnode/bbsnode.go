@@ -195,7 +195,7 @@ func (c *Config) PostProcess() (*Config, error) {
 		// Enforce behaviour.
 		c.Master = true
 		c.WebGUIEnable = true
-		c.MemoryMode = false
+		c.MemoryMode = true
 	}
 	// Configure configuration directories if necessary.
 	if !c.MemoryMode {

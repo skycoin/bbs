@@ -11,20 +11,20 @@ import (
 func (c *CXO) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) []typ.Vote {
 	c.Lock(c.GetVotesForThread)
 	defer c.Unlock()
-	return c.ss.GetThreadVotes(bpk, tRef)
+	return c.ss.GetThreadVotes(c, bpk, tRef)
 }
 
 // GetVotesForPost obtains the votes for specified post present in specified board.
 func (c *CXO) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) []typ.Vote {
 	c.Lock(c.GetVotesForPost)
 	defer c.Unlock()
-	return c.ss.GetPostVotes(bpk, pRef)
+	return c.ss.GetPostVotes(c, bpk, pRef)
 }
 
 func (c *CXO) GetVotesForUser(bpk, upk cipher.PubKey) []typ.Vote {
 	c.Lock(c.GetVotesForUser)
 	defer c.Unlock()
-	return c.ss.GetUserVotes(bpk, upk)
+	return c.ss.GetUserVotes(c, bpk, upk)
 }
 
 // VoteForThread adds a vote for a thread on a specified board.
