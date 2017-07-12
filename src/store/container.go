@@ -29,7 +29,7 @@ type CXO struct {
 
 func NewCXO(config *Config) (*CXO, error) {
 	c := &CXO{
-		ss:     NewStateSaver(!config.Master),
+		ss:     NewStateSaver(config.InternalState),
 		config: config,
 		msgs:   make(chan *Msg),
 	}

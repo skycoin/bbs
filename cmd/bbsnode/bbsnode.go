@@ -38,10 +38,11 @@ type Config struct {
 	TestModeTimeOut     int  // Will stop simulated activity after this time (in seconds). Disabled if negative.
 	TestModePostCap     int  // Maximum number of posts allowed. Disabled if negative.
 
-	Master    bool   // Whether BBS node can host boards.
-	ConfigDir string // Configuration directory.
-	RPCPort   int    // RPC server port (Master node only).
-	RPCRemAdr string // RPC remote address (Master node only).
+	Master        bool   // Whether BBS node can host boards.
+	InternalState bool   // Whether to use internal state for votes.
+	ConfigDir     string // Configuration directory.
+	RPCPort       int    // RPC server port (Master node only).
+	RPCRemAdr     string // RPC remote address (Master node only).
 
 	CXOPort    int  // Port of CXO Daemon.
 	CXORPCPort int  // Port of CXO Daemon's RPC.
@@ -64,11 +65,12 @@ func NewConfig() *Config {
 		TestModeTimeOut:     -1,
 		TestModePostCap:     -1,
 
-		Master:     false,
-		ConfigDir:  "",
-		MemoryMode: false,
-		RPCPort:    6421,
-		RPCRemAdr:  "",
+		Master:        false,
+		InternalState: true,
+		ConfigDir:     "",
+		MemoryMode:    false,
+		RPCPort:       6421,
+		RPCRemAdr:     "",
 
 		CXOPort:    8998,
 		CXORPCPort: 8997,
@@ -121,6 +123,10 @@ func (c *Config) Parse() *Config {
 	flag.BoolVar(&c.Master,
 		"master", c.Master,
 		"whether to enable bbs node to host boards")
+
+	flag.BoolVar(&c.InternalState,
+		"internal-state", c.InternalState,
+		"whether to enable internal state for caching and viewing votes")
 
 	flag.StringVar(&c.ConfigDir,
 		"config-dir", c.ConfigDir,
@@ -231,12 +237,13 @@ func run(config *Config, quit chan int) {
 	log.Println("[CONFIG] Connecting to cxo on port", config.CXOPort)
 
 	storeConfig := &store.Config{
-		Master:     config.Master,
-		TestMode:   config.TestMode,
-		MemoryMode: config.MemoryMode,
-		ConfigDir:  config.ConfigDir,
-		CXOPort:    config.CXOPort,
-		CXORPCPort: config.CXORPCPort,
+		Master:        config.Master,
+		TestMode:      config.TestMode,
+		MemoryMode:    config.MemoryMode,
+		InternalState: config.InternalState,
+		ConfigDir:     config.ConfigDir,
+		CXOPort:       config.CXOPort,
+		CXORPCPort:    config.CXORPCPort,
 	}
 	container, e := store.NewCXO(storeConfig)
 	CatchError(e, "unable to create cxo container")
