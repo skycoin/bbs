@@ -302,10 +302,7 @@ func (g *ThreadVotes) get(bpk cipher.PubKey, tRef skyobject.Reference) (*VotesVi
 	cu := g.userSaver.GetCurrent()
 	upk := cu.GetPK()
 	// Get votes.
-	votes, e := g.container.GetVotesForThread(bpk, tRef)
-	if e != nil {
-		return nil, e
-	}
+	votes := g.container.GetVotesForThread(bpk, tRef)
 	vv := &VotesView{}
 	for _, vote := range votes {
 		switch vote.Mode {

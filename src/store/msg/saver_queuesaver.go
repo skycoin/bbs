@@ -193,6 +193,19 @@ func (qs *QueueSaver) Process() {
 			ok, e := rpcClient.VoteThread(req)
 			log.Printf("[QUEUESAVER] \t- (COMPLETE!) Status: '%v', Err: '%s'", ok, e.Error())
 			doneList = append(doneList, i)
+
+		case qi.ReqVoteUser != nil:
+			req := qi.ReqVoteUser
+			log.Println("[QUEUESAVER] RESENDING: (Vote User Request)")
+
+			rpcClient, e := connectRemote(req.BoardPubKey, qi)
+			if e != nil {
+				break
+			}
+
+			ok, e := rpcClient.VoteUser(req)
+			log.Printf("[QUEUESAVER] \t- (COMPLETE!) Status: '%v', Err: '%s'", ok, e.Error())
+			doneList = append(doneList, i)
 		}
 	}
 
@@ -344,6 +357,42 @@ func (qs *QueueSaver) AddVoteThreadReq(bpk cipher.PubKey, tRef skyobject.Referen
 		return nil
 	}
 	if ok, e := rpcClient.VoteThread(req); e != nil {
+		e = errors.Wrap(e, "error from remote")
+		log.Println("[QUEUESAVER] \t- reply:", e)
+		return e
+	} else {
+		log.Println("[QUEUESAVER] \t- (COMPLETE!) Status:", ok)
+		return nil
+	}
+}
+
+func (qs *QueueSaver) AddVoteUserReq(bpk, upk cipher.PubKey, vote *typ.Vote) error {
+	qs.Lock()
+	defer qs.Unlock()
+	log.Println("[QUEUESAVER] Sending vote user request...")
+	req := &rpc.ReqVoteUser{bpk, upk, vote}
+	b, e := qs.c.GetBoard(bpk)
+	if e != nil {
+		e = errors.Wrap(e, "failed to obtain board")
+		log.Printf("[QUEUESAVER] \t- Error: '%s'", e.Error())
+		return e
+	}
+	subAddr, e := qs.getSubAddr(b)
+	if e != nil {
+		e = errors.Wrap(e, "failed to obtain submission address")
+		log.Printf("[QUEUESAVER] \t- Error: '%s'", e.Error())
+		return e
+	}
+	rpcClient, e := rpc.NewClient(subAddr)
+	if e != nil {
+		// Add to queue.
+		log.Printf("[QUEUESAVER] \t- rpc error: '%s'", e.Error())
+		log.Printf("[QUEUESAVER] \t- adding request to queue: %v", req)
+		qs.queue = append(qs.queue, NewQueueItem().SetReqVoteUser(req))
+		qs.save()
+		return nil
+	}
+	if ok, e := rpcClient.VoteUser(req); e != nil {
 		e = errors.Wrap(e, "error from remote")
 		log.Println("[QUEUESAVER] \t- reply:", e)
 		return e

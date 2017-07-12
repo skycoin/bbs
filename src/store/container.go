@@ -54,8 +54,10 @@ func (c *CXO) setupCXONode() error {
 	r.Register("Vote", typ.Vote{})
 	r.Register("ThreadVotes", typ.ThreadVotes{})
 	r.Register("PostVotes", typ.PostVotes{})
+	r.Register("UserVotes", typ.UserVotes{})
 	r.Register("ThreadVotesContainer", typ.ThreadVotesContainer{})
 	r.Register("PostVotesContainer", typ.PostVotesContainer{})
+	r.Register("UserVotesContainer", typ.UserVotesContainer{})
 	r.Done()
 
 	// Setup CXO Configuration.

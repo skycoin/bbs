@@ -16,6 +16,7 @@ type QueueItem struct {
 	ReqNewThread    *rpc.ReqNewThread  `json:"new_thread_request,omitempty"`
 	ReqVotePost     *rpc.ReqVotePost   `json:"vote_post_request,omitempty"`
 	ReqVoteThread   *rpc.ReqVoteThread `json:"vote_thread_request,omitempty"`
+	ReqVoteUser     *rpc.ReqVoteUser `json:"vote_user_request,omitempty"`
 }
 
 // NewQueueItem creates a new QueueItem.
@@ -32,6 +33,7 @@ func (qi *QueueItem) Clear() {
 	qi.ReqNewThread = nil
 	qi.ReqVotePost = nil
 	qi.ReqVoteThread = nil
+	qi.ReqVoteUser = nil
 }
 
 func (qi *QueueItem) SetReqNewPost(req *rpc.ReqNewPost) *QueueItem {
@@ -51,5 +53,10 @@ func (qi *QueueItem) SetReqVotePost(req *rpc.ReqVotePost) *QueueItem {
 
 func (qi *QueueItem) SetReqVoteThread(req *rpc.ReqVoteThread) *QueueItem {
 	qi.ReqVoteThread = req
+	return qi
+}
+
+func (qi *QueueItem) SetReqVoteUser(req *rpc.ReqVoteUser) *QueueItem {
+	qi.ReqVoteUser = req
 	return qi
 }

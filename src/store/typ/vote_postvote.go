@@ -39,14 +39,10 @@ func (pvc *PostVotesContainer) AddPost(pRef skyobject.Reference) {
 // RemovePost removes a post from PostVotesContainer.
 func (pvc *PostVotesContainer) RemovePost(pRef skyobject.Reference) {
 	for i, p := range pvc.Posts {
-		if p.Post != pRef {
-			continue
+		if p.Post == pRef {
+			pvc.Posts[i], pvc.Posts[0] = pvc.Posts[0], pvc.Posts[i]
+			pvc.Posts = pvc.Posts[1:]
+			return
 		}
-		// Swap i'th and last element.
-		pvc.Posts[i], pvc.Posts[len(pvc.Posts)-1] =
-			pvc.Posts[len(pvc.Posts)-1], pvc.Posts[i]
-		// Remove last element.
-		pvc.Posts = pvc.Posts[:len(pvc.Posts)-1]
-		return
 	}
 }

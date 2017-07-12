@@ -38,54 +38,50 @@ func (s *StateSaver) Init(c *CXO, pks ...cipher.PubKey) {
 	}
 }
 
-func (s *StateSaver) getState(bpk cipher.PubKey) (*State, error) {
+func (s *StateSaver) getState(bpk cipher.PubKey) *State {
 	s.Lock()
 	defer s.Unlock()
 	state, has := s.store[bpk]
 	if !has {
-		return nil, errors.Errorf(
-			"board of public key '%s' not found in state saver", bpk.Hex())
+		state = NewState()
+		s.store[bpk] = state
 	}
-	return state, nil
+	return state
 }
 
 // GetThreadVotes obtains thread votes.
-func (s *StateSaver) GetThreadVotes(bpk cipher.PubKey, tRef skyobject.Reference) ([]typ.Vote, error) {
-	state, e := s.getState(bpk)
-	if e != nil {
-		return nil, e
-	}
-	votes, has := state.GetThreadVotes(tRef)
+func (s *StateSaver) GetThreadVotes(bpk cipher.PubKey, tRef skyobject.Reference) []typ.Vote {
+	votes, has := s.getState(bpk).GetThreadVotes(tRef)
 	if !has {
-		return nil, errors.Errorf(
-			"thread of reference '%s:%s' not found in state saver", bpk.Hex(), tRef.String())
+		log.Printf("thread of reference '%s:%s' not found in state saver", bpk.Hex(), tRef.String())
+		return nil
 	}
-	return votes, nil
+	return votes
 }
 
 // GetPostVotes obtains post votes.
-func (s *StateSaver) GetPostVotes(bpk cipher.PubKey, pRef skyobject.Reference) ([]typ.Vote, error) {
-	state, e := s.getState(bpk)
-	if e != nil {
-		return nil, e
-	}
-	votes, has := state.GetPostVotes(pRef)
+func (s *StateSaver) GetPostVotes(bpk cipher.PubKey, pRef skyobject.Reference) []typ.Vote {
+	votes, has := s.getState(bpk).GetPostVotes(pRef)
 	if !has {
-		return nil, errors.Errorf(
-			"post of reference '%s:%s' not found in state saver", bpk.Hex(), pRef.String())
+		log.Printf("post of reference '%s:%s' not found in state saver", bpk.Hex(), pRef.String())
+		return nil
 	}
-	return votes, nil
+	return votes
+}
+
+// GetUserVotes obtains user votes.
+func (s *StateSaver) GetUserVotes(bpk, upk cipher.PubKey) []typ.Vote {
+	votes, has := s.getState(bpk).GetUserVotes(upk)
+	if !has {
+		log.Printf("user of reference '%s:%s' not found in state saver", bpk.Hex(), upk.Hex())
+		return nil
+	}
+	return votes
 }
 
 // ReplaceThreadVotes replaces thread votes.
 func (s *StateSaver) ReplaceThreadVotes(bpk cipher.PubKey, tRef skyobject.Reference, votes []typ.Vote) {
-	state, e := s.getState(bpk)
-	if e != nil {
-		state = NewState()
-		s.Lock()
-		s.store[bpk] = state
-		s.Unlock()
-	}
+	state := s.getState(bpk)
 	state.tMux.Lock()
 	state.tMap[tRef] = votes
 	state.tMux.Unlock()
@@ -93,16 +89,18 @@ func (s *StateSaver) ReplaceThreadVotes(bpk cipher.PubKey, tRef skyobject.Refere
 
 // ReplacePostVotes replaces post votes.
 func (s *StateSaver) ReplacePostVotes(bpk cipher.PubKey, pRef skyobject.Reference, votes []typ.Vote) {
-	state, e := s.getState(bpk)
-	if e != nil {
-		state = NewState()
-		s.Lock()
-		s.store[bpk] = state
-		s.Unlock()
-	}
+	state := s.getState(bpk)
 	state.pMux.Lock()
 	state.pMap[pRef] = votes
 	state.pMux.Unlock()
+}
+
+// ReplaceUserVotes replaces user votes.
+func (s *StateSaver) ReplaceUserVotes(bpk, upk cipher.PubKey, votes []typ.Vote) {
+	state := s.getState(bpk)
+	state.uMux.Lock()
+	state.uMap[upk] = votes
+	state.uMux.Unlock()
 }
 
 // Fill fills a state.
@@ -126,20 +124,14 @@ func (s *StateSaver) Remove(bpk cipher.PubKey) {
 }
 
 func (s *StateSaver) RemoveThreadVotes(bpk cipher.PubKey, tRef skyobject.Reference) {
-	state, e := s.getState(bpk)
-	if e != nil {
-		return
-	}
+	state := s.getState(bpk)
 	state.tMux.Lock()
 	delete(state.tMap, tRef)
 	state.tMux.Unlock()
 }
 
 func (s *StateSaver) RemovePostVotes(bpk cipher.PubKey, pRef skyobject.Reference) {
-	state, e := s.getState(bpk)
-	if e != nil {
-		return
-	}
+	state := s.getState(bpk)
 	state.pMux.Lock()
 	delete(state.pMap, pRef)
 	state.pMux.Unlock()
@@ -151,6 +143,8 @@ type State struct {
 	tMap map[skyobject.Reference][]typ.Vote
 	pMux sync.Mutex
 	pMap map[skyobject.Reference][]typ.Vote
+	uMux sync.Mutex
+	uMap map[cipher.PubKey][]typ.Vote
 }
 
 // NewState creates a new internal state.
@@ -158,6 +152,7 @@ func NewState() *State {
 	return &State{
 		tMap: make(map[skyobject.Reference][]typ.Vote),
 		pMap: make(map[skyobject.Reference][]typ.Vote),
+		uMap: make(map[cipher.PubKey][]typ.Vote),
 	}
 }
 
@@ -172,6 +167,13 @@ func (s *State) GetPostVotes(ref skyobject.Reference) ([]typ.Vote, bool) {
 	s.pMux.Lock()
 	defer s.pMux.Unlock()
 	votes, has := s.pMap[ref]
+	return votes, has
+}
+
+func (s *State) GetUserVotes(pk cipher.PubKey) ([]typ.Vote, bool) {
+	s.uMux.Lock()
+	defer s.uMux.Unlock()
+	votes, has := s.uMap[pk]
 	return votes, has
 }
 
@@ -202,6 +204,19 @@ func (s *State) Fill(r *node.Root) *State {
 			s.pMap[k] = v
 		}
 		s.pMux.Unlock()
+	}
+	uvsMap, e := s.fillUserVotes(r.Walker())
+	if e != nil {
+		log.Printf(
+			"[CONTAINER : INTERNAL STATE] Failed for user '%s'. Error: '%s'",
+			r.Pub().Hex(), e.Error(),
+		)
+	} else {
+		s.uMux.Lock()
+		for k, v := range uvsMap {
+			s.uMap[k] = v
+		}
+		s.uMux.Unlock()
 	}
 	return s
 }
@@ -240,4 +255,22 @@ func (s *State) fillPostVotes(w *node.RootWalker) (map[skyobject.Reference][]typ
 		postVotesMap[postVotes.Post] = votes
 	}
 	return postVotesMap, nil
+}
+
+func (s *State) fillUserVotes(w *node.RootWalker) (map[cipher.PubKey][]typ.Vote, error) {
+	vc := &typ.UserVotesContainer{}
+	if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
+		return nil, e
+	}
+	userVotesMap := make(map[cipher.PubKey][]typ.Vote)
+	for _, userVotes := range vc.Users {
+		votes := make([]typ.Vote, len(userVotes.Votes))
+		for i, ref := range userVotes.Votes {
+			if e := w.DeserializeFromRef(ref, &votes[i]); e != nil {
+				return nil, errors.Errorf("failed to obtain vote '%s'", ref.String())
+			}
+		}
+		userVotesMap[userVotes.User] = votes
+	}
+	return userVotesMap, nil
 }

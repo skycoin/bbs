@@ -124,6 +124,8 @@ func NewServeMux(api *Gateway, appLoc string, enableGUI bool) *http.ServeMux {
 	mux.HandleFunc("/api/users/masters/add", api.Users.Masters.Add)
 	mux.HandleFunc("/api/users/masters/current/get", api.Users.Masters.Current.Get)
 	mux.HandleFunc("/api/users/masters/current/set", api.Users.Masters.Current.Set)
+	mux.HandleFunc("/api/users/votes/get", api.Users.Votes.Get)
+	mux.HandleFunc("/api/users/votes/add", api.Users.Votes.Add)
 
 	mux.HandleFunc("/api/boards/get_all", api.Boards.GetAll)
 	mux.HandleFunc("/api/boards/get", api.Boards.Get)
