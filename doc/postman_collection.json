@@ -870,6 +870,17 @@
 			"response": []
 		},
 		{
+          "name": "Generate Seed",
+          "request": {
+            "url": "http://127.0.0.1:7410/api/generate_seed",
+            "method": "GET",
+            "header": [],
+            "body": {},
+            "description": ""
+          },
+          "response": []
+        },
+      {
 			"name": "Quit",
 			"request": {
 				"url": "http://127.0.0.1:7410/api/quit",

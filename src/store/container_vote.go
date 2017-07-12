@@ -12,23 +12,6 @@ func (c *CXO) GetVotesForThread(bpk cipher.PubKey, tRef skyobject.Reference) ([]
 	c.Lock(c.GetVotesForThread)
 	defer c.Unlock()
 	return c.ss.GetThreadVotes(bpk, tRef)
-
-	//w := c.c.LastFullRoot(bpk).Walker()
-	//vc := &typ.ThreadVotesContainer{}
-	//if e := w.AdvanceFromRoot(vc, makeThreadVotesContainerFinder(w.Root())); e != nil {
-	//	return nil, e
-	//}
-	//threadVotes, e := vc.GetThreadVotes(tRef)
-	//if e != nil {
-	//	return nil, e
-	//}
-	//votes := make([]typ.Vote, len(threadVotes.Votes))
-	//for i, ref := range threadVotes.Votes {
-	//	if e := w.DeserializeFromRef(ref, &votes[i]); e != nil {
-	//		return nil, errors.Errorf("failed to obtain vote '%s'", ref.String())
-	//	}
-	//}
-	//return votes, nil
 }
 
 // GetVotesForPost obtains the votes for specified post present in specified board.
@@ -36,23 +19,6 @@ func (c *CXO) GetVotesForPost(bpk cipher.PubKey, pRef skyobject.Reference) ([]ty
 	c.Lock(c.GetVotesForPost)
 	defer c.Unlock()
 	return c.ss.GetPostVotes(bpk, pRef)
-
-	//w := c.c.LastFullRoot(bpk).Walker()
-	//vc := &typ.PostVotesContainer{}
-	//if e := w.AdvanceFromRoot(vc, makePostVotesContainerFinder(w.Root())); e != nil {
-	//	return nil, e
-	//}
-	//postVotes, e := vc.GetPostVotes(pRef)
-	//if e != nil {
-	//	return nil, e
-	//}
-	//votes := make([]typ.Vote, len(postVotes.Votes))
-	//for i, ref := range postVotes.Votes {
-	//	if e := w.DeserializeFromRef(ref, &votes[i]); e != nil {
-	//		return nil, errors.Errorf("failed to obtain vote '%s'", ref.String())
-	//	}
-	//}
-	//return votes, nil
 }
 
 // VoteForThread adds a vote for a thread on a specified board.

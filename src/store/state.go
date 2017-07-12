@@ -27,6 +27,8 @@ func NewStateSaver() *StateSaver {
 func (s *StateSaver) Init(c *CXO, pks ...cipher.PubKey) {
 	s.Lock()
 	defer s.Unlock()
+	s.store = nil
+	s.store = map[cipher.PubKey]*State{}
 	for _, pk := range pks {
 		r := c.node.Container().LastFullRoot(pk)
 		if r == nil {
@@ -114,6 +116,33 @@ func (s *StateSaver) Fill(r *node.Root) {
 	s.Unlock()
 
 	state.Fill(r)
+}
+
+// Remove removes a board state.
+func (s *StateSaver) Remove(bpk cipher.PubKey) {
+	s.Lock()
+	defer s.Unlock()
+	delete(s.store, bpk)
+}
+
+func (s *StateSaver) RemoveThreadVotes(bpk cipher.PubKey, tRef skyobject.Reference) {
+	state, e := s.getState(bpk)
+	if e != nil {
+		return
+	}
+	state.tMux.Lock()
+	delete(state.tMap, tRef)
+	state.tMux.Unlock()
+}
+
+func (s *StateSaver) RemovePostVotes(bpk cipher.PubKey, pRef skyobject.Reference) {
+	state, e := s.getState(bpk)
+	if e != nil {
+		return
+	}
+	state.pMux.Lock()
+	delete(state.pMap, pRef)
+	state.pMux.Unlock()
 }
 
 // State compiles maps for content and user votes.
