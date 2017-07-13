@@ -100,3 +100,7 @@ There are currently two ways of interacting with Skycoin BBS.
 * **Web interface -** By default, the flags `web-gui-enable` and `web-gui-open-browser` are enabled. Hence, when BBS is launched, the web gui will be opened via the system browser.
 
 * **Restful json api -** This is ideal for controlling nodes without a graphical user interface (in a server), or for building applications or administrator tools. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [docfiles/postman_collection.json](https://raw.githubusercontent.com/skycoin/bbs/master/docfiles/postman_collection.json).
+
+## Participate
+
+* [Telegram](https://t.me/joinchat/B_ax-ERzBNAAQDuqgGgOUQ) (Skycoin BBS Development)
