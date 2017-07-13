@@ -43,6 +43,7 @@ func (p *Post) Sign(pk cipher.PubKey, sk cipher.SecKey) error {
 	}
 	p.Author = pk.Hex()
 	p.Created = 0
+	p.Ref = ""
 	p.Sig = cipher.Sig{}
 	p.Sig = cipher.SignHash(cipher.SumSHA256(encoder.Serialize(*p)), sk)
 	return nil
@@ -63,6 +64,7 @@ func (p Post) Verify() error {
 	sig := p.Sig
 	p.Sig = cipher.Sig{}
 	p.Created = 0
+	p.Ref = ""
 
 	return cipher.VerifySignature(
 		authorPK, sig,

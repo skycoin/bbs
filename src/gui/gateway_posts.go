@@ -74,7 +74,7 @@ func (g *Posts) Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Posts) add(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) (e error) {
-	// Check request.
+	// Check post.
 	uc := g.userSaver.GetCurrent()
 	if e = post.Sign(uc.GetPK(), uc.GetSK()); e != nil {
 		return
