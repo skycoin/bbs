@@ -12,6 +12,11 @@ export interface Post {
   created?: number;
   ref?: string;
   votes?: VotesSummary; // Posts now have vote summary here.
+  uiOptions?: VoteOptions;
+}
+
+export interface VoteOptions {
+  voted?: boolean;
 }
 
 export interface ThreadPage {
@@ -36,6 +41,7 @@ export interface Thread {
   master_board?: string;
   ref?: string;
   votes?: VotesSummary; // Threads now have vote summary here.
+  uiOptions?: VoteOptions;
 }
 
 export interface Board {

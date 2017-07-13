@@ -1,32 +1,45 @@
 <div class="container-fluid">
-
   <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.thread?.name != '' ">
     <div class="card-block">
       <div class="content">
-        <h4 class="card-title single-line">{{data?.thread?.name}}</h4>
+        <div class="title-box">
+          <h4 class="card-title single-line title">{{data?.thread?.name}}</h4>
+          <small class="text-muted"><i class="fa fa-users"></i><span>{{data?.posts?.length}}</span></small>
+        </div>
         <p class="card-text break-line text-muted">{{data?.thread?.description}}</p>
-      </div>
-      <div class="other">
-        <small class="text-muted"><i class="fa fa-users"></i><span>{{data?.posts?.length}}</span></small>
       </div>
     </div>
     <div class="card-block">
-      <p class="d-flex justify-content-end"><button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Post</button></p>
+      <p class="d-flex justify-content-end">
+        <button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Post</button>
+      </p>
+      <p class="d-flex justify-content-end thread-vote-box">
+        <span (click)="addThreadVote(1,data.thread,$event)"><i class="fa fa-thumbs-o-up"></i>{{data?.thread?.votes?.up_votes}}</span>
+        <span (click)="addThreadVote(-1,data.thread,$event)"><i class="fa fa-thumbs-o-down"></i>{{data?.thread?.votes?.down_votes}}</span>
+      </p>
     </div>
   </div>
   <p class="text-muted text-center" *ngIf="data?.posts?.length <= 0">Add the first <a href="javascript:void(0);" (click)="openReply(addPost)"><i class="fa fa-reply"></i>post</a></p>
   <!--trackBy: item?.ref-->
   <!--(data.posts | orderBy:sort)-->
-  <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data.posts | orderBy:sort);let i = index;">
-    <div class="card-block">
-      <div class="content">
-        <h6 class="card-text single-line">{{item?.title}}</h6>
-        <p class="card-text text-primary single-line" title="{{item?.author}}" placement="top" ><small [ngbTooltip]="item?.author">{{item?.author}}</small></p>
-        <p class="card-text text-muted break-line" [innerHTML]="item?.body | safeHtml"></p>
-        <p class="card-text single-line"><small class="text-muted">Posted:<span class="created">{{item?.created / 1000000 | date:'yMMMdjms'}}</span></small></p>
-      </div>
-      <div class="other">
-        <small class="card-text text-muted index">#{{i+1}}</small>
+  <div class="post-box">
+    <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data.posts | orderBy:sort);let i = index;">
+      <div class="card-block">
+        <div class="content">
+          <div class="title-box">
+            <h6 class="card-text single-line title">{{item?.title}}</h6>
+            <small class="text-muted index">#{{i+1}}</small>
+          </div>
+          <p class="card-text text-primary single-line" title="{{item?.author}}" placement="top"><small [ngbTooltip]="item?.author">{{item?.author}}</small></p>
+          <p class="card-text text-muted break-line" [innerHTML]="item?.body | safeHtml"></p>
+          <div class="card-text">
+            <small class="text-muted time-box">Posted:<span class="created">{{item?.created / 1000000 | date:'yMMMdjms'}}</span></small>
+            <div class="vote-box">
+              <span (click)="addPostVote(1,item,$event)"><i class="fa fa-thumbs-o-up"></i>{{item?.votes?.up_votes}}</span>
+              <span (click)="addPostVote(-1,item,$event)"><i class="fa fa-thumbs-o-down"></i>{{item?.votes?.down_votes}}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

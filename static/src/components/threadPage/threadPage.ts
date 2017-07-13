@@ -1,5 +1,5 @@
 import { Component, HostBinding, HostListener, OnInit, ViewEncapsulation } from '@angular/core';
-import { ApiService, CommonService, ThreadPage } from '../../providers';
+import { ApiService, CommonService, ThreadPage, Post, VotesSummary, Thread } from '../../providers';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -68,10 +68,10 @@ export class ThreadPageComponent implements OnInit {
   };
 
   constructor(private api: ApiService,
-              private router: Router,
-              private route: ActivatedRoute,
-              private modal: NgbModal,
-              private common: CommonService) {
+    private router: Router,
+    private route: ActivatedRoute,
+    private modal: NgbModal,
+    private common: CommonService) {
   }
 
   ngOnInit() {
@@ -85,7 +85,60 @@ export class ThreadPageComponent implements OnInit {
   public setSort() {
     this.sort = this.sort === 'desc' ? 'esc' : 'desc';
   }
-
+  addThreadVote(mode: string, thread: Thread, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    if (thread.uiOptions !== undefined && thread.uiOptions.voted !== undefined && thread.uiOptions.voted) {
+      return;
+    }
+    thread.uiOptions = { voted: true };
+    const data = new FormData();
+    data.append('board', this.boardKey);
+    data.append('thread', thread.ref);
+    data.append('mode', mode);
+    this.api.addThreadVote(data).subscribe(result => {
+      if (result) {
+        data.delete('mode');
+        this.api.getThreadVotes(data).subscribe((votes: VotesSummary) => {
+          thread.votes.up_votes = votes.up_votes;
+          thread.votes.down_votes = votes.down_votes;
+        }, err => {
+          console.log('update vote fail');
+        })
+      } else {
+        this.common.showErrorAlert('Vote Fail');
+      }
+    }, err => {
+      thread.uiOptions.voted = false;
+    })
+  }
+  addPostVote(mode: string, post: Post, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    if (post.uiOptions !== undefined && post.uiOptions.voted !== undefined && post.uiOptions.voted) {
+      return;
+    }
+    post.uiOptions = { voted: true };
+    let data = new FormData();
+    data.append('board', this.boardKey);
+    data.append('post', post.ref);
+    data.append('mode', mode);
+    this.api.addPostVote(data).subscribe(result => {
+      if (result) {
+        data = new FormData();
+        data.append('board', this.boardKey);
+        data.append('post', post.ref);
+        this.api.getPostVotes(data).subscribe((votes: VotesSummary) => {
+          post.votes.up_votes = votes.up_votes;
+          post.votes.down_votes = votes.down_votes;
+        })
+      } else {
+        this.common.showErrorAlert('Vote Fail');
+      }
+    }, err => {
+      post.uiOptions.voted = false;
+    })
+  }
   openReply(content) {
     this.postForm.reset();
     this.modal.open(content, { backdrop: 'static', size: 'lg', keyboard: false }).result.then((result) => {
@@ -129,6 +182,8 @@ export class ThreadPageComponent implements OnInit {
     this.api.getThreadpage(data).subscribe(res => {
       this.data = res;
       this.common.loading.close();
+    }, err => {
+      this.router.navigate(['']);
     });
   }
 

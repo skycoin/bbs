@@ -37,10 +37,10 @@ export class BoardsListComponent implements OnInit {
   public tmpBoard: Board = null;
 
   constructor(private api: ApiService,
-              private user: UserService,
-              private router: Router,
-              private modal: NgbModal,
-              public common: CommonService) {
+    private user: UserService,
+    private router: Router,
+    private modal: NgbModal,
+    public common: CommonService) {
   }
 
   ngOnInit(): void {
@@ -200,18 +200,25 @@ export class BoardsListComponent implements OnInit {
   unSubscribe(ev: Event, boardKey: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
-    if (boardKey === '') {
-      this.common.showErrorAlert('UnSubscribe failed');
-      return;
-    }
-    const data = new FormData();
-    data.append('board', boardKey);
-    this.api.unSubscribe(data).subscribe(isOk => {
-      if (isOk) {
-        this.common.showSucceedAlert('Unsubscribe successfully');
-        this.getBoards();
+    const modalRef = this.modal.open(AlertComponent);
+    modalRef.componentInstance.title = 'UnSubscribe';
+    modalRef.componentInstance.body = 'Do you unsubscribe the board?';
+    modalRef.result.then(result => {
+      if (result) {
+        if (boardKey === '') {
+          this.common.showErrorAlert('UnSubscribe failed');
+          return;
+        }
+        const data = new FormData();
+        data.append('board', boardKey);
+        this.api.unSubscribe(data).subscribe(isOk => {
+          if (isOk) {
+            this.common.showSucceedAlert('Unsubscribe successfully');
+            this.getBoards();
+          }
+        });
       }
-    });
+    })
   }
 
   openThreads(ev: Event, key: string) {

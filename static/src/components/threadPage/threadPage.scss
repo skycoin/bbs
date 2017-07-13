@@ -7,18 +7,53 @@ app-threadpage {
     min-width: 20px;
     min-height: 20px;
   }
+  .post-box {
+    margin-bottom: 5rem;
+  }
   .card {
     .card-block {
-      .content,
-      .other {
-        float: left;
+      .thread-vote-box {
+        color: red;
+        span {
+          cursor: pointer;
+          &:hover {
+            color: #b10909;
+          }
+        }
       }
       .content {
-        width: 90%;
-      }
-      .other {
-        text-align: right;
-        width: 10%;
+        .title-box {
+          width: 100%;
+          .title,
+          .index {
+            float: left;
+          }
+          .title {
+            width: 80%;
+          }
+          small {
+            display: inline-block;
+            width: 20%;
+            text-align: right;
+          }
+        }
+        .card-text {
+          clear: both;
+          .time-box,
+          .vote-box {
+            display: inline-block;
+          }
+          .vote-box {
+            float: right;
+            span {
+              color: blue;
+              cursor: pointer;
+              &:hover {
+                color: #b16816;
+              }
+            }
+          }
+        }
       }
     }
   }
