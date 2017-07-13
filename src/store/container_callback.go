@@ -55,7 +55,7 @@ func (c *CXO) subRejectedInternalCB(conn *gnet.Conn, feed cipher.PubKey) {
 }
 
 func (c *CXO) connCreatedInternalCB(conn *gnet.Conn) {
-	log.Printf("[CONTAINER] CONNECTION CREATED: '%s'.", conn.Address())
+	log.Printf("[CONTAINER] CONNECTION OPENED: '%s'.", conn.Address())
 	go c.sendConnMsg(conn, ConnCreated)
 }
 

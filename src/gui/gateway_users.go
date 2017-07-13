@@ -222,6 +222,7 @@ func (g *UserVotes) add(bpk, upk cipher.PubKey, vote *typ.Vote) error {
 	if !got {
 		return errors.Errorf("not subscribed to board '%s'", bpk.Hex())
 	}
+	g.container.GetStateSaver().AddUserVote(bpk, upk, vote)
 	// Check if this node owns the board.
 	if bi.Config.Master {
 		// Via CXO.

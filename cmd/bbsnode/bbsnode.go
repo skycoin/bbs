@@ -230,7 +230,6 @@ func (c *Config) PostProcess() (*Config, error) {
 }
 
 func run(config *Config, quit chan int) {
-	file.InitDataDir(config.ConfigDir)
 	log.Println("[CONFIG] Master mode:", config.Master)
 	defer log.Println("Goodbye.")
 

@@ -29,7 +29,7 @@ func (g *Gateway) PingPong(_, ok *bool) error {
 	return nil
 }
 
-func (g *Gateway) NewPost(req *ReqNewPost, pRefStr *string) (e error) {
+func (g *Gateway) NewPost(req *ReqNewPost, pRefStr *string) error {
 	log.Println("[RPCGATEWAY] NewPost request recieved. Processing...")
 	if req == nil || req.Post == nil {
 		return errors.New("nil error")
@@ -48,8 +48,13 @@ func (g *Gateway) NewPost(req *ReqNewPost, pRefStr *string) (e error) {
 	if bi.Config.Master == false {
 		return errors.New("not master of board")
 	}
+	// Create new post.
+	if e := g.container.NewPost(req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef, req.Post); e != nil {
+		return e
+	}
+	// Modify post.
 	*pRefStr = req.Post.Ref
-	return g.container.NewPost(req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef, req.Post)
+	return nil
 }
 
 func (g *Gateway) NewThread(req *ReqNewThread, tRefStr *string) error {
@@ -101,16 +106,22 @@ func (g *Gateway) VotePost(req *ReqVotePost, ok *bool) error {
 		return errors.New("not master of board")
 	}
 	// Do vote.
+	var e error
 	switch vote.Mode {
 	case 0:
-		return g.container.RemoveVoteForPost(
+		e = g.container.RemoveVoteForPost(
 			vote.User, req.BoardPubKey, bi.Config.GetSK(), req.PostRef)
 	case -1, +1:
-		return g.container.AddVoteForPost(
+		e = g.container.AddVoteForPost(
 			req.BoardPubKey, bi.Config.GetSK(), req.PostRef, vote)
 	default:
-		return errors.Errorf("invalid vote mode '%d'", vote.Mode)
+		e = errors.Errorf("invalid vote mode '%d'", vote.Mode)
 	}
+	if e != nil {
+		return e
+	}
+	*ok = true
+	return nil
 }
 
 func (g *Gateway) VoteThread(req *ReqVoteThread, ok *bool) error {
@@ -135,16 +146,22 @@ func (g *Gateway) VoteThread(req *ReqVoteThread, ok *bool) error {
 			req.BoardPubKey.Hex())
 	}
 	// Do vote.
+	var e error
 	switch vote.Mode {
 	case 0:
-		return g.container.RemoveVoteForThread(
+		e = g.container.RemoveVoteForThread(
 			vote.User, req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef)
 	case -1, +1:
-		return g.container.AddVoteForThread(
+		e = g.container.AddVoteForThread(
 			req.BoardPubKey, bi.Config.GetSK(), req.ThreadRef, vote)
 	default:
-		return errors.Errorf("invalid vote mode '%d'", vote.Mode)
+		e = errors.Errorf("invalid vote mode '%d'", vote.Mode)
 	}
+	if e != nil {
+		return e
+	}
+	*ok = true
+	return nil
 }
 
 func (g *Gateway) VoteUser(req *ReqVoteUser, ok *bool) error {
@@ -169,14 +186,20 @@ func (g *Gateway) VoteUser(req *ReqVoteUser, ok *bool) error {
 			req.BoardPubKey.Hex())
 	}
 	// Do vote.
+	var e error
 	switch vote.Mode {
 	case 0:
-		return g.container.RemoveVoteForUser(
+		e = g.container.RemoveVoteForUser(
 			vote.User, req.BoardPubKey, req.UserPubKey, bi.Config.GetSK())
 	case -1, +1:
-		return g.container.AddVoteForUser(
+		e = g.container.AddVoteForUser(
 			req.BoardPubKey, req.UserPubKey, bi.Config.GetSK(), vote)
 	default:
-		return errors.Errorf("invalid vote mode '%d'", vote.Mode)
+		e = errors.Errorf("invalid vote mode '%d'", vote.Mode)
 	}
+	if e != nil {
+		return e
+	}
+	*ok = true
+	return nil
 }
