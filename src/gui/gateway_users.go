@@ -232,7 +232,7 @@ func (g *UserVotes) add(bpk, upk cipher.PubKey, vote *typ.Vote) error {
 			return g.container.AddVoteForUser(bpk, upk, bi.Config.GetSK(), vote)
 		}
 	} else {
-		// TODO: Add user vote for external board!!!!
+		return g.queueSaver.AddVoteUserReq(bpk, upk, vote)
 	}
 	return nil
 }

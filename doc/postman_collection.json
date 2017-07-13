@@ -193,7 +193,7 @@
 							"formdata": [
 								{
 									"key": "board",
-									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
+                                  "value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
 									"type": "text"
 								},
 								{
@@ -255,7 +255,7 @@
 								},
 								{
 									"key": "thread",
-                                  "value": "0fe7cb2f850c8d42088aa1d87497581552214b8df49416b2b52775fdcfc7027a",
+                                  "value": "0c52a02af79a3f798a6bea71b7391e3ea0af83e2f8452fbc96d766bb4e74c6ec",
 									"type": "text"
 								}
 							]
@@ -600,6 +600,17 @@
 						"description": ""
 					},
 					"response": []
+                },
+              {
+                "name": "Panic",
+                "request": {
+                  "url": "http://127.0.0.1:7410/api/tests/panic",
+                  "method": "GET",
+                  "header": [],
+                  "body": {},
+                  "description": ""
+                },
+                "response": []
 				}
 			]
 		},
@@ -855,8 +866,95 @@
 						"description": ""
 					},
 					"response": []
-				}
-			]
+                },
+              {
+                "name": "Get User Votes",
+                "request": {
+                  "url": "http://127.0.0.1:7410/api/users/votes/get",
+                  "method": "POST",
+                  "header": [],
+                  "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                      {
+                        "key": "board",
+                        "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
+                        "description": "Public Key of Board.",
+                        "type": "text"
+                      },
+                      {
+                        "key": "user",
+                        "value": "038614395bdbd7e443fe6baabc95f68d548b0038a9ddce06191249bef75000617f",
+                        "description": "Public Key of User.",
+                        "type": "text"
+                      }
+                    ]
+                  },
+                  "description": ""
+                },
+                "response": []
+              },
+              {
+                "name": "Add User Vote",
+                "request": {
+                  "url": "http://127.0.0.1:7410/api/users/votes/add",
+                  "method": "POST",
+                  "header": [],
+                  "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                      {
+                        "key": "board",
+                        "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
+                        "description": "Public key of board.",
+                        "type": "text"
+                      },
+                      {
+                        "key": "user",
+                        "value": "038614395bdbd7e443fe6baabc95f68d548b0038a9ddce06191249bef75000617f",
+                        "description": "Public key of user to cast vote on.",
+                        "type": "text"
+                      },
+                      {
+                        "key": "mode",
+                        "value": "+1",
+                        "description": "Mode of vote (+1, 0, -1).",
+                        "type": "text"
+                      },
+                      {
+                        "key": "tag",
+                        "value": "",
+                        "description": "Tag of vote.",
+                        "type": "text"
+                      }
+                    ]
+                  },
+                  "description": ""
+                },
+                "response": []
+              }
+            ]
+        },
+      {
+        "name": "Ping Submission Address",
+        "request": {
+          "url": "http://127.0.0.1:7410/api/ping_submission_address",
+          "method": "POST",
+          "header": [],
+          "body": {
+            "mode": "formdata",
+            "formdata": [
+              {
+                "key": "address",
+                "value": "34.204.161.180:8212",
+                "description": "Submission address to ping.",
+                "type": "text"
+              }
+            ]
+          },
+          "description": ""
+        },
+        "response": []
 		},
 		{
 			"name": "Get Stats",
