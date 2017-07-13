@@ -10,5 +10,6 @@ go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
     -test-mode-min=0 \
     -test-mode-max=1 \
     -test-mode-timeout=-1 \
-    -test-mode-post-cap=50
+    -test-mode-post-cap=50 \
+    -web-gui-dir=""
 echo "Goodbye!"

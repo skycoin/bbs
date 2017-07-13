@@ -51,15 +51,15 @@ RunNode() {
     PORT_CXO_RPC=$4
     OPEN_GUI=$5
     go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
-        --master=true \
-        --memory-mode=true \
-        --rpc-port=$PORT_BBS_RPC \
-        --rpc-remote-address=127.0.0.1:$PORT_BBS_RPC \
-        --cxo-port=$PORT_CXO_SERVER \
-        --cxo-rpc-port=$PORT_CXO_RPC \
-        --web-gui-port=$PORT_BBS_GUI \
-        --web-gui-open-browser=$OPEN_GUI \
-        --web-gui-dir=$GOPATH/src/github.com/skycoin/bbs/static/dist \
+        -master=true \
+        -memory-mode=true \
+        -rpc-port=$PORT_BBS_RPC \
+        -rpc-remote-address=127.0.0.1:$PORT_BBS_RPC \
+        -cxo-port=$PORT_CXO_SERVER \
+        -cxo-rpc-port=$PORT_CXO_RPC \
+        -web-gui-port=$PORT_BBS_GUI \
+        -web-gui-open-browser=$OPEN_GUI \
+        -web-gui-dir=$GOPATH/src/github.com/skycoin/bbs/static/dist \
         &
 }
 
