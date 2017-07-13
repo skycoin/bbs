@@ -11,13 +11,14 @@ a_bbsgui=6490
 echo "[ STARTING BBS NODE 'A' ]"
 
 go run $GOPATH/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
-    --master=true \
-    --memory-mode=true \
-    --cxo-port=$a_cxod \
-    --cxo-rpc-port=$a_cxorpc \
-    --rpc-port=$a_bbsrpc \
-    --rpc-remote-address=127.0.0.1:$a_bbsrpc \
-    --web-gui-port=$a_bbsgui \
-    --web-gui-open-browser=false
+    -master=true \
+    -memory-mode=true \
+    -cxo-port=$a_cxod \
+    -cxo-rpc-port=$a_cxorpc \
+    -rpc-port=$a_bbsrpc \
+    -rpc-remote-address=127.0.0.1:$a_bbsrpc \
+    -web-gui-port=$a_bbsgui \
+    -web-gui-open-browser=false \
+    -web-gui-dir=""
 
 echo "Goodbye!"
