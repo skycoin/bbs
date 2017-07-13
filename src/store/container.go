@@ -230,3 +230,8 @@ func (c *CXO) Disconnect(addr string) error {
 func (c *CXO) InitStateSaver() {
 	c.ss.Init(c, c.Feeds()...)
 }
+
+// GetStateSaver obtains the StateSaver.
+func (c *CXO) GetStateSaver() *StateSaver {
+	return c.ss
+}

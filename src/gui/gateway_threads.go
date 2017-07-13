@@ -86,7 +86,7 @@ func (g *Threads) Add(w http.ResponseWriter, r *http.Request) {
 		send(w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	send(w, thread, http.StatusOK)
+	send(w, ThreadView{Thread: thread, Votes: &VotesView{}}, http.StatusOK)
 }
 
 func (g *Threads) add(bpk cipher.PubKey, thread *typ.Thread) error {
@@ -361,6 +361,7 @@ func (g *ThreadVotes) add(bpk cipher.PubKey, tRef skyobject.Reference, vote *typ
 	if !got {
 		return errors.Errorf("not subscribed to board '%s'", bpk.Hex())
 	}
+	g.container.GetStateSaver().AddThreadVote(bpk, tRef, vote)
 	// Check if this node owns the board.
 	if bi.Config.Master {
 		// Via CXO.

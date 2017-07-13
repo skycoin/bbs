@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 const BoardSaverFileName = "bbs_boards.json"
@@ -47,6 +48,7 @@ func NewBoardSaver(config *Config, container *CXO) (*BoardSaver, error) {
 	if e := bs.save(); e != nil {
 		return nil, e
 	}
+	go bs.service()
 	return &bs, nil
 }
 
@@ -92,7 +94,6 @@ func (s *BoardSaver) load() error {
 	if s.config.Master {
 		s.checkMasterURLs()
 		s.checkMasterDeps()
-		go s.service()
 	}
 	return nil
 }
@@ -115,6 +116,7 @@ func (s *BoardSaver) save() error {
 func (s *BoardSaver) service() {
 	log.Println("[BOARDSAVER] Sync service started.")
 	msgs := s.c.GetUpdatesChan()
+	reconnectTicker := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case msg := <-msgs:
@@ -137,13 +139,16 @@ func (s *BoardSaver) service() {
 					bi.RejectedCount += 1
 				}
 				s.Unlock()
-			case ConnCreated:
-				s.Lock()
-				s.Unlock()
-			case ConnClosed:
-				s.Lock()
-				s.Unlock()
+			//case ConnCreated:
+			//case ConnClosed:
 			}
+		case <-reconnectTicker.C:
+			s.Lock()
+			//for pk, bi := range s.store {
+				//s.c.Unsubscribe("", pk)
+				//s.c.Subscribe(bi.Config.Address, pk)
+			//}
+			s.Unlock()
 		case <-s.quit:
 			return
 		}

@@ -70,7 +70,7 @@ func (g *Posts) Add(w http.ResponseWriter, r *http.Request) {
 		send(w, e.Error(), http.StatusBadRequest)
 		return
 	}
-	send(w, post, http.StatusOK)
+	send(w, PostView{Post: post, Votes: &VotesView{}}, http.StatusOK)
 }
 
 func (g *Posts) add(bpk cipher.PubKey, tRef skyobject.Reference, post *typ.Post) (e error) {
@@ -232,6 +232,7 @@ func (g *PostVotes) add(bpk cipher.PubKey, pRef skyobject.Reference, vote *typ.V
 	if !got {
 		return errors.Errorf("not subscribed to board '%s'", bpk.Hex())
 	}
+	g.container.GetStateSaver().AddPostVote(bpk, pRef, vote)
 	// Check if this node owns the board.
 	if bi.Config.Master {
 		// Via CXO.

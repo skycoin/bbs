@@ -108,6 +108,51 @@ func (s *StateSaver) GetUserVotes(cxo *CXO, bpk, upk cipher.PubKey) []typ.Vote {
 	return votes
 }
 
+// AddThreadVote adds a thread vote.
+func (s *StateSaver) AddThreadVote(bpk cipher.PubKey, tRef skyobject.Reference, vote *typ.Vote) {
+	if !s.enable {
+		return
+	}
+	state := s.getState(bpk)
+	state.tMux.Lock()
+	if _, has := state.tMap[tRef]; !has {
+		state.tMap[tRef] = []typ.Vote{*vote}
+	} else {
+		state.tMap[tRef] = append(state.tMap[tRef], *vote)
+	}
+	state.tMux.Unlock()
+}
+
+// AddPostVote adds a post vote.
+func (s *StateSaver) AddPostVote(bpk cipher.PubKey, pRef skyobject.Reference, vote *typ.Vote) {
+	if !s.enable {
+		return
+	}
+	state := s.getState(bpk)
+	state.pMux.Lock()
+	if _, has := state.pMap[pRef]; !has {
+		state.pMap[pRef] = []typ.Vote{*vote}
+	} else {
+		state.pMap[pRef] = append(state.pMap[pRef], *vote)
+	}
+	state.pMux.Unlock()
+}
+
+// AddUserVote adds a user vote.
+func (s *StateSaver) AddUserVote(bpk, upk cipher.PubKey, vote *typ.Vote) {
+	if !s.enable {
+		return
+	}
+	state := s.getState(bpk)
+	state.uMux.Lock()
+	if _, has := state.uMap[upk]; !has {
+		state.uMap[upk] = []typ.Vote{*vote}
+	} else {
+		state.uMap[upk] = append(state.uMap[upk], *vote)
+	}
+	state.uMux.Unlock()
+}
+
 // ReplaceThreadVotes replaces thread votes.
 func (s *StateSaver) ReplaceThreadVotes(bpk cipher.PubKey, tRef skyobject.Reference, votes []typ.Vote) {
 	if !s.enable {
