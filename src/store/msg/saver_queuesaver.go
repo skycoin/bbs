@@ -257,11 +257,11 @@ func (qs *QueueSaver) AddNewPostReq(bpk cipher.PubKey, tRef skyobject.Reference,
 	}
 }
 
-func (qs *QueueSaver) AddNewThreadReq(bpk, upk cipher.PubKey, usk cipher.SecKey, thread *typ.Thread) error {
+func (qs *QueueSaver) AddNewThreadReq(bpk cipher.PubKey, thread *typ.Thread) error {
 	qs.Lock()
 	defer qs.Unlock()
 	log.Println("[QUEUESAVER] Sending new thread request...")
-	req := &rpc.ReqNewThread{bpk, upk, thread.Sign(usk), thread}
+	req := &rpc.ReqNewThread{bpk, thread}
 	b, e := qs.c.GetBoard(bpk)
 	if e != nil {
 		e = errors.Wrap(e, "failed to obtain board")

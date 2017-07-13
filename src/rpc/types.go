@@ -14,8 +14,6 @@ type ReqNewPost struct {
 
 type ReqNewThread struct {
 	BoardPubKey cipher.PubKey `json:"board_public_key,string"`
-	Creator     cipher.PubKey `json:"creator,string"`
-	Signature   cipher.Sig    `json:"signature,string"`
 	Thread      *typ.Thread   `json:"thread"`
 }
 

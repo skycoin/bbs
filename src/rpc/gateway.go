@@ -58,9 +58,10 @@ func (g *Gateway) NewThread(req *ReqNewThread, tRefStr *string) error {
 		return errors.New("nil error")
 	}
 	// Check thread.
-	if e := req.Thread.Verify(req.Creator, req.Signature); e != nil {
+	if e := req.Thread.Verify(); e != nil {
 		return e
 	}
+	req.Thread.Touch()
 	// Check board.
 	bi, has := g.boardSaver.Get(req.BoardPubKey)
 	if has == false {

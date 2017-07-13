@@ -91,9 +91,11 @@ func (g *Threads) Add(w http.ResponseWriter, r *http.Request) {
 
 func (g *Threads) add(bpk cipher.PubKey, thread *typ.Thread) error {
 	// Check thread.
-	if e := thread.Check(); e != nil {
+	uc := g.userSaver.GetCurrent()
+	if e := thread.Sign(uc.GetPK(), uc.GetSK()); e != nil {
 		return e
 	}
+	thread.Touch()
 	// Check board.
 	bi, has := g.boardSaver.Get(bpk)
 	if has == false {
@@ -105,8 +107,7 @@ func (g *Threads) add(bpk cipher.PubKey, thread *typ.Thread) error {
 		return g.container.NewThread(bpk, bi.Config.GetSK(), thread)
 	} else {
 		// Via RPC Client.
-		uc := g.userSaver.GetCurrent()
-		return g.queueSaver.AddNewThreadReq(bpk, uc.GetPK(), uc.GetSK(), thread)
+		return g.queueSaver.AddNewThreadReq(bpk, thread)
 	}
 }
 
