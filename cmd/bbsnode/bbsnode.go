@@ -245,6 +245,14 @@ func run(config *Config, quit chan int) {
 		CXORPCPort:    config.CXORPCPort,
 	}
 	container, e := store.NewCXO(storeConfig)
+	defer func() {
+		if r := recover(); r != nil {
+			if config.WebGUIEnable && config.WebGUIOpenBrowser {
+				browser.Open("http://127.0.0.1:7410")
+			}
+			return
+		}
+	}()
 	CatchError(e, "unable to create cxo container")
 	defer container.Close()
 
@@ -313,7 +321,7 @@ func run(config *Config, quit chan int) {
 	if config.WebGUIEnable && config.WebGUIOpenBrowser {
 		go func() {
 			time.Sleep(time.Millisecond * 100)
-			log.Println("Opening web browser...")
+			log.Printf("Opening web browser at '%s' ...", serveAddr)
 			browser.Open(serveAddr)
 		}()
 	}

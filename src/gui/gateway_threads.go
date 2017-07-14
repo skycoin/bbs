@@ -239,6 +239,9 @@ func (g *ThreadPage) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *ThreadPage) get(bpk cipher.PubKey, tRef skyobject.Reference) (*ThreadPageView, error) {
+	if e := g.boardSaver.Check(bpk); e != nil {
+		return nil, e
+	}
 	b, e := g.container.GetBoard(bpk)
 	if e != nil {
 		return nil, errors.Wrap(e, "unable to obtain board")

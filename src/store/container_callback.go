@@ -38,7 +38,7 @@ func (c *CXO) rootFilledInternalCB(root *node.Root) {
 	log.Printf("[CONTAINER] Recieved filled board '%s'", root.Pub().Hex())
 	c.ss.Fill(root)
 	if c.config.Master {
-		go c.sendRootMsg(root.Pub(), RootFilled)
+		c.sendRootMsg(root.Pub(), RootFilled)
 	}
 }
 

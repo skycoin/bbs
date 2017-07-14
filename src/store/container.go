@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"log"
+	"fmt"
 )
 
 type CXO struct {
@@ -62,6 +64,9 @@ func (c *CXO) setupCXONode() error {
 
 	// Setup CXO Configuration.
 	nc := node.NewConfig()
+	nc.Config.ReadTimeout = 20 * time.Second
+	nc.Config.WriteTimeout = 20 * time.Second
+	nc.Log.Debug = false
 	nc.MaxMessageSize = 0 /* TODO: Should really look into adjusting this in the future. */
 	nc.InMemoryDB = c.config.MemoryMode
 	nc.DataDir = filepath.Join(c.config.ConfigDir, "cxo")
@@ -138,6 +143,21 @@ func (c *CXO) Lock(function interface{}) {
 func (c *CXO) Unlock() {
 	c.PrintMux.Unlock()
 	c.c.UnlockGC()
+}
+
+// Reset resets CXO completely.
+func (c *CXO) Reset() {
+	c.PrintMux.Lock(c.Reset)
+	defer c.PrintMux.Unlock()
+	log.Println("[CONTAINER] Resetting...")
+	c.c = nil
+	c.node.Close()
+	fmt.Println("[CONTAINER] Close node [okay]")
+	select {
+	case <-c.node.Quiting():
+	}
+	c.node = nil
+	c.setupCXONode()
 }
 
 // IsMaster returns whether master or not.
@@ -224,6 +244,11 @@ func (c *CXO) Disconnect(addr string) error {
 		return nil
 	}
 	return conn.Close()
+}
+
+// HasConnection checks whether we have this connection.
+func (c *CXO) HasConnection(addr string) bool {
+	return c.node.Pool().Connection(addr) != nil
 }
 
 // InitStateSaver initiates StateSaver.
