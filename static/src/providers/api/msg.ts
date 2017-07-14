@@ -38,6 +38,8 @@ export interface Stats {
 export interface Thread {
   name?: string;
   description?: string;
+  author?: string;
+  created?: string;
   master_board?: string;
   ref?: string;
   votes?: VotesSummary; // Threads now have vote summary here.

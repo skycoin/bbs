@@ -11,13 +11,50 @@ app-threadpage {
     margin-bottom: 5rem;
   }
   .card {
+    .other-block {
+      display: flex;
+      padding: 0 1.25rem;
+      .img-box {
+        display: inline-block;
+      }
+      .img-box {
+        outline: 0;
+        text-decoration: none;
+        margin-right: 1rem;
+        .author {
+          width: 60px;
+          height: 60px;
+          background-image: url("../../assets/user-thumbnail.png");
+          background-size: 100% 100%;
+        }
+      }
+      .info-box {
+        display: inline-flex;
+        flex-direction: column;
+        align-self: center;
+        small {
+          display: block;
+        }
+        .replies {
+          color: red;
+        }
+        .author-name {
+          color: #636363;
+          max-width: 6rem;
+        }
+      }
+    }
     .card-block {
       .thread-vote-box {
         color: red;
         span {
+          margin: 0 2em;
           cursor: pointer;
           &:hover {
             color: #b10909;
+          }
+          .fa {
+            font-size: 2em;
           }
         }
       }

@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/filter';
 import { Observable } from 'rxjs/Observable';
-import { LoadingComponent } from '../../components';
+import { LoadingComponent, FixedButtonComponent } from '../../components';
 
 @Injectable()
 export class CommonService {
@@ -11,6 +11,7 @@ export class CommonService {
   public alertMessage = 'test alert';
   public alert = false;
   public topBtn = false;
+  public fb: FixedButtonComponent = null;
   public loading: LoadingComponent = null;
   // public sortBy = 'desc';
   constructor(private http: Http) {

@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ApiService, CommonService, UserService } from '../providers';
-import { LoadingComponent } from '../components';
+import { LoadingComponent, FixedButtonComponent } from '../components';
 import { NavigationStart, Router } from '@angular/router';
 import 'rxjs/add/operator/filter';
 
@@ -12,6 +12,7 @@ import 'rxjs/add/operator/filter';
 })
 export class AppComponent implements OnInit {
   @ViewChild(LoadingComponent) loading: LoadingComponent;
+  @ViewChild(FixedButtonComponent) fb: FixedButtonComponent;
   public title = 'app';
   public name = '';
   public isMasterNode = false;
@@ -24,6 +25,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.common.fb = this.fb;
     this.common.loading = this.loading;
     this.user.getCurrent().subscribe(user => {
       this.name = user.alias;

@@ -1,19 +1,28 @@
-<div class="container-fluid">
+<div class="container">
   <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.thread?.name != '' ">
+    <div class="other-block">
+      <a href="javascript:void(0)" class="img-box">
+        <div class="author" title="user"></div>
+      </a>
+      <div class="info-box">
+        <small class="single-line author-name " title="{{data?.thread?.author}}">{{data?.thread?.author}}</small>
+        <small class="text-muted">
+          replies
+          <span class="replies">{{data?.posts?.length}}</span> &nbsp;• &nbsp;
+          created &nbsp;<span>{{data?.thread?.created / 1000000 | date:'yMMMdjms'}}</span>
+        </small>
+      </div>
+    </div>
     <div class="card-block">
       <div class="content">
         <div class="title-box">
           <h4 class="card-title single-line title">{{data?.thread?.name}}</h4>
-          <small class="text-muted"><i class="fa fa-users"></i><span>{{data?.posts?.length}}</span></small>
         </div>
         <p class="card-text break-line text-muted">{{data?.thread?.description}}</p>
       </div>
     </div>
     <div class="card-block">
-      <p class="d-flex justify-content-end">
-        <button class="btn btn-sm btn-primary" (click)="openReply(addPost)"><i class="fa fa-reply"></i>Post</button>
-      </p>
-      <p class="d-flex justify-content-end thread-vote-box">
+      <p class="d-flex justify-content-center thread-vote-box">
         <span (click)="addThreadVote(1,data.thread,$event)"><i class="fa fa-thumbs-o-up"></i>{{data?.thread?.votes?.up_votes}}</span>
         <span (click)="addThreadVote(-1,data.thread,$event)"><i class="fa fa-thumbs-o-down"></i>{{data?.thread?.votes?.down_votes}}</span>
       </p>

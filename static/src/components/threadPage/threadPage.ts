@@ -1,4 +1,4 @@
-import { Component, HostBinding, HostListener, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, HostBinding, HostListener, OnInit, ViewEncapsulation, ViewChild, OnDestroy, AfterViewInit } from '@angular/core';
 import { ApiService, CommonService, ThreadPage, Post, VotesSummary, Thread } from '../../providers';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -13,9 +13,10 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
   animations: [slideInLeftAnimation],
 })
 
-export class ThreadPageComponent implements OnInit {
+export class ThreadPageComponent implements OnInit, OnDestroy {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
+  @ViewChild('addPost') replyBox: any;
   public sort = 'esc';
   public boardKey = '';
   public threadKey = '';
@@ -80,8 +81,17 @@ export class ThreadPageComponent implements OnInit {
       this.threadKey = res['thread'];
       this.open(this.boardKey, this.threadKey);
     });
+    setTimeout(() => {
+      this.common.fb.display = 'flex';
+      this.common.fb.handle = () => {
+        this.openReply(this.replyBox);
+      }
+    }, 2000);
   }
-
+  ngOnDestroy() {
+    this.common.fb.display = 'none';
+    this.common.fb.handle = null;
+  }
   public setSort() {
     this.sort = this.sort === 'desc' ? 'esc' : 'desc';
   }
