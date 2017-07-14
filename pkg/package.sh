@@ -45,7 +45,7 @@ msg "INITIALIZING DIRECTORIES"
 init_dir() {
     cmd "mkdir -p ${1}/static/dist"
 }
-cmd "rm -rf ${BUILD_DIR} || true"
+#cmd "rm -rf ${BUILD_DIR} || true"
 init_dir ${WINDOWS_DIR}
 init_dir ${LINUX_DIR}
 init_dir ${OSX_DIR}
@@ -63,8 +63,7 @@ build() {
     # 1: OS, 2: Build Directory.
     msg "BUILDING (${1})"
     cmd "cd ${2}"
-    GOOS=${1}
-    cmd "go build ${BBSNODE_MAIN}"
+    cmd "env GOOS=${1} go build ${BBSNODE_MAIN}"
     cmd "cp -R ${STATIC_DIR}/dist ${2}/static"
     cmd "zip -r ../${3}.zip *"
     space

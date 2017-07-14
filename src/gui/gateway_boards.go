@@ -42,6 +42,9 @@ func (g *Boards) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Boards) get(bpk cipher.PubKey) (*typ.Board, error) {
+	if e := g.boardSaver.Check(bpk); e != nil {
+		return nil, e
+	}
 	board, e := g.container.GetBoard(bpk)
 	return board, errors.Wrap(e, "unable to obtain board")
 }
@@ -151,6 +154,9 @@ func (g *BoardMeta) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *BoardMeta) get(bpk cipher.PubKey) (*typ.BoardMeta, error) {
+	if e := g.boardSaver.Check(bpk); e != nil {
+		return nil, e
+	}
 	board, e := g.container.GetBoard(bpk)
 	if e != nil {
 		return nil, errors.Wrap(e, "unable to obtain board")
@@ -180,6 +186,9 @@ func (g *BoardsMetaSubmissionAddresses) GetAll(w http.ResponseWriter, r *http.Re
 }
 
 func (g *BoardsMetaSubmissionAddresses) getAll(bpk cipher.PubKey) ([]string, error) {
+	if e := g.boardSaver.Check(bpk); e != nil {
+		return nil, e
+	}
 	list, e := g.container.GetSubmissionAddresses(bpk)
 	return list, errors.Wrap(e, "failed to obtain submission addresses of board")
 }
@@ -265,6 +274,9 @@ func (g *BoardPage) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *BoardPage) get(bpk cipher.PubKey) (*BoardPageView, error) {
+	if e := g.boardSaver.Check(bpk); e != nil {
+		return nil, e
+	}
 	board, e := g.container.GetBoard(bpk)
 	if e != nil {
 		return nil, errors.Wrap(e, "unable to obtain board")

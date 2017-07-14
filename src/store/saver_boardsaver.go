@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 const BoardSaverFileName = "bbs_boards.json"
@@ -116,7 +115,6 @@ func (s *BoardSaver) save() error {
 func (s *BoardSaver) service() {
 	log.Println("[BOARDSAVER] Sync service started.")
 	msgs := s.c.GetUpdatesChan()
-	reconnectTicker := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case msg := <-msgs:
@@ -141,14 +139,15 @@ func (s *BoardSaver) service() {
 				s.Unlock()
 			//case ConnCreated:
 			//case ConnClosed:
+				//s.Lock()
+				//for bpk, bi := range s.store {
+				//	addr := msg.Conn().Address()
+				//	if bi.Config.Address == addr {
+				//		s.c.Subscribe(addr, bpk)
+				//	}
+				//}
+				//s.Unlock()
 			}
-		case <-reconnectTicker.C:
-			s.Lock()
-			//for pk, bi := range s.store {
-				//s.c.Unsubscribe("", pk)
-				//s.c.Subscribe(bi.Config.Address, pk)
-			//}
-			s.Unlock()
 		case <-s.quit:
 			return
 		}
@@ -272,6 +271,20 @@ func (s *BoardSaver) ListKeys() []cipher.PubKey {
 	return keys
 }
 
+func (s *BoardSaver) Check(bpk cipher.PubKey) error {
+	s.Lock()
+	defer s.Unlock()
+	bi, has := s.store[bpk]
+	if !has {
+		return errors.Errorf("not subscribed to board '%s'", bpk.Hex())
+	}
+	addr := bi.Config.GetAddress()
+	if !s.c.HasConnection(addr) {
+		return s.c.Subscribe(addr, bpk)
+	}
+	return nil
+}
+
 // Get gets a subscription of specified board.
 func (s *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
 	s.Lock()
@@ -279,6 +292,10 @@ func (s *BoardSaver) Get(bpk cipher.PubKey) (BoardInfo, bool) {
 	bi, has := s.store[bpk]
 	if has == false {
 		return BoardInfo{}, has
+	}
+	addr := bi.Config.GetAddress()
+	if !s.c.HasConnection(addr) {
+		s.c.Subscribe(addr, bpk)
 	}
 	return *bi, has
 }
