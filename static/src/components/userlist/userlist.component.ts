@@ -105,6 +105,6 @@ export class UserlistComponent implements OnInit {
 
   @HostListener('window:scroll', ['$event'])
   windowScroll(event) {
-    this.common.showOrHideToTopBtn(2);
+    this.common.showOrHideToTopBtn();
   }
 }

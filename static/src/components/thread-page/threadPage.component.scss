@@ -46,12 +46,20 @@ app-threadpage {
     }
     .card-block {
       .thread-vote-box {
-        color: red;
-        span {
+        .vote-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           margin: 0 2em;
+          width: 80px;
+          height: 80px;
+          background-color: #bbd9f3;
+          box-shadow: 0 0.3rem 0.4rem hsla(0, 0%, 0%, 0.3);
+          border-radius: 50%;
+          color: #fff;
           cursor: pointer;
           &:hover {
-            color: #b10909;
+            background-color: #e0ebf5;
           }
           .fa {
             font-size: 2em;
@@ -98,6 +106,36 @@ app-threadpage {
     margin: .8rem 0;
     .card-block {
       .content {
+        .author-box {
+          display: flex;
+          .action-box {
+            position: relative;
+            cursor: pointer;
+            &:hover {
+              color: red;
+            }
+            .overlay {
+              position: fixed;
+              top: -70px;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              background-color: transparent;
+            }
+            .author-menu {
+              position: absolute;
+              display: block;
+              top: 90%;
+              left: -70%;
+              min-width: auto;
+            }
+          }
+          .post-author {
+            position: relative;
+            display: inline-block;
+            width: 10rem;
+          }
+        }
         .card-text {
           .text-muted {
             .created {

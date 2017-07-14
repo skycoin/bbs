@@ -7,8 +7,8 @@ import { slideInLeftAnimation } from '../../animations/router.animations';
 
 @Component({
   selector: 'app-threadpage',
-  templateUrl: 'threadPage.html',
-  styleUrls: ['threadPage.scss'],
+  templateUrl: 'threadPage.component.html',
+  styleUrls: ['threadPage.component.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: [slideInLeftAnimation],
 })
@@ -122,6 +122,30 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
       thread.uiOptions.voted = false;
     })
   }
+  addUserVote(mode: string, post: Post, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    if (post.uiOptions !== undefined && post.uiOptions.userVoted !== undefined && post.uiOptions.userVoted) {
+      this.common.showWarningAlert('You have already voted');
+      post.uiOptions.menu = false;
+      return;
+    }
+    post.uiOptions = { userVoted: true };
+    const data = new FormData();
+    data.append('board', this.boardKey);
+    data.append('user', post.author);
+    data.append('mode', mode);
+    this.api.addUserVote(data).subscribe(result => {
+      if (result) {
+        this.common.showSucceedAlert('Successful Vote');
+        post.uiOptions.menu = false;
+      } else {
+        this.common.showErrorAlert('Vote Fail');
+      }
+    }, err => {
+      post.uiOptions.userVoted = false;
+    })
+  }
   addPostVote(mode: string, post: Post, ev: Event) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
@@ -179,7 +203,16 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
     });
 
   }
-
+  PostAuthorMenu(post: Post, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (!post.uiOptions) {
+      post.uiOptions = { menu: true };
+    } else {
+      post.uiOptions.menu = !post.uiOptions.menu;
+    }
+  }
   open(master, ref: string) {
     if (master === '' || ref === '') {
       this.common.showErrorAlert('Parameter error!!!');
@@ -199,6 +232,6 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
 
   @HostListener('window:scroll', ['$event'])
   windowScroll(event) {
-    this.common.showOrHideToTopBtn(50);
+    this.common.showOrHideToTopBtn();
   }
 }

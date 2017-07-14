@@ -17,6 +17,8 @@ export interface Post {
 
 export interface VoteOptions {
   voted?: boolean;
+  userVoted?: boolean;
+  menu?: boolean;
 }
 
 export interface ThreadPage {
