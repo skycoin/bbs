@@ -6,18 +6,27 @@ Skycoin BBS is a next generation decentralised social network (BBS stands for [B
 
 Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) (CXO) to store and synchronise data between nodes.  
 
-[![Skycoin BBS Alpha Showcase - YouTube](https://img.youtube.com/vi/MBceYIZltaw/0.jpg)](https://youtu.be/MBceYIZltaw)
+[![Skycoin BBS Alpha Showcase - YouTube](https://img.youtube.com/vi/OBaaSB369TI/0.jpg)](https://youtu.be/OBaaSB369TI)
 
-## Installing Skycoin BBS
+## Building Skycoin BBS
 
-First ensure that `go` is installed and the `GOPATH` environment variable is set.
+First ensure that `go`, `npm`, `zip` and `ng` are installed and the `GOPATH` environment variable is set.
 
-Get the source code, dependencies and build BBS Node:
+#### BBS Node
+
+To get the source code, dependencies and build BBS Node:
 ```bash
 go get github.com/skycoin/bbs/cmd/bbsnode
 ```
+The executables will be in `$GOPATH/bin`.
 
-The executable will be in `$GOPATH/bin`.
+Optionally, you can then package BBS Node by running bash script provided: `pkg/package.sh`.
+```bash
+cd $GOPATH/src/github.com/skycoin/bbs/pkg
+
+bash package.sh
+```
+Built binaries and static files will be located in `pkg/build/` folder.
 
 ## Running Skycoin BBS
 
@@ -29,6 +38,8 @@ By default (aka running `bbsnode` without specifying flags), a BBS Node will hav
 
 * **Uses the following ports -** The CXO Daemon will listen on `8998` and `8997` (RPC). The BBS Node will host it's web interface and JSON API on `7410`.
 
+* **Serves static files in `./static/dist` -** If no static files are found, `bbsnode` will panic. However, you can specify flag `-web-gui-dir=""` and `bbsnode` will serve static files in `$GOPATH/src/github.com/skycoin/bbs/static/dist` (assuming that the `GOPATH` env has been set).
+
 * **Launches the browser -** After the `bbsnode` has successfully started, the browser will be launched to display the web interface.
 
 ### Examples
@@ -38,6 +49,14 @@ The following examples assume that you have `$GOPATH/bin` in your `$PATH`, and t
 #### Show help dialog and exit
 ```bash
 bbsnode --help
+```
+
+#### Run a node with static files in `$GOPATH/src/github.com/bbs/static/dist`
+
+First ensure that the `GOPATH` env is set and you have the Skycoin BBS module.
+
+```bash
+bbsnode -web-gui-dir=""
 ```
 
 #### Run a node as master
@@ -63,8 +82,7 @@ If a graphical user interface is not needed for the node, setting `web-gui-enabl
 This mode is ideal for testing, or if you don't wish to save anything to disk.
 
 ```bash
-bbsnode \
-    -memory-mode=true
+bbsnode -memory-mode
 ```
 
 The `save-config` flag determines whether or not to save the Skycoin BBS configuration files for boards, users and messages. Here, it is set as false.
@@ -77,7 +95,7 @@ In test mode, the node generates a board, and creates threads, posts and votes a
 
 ```bash
 bbsnode \
-    -test-mode=true \
+    -test-mode \
     -test-mode-threads=4 \
     -test-mode-users=50 \
     -test-mode-min=1 \
