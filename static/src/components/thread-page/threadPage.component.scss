@@ -7,65 +7,86 @@ app-threadpage {
     min-width: 20px;
     min-height: 20px;
   }
+  .thread {
+    padding-bottom: 5rem;
+  }
   .post-box {
     margin-bottom: 5rem;
   }
   .card {
-    .other-block {
-      display: flex;
-      padding: 0 1.25rem;
-      .img-box {
-        display: inline-block;
-      }
-      .img-box {
-        outline: 0;
-        text-decoration: none;
-        margin-right: 1rem;
-        .author {
-          width: 60px;
-          height: 60px;
-          background-image: url("../../assets/user-thumbnail.png");
-          background-size: 100% 100%;
+    flex-direction: row;
+    .vote-box {
+      width: 5%;
+      text-align: center;
+      color: #999;
+      .vote-btn {
+        cursor: pointer;
+        &:hover {
+          color: #000;
         }
-      }
-      .info-box {
-        display: inline-flex;
-        flex-direction: column;
-        align-self: center;
-        small {
+        span {
           display: block;
         }
-        .replies {
-          color: red;
+      }
+    }
+    .content-box {
+      width: 95%;
+      .other-block {
+        display: flex;
+        padding: 0 1.25rem;
+        .img-box {
+          display: inline-block;
         }
-        .author-name {
-          color: #636363;
-          max-width: 6rem;
+        .img-box {
+          outline: 0;
+          text-decoration: none;
+          margin-right: 1rem;
+          .author {
+            width: 60px;
+            height: 60px;
+            background-image: url("../../assets/user-thumbnail.png");
+            background-size: 100% 100%;
+          }
+        }
+        .info-box {
+          display: inline-flex;
+          flex-direction: column;
+          align-self: center;
+          small {
+            display: block;
+          }
+          .replies {
+            color: red;
+          }
+          .author-name {
+            color: #636363;
+            max-width: 6rem;
+          }
         }
       }
     }
     .card-block {
-      .thread-vote-box {
-        .vote-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 2em;
-          width: 80px;
-          height: 80px;
-          background-color: #bbd9f3;
-          box-shadow: 0 0.3rem 0.4rem hsla(0, 0%, 0%, 0.3);
-          border-radius: 50%;
-          color: #fff;
-          cursor: pointer;
-          &:hover {
-            background-color: #e0ebf5;
-          }
-          .fa {
-            font-size: 2em;
-          }
-        }
-      }
+      // .thread-vote-box {
+      //   .vote-btn {
+      //     display: flex;
+      //     align-items: center;
+      //     justify-content: center;
+      //     margin: 0 2em;
+      //     width: 80px;
+      //     height: 80px;
+      //     background-color: #bbd9f3;
+      //     box-shadow: 0 0.3rem 0.4rem hsla(0, 0%, 0%, 0.3);
+      //     border-radius: 50%;
+      //     color: #fff;
+      //     cursor: pointer;
+      //     &:hover {
+      //       background-color: #e0ebf5;
+      //     }
+      //     .fa {
+      //       font-size: 2em;
+      //     }
+      //   }
+      // }
       .content {
         .title-box {
           width: 100%;
