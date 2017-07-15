@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/skycoin/bbs/src/boo"
 	"github.com/skycoin/bbs/src/misc"
-	"github.com/skycoin/bbs/src/store/view"
+	"github.com/skycoin/bbs/src/store/obj/view"
 )
 
 // NewThreadInput is the configuration struct used when creating a new thread.
@@ -15,7 +15,7 @@ type NewThreadInput struct {
 }
 
 // NewThread creates a new thread on specified board.
-func (a *BoardAccessor) NewThread(in *NewThreadInput) (*view.Thread, error) {
+func (a *BoardAccessor) NewThread(in *NewThreadInput) (*view.ThreadView, error) {
 	defer a.lock()()
 
 	// Obtain board public key.

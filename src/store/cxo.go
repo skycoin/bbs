@@ -103,7 +103,7 @@ func (c *CXO) NewRoot(seed []byte, modifier RootModifier) (cipher.PubKey, cipher
 	defer c.Unlock()
 	root, e := c.node.Container().NewRoot(pk, sk)
 	if e != nil {
-		return pk, sk, boo.New(boo.Internal, "failed to create root:", e.Error())
+		return pk, sk, boo.WrapType(e, boo.Internal, "failed to create root")
 	}
 	return pk, sk, modifier(root)
 }

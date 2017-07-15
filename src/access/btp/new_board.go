@@ -3,7 +3,7 @@ package btp
 import (
 	"github.com/skycoin/bbs/src/boo"
 	"github.com/skycoin/bbs/src/store/obj"
-	"github.com/skycoin/bbs/src/store/view"
+	"github.com/skycoin/bbs/src/store/obj/view"
 	"github.com/skycoin/cxo/node"
 	"time"
 )
@@ -16,7 +16,7 @@ type NewBoardInput struct {
 }
 
 // NewBoard creates a new board.
-func (a *BoardAccessor) NewBoard(in *NewBoardInput) (*view.Board, error) {
+func (a *BoardAccessor) NewBoard(in *NewBoardInput) (*view.BoardView, error) {
 	if !a.cxo.IsMaster() {
 		return nil, boo.New(boo.NotMaster)
 	}
@@ -45,7 +45,7 @@ func (a *BoardAccessor) NewBoard(in *NewBoardInput) (*view.Board, error) {
 
 	a.bFile.AddMaster(pk, sk)
 
-	boardView := &view.Board{
+	boardView := &view.BoardView{
 		Board:     *board,
 		PublicKey: pk.Hex(),
 	}

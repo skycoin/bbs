@@ -6,7 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/boo"
 	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/bbs/src/store/obj"
-	"github.com/skycoin/bbs/src/store/view"
+	"github.com/skycoin/bbs/src/store/obj/view"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"sync"
@@ -17,7 +17,7 @@ const rootQueueCap = 1
 // State represents a state of a board.
 type State struct {
 	mux       sync.Mutex
-	board     view.Board
+	board     view.BoardView
 	boardRoot chan *skyobject.Root
 	quit      chan struct{}
 }
@@ -50,7 +50,7 @@ func (s *State) PushNewBoardRoot(root *skyobject.Root) {
 }
 
 // GetView obtains the current state view.
-func (s *State) GetView() view.Board {
+func (s *State) GetView() view.BoardView {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	return s.board
@@ -75,11 +75,10 @@ func (s *State) service() {
 	}
 }
 
-func processBoardRoot(r *skyobject.Root) (*view.Board, error) {
+func processBoardRoot(r *skyobject.Root) (*view.BoardView, error) {
 	schemaRefs, e := misc.GetSchemaRefsFromRoot(r)
 	if e != nil {
-		return nil, boo.New(boo.InvalidRead,
-			"failed to obtain schema references:", e.Error())
+		return nil, boo.WrapType(e, boo.InvalidRead, "failed to obtain schema references")
 	}
 
 	for _, dyn := range r.Refs() {
@@ -100,8 +99,7 @@ func getBoardPage(r *skyobject.Root, ref skyobject.Reference) (*obj.BoardPage, e
 	}
 	boardPage := new(obj.BoardPage)
 	if e := encoder.DeserializeRaw(data, boardPage); e != nil {
-		return nil, boo.New(boo.InvalidRead,
-			"failed to deserialize board page:", e.Error())
+		return nil, boo.WrapType(e, boo.InvalidRead, "failed to deserialize board page")
 	}
 	return boardPage, nil
 }
@@ -109,21 +107,19 @@ func getBoardPage(r *skyobject.Root, ref skyobject.Reference) (*obj.BoardPage, e
 func getBoard(r *skyobject.Root, ref skyobject.Reference) (*obj.Board, error) {
 	data, has := r.Get(ref)
 	if !has {
-		return nil, boo.Newf(boo.ObjectNotFound,
-			"board of ref '%s' not found", ref.String())
+		return nil, boo.Newf(boo.ObjectNotFound, "board of ref '%s' not found", ref.String())
 	}
 	board := new(obj.Board)
 	if e := encoder.DeserializeRaw(data, board); e != nil {
-		return nil, boo.New(boo.InvalidRead,
-			"failed to deserialize board:", e.Error())
+		return nil, boo.WrapType(e, boo.InvalidRead, "failed to deserialize board")
 	}
 	return board, nil
 }
 
-func getExtRootsView(board *obj.Board) ([]view.ExternalRoot, error) {
-	extRootViews := make([]view.ExternalRoot, len(board.ExternalRoots))
+func getExtRootsView(board *obj.Board) ([]view.ExternalRootView, error) {
+	extRootViews := make([]view.ExternalRootView, len(board.ExternalRoots))
 	for i, extRoot := range board.ExternalRoots {
-		extRootViews[i] = view.ExternalRoot{
+		extRootViews[i] = view.ExternalRootView{
 			ExternalRoot: extRoot,
 			PublicKey:    extRoot.PublicKey.Hex(),
 		}
@@ -131,7 +127,7 @@ func getExtRootsView(board *obj.Board) ([]view.ExternalRoot, error) {
 	return extRootViews, nil
 }
 
-func getBoardView(r *skyobject.Root, ref skyobject.Reference) (*view.Board, error) {
+func getBoardView(r *skyobject.Root, ref skyobject.Reference) (*view.BoardView, error) {
 	boardPage, e := getBoardPage(r, ref)
 	if e != nil {
 		return nil, e
@@ -148,7 +144,7 @@ func getBoardView(r *skyobject.Root, ref skyobject.Reference) (*view.Board, erro
 	if e != nil {
 		return nil, e
 	}
-	boardView := &view.Board{
+	boardView := &view.BoardView{
 		Board:         *board,
 		PublicKey:     r.Pub().Hex(),
 		ExternalRoots: extRootsView,
@@ -160,13 +156,11 @@ func getBoardView(r *skyobject.Root, ref skyobject.Reference) (*view.Board, erro
 func getThreadPage(r *skyobject.Root, ref skyobject.Reference) (*obj.ThreadPage, error) {
 	data, has := r.Get(ref)
 	if !has {
-		return nil, boo.Newf(boo.ObjectNotFound,
-			"thread page of ref '%s' not found", ref.String())
+		return nil, boo.Newf(boo.ObjectNotFound, "thread page of ref '%s' not found", ref.String())
 	}
 	threadPage := new(obj.ThreadPage)
 	if e := encoder.DeserializeRaw(data, threadPage); e != nil {
-		return nil, boo.New(boo.InvalidRead,
-			"failed to deserialize thread page:", e.Error())
+		return nil, boo.WrapType(e, boo.InvalidRead, "failed to deserialize thread page")
 	}
 	return threadPage, nil
 }
@@ -179,14 +173,13 @@ func getThread(r *skyobject.Root, ref skyobject.Reference) (*obj.Thread, error) 
 	}
 	thread := new(obj.Thread)
 	if e := encoder.DeserializeRaw(data, thread); e != nil {
-		return nil, boo.New(boo.InvalidRead,
-			"failed to deserialize thread:", e.Error())
+		return nil, boo.WrapType(e, boo.InvalidRead, "failed to deserialize thread")
 	}
 	return thread, nil
 }
 
-func getThreadViews(r *skyobject.Root, refs skyobject.References) ([]view.Thread, error) {
-	tViews := make([]view.Thread, len(refs))
+func getThreadViews(r *skyobject.Root, refs skyobject.References) ([]view.ThreadView, error) {
+	tViews := make([]view.ThreadView, len(refs))
 	for i, ref := range refs {
 		threadPage, e := getThreadPage(r, ref)
 		if e != nil {
@@ -213,19 +206,17 @@ func getThreadViews(r *skyobject.Root, refs skyobject.References) ([]view.Thread
 func getPost(r *skyobject.Root, ref skyobject.Reference) (*obj.Post, error) {
 	data, has := r.Get(ref)
 	if !has {
-		return nil, boo.Newf(boo.ObjectNotFound,
-			"post of ref '%s' not found", ref.String())
+		return nil, boo.Newf(boo.ObjectNotFound, "post of ref '%s' not found", ref.String())
 	}
 	post := new(obj.Post)
 	if e := encoder.DeserializeRaw(data, post); e != nil {
-		return nil, boo.New(boo.InvalidRead,
-			"failed to deserialize post:", e.Error())
+		return nil, boo.WrapType(e, boo.InvalidRead, "failed to deserialize post")
 	}
 	return post, nil
 }
 
-func getPostViews(r *skyobject.Root, refs skyobject.References) ([]view.Post, error) {
-	pViews := make([]view.Post, len(refs))
+func getPostViews(r *skyobject.Root, refs skyobject.References) ([]view.PostView, error) {
+	pViews := make([]view.PostView, len(refs))
 	for i, ref := range refs {
 		post, e := getPost(r, ref)
 		if e != nil {
@@ -235,7 +226,7 @@ func getPostViews(r *skyobject.Root, refs skyobject.References) ([]view.Post, er
 		pViews[i].Ref = ref.String()
 		pViews[i].AuthorRef = post.User.Hex()
 		pViews[i].AuthorAlias = "" // TODO: Implement.
-		// TODO: Post meta and votes.
+		// TODO: PostView meta and votes.
 	}
 	return pViews, nil
 }

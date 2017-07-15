@@ -4,11 +4,8 @@ import (
 	"fmt"
 )
 
-// Type represents the type of boo.
-type Type int
-
 const (
-	Unknown = Type(iota)
+	Unknown = iota
 	Internal
 	InvalidInput
 	InvalidRead
@@ -18,7 +15,7 @@ const (
 	ObjectAlreadyExists
 )
 
-func Message(t Type) string {
+func Message(t int) string {
 	switch t {
 	case Internal:
 		return "An internal error has occurred."
@@ -39,32 +36,65 @@ func Message(t Type) string {
 	}
 }
 
-type root struct {
-	details string
-	what    Type
+type elem struct {
+	e error
+	m string
+	t int
 }
 
-func (r *root) Error() string {
-	return r.details
-}
-
-func New(what Type, v ...interface{}) error {
-	return &root{
-		details: fmt.Sprintln(v...),
-		what:    what,
+func (e *elem) dig(msg *string, typ *int) {
+	*msg += ": " + e.m
+	if *typ == Unknown {
+		*typ = e.t
+	}
+	if e.e == nil {
+		return
+	}
+	switch e.e.(type) {
+	case *elem:
+		e.e.(*elem).dig(msg, typ)
+	default:
+		*msg += ": " + e.e.Error()
 	}
 }
 
-func Newf(what Type, format string, v ...interface{}) error {
-	return &root{
-		details: fmt.Sprintf(format, v...),
-		what:    what,
-	}
+func (e *elem) Error() string {
+	msg, typ := "", Unknown
+	e.dig(&msg, &typ)
+	return msg[2:]
 }
 
-func What(e error) Type {
-	if r, ok := e.(*root); ok {
-		return r.what
+func New(t int, m string) error {
+	return &elem{e: nil, m: m, t: t}
+}
+
+func Newf(t int, f string, v ...interface{}) error {
+	return &elem{e: nil, m: fmt.Sprintf(f, v...), t: t}
+}
+
+func Wrap(e error, m string) error {
+	return &elem{e: e, m: m, t: Unknown}
+}
+
+func Wrapf(e error, f string, v ...interface{}) error {
+	return &elem{e: e, m: fmt.Sprintf(f, v...), t: Unknown}
+}
+
+func WrapType(e error, t int, m string) error {
+	return &elem{e: e, m: m, t: t}
+}
+
+func WrapTypef(e error, t int, f string, v ...interface{}) error {
+	return &elem{e: e, m: fmt.Sprintf(f, v...), t: t}
+}
+
+func Type(e error) int {
+	switch e.(type) {
+	case *elem:
+		msg, typ := "", Unknown
+		e.(*elem).dig(&msg, &typ)
+		return typ
+	default:
+		return Unknown
 	}
-	return Unknown
 }

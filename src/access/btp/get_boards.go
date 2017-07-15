@@ -3,7 +3,7 @@ package btp
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc"
-	"github.com/skycoin/bbs/src/store/view"
+	"github.com/skycoin/bbs/src/store/obj/view"
 )
 
 type GetBoardsInput struct {
@@ -11,14 +11,14 @@ type GetBoardsInput struct {
 }
 
 type GetBoardsOutput struct {
-	MasterBoards []view.Board `json:"master_boards,omitempty"`
-	Boards       []view.Board `json:"boards"`
+	MasterBoards []view.BoardView `json:"master_boards,omitempty"`
+	Boards       []view.BoardView `json:"boards"`
 }
 
 func (a *BoardAccessor) GetBoards(in *GetBoardsInput) (*GetBoardsOutput, error) {
 	defer a.lock()()
 
-	mbOut := []view.Board{}
+	mbOut := []view.BoardView{}
 	for pkStr := range a.bFile.MasterBoards {
 		pk, e := misc.GetPubKey(pkStr)
 		if e != nil {
@@ -33,7 +33,7 @@ func (a *BoardAccessor) GetBoards(in *GetBoardsInput) (*GetBoardsOutput, error) 
 		mbOut = append(mbOut, view)
 	}
 
-	bOut := []view.Board{}
+	bOut := []view.BoardView{}
 	for pkStr := range a.bFile.Boards {
 		pk, e := misc.GetPubKey(pkStr)
 		if e != nil {

@@ -186,7 +186,7 @@ func CatchError(e error, msg string, args ...interface{}) {
 
 func main() {
 	config := NewDefaultConfig()
-	flags := cli.FlagsByName{
+	flags := []cli.Flag{
 		cli.BoolFlag{
 			Name:        "master",
 			Destination: &config.Master,

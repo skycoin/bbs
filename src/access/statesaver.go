@@ -2,7 +2,7 @@ package access
 
 import (
 	"github.com/skycoin/bbs/src/boo"
-	"github.com/skycoin/bbs/src/store/view"
+	"github.com/skycoin/bbs/src/store/obj/view"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -34,11 +34,11 @@ func (s *StateSaver) Close() {
 	}
 }
 
-func (s *StateSaver) Get(pk cipher.PubKey) (view.Board, error) {
+func (s *StateSaver) Get(pk cipher.PubKey) (view.BoardView, error) {
 	defer s.lock()()
 	state, has := s.boards[pk]
 	if !has {
-		return view.Board{}, boo.Newf(boo.ObjectNotFound,
+		return view.BoardView{}, boo.Newf(boo.ObjectNotFound,
 			"board of public key '%s' not found in internal state", pk.Hex())
 	}
 	return state.GetView(), nil
