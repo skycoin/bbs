@@ -24,7 +24,7 @@ export class OrderByPipe implements PipeTransform {
           return 0;
         });
         break;
-      case 'esc':
+      case 'asc':
         values.sort((a, b) => {
           if (a.created > b.created) {
             return -1;

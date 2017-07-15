@@ -81,19 +81,17 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
       this.threadKey = res['thread'];
       this.open(this.boardKey, this.threadKey);
     });
-    setTimeout(() => {
-      this.common.fb.display = 'flex';
-      this.common.fb.handle = () => {
-        this.openReply(this.replyBox);
-      }
-    }, 2000);
+    this.common.fb.display = 'flex';
+    this.common.fb.handle = () => {
+      this.openReply(this.replyBox);
+    }
   }
   ngOnDestroy() {
     this.common.fb.display = 'none';
     this.common.fb.handle = null;
   }
   public setSort() {
-    this.sort = this.sort === 'desc' ? 'esc' : 'desc';
+    this.sort = this.sort === 'desc' ? 'asc' : 'desc';
   }
   addThreadVote(mode: string, thread: Thread, ev: Event) {
     ev.stopImmediatePropagation();

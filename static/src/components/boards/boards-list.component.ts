@@ -31,7 +31,7 @@ export class BoardsListComponent implements OnInit {
   public addForm = new FormGroup({
     name: new FormControl('', Validators.required),
     description: new FormControl('', Validators.required),
-    seed: new FormControl('', Validators.required),
+    seed: new FormControl({ value: '', disabled: true }, Validators.required),
     addresses: new FormControl(''),
   });
   public tmpBoard: Board = null;
@@ -52,7 +52,7 @@ export class BoardsListComponent implements OnInit {
   }
 
   setSort() {
-    this.sort = this.sort === 'desc' ? 'esc' : 'desc';
+    this.sort = this.sort === 'desc' ? 'asc' : 'desc';
   }
 
   getBoards() {
@@ -123,24 +123,29 @@ export class BoardsListComponent implements OnInit {
 
   openAdd(content) {
     this.addForm.reset();
-    this.modal.open(content).result.then((result) => {
-      if (result === true) {
-        if (!this.addForm.valid) {
-          this.common.showErrorAlert('Parameter error');
-          return;
+    this.api.generateSeed().subscribe(seed => {
+      this.addForm.patchValue({ seed: seed });
+      this.modal.open(content).result.then((result) => {
+        if (result === true) {
+          if (!this.addForm.valid) {
+            this.common.showErrorAlert('Parameter error');
+            return;
+          }
+          const data = new FormData();
+          data.append('name', this.addForm.get('name').value);
+          data.append('description', this.addForm.get('description').value);
+          data.append('seed', this.addForm.get('seed').value);
+          data.append('submission_addresses', this.addForm.get('addresses').value);
+          this.api.addBoard(data).subscribe(res => {
+            this.getBoards();
+            this.common.showSucceedAlert('Added Successfully');
+          });
         }
-        const data = new FormData();
-        data.append('name', this.addForm.get('name').value);
-        data.append('description', this.addForm.get('description').value);
-        data.append('seed', this.addForm.get('seed').value);
-        data.append('submission_addresses', this.addForm.get('addresses').value);
-        this.api.addBoard(data).subscribe(res => {
-          this.getBoards();
-          this.common.showSucceedAlert('Added Successfully');
-        });
-      }
+      }, err => {
+      });
     }, err => {
-    });
+      this.common.showErrorAlert('Unable to create,Please try again later');
+    })
   }
 
   delAddress(ev: Event, key: string, address: string) {
