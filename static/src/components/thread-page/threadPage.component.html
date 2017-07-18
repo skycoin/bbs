@@ -56,8 +56,8 @@
               <h6 class="card-text single-line title">{{item?.title}}</h6>
               <small class="text-muted index">#{{i+1}}</small>
             </div>
-            <p class="card-text text-primary author-box" title="{{item?.author}}" placement="top">
-              <small class="single-line post-author" [ngbTooltip]="item?.author">{{item?.author}}</small>
+            <p class="card-text text-primary author-box"  placement="top">
+              <small class="single-line post-author" title="{{item?.author}}" [ngbTooltip]="item?.author">{{item?.author}}</small>
               <small class="action-box">
               <i class="fa fa-caret-down fa-2x" (click)="PostAuthorMenu(item,$event)"></i>
               <div class="overlay" *ngIf="item?.uiOptions?.menu" (click)="PostAuthorMenu(item,$event)"></div>

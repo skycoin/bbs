@@ -31,6 +31,7 @@ export class UserlistComponent implements OnInit {
   }
 
   openEdit(content: any, key: string) {
+    this.editName = '';
     if (key === '') {
       this.common.showErrorAlert('Parameter error!!!');
       return;
@@ -72,7 +73,7 @@ export class UserlistComponent implements OnInit {
       this.userlist = [];
       this.user.getAll().subscribe(userlist => {
         this.userlist = userlist;
-        this.common.showAlert('successfully modified', 'success', 3000);
+        this.common.showAlert('modified successfully', 'success', 3000);
       });
     });
   }
@@ -92,14 +93,14 @@ export class UserlistComponent implements OnInit {
             this.userlist = [];
             this.user.getAll().subscribe(userlist => {
               this.userlist = userlist;
-              this.common.showAlert('successfully deleted', 'success', 1000);
+              this.common.showAlert('deleted successfully', 'success', 1000);
             });
           } else {
             this.common.showAlert('failed to delete', 'success', 1000);
           }
         });
       }
-    });
+    }, err => { });
 
   }
 

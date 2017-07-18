@@ -25,7 +25,7 @@ export class BoardsListComponent implements OnInit {
     board: new FormControl('', Validators.required),
   });
   public addressForm = new FormGroup({
-    url: new FormControl('', Validators.required),
+    ip: new FormControl('', Validators.required),
     port: new FormControl('', Validators.required),
   });
   public addForm = new FormGroup({
@@ -90,7 +90,7 @@ export class BoardsListComponent implements OnInit {
         }
         let data = new FormData();
         data.append('board', key);
-        data.append('address', this.addressForm.get('url').value + ':' + this.addressForm.get('port').value);
+        data.append('address', this.addressForm.get('ip').value + ':' + this.addressForm.get('port').value);
         this.api.addSubmissionAddress(data).subscribe(isOk => {
           if (isOk) {
             data = new FormData();
@@ -170,18 +170,19 @@ export class BoardsListComponent implements OnInit {
             this.api.getSubmissionAddresses(data).subscribe(res => {
               this.tmpBoard.address = res;
             });
-            this.common.showSucceedAlert('successfully deleted');
+            this.common.showSucceedAlert('deleted successfully');
           } else {
             this.common.showErrorAlert('failed to delete');
           }
         });
       }
-    });
+    }, err => { });
   }
 
   subscribe(ev: Event, content: any) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    this.subscribeForm.reset();
     this.modal.open(content).result.then(result => {
       if (result) {
         if (!this.subscribeForm.valid) {
@@ -193,13 +194,12 @@ export class BoardsListComponent implements OnInit {
         data.append('board', this.subscribeForm.get('board').value);
         this.api.subscribe(data).subscribe(isOk => {
           if (isOk) {
-            this.common.showSucceedAlert('Subscribe successfully');
+            this.common.showSucceedAlert('Subscribed successfully');
             this.getBoards();
           }
         });
       }
-    });
-
+    }, err => { });
   }
 
   unSubscribe(ev: Event, boardKey: string) {
@@ -218,7 +218,7 @@ export class BoardsListComponent implements OnInit {
         data.append('board', boardKey);
         this.api.unSubscribe(data).subscribe(isOk => {
           if (isOk) {
-            this.common.showSucceedAlert('Unsubscribe successfully');
+            this.common.showSucceedAlert('Unsubscribed successfully');
             this.getBoards();
           }
         });

@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
+import 'rxjs/add/operator/filter';
 
 @Component({
   selector: 'app-threadpage',
@@ -135,7 +136,7 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
     data.append('mode', mode);
     this.api.addUserVote(data).subscribe(result => {
       if (result) {
-        this.common.showSucceedAlert('Successful Vote');
+        this.common.showSucceedAlert('Voted Successful');
         post.uiOptions.menu = false;
       } else {
         this.common.showErrorAlert('Vote Fail');
