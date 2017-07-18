@@ -51,7 +51,7 @@ The following examples assume that you have `$GOPATH/bin` in your `$PATH`, and t
 bbsnode --help
 ```
 
-#### Run a node with static files in `$GOPATH/src/github.com/bbs/static/dist`
+#### Run a node with static files in `$GOPATH/src/github.com/skycoin/bbs/static/dist`
 
 First ensure that the `GOPATH` env is set and you have the Skycoin BBS module.
 
