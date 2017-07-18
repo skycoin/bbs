@@ -24,3 +24,7 @@ Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) 
     * Data/OT Rank -> Prune & Organise.
     * FUTURE: Tweet module.
     * Archive roots.
+
+## Features for v0.2
+
+* Refactor

@@ -30,17 +30,17 @@ func (a *BoardAccessor) NewBoard(in *NewBoardInput) (*view.BoardView, error) {
 	pk, sk, e := a.cxo.NewRoot([]byte(in.Seed), func(r *node.Root) error {
 		boardPageDyn, e := r.Dynamic("BoardPage", obj.BoardPage{Board: r.Save(*board)})
 		if e != nil {
-			return boo.New(boo.Internal, "failed to save board page to root:", e.Error())
+			return boo.WrapType(e, boo.Internal, "failed to save board page to root")
 		}
 		if _, e := r.Append(boardPageDyn); e != nil {
-			return boo.New(boo.Internal, "failed to append to root:", e.Error())
+			return boo.WrapType(e, boo.Internal, "failed to append to root")
 		}
 		a.stateSaver.Update(r)
 		return nil
 	})
 
 	if e != nil {
-		return nil, boo.New(boo.Internal, "failed to create root:", e.Error())
+		return nil, boo.WrapType(e, boo.Internal, "failed to create root")
 	}
 
 	a.bFile.AddMaster(pk, sk)

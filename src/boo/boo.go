@@ -64,8 +64,8 @@ func (e *elem) Error() string {
 	return msg[2:]
 }
 
-func New(t int, m string) error {
-	return &elem{e: nil, m: m, t: t}
+func New(t int, m ...string) error {
+	return &elem{e: nil, m: fmt.Sprint(m...), t: t}
 }
 
 func Newf(t int, f string, v ...interface{}) error {
@@ -80,8 +80,8 @@ func Wrapf(e error, f string, v ...interface{}) error {
 	return &elem{e: e, m: fmt.Sprintf(f, v...), t: Unknown}
 }
 
-func WrapType(e error, t int, m string) error {
-	return &elem{e: e, m: m, t: t}
+func WrapType(e error, t int, m ...string) error {
+	return &elem{e: e, m: fmt.Sprint(m...), t: t}
 }
 
 func WrapTypef(e error, t int, f string, v ...interface{}) error {
