@@ -1,991 +1,172 @@
 {
 	"variables": [],
 	"info": {
-		"name": "Skycoin BBS",
-		"_postman_id": "1b216e10-2695-d3ee-8b0e-c1cc78ff6d7c",
-		"description": "",
+		"name": "Skycoin BBS New",
+		"_postman_id": "a78885d6-0d37-6050-cf6e-bc10e5522baf",
+		"description": "API for rewrite of Skycoin BBS.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Board Meta",
-			"description": "",
-			"item": [
-				{
-					"name": "Get Submission Addresses",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/boards/meta/submission_addresses/get_all",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"description": "Board's  public key.",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Add Submission Address",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/boards/meta/submission_addresses/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"description": "Board's public key.",
-									"type": "text"
-								},
-								{
-									"key": "address",
-									"value": "192.168.20.5:6420",
-									"description": "Submission address.",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Remove Submission Address",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/boards/meta/submission_addresses/remove",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"description": "Board's public key.",
-									"type": "text"
-								},
-								{
-									"key": "address",
-									"value": "192.168.20.5:6420",
-									"description": "Submission address.",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Boards, Theads & Posts",
-			"description": "",
-			"item": [
-				{
-                  "name": "Get All Boards",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/boards/get_all",
-						"method": "GET",
-						"header": [],
-						"body": {},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "New Board",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/boards/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "name",
-									"value": "Board of Life",
-									"type": "text",
-									"description": "Name of board."
-								},
-								{
-									"key": "description",
-									"value": "All about life.",
-									"type": "text",
-									"description": "Description of board."
-								},
-								{
-									"key": "seed",
-									"value": "b",
-									"type": "text",
-									"description": "Seed to generate public key of board."
-								},
-								{
-									"key": "submission_addresses",
-									"value": "",
-									"description": "(Optional) Specify submission addresses of board. If not specified, current node's submission address will be used.",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get BoardPage",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/boards/page/get",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get Threads",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/threads/get_all",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "New Thread",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/threads/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text"
-								},
-								{
-									"key": "name",
-									"value": "Web User Interface",
-									"type": "text"
-								},
-								{
-									"key": "description",
-									"value": "Regarding the user interface of Skycoin BBS.",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-                  "name": "Remove Thread",
-                  "request": {
-                    "url": "http://127.0.0.1:7410/api/threads/remove",
-                    "method": "POST",
-                    "header": [],
-                    "body": {
-                      "mode": "formdata",
-                      "formdata": [
-                        {
-                          "key": "board",
-                          "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-                          "description": "",
-                          "type": "text"
-                        },
-                        {
-                          "key": "thread",
-                          "value": "8755f49db460fe6c5b474b14832381c779986f95b6c67dbf99a0bb84c5b87481",
-                          "description": "",
-                          "type": "text"
-                        }
-                      ]
-                    },
-                    "description": ""
-                  },
-                  "response": []
-                },
-              {
-					"name": "Get ThreadPage",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/threads/page/get",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								},
-								{
-									"key": "thread",
-                                  "value": "0c52a02af79a3f798a6bea71b7391e3ea0af83e2f8452fbc96d766bb4e74c6ec",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get Posts",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/posts/get_all",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								},
-								{
-									"key": "thread",
-                                  "value": "0fe7cb2f850c8d42088aa1d87497581552214b8df49416b2b52775fdcfc7027a",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "New Post",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/posts/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								},
-								{
-									"key": "thread",
-                                  "value": "0fe7cb2f850c8d42088aa1d87497581552214b8df49416b2b52775fdcfc7027a",
-									"type": "text"
-								},
-								{
-									"key": "title",
-									"value": "Banana",
-									"type": "text"
-								},
-								{
-									"key": "body",
-									"value": "It's a very healthy fruit!",
-									"type": "text"
-                                }
-                            ]
-                        },
-                      "description": ""
-                    },
-                  "response": []
-                },
-              {
-                "name": "Remove Post",
-                "request": {
-                  "url": "http://127.0.0.1:7410/api/posts/remove",
-                  "method": "POST",
-                  "header": [],
-                  "body": {
-                    "mode": "formdata",
-                    "formdata": [
-                      {
-                        "key": "board",
-                        "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-                        "description": "",
-                        "type": "text"
-                      },
-                      {
-                        "key": "thread",
-                        "value": "0fe7cb2f850c8d42088aa1d87497581552214b8df49416b2b52775fdcfc7027a",
-                        "description": "",
-                        "type": "text"
-                      },
-                      {
-                        "key": "post",
-                        "value": "24775b899ee328d5766273eb99965b716bd98443e42cf865daa0b8a5ae3ac14f",
-                        "description": "",
-                        "type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Import Thread",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/threads/import",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "from_board",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text"
-								},
-								{
-									"key": "to_board",
-									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
-									"type": "text"
-								},
-								{
-									"key": "thread",
-									"value": "053fb17da0250158996a96b405e09b2971e578f9add2f656380bc07f6af5686a",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Connections",
-			"description": "",
-			"item": [
-				{
-					"name": "Get All Connections",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/connections/get_all",
-						"method": "GET",
-						"header": [],
-						"body": {},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-                  "name": "Add Connection",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/connections/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "address",
-									"value": "127.0.0.1:7412",
-									"description": "",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Remove Connection",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/connections/remove",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "address",
-									"value": "127.0.0.1:7412",
-									"description": "",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Hex",
-			"description": "",
-			"item": [
-				{
-					"name": "Get ThreadPage (Hex)",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/hex/get_threadpage",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text"
-								},
-								{
-									"key": "thread",
-									"value": "10864517e610006b30cf334d8d6784e2cdc4a66c3a5e8c84ef093c5084156cef",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Subscriptions",
-			"description": "",
-			"item": [
-				{
-                  "name": "Get All Subscriptions",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/subscriptions/get_all",
-						"method": "GET",
-						"header": [],
-						"body": {},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get Subscription",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/subscriptions/get",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Subscribe",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/subscriptions/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "address",
-									"value": "127.0.0.1:7412",
-									"description": "",
-									"type": "text"
-								},
-								{
-									"key": "board",
-									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Unsubscribe",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/subscriptions/remove",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-									"value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Tests",
-			"description": "",
-			"item": [
-				{
-					"name": "New Filled Board",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/tests/add_filled_board",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "seed",
-									"value": "a",
-									"type": "text"
-								},
-								{
-									"key": "threads",
-									"value": "5",
-									"type": "text"
-								},
-								{
-									"key": "min_posts",
-									"value": "10",
-									"type": "text"
-								},
-								{
-									"key": "max_posts",
-									"value": "100",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-                },
-              {
-                "name": "Panic",
-                "request": {
-                  "url": "http://127.0.0.1:7410/api/tests/panic",
-                  "method": "GET",
-                  "header": [],
-                  "body": {},
-                  "description": ""
-                },
-                "response": []
-				}
-			]
-		},
-		{
-			"name": "Users",
-			"description": "",
-			"item": [
-				{
-					"name": "Get Current",
-					"request": {
-                      "url": "http://127.0.0.1:7410//api/users/masters/current/get",
-						"method": "GET",
-						"header": [],
-						"body": {},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Set Current",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/users/masters/current/set",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "user",
-									"value": "030e40dda21c27126d829b6ae57816e1440dcb2cc73e37e860af26eff1ec55ed73",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Masters",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/users/masters/get_all",
-						"method": "GET",
-						"header": [],
-						"body": {},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "New Master",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/users/masters/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "alias",
-									"value": "evanlinjin",
-									"type": "text"
-								},
-								{
-									"key": "seed",
-									"value": "random_seed",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get All",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/users/get_all",
-						"method": "GET",
-						"header": [],
-						"body": {},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "New",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/users/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "user",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"type": "text"
-								},
-								{
-									"key": "alias",
-									"value": "not_master",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Remove",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/users/remove",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "user",
-									"value": "0369f1cf2abf86d21414913eecdcd0c45450f97f8af9a9deeaea26af4cf16bab14",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Votes",
-			"description": "",
-			"item": [
-				{
-					"name": "Get Thread Votes",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/threads/votes/get",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								},
-								{
-									"key": "thread",
-                                  "value": "0fe7cb2f850c8d42088aa1d87497581552214b8df49416b2b52775fdcfc7027a",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get Post Votes",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/posts/votes/get",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								},
-								{
-									"key": "post",
-                                  "value": "24775b899ee328d5766273eb99965b716bd98443e42cf865daa0b8a5ae3ac14f",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Add Thread Vote",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/threads/votes/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								},
-								{
-									"key": "thread",
-                                  "value": "0fe7cb2f850c8d42088aa1d87497581552214b8df49416b2b52775fdcfc7027a",
-									"type": "text"
-								},
-								{
-									"key": "mode",
-                                  "value": "-1",
-									"type": "text"
-								},
-								{
-									"key": "tag",
-									"value": "",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Add Post Vote",
-					"request": {
-                      "url": "http://127.0.0.1:7410/api/posts/votes/add",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board",
-                                  "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-									"type": "text"
-								},
-								{
-									"key": "post",
-                                  "value": "5f93f547b9dd3af57b0f7062bced9a1b3777bf7c6495466294956aa1113ddde1",
-									"type": "text"
-								},
-								{
-									"key": "mode",
-									"value": "1",
-									"type": "text"
-								},
-								{
-									"key": "tag",
-									"value": "",
-									"type": "text"
-								}
-							]
-						},
-						"description": ""
-					},
-					"response": []
-                },
-              {
-                "name": "Get User Votes",
-                "request": {
-                  "url": "http://127.0.0.1:7410/api/users/votes/get",
-                  "method": "POST",
-                  "header": [],
-                  "body": {
-                    "mode": "formdata",
-                    "formdata": [
-                      {
-                        "key": "board",
-                        "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-                        "description": "Public Key of Board.",
-                        "type": "text"
-                      },
-                      {
-                        "key": "user",
-                        "value": "038614395bdbd7e443fe6baabc95f68d548b0038a9ddce06191249bef75000617f",
-                        "description": "Public Key of User.",
-                        "type": "text"
-                      }
-                    ]
-                  },
-                  "description": ""
-                },
-                "response": []
-              },
-              {
-                "name": "Add User Vote",
-                "request": {
-                  "url": "http://127.0.0.1:7410/api/users/votes/add",
-                  "method": "POST",
-                  "header": [],
-                  "body": {
-                    "mode": "formdata",
-                    "formdata": [
-                      {
-                        "key": "board",
-                        "value": "03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-                        "description": "Public key of board.",
-                        "type": "text"
-                      },
-                      {
-                        "key": "user",
-                        "value": "038614395bdbd7e443fe6baabc95f68d548b0038a9ddce06191249bef75000617f",
-                        "description": "Public key of user to cast vote on.",
-                        "type": "text"
-                      },
-                      {
-                        "key": "mode",
-                        "value": "+1",
-                        "description": "Mode of vote (+1, 0, -1).",
-                        "type": "text"
-                      },
-                      {
-                        "key": "tag",
-                        "value": "",
-                        "description": "Tag of vote.",
-                        "type": "text"
-                      }
-                    ]
-                  },
-                  "description": ""
-                },
-                "response": []
-              }
-            ]
-        },
-      {
-        "name": "Ping Submission Address",
-        "request": {
-          "url": "http://127.0.0.1:7410/api/ping_submission_address",
-          "method": "POST",
-          "header": [],
-          "body": {
-            "mode": "formdata",
-            "formdata": [
-              {
-                "key": "address",
-                "value": "34.204.161.180:8212",
-                "description": "Submission address to ping.",
-                "type": "text"
-              }
-            ]
-          },
-          "description": ""
-        },
-        "response": []
-		},
-		{
-			"name": "Get Stats",
+			"name": "New Board",
 			"request": {
-              "url": "http://127.0.0.1:7410/api/stats/get",
-				"method": "GET",
+				"url": "http://127.0.0.1:7410/api/boards/new",
+				"method": "POST",
 				"header": [],
-				"body": {},
-				"description": ""
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "Test Board",
+							"description": "Name of the board.",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "This is a test board.",
+							"description": "Description of the board.",
+							"type": "text"
+						},
+						{
+							"key": "seed",
+							"value": " these are words to generate a seed",
+							"description": "Seed to generate public/secret key pair.",
+							"type": "text"
+						}
+					]
+				},
+				"description": "Creates a new board hosted on node.\nAction only permitted if node is master."
 			},
-			"response": []
+			"response": [
+				{
+					"id": "6622471d-11f7-4b5c-a99f-bda194c80db9",
+					"name": "New Board Example",
+					"originalRequest": {
+						"url": "http://127.0.0.1:7410/api/boards/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Board Name",
+									"description": "Name of the board.",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "This is a board.",
+									"description": "Description of the board.",
+									"type": "text"
+								},
+								{
+									"key": "seed",
+									"value": "this is a seed with random words",
+									"description": "Seed to generate public/secret key pair.",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"_postman_previewtype": "text",
+					"header": [
+						{
+							"key": "Content-Length",
+							"value": "331",
+							"name": "Content-Length",
+							"description": "The length of the response body in octets (8-bit bytes)"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "The mime type of this content"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 10 Jul 2017 03:38:39 GMT",
+							"name": "Date",
+							"description": "The date and time that the message was sent"
+						}
+					],
+					"cookie": [],
+					"responseTime": 104,
+					"body": "{\"okay\":true,\"data\":{\"name\":\"Board Name\",\"description\":\"This is a board.\",\"created\":1499657919723743046,\"submission_addresses\":null,\"public_key\":\"028ec9c2a8c715ce9f4542166f04c2194d5f0b18f54b6293f7778e5070a35d1133\",\"secret_key\":\"7bcc93f778a84fb527229212f105dd7663b2bea9910741f38001110d4462b043\",\"external_roots\":null,\"thread\":null}}"
+				},
+				{
+					"id": "5cd23ecf-8fe8-454b-86db-e256c1fe6edb",
+					"name": "New Board Example",
+					"originalRequest": {
+						"url": "http://127.0.0.1:7410/api/boards/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Test Board",
+									"description": "Name of the board.",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "This is a test board.",
+									"description": "Description of the board.",
+									"type": "text"
+								},
+								{
+									"key": "seed",
+									"value": " these are words to generate a seed",
+									"description": "Seed to generate public/secret key pair.",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"_postman_previewtype": "text",
+					"header": [
+						{
+							"key": "Content-Length",
+							"value": "257",
+							"name": "Content-Length",
+							"description": "The length of the response body in octets (8-bit bytes)"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "The mime type of this content"
+						},
+						{
+							"key": "Date",
+							"value": "Tue, 11 Jul 2017 09:06:45 GMT",
+							"name": "Date",
+							"description": "The date and time that the message was sent"
+						}
+					],
+					"cookie": [],
+					"responseTime": 41,
+					"body": "{\"okay\":true,\"data\":{\"name\":\"Test Board\",\"description\":\"This is a test board.\",\"created\":1499764005678781985,\"submission_addresses\":null,\"public_key\":\"036da5e81db42e285760da8c3acc4cd897a81d60de80d05145876d0136587c95dd\",\"external_roots\":null,\"threads\":null}}"
+				}
+			]
 		},
 		{
-          "name": "Generate Seed",
-          "request": {
-            "url": "http://127.0.0.1:7410/api/generate_seed",
-            "method": "GET",
-            "header": [],
-            "body": {},
-            "description": ""
-          },
-          "response": []
-        },
-      {
-			"name": "Quit",
+			"name": "Get All Boards",
 			"request": {
-				"url": "http://127.0.0.1:7410/api/quit",
+				"url": "http://127.0.0.1:7410/api/boards/get_all",
 				"method": "GET",
 				"header": [],
 				"body": {},
-				"description": "Quits the BBS Node."
+				"description": "Gets all boards."
 			},
 			"response": []
 		}
