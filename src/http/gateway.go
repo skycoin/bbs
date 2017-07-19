@@ -170,9 +170,9 @@ func (g *Gateway) boardsNew() http.HandlerFunc {
 */
 
 type Error struct {
-	Type    boo.Type `json:"type"`
-	Message string   `json:"message"`
-	Details string   `json:"details"`
+	Type    int    `json:"type"`
+	Message string `json:"message"`
+	Details string `json:"details"`
 }
 
 type Response struct {
@@ -190,7 +190,7 @@ func sendErr(w http.ResponseWriter, e error) error {
 	if e == nil {
 		return sendOK(w, true)
 	}
-	eType := boo.What(e)
+	eType := boo.Type(e)
 	eMsg := boo.Message(eType)
 	var status int
 	switch eType {

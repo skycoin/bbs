@@ -1,9 +1,7 @@
-package view
-
-import "github.com/skycoin/bbs/src/store/obj"
+package obj
 
 type BoardView struct {
-	obj.Board
+	Board
 	PublicKey     string             `json:"public_key"`
 	ExternalRoots []ExternalRootView `json:"external_roots"`
 	Threads       []ThreadView       `json:"threads"`
@@ -11,12 +9,12 @@ type BoardView struct {
 }
 
 type ExternalRootView struct {
-	obj.ExternalRoot
+	ExternalRoot
 	PublicKey string `json:"public_key"`
 }
 
 type ThreadView struct {
-	obj.Thread
+	Thread
 	Ref            string     `json:"reference"`
 	AuthorRef      string     `json:"author_reference,omitempty"`
 	AuthorAlias    string     `json:"author_alias,omitempty"`
@@ -26,10 +24,25 @@ type ThreadView struct {
 }
 
 type PostView struct {
-	obj.Post
+	Post
 	Ref         string `json:"reference"`
 	AuthorRef   string `json:"author_reference,omitempty"`
 	AuthorAlias string `json:"author_alias,omitempty"`
 	// TODO: PostMeta part.
 	// TODO: Votes.
+}
+
+type VoteSummary struct {
+}
+
+type UserView struct {
+	Alias     string `json:"alias"`
+	PublicKey string `json:"public_key"`
+	SecretKey string `json:"secret_key,omitempty"`
+}
+
+type SubscriptionView struct {
+	PubKey      string   `json:"public_key"`
+	SecKey      string   `json:"secret_key,omitempty"`
+	Connections []string `json:"conns,omitempty"`
 }

@@ -1,7 +1,7 @@
 package obj
 
 import (
-	"github.com/skycoin/bbs/src/verify"
+	"github.com/skycoin/bbs/src/misc/verify"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )
@@ -48,3 +48,28 @@ type Post struct {
 
 // Verify verifies the post.
 func (p Post) Verify() error { return verify.Check(&p) }
+
+type ThreadVotesPage struct {
+	Store []VotesPage
+}
+
+type PostVotesPage struct {
+	Store []VotesPage
+}
+
+type VotesPage struct {
+	Ref   cipher.SHA256
+	Votes skyobject.References `skyobject:"schema=Vote"`
+}
+
+type User struct {
+	Alias     string        `json:"alias"`
+	PublicKey cipher.PubKey `json:"-"`
+	SecretKey cipher.SecKey `json:"-"`
+}
+
+type Subscription struct {
+	PubKey      cipher.PubKey `json:"pk"`
+	SecKey      cipher.SecKey `json:"sk,omitempty"`
+	Connections []string      `json:"conns,omitempty"`
+}
