@@ -28,7 +28,8 @@
   position: fixed;
   z-index: 99;
   bottom: 2%;
-  right: 2%;
+  right: 5%;
+  box-shadow: 0 0.3rem 0.4rem hsla(0, 0%, 0%, 0.3);
   cursor: pointer;
   .top {
     width: 0;

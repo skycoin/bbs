@@ -17,6 +17,32 @@ export class ApiService {
   constructor(private http: Http, private common: CommonService) {
   }
 
+  addUserVote(data: FormData) {
+    return this.common.handlePost(this.baseUrl + 'users/votes/add', data);
+  }
+
+  addThreadVote(data: FormData) {
+    return this.common.handlePost(this.baseUrl + 'threads/votes/add', data);
+  }
+
+  addPostVote(data: FormData) {
+    return this.common.handlePost(this.baseUrl + 'posts/votes/add', data);
+  }
+
+  getUserVotes(data: FormData) {
+    return this.common.handlePost(this.baseUrl + 'threads/votes/get', data);
+  }
+
+  getThreadVotes(data: FormData) {
+    return this.common.handlePost(this.baseUrl + 'threads/votes/get', data);
+  }
+  getPostVotes(data: FormData) {
+    return this.common.handlePost(this.baseUrl + 'posts/votes/get', data);
+  }
+  generateSeed() {
+    return this.common.handleGet(this.baseUrl + 'generate_seed');
+  }
+
   getSubmissionAddresses(data: FormData) {
     return this.common.handlePost(this.submissionAddressUrl + 'get_all', data);
   }

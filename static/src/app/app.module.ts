@@ -18,7 +18,8 @@ import {
   UserComponent,
   ConnectionComponent,
   AlertComponent,
-  LoadingComponent
+  LoadingComponent,
+  FixedButtonComponent
 } from '../components';
 import { SafeHTMLPipe, OrderByPipe } from '../pipes';
 import { ClipDirective, IscrollDirective } from '../directives/index';
@@ -45,13 +46,16 @@ import { ClipDirective, IscrollDirective } from '../directives/index';
     ConnectionComponent,
     AlertComponent,
     LoadingComponent,
+    FixedButtonComponent,
+
     // Pipes
     SafeHTMLPipe,
     OrderByPipe,
 
     // Directives
     ClipDirective,
-    IscrollDirective
+    IscrollDirective,
+    FixedButtonComponent,
   ],
   entryComponents: [AlertComponent],
   providers: [CommonService, ApiService, UserService, ConnectionService],

@@ -30,10 +30,10 @@ export class ThreadsComponent implements OnInit {
   @Output() thread: EventEmitter<{ master: string, ref: string }> = new EventEmitter();
 
   constructor(private api: ApiService,
-              private router: Router,
-              private route: ActivatedRoute,
-              private modal: NgbModal,
-              private common: CommonService) {
+    private router: Router,
+    private route: ActivatedRoute,
+    private modal: NgbModal,
+    private common: CommonService) {
   }
 
   ngOnInit() {
@@ -66,6 +66,8 @@ export class ThreadsComponent implements OnInit {
       this.board = res.board;
       this.threads = res.threads;
       this.common.loading.close();
+    }, err => {
+      this.router.navigate(['']);
     });
   }
 

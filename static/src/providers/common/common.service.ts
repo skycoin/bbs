@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/filter';
 import { Observable } from 'rxjs/Observable';
-import { LoadingComponent } from '../../components';
+import { LoadingComponent, FixedButtonComponent } from '../../components';
 
 @Injectable()
 export class CommonService {
@@ -11,6 +11,7 @@ export class CommonService {
   public alertMessage = 'test alert';
   public alert = false;
   public topBtn = false;
+  public fb: FixedButtonComponent = null;
   public loading: LoadingComponent = null;
   // public sortBy = 'desc';
   constructor(private http: Http) {
@@ -59,7 +60,9 @@ export class CommonService {
   showErrorAlert(message: string, timeout: number = 3000) {
     this.showAlert(message, 'danger', timeout);
   }
-
+  showWarningAlert(message: string, timeout: number = 3000) {
+    this.showAlert(message, 'warning', timeout);
+  }
   showSucceedAlert(message: string, timeout: number = 3000) {
     this.showAlert(message, 'success', timeout);
   }
@@ -82,12 +85,13 @@ export class CommonService {
    * Show Or Hide Top Button
    * @param multiple Take the maximum percentage
    */
-  showOrHideToTopBtn(multiple: number = 3) {
+  showOrHideToTopBtn() {
     const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
     const max = document.documentElement.scrollHeight;
-    if (pos > (max / multiple)) {
+    const clientHeight = document.documentElement.clientHeight;
+    if (pos > max - (max - clientHeight)) {
       this.topBtn = true;
-    } else {
+    } else if (pos <= clientHeight) {
       this.topBtn = false;
     }
   }

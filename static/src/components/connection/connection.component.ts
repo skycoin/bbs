@@ -18,8 +18,8 @@ export class ConnectionComponent implements OnInit {
   addUrl = '';
 
   constructor(private conn: ConnectionService,
-              private modal: NgbModal,
-              private common: CommonService) {
+    private modal: NgbModal,
+    private common: CommonService) {
   }
 
   ngOnInit() {
@@ -68,6 +68,6 @@ export class ConnectionComponent implements OnInit {
           }
         });
       }
-    });
+    }, err => { });
   }
 }
