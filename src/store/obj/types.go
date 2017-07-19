@@ -65,10 +65,11 @@ type VotesPage struct {
 type User struct {
 	Alias     string        `json:"alias"`
 	PublicKey cipher.PubKey `json:"-"`
-	SecretKey cipher.SecKey `json:"-" enc:"-"`
+	SecretKey cipher.SecKey `json:"-"`
 }
 
 type Subscription struct {
 	PubKey      cipher.PubKey `json:"pk"`
-	Connections []string      `json:"conns"`
+	SecKey      cipher.SecKey `json:"sk,omitempty"`
+	Connections []string      `json:"conns,omitempty"`
 }

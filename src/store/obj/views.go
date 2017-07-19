@@ -34,3 +34,15 @@ type PostView struct {
 
 type VoteSummary struct {
 }
+
+type UserView struct {
+	Alias     string `json:"alias"`
+	PublicKey string `json:"public_key"`
+	SecretKey string `json:"secret_key,omitempty"`
+}
+
+type SubscriptionView struct {
+	PubKey      string   `json:"public_key"`
+	SecKey      string   `json:"secret_key,omitempty"`
+	Connections []string `json:"conns,omitempty"`
+}
