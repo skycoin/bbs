@@ -1,4 +1,4 @@
-package misc
+package keys
 
 import (
 	"encoding/hex"
