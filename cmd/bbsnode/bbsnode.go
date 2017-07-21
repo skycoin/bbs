@@ -3,10 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/skycoin/bbs/src/access"
-	"github.com/skycoin/bbs/src/access/btp"
 	"github.com/skycoin/bbs/src/http"
 	"github.com/skycoin/bbs/src/store"
+	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/file"
 	"gopkg.in/urfave/cli.v1"
 	"log"
@@ -118,10 +117,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		quit := CatchInterrupt()
 		defer log.Println("Goodbye.")
 
-		stateSaver := access.NewStateSaver()
-		defer stateSaver.Close()
-
-		cxoConfig := &store.CXOConfig{
+		session, e := state.NewSession(&state.SessionConfig{
 			Master:       &c.Master,
 			TestMode:     &testMode,
 			MemoryMode:   &c.Memory,
@@ -129,33 +125,23 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 			CXOPort:      &c.CXOPort,
 			CXORPCEnable: &c.CXORPC,
 			CXORPCPort:   &c.CXORPCPort,
-		}
+		})
+		CatchError(e, "failed to create session manager")
+		defer session.Close()
 
-		cxo, e := store.NewCXO(cxoConfig, stateSaver.Update)
-		CatchError(e, "failed to create cxo")
-		defer cxo.Close()
-
-		boardAccessorConfig := &btp.BoardAccessorConfig{
-			MemoryMode: &c.Memory,
-			ConfigDir:  &c.ConfigDir,
-		}
-
-		boardAccessor := btp.NewBoardAccessor(boardAccessorConfig, cxo, stateSaver)
-		defer boardAccessor.Close()
-
-		httpGateway := &http.Gateway{
-			BoardAccessor: boardAccessor,
-			CXO:           cxo,
-			Quit:          quit,
-		}
-
-		httpServerConfig := &http.ServerConfig{
-			Port:      &c.HTTPPort,
-			StaticDir: &c.HTTPGUIDir,
-			EnableGUI: &c.HTTPGUI,
-		}
-
-		httpServer, e := http.NewServer(httpServerConfig, httpGateway)
+		httpServer, e := http.NewServer(
+			&http.ServerConfig{
+				Port:      &c.HTTPPort,
+				StaticDir: &c.HTTPGUIDir,
+				EnableGUI: &c.HTTPGUI,
+			},
+			&http.Gateway{
+				Access: &store.Access{
+					Session: session,
+				},
+				Quit: quit,
+			},
+		)
 		CatchError(e, "failed to create HTTP Server")
 		defer httpServer.Close()
 
