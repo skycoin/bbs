@@ -621,8 +621,8 @@ func (s *SessionManager) processNewMaster(r *reqNewMaster) {
 		}
 	}
 	s.user.Masters = append(s.user.Masters, obj.Subscription{
-		PubKey:      r.in.pubKey,
-		SecKey:      r.in.secKey,
+		PubKey: r.in.pubKey,
+		SecKey: r.in.secKey,
 	})
 
 	s.changes = true

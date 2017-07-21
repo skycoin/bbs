@@ -96,7 +96,7 @@ func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
 	for i, address := range f.Connections {
 		connections[i] = obj.ConnectionView{
 			Address: address,
-			Active: activeConnectionsMap[address],
+			Active:  activeConnectionsMap[address],
 		}
 	}
 	view.Connections = connections

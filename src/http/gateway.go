@@ -2,18 +2,14 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/skycoin/bbs/src/access/btp"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store"
 	"net/http"
 	"time"
 )
 
 // Gateway represents what is exposed to HTTP interface.
 type Gateway struct {
-	BoardAccessor *btp.BoardAccessor
-	CXO           *store.CXO
-	Quit          chan int
+	Quit chan int
 }
 
 func (g *Gateway) prepare(mux *http.ServeMux) error {
@@ -52,13 +48,7 @@ func (g *Gateway) statsGet() http.HandlerFunc {
 		NodeIsMaster   bool   `json:"node_is_master"`
 		NodeCXOAddress string `json:"node_cxo_address"`
 	}
-	return func(w http.ResponseWriter, r *http.Request) {
-		view := &View{
-			NodeIsMaster:   g.CXO.IsMaster(),
-			NodeCXOAddress: g.CXO.GetAddress(),
-		}
-		sendOK(w, *view)
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 /*
@@ -66,29 +56,15 @@ func (g *Gateway) statsGet() http.HandlerFunc {
 */
 
 func (g *Gateway) connectionsGetAll() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		sendOK(w, g.CXO.GetConnections())
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 func (g *Gateway) connectionsNew() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if e := g.CXO.Connect(r.FormValue("address")); e != nil {
-			sendErr(w, e)
-			return
-		}
-		sendOK(w, true)
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 func (g *Gateway) connectionsRemove() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if e := g.CXO.Disconnect(r.FormValue("address")); e != nil {
-			sendErr(w, e)
-			return
-		}
-		sendOK(w, true)
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 /*
@@ -96,41 +72,15 @@ func (g *Gateway) connectionsRemove() http.HandlerFunc {
 */
 
 func (g *Gateway) subscriptionsGetAll() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		data, e := g.BoardAccessor.GetSubscriptionsView()
-		if e != nil {
-			sendErr(w, e)
-			return
-		}
-		sendRawOK(w, data)
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 func (g *Gateway) subscriptionsNew() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		e := g.BoardAccessor.NewSubscription(&btp.NewSubscriptionInput{
-			Address: r.FormValue("address"),
-			PubKey:  r.FormValue("public_key"),
-		})
-		if e != nil {
-			sendErr(w, e)
-			return
-		}
-		sendOK(w, true)
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 func (g *Gateway) subscriptionsRemove() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		e := g.BoardAccessor.RemoveSubscription(&btp.RemoveSubscriptionInput{
-			PubKey: r.FormValue("public_key"),
-		})
-		if e != nil {
-			sendErr(w, e)
-			return
-		}
-		sendOK(w, true)
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 /*
@@ -138,31 +88,11 @@ func (g *Gateway) subscriptionsRemove() http.HandlerFunc {
 */
 
 func (g *Gateway) boardsGetAll() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		view, e := g.BoardAccessor.GetBoards(&btp.GetBoardsInput{
-			SortBy: r.FormValue("sort_by"),
-		})
-		if e != nil {
-			sendErr(w, e)
-			return
-		}
-		sendOK(w, *view)
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 func (g *Gateway) boardsNew() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		view, e := g.BoardAccessor.NewBoard(&btp.NewBoardInput{
-			Name: r.FormValue("name"),
-			Desc: r.FormValue("description"),
-			Seed: r.FormValue("seed"),
-		})
-		if e != nil {
-			sendErr(w, e)
-			return
-		}
-		sendOK(w, *view)
-	}
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 /*

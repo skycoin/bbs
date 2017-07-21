@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	ErrInvalidSeed = boo.New(boo.InvalidInput, "invalid seed provided")
-	ErrInvalidName = boo.New(boo.InvalidInput, "invalid name provided")
-	ErrInvalidDesc = boo.New(boo.InvalidInput, "invalid description provided")
-	ErrInvalidAlias = boo.New(boo.InvalidInput, "invalid alias provided")
+	ErrInvalidSeed     = boo.New(boo.InvalidInput, "invalid seed provided")
+	ErrInvalidName     = boo.New(boo.InvalidInput, "invalid name provided")
+	ErrInvalidDesc     = boo.New(boo.InvalidInput, "invalid description provided")
+	ErrInvalidAlias    = boo.New(boo.InvalidInput, "invalid alias provided")
 	ErrInvalidPassword = boo.New(boo.InvalidInput, "invalid password provided")
 )
 
