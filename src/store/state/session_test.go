@@ -24,12 +24,12 @@ var (
 	cxoRPCPort   = 8997
 )
 
-func createUserState() (*SessionManager, func()) {
+func createUserState() (*Session, func()) {
 	configDir, e := ioutil.TempDir("", "skybbs")
 	if e != nil {
 		log.Panic(e)
 	}
-	us, e := NewSessionManager(&SessionManagerConfig{
+	us, e := NewSession(&SessionConfig{
 		Master:       &master,
 		TestMode:     &testMode,
 		MemoryMode:   &memoryMode,
@@ -49,7 +49,7 @@ func createUserState() (*SessionManager, func()) {
 	}
 }
 
-func createUsers(t *testing.T, us *SessionManager, n int) {
+func createUsers(t *testing.T, us *Session, n int) {
 	for i := 0; i < n; i++ {
 		iStr := strconv.Itoa(i)
 		_, e := us.NewUser(context.Background(), &NewUserIO{
@@ -92,7 +92,7 @@ func checkCount(t *testing.T, got, exp int) {
 	}
 }
 
-func login(ctx context.Context, t *testing.T, us *SessionManager, n int) {
+func login(ctx context.Context, t *testing.T, us *Session, n int) {
 	file, e := us.Login(ctx, &LoginIO{
 		Alias:    "person" + strconv.Itoa(n),
 		Password: "password" + strconv.Itoa(n),

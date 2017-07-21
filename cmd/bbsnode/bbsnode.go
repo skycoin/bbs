@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/http"
+	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/file"
 	"gopkg.in/urfave/cli.v1"
@@ -116,7 +117,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		quit := CatchInterrupt()
 		defer log.Println("Goodbye.")
 
-		session, e := state.NewSessionManager(&state.SessionManagerConfig{
+		session, e := state.NewSession(&state.SessionConfig{
 			Master:       &c.Master,
 			TestMode:     &testMode,
 			MemoryMode:   &c.Memory,
@@ -135,6 +136,9 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 				EnableGUI: &c.HTTPGUI,
 			},
 			&http.Gateway{
+				Access: &store.Access{
+					Session: session,
+				},
 				Quit: quit,
 			},
 		)

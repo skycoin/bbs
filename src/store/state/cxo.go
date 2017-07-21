@@ -31,7 +31,7 @@ var (
 // CXO updates events from cxo.
 type CXO struct {
 	mux  sync.Mutex
-	c    *SessionManagerConfig
+	c    *SessionConfig
 	l    *log.Logger
 	node *node.Node
 
@@ -39,7 +39,7 @@ type CXO struct {
 }
 
 // NewCXO creates a new CXO.
-func NewCXO(config *SessionManagerConfig, updater func(root *node.Root)) *CXO {
+func NewCXO(config *SessionConfig, updater func(root *node.Root)) *CXO {
 	return &CXO{
 		c:       config,
 		l:       inform.NewLogger(true, os.Stdout, cxoLogPrefix),

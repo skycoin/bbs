@@ -3,96 +3,121 @@ package http
 import (
 	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store"
+	"github.com/skycoin/bbs/src/store/state"
+	"log"
 	"net/http"
-	"time"
+	"os"
 )
 
 // Gateway represents what is exposed to HTTP interface.
 type Gateway struct {
-	Quit chan int
+	l      *log.Logger
+	Access *store.Access
+	Quit   chan int
 }
 
 func (g *Gateway) prepare(mux *http.ServeMux) error {
-	mux.HandleFunc("/api/quit", g.quit())
+	g.l = inform.NewLogger(true, os.Stdout, "")
 
-	mux.HandleFunc("/api/stats/get", g.statsGet())
+	/*
+		<<< NODE >>>
+	*/
 
-	mux.HandleFunc("/api/connections/get_all", g.connectionsGetAll())
-	mux.HandleFunc("/api/connections/new", g.connectionsNew())
-	mux.HandleFunc("/api/connections/remove", g.connectionsRemove())
+	// Quits the node.
+	mux.HandleFunc("/api/node/quit",
+		func(w http.ResponseWriter, r *http.Request) {
+			g.Quit <- 0
+			send(w, true, nil)
+		})
 
-	mux.HandleFunc("/api/subscriptions/get_all", g.subscriptionsGetAll())
-	mux.HandleFunc("/api/subscriptions/new", g.subscriptionsNew())
-	mux.HandleFunc("/api/subscriptions/remove", g.subscriptionsRemove())
+	// Obtains node states.
+	mux.HandleFunc("/api/node/stats",
+		func(w http.ResponseWriter, r *http.Request) {
+			view := struct {
+				NodeIsMaster bool `json:"node_is_master"`
+			}{
+				NodeIsMaster: g.Access.Session.GetCXO().IsMaster(),
+			}
+			send(w, view, nil)
+		})
 
-	mux.HandleFunc("/api/boards/get_all", g.boardsGetAll())
-	mux.HandleFunc("/api/boards/new", g.boardsNew())
+	/*
+		<<< CONNECTIONS >>>
+	*/
+
+	// Gets all connections.
+	mux.HandleFunc("/api/connections/get_all",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.GetConnections(r.Context())
+			send(w, out, e)
+		})
+
+	// Creates a new connection.
+	mux.HandleFunc("/api/connections/new",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.NewConnection(r.Context(), &state.ConnectionIO{
+				Address: r.FormValue("address"),
+			})
+			send(w, out, e)
+		})
+
+	// Deletes a connection.
+	mux.HandleFunc("/api/connections/delete",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.DeleteConnection(r.Context(), &state.ConnectionIO{
+				Address: r.FormValue("address"),
+			})
+			send(w, out, e)
+		})
+
+	/*
+		<<< SUBSCRIPTIONS >>>
+	*/
+
+	// Gets all subscriptions (non-master and master).
+	mux.HandleFunc("/api/subscriptions/get_all",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.GetSubs(r.Context())
+			send(w, out, e)
+		})
+
+	// Creates a new subscription.
+	mux.HandleFunc("/api/subscriptions/new",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.NewSub(r.Context(), &state.SubscriptionIO{
+				PubKey: r.FormValue("public_key"),
+			})
+			send(w, out, e)
+		})
+
+	// Deletes a subscription.
+	mux.HandleFunc("/api/subscriptions/remove",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.DeleteSub(r.Context(), &state.SubscriptionIO{
+				PubKey: r.FormValue("public_key"),
+			})
+			send(w, out, e)
+		})
+
+	/*
+		<<< BOARDS >>>
+	*/
+
+	// Gets all boards (non-master and master). TODO
+	mux.HandleFunc("/api/boards/get_all",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w, true, nil)
+		})
+
+	// Creates a new board. TODO
+	mux.HandleFunc("/api/boards/new",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w, true, nil)
+		})
 
 	return nil
-}
-
-func (g *Gateway) quit() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		timer := time.NewTimer(10 * time.Second)
-		select {
-		case g.Quit <- 0:
-			sendOK(w, true)
-		case <-timer.C:
-			sendErr(w, boo.New(boo.Internal, "failed to exit node"))
-		}
-	}
-}
-
-func (g *Gateway) statsGet() http.HandlerFunc {
-	type View struct {
-		NodeIsMaster   bool   `json:"node_is_master"`
-		NodeCXOAddress string `json:"node_cxo_address"`
-	}
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-/*
-	<<< CONNECTIONS >>>
-*/
-
-func (g *Gateway) connectionsGetAll() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-func (g *Gateway) connectionsNew() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-func (g *Gateway) connectionsRemove() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-/*
-	<<< SUBSCRIPTIONS >>>
-*/
-
-func (g *Gateway) subscriptionsGetAll() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-func (g *Gateway) subscriptionsNew() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-func (g *Gateway) subscriptionsRemove() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-/*
-	<<< BOARDS >>>
-*/
-
-func (g *Gateway) boardsGetAll() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-func (g *Gateway) boardsNew() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 /*
@@ -111,9 +136,16 @@ type Response struct {
 	Error *Error      `json:"error,omitempty"`
 }
 
+func send(w http.ResponseWriter, v interface{}, e error) error {
+	if e != nil {
+		return sendErr(w, e)
+	}
+	return sendOK(w, v)
+}
+
 func sendOK(w http.ResponseWriter, v interface{}) error {
 	response := Response{Okay: true, Data: v}
-	return send(w, response, http.StatusOK)
+	return sendStatus(w, response, http.StatusOK)
 }
 
 func sendErr(w http.ResponseWriter, e error) error {
@@ -144,10 +176,10 @@ func sendErr(w http.ResponseWriter, e error) error {
 			Details: e.Error(),
 		},
 	}
-	return send(w, response, status)
+	return sendStatus(w, response, status)
 }
 
-func send(w http.ResponseWriter, v interface{}, status int) error {
+func sendStatus(w http.ResponseWriter, v interface{}, status int) error {
 	data, e := json.Marshal(v)
 	if e != nil {
 		return e
@@ -156,9 +188,9 @@ func send(w http.ResponseWriter, v interface{}, status int) error {
 	return nil
 }
 
-func sendRawOK(w http.ResponseWriter, data []byte) {
-	sendRaw(w, data, http.StatusOK)
-}
+//func sendRawOK(w http.ResponseWriter, data []byte) {
+//	sendRaw(w, data, http.StatusOK)
+//}
 
 func sendRaw(w http.ResponseWriter, data []byte, status int) {
 	w.Header().Set("Content-Type", "application/json")

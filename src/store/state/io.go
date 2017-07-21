@@ -35,8 +35,13 @@ func CheckAlias(alias string) error {
 	return nil
 }
 
-// CheckPassword ensures validity of passwords. TODO
+// CheckPassword ensures validity of password. TODO
 func CheckPassword(password string) error {
+	return nil
+}
+
+// CheckAddress ensures validity of address. TODO
+func CheckAddress(address string) error {
 	return nil
 }
 
@@ -159,6 +164,18 @@ func (io *LoginIO) Process() error {
 		return e
 	}
 	if e := CheckPassword(io.Password); e != nil {
+		return e
+	}
+	return nil
+}
+
+// ConnectionIO represents input/output required when connection/disconnecting from address.
+type ConnectionIO struct {
+	Address string `json:"address"`
+}
+
+func (io *ConnectionIO) Process() error {
+	if e := CheckAddress(io.Address); e != nil {
 		return e
 	}
 	return nil
