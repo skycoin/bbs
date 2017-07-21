@@ -2,10 +2,11 @@ package state
 
 import (
 	"context"
-	"github.com/skycoin/bbs/src/boo"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/hide"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/obj"
+	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"github.com/skycoin/skycoin/src/util/file"
@@ -19,11 +20,12 @@ import (
 )
 
 const (
-	logPrefix    = "USERSTATE"
-	subDir       = "/users"
-	extension    = ".usr"
-	timeout      = time.Second * 10
-	saveDuration = time.Second * 10
+	usersLogPrefix     = "USERSTATE"
+	usersSubDir        = "/users"
+	usersFileExtension = ".usr"
+	usersTimeout       = time.Second * 10
+	usersSaveDuration  = time.Second * 10
+	usersRetryDuration = time.Second * 5
 )
 
 var (
@@ -33,8 +35,13 @@ var (
 
 // SessionManagerConfig configures a SessionManager.
 type SessionManagerConfig struct {
-	ConfigDir *string `json:"config_dir"`
-	Memory    *bool   `json:"memory"`
+	Master       *bool   // Whether node is master.
+	TestMode     *bool   // Whether node is in test mode.
+	MemoryMode   *bool   // Whether to use local storage in runtime.
+	ConfigDir    *string // Configuration directory.
+	CXOPort      *int    // CXO listening port.
+	CXORPCEnable *bool   // Whether to enable CXO RPC.
+	CXORPCPort   *int    // CXO RPC listening port.
 }
 
 // SessionManager manages user sessions.
@@ -44,70 +51,119 @@ type SessionManager struct {
 	l *log.Logger
 
 	// Session.
+	cxo     *CXO
 	user    *UserFile
 	key     []byte
 	changes bool
 
-	// Request / response.
-	requests chan interface{}
-	quit     chan struct{}
-	wg       sync.WaitGroup
+	// Request & Response.
+	retries      chan *RetryIO      // Channel for retrying failed subscriptions/connections.
+	clearRetries chan chan struct{} // Channel for clearing retry queue (i.e. logout).
+	requests     chan interface{}   // Channel for user requests.
+	quit         chan struct{}      // Channel for quitting SessionManager.
+	wg           sync.WaitGroup
 }
 
 // NewSessionManager creates a new SessionManager with configuration.
 func NewSessionManager(config *SessionManagerConfig) (*SessionManager, error) {
 	s := &SessionManager{
-		c:        config,
-		l:        inform.NewLogger(true, os.Stdout, logPrefix),
-		changes:  false,
-		requests: make(chan interface{}),
-		quit:     make(chan struct{}),
+		c:            config,
+		l:            inform.NewLogger(true, os.Stdout, usersLogPrefix),
+		cxo:          NewCXO(config, func(_ *node.Root) {}), // TODO: Implement.
+		changes:      false,
+		retries:      make(chan *RetryIO, 5),
+		clearRetries: make(chan chan struct{}),
+		requests:     make(chan interface{}, 5),
+		quit:         make(chan struct{}),
 	}
-	e := os.MkdirAll(s.folderPath(), os.FileMode(0700))
-	if e != nil {
+	if e := os.MkdirAll(s.folderPath(), os.FileMode(0700)); e != nil {
 		return nil, e
 	}
 	go s.service()
+	go s.retryLoop()
 	return s, nil
 }
 
 // Close closes the SessionManager service.
 func (s *SessionManager) Close() {
-	select {
-	case s.quit <- struct{}{}:
-	default:
+	for {
+		select {
+		case s.quit <- struct{}{}:
+			continue
+		default:
+			s.wg.Wait()
+			if e := s.cxo.Close(); e != nil && e != ErrCXONotOpened {
+				s.l.Println("Closing CXO Error:", e)
+			}
+			return
+		}
 	}
-	s.wg.Wait()
 }
 
 func (s *SessionManager) folderPath() string {
-	return path.Join(*s.c.ConfigDir, subDir)
+	return path.Join(*s.c.ConfigDir, usersSubDir)
 }
 
 func (s *SessionManager) filePath(user string) string {
-	return path.Join(s.folderPath(), user+extension)
+	return path.Join(s.folderPath(), user+usersFileExtension)
 }
 
 func (s *SessionManager) timedContext(ctx context.Context) context.Context {
-	ctx, _ = context.WithTimeout(ctx, timeout)
+	ctx, _ = context.WithTimeout(ctx, usersTimeout)
 	return ctx
 }
+
+/*
+	<<< LOOPS >>>
+*/
 
 func (s *SessionManager) service() {
 	s.wg.Add(1)
 	defer s.wg.Done()
 
-	ticker := time.NewTicker(saveDuration)
+	ticker := time.NewTicker(usersSaveDuration)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case req := <-s.requests:
 			s.processRequest(req)
+
 		case <-ticker.C:
 			s.processSave()
+
 		case <-s.quit:
 			s.processSave()
+			return
+		}
+	}
+}
+
+func (s *SessionManager) retryLoop() {
+	s.wg.Add(1)
+	defer s.wg.Done()
+
+	ticker := time.NewTicker(usersRetryDuration)
+	defer ticker.Stop()
+
+	retryQueue := new(RetryIO)
+
+	for {
+		select {
+		case io := <-s.retries:
+			retryQueue.Add(s.cxo.Initialize(io))
+
+		case done := <-s.clearRetries:
+			retryQueue = new(RetryIO)
+			done <- struct{}{}
+
+		case <-ticker.C:
+			if retryQueue.IsEmpty() {
+				continue
+			}
+			retryQueue = s.cxo.Initialize(retryQueue)
+
+		case <-s.quit:
 			return
 		}
 	}
@@ -119,7 +175,7 @@ func (s *SessionManager) service() {
 
 func (s *SessionManager) processSave() {
 	s.changes = false
-	if *s.c.Memory || s.user == nil {
+	if *s.c.MemoryMode || s.user == nil {
 		return
 	}
 	data, e := hide.Encrypt(s.key, encoder.Serialize(*s.user))
@@ -146,7 +202,7 @@ type output struct {
 	e error
 }
 
-func (o *output) get() (*UserFile, error) {return o.f, o.e}
+func (o *output) get() (*UserFile, error) { return o.f, o.e }
 
 type outputChan chan output
 
@@ -204,10 +260,10 @@ func (s *SessionManager) processGetUsers(r *reqGetUsers) {
 	}
 	var users []string
 	for _, info := range files {
-		if info.IsDir() || !strings.HasSuffix(info.Name(), extension) {
+		if info.IsDir() || !strings.HasSuffix(info.Name(), usersFileExtension) {
 			continue
 		}
-		name := strings.TrimSuffix(info.Name(), extension)
+		name := strings.TrimSuffix(info.Name(), usersFileExtension)
 		s.l.Printf("Found User: '%s'.", name)
 		users = append(users, name)
 	}
@@ -234,7 +290,7 @@ func (s *SessionManager) GetUsers(ctx context.Context) ([]string, error) {
 */
 
 type reqNewUser struct {
-	in  *NewUserInput
+	in  *NewUserIO
 	out outputChan
 }
 
@@ -262,10 +318,8 @@ func (s *SessionManager) processNewUser(r *reqNewUser) {
 }
 
 // NewUser creates a new user.
-func (s *SessionManager) NewUser(ctx context.Context, in *NewUserInput) (*UserFile, error) {
+func (s *SessionManager) NewUser(ctx context.Context, in *NewUserIO) (*UserFile, error) {
 	ctx = s.timedContext(ctx)
-	// TODO: Check inputs.
-
 	req := reqNewUser{in: in, out: make(outputChan)}
 	go func() { s.requests <- &req }()
 	select {
@@ -311,7 +365,7 @@ func (s *SessionManager) DeleteUser(ctx context.Context, alias string) error {
 */
 
 type reqLogin struct {
-	in  *LoginInput
+	in  *LoginIO
 	out outputChan
 }
 
@@ -348,12 +402,22 @@ func (s *SessionManager) processLogin(r *reqLogin) {
 		return
 	}
 
+	if failed, e := s.cxo.Open(r.in.Alias, new(RetryIO).Fill(uFile)); e != nil {
+		r.out <- output{
+			e: boo.WrapType(e, boo.Internal, "failed to open cxo")}
+		return
+	} else {
+		if !failed.IsEmpty() {
+			s.retries <- failed
+		}
+	}
+
 	s.user, s.key, s.changes = uFile, key, true
 	r.out <- output{f: &(*uFile)}
 }
 
 // Login logs in a user.
-func (s *SessionManager) Login(ctx context.Context, in *LoginInput) (*UserFile, error) {
+func (s *SessionManager) Login(ctx context.Context, in *LoginIO) (*UserFile, error) {
 	ctx = s.timedContext(ctx)
 	req := reqLogin{in: in, out: make(outputChan)}
 	go func() { s.requests <- &req }()
@@ -374,7 +438,22 @@ type reqLogout struct {
 }
 
 func (s *SessionManager) processLogout(r *reqLogout) {
+	if s.user == nil {
+		r.e <- ErrNotLoggedIn
+		return
+	}
 	s.processSave()
+
+	// Clear retries.
+	done := make(chan struct{})
+	go func() { s.clearRetries <- done }()
+	<-done
+
+	// Close CXO.
+	if e := s.cxo.Close(); e != nil {
+		r.e <- boo.WrapType(e, boo.Internal, "failed to close cxo")
+		return
+	}
 	s.user, s.key = nil, nil
 	r.e <- nil
 }
@@ -393,7 +472,7 @@ func (s *SessionManager) Logout(ctx context.Context) error {
 }
 
 /*
-	<<< REQUESTS : GET INFO >>> TODO: TEST
+	<<< REQUESTS : GET INFO >>>
 */
 
 type reqGetInfo struct {
@@ -422,11 +501,11 @@ func (s *SessionManager) GetInfo(ctx context.Context) (*UserFile, error) {
 }
 
 /*
-	<<< REQUESTS : New SUBSCRIPTION >>> TODO: TEST
+	<<< REQUESTS : NEW SUBSCRIPTION >>>
 */
 
 type reqNewSubscription struct {
-	in  *SubscriptionInput
+	in  *SubscriptionIO
 	out outputChan
 }
 
@@ -436,7 +515,7 @@ func (s *SessionManager) processNewSubscription(r *reqNewSubscription) {
 		return
 	}
 
-	if e := r.in.process(); e != nil {
+	if e := r.in.Process(); e != nil {
 		r.out <- output{e: e}
 		return
 	}
@@ -449,13 +528,15 @@ func (s *SessionManager) processNewSubscription(r *reqNewSubscription) {
 		}
 	}
 
+	s.retries <- &RetryIO{pks: []cipher.PubKey{r.in.pubKey}}
+
 	s.user.Subscriptions = append(s.user.Subscriptions, obj.Subscription{PubKey: r.in.pubKey})
 	s.changes = true
 	r.out <- output{f: &(*s.user)}
 }
 
 // NewSubscription creates a new subscription.
-func (s *SessionManager) NewSubscription(ctx context.Context, in *SubscriptionInput) (*UserFile, error) {
+func (s *SessionManager) NewSubscription(ctx context.Context, in *SubscriptionIO) (*UserFile, error) {
 	ctx = s.timedContext(ctx)
 	req := reqNewSubscription{in: in, out: make(outputChan)}
 	go func() { s.requests <- &req }()
@@ -468,11 +549,11 @@ func (s *SessionManager) NewSubscription(ctx context.Context, in *SubscriptionIn
 }
 
 /*
-	<<< REQUESTS : DELETE SUBSCRIPTION >>> TODO: TEST
+	<<< REQUESTS : DELETE SUBSCRIPTION >>>
 */
 
 type reqDeleteSubscription struct {
-	in  *SubscriptionInput
+	in  *SubscriptionIO
 	out outputChan
 }
 
@@ -482,7 +563,7 @@ func (s *SessionManager) processDeleteSubscription(r *reqDeleteSubscription) {
 		return
 	}
 
-	if e := r.in.process(); e != nil {
+	if e := r.in.Process(); e != nil {
 		r.out <- output{e: e}
 		return
 	}
@@ -497,11 +578,16 @@ func (s *SessionManager) processDeleteSubscription(r *reqDeleteSubscription) {
 		}
 	}
 
+	s.cxo.Unsubscribe("", r.in.pubKey)
+	for _, address := range s.user.Connections {
+		s.cxo.Unsubscribe(address, r.in.pubKey)
+	}
+
 	r.out <- output{f: &(*s.user)}
 }
 
 // DeleteSubscription removes a subscription.
-func (s *SessionManager) DeleteSubscription(ctx context.Context, in *SubscriptionInput) (*UserFile, error) {
+func (s *SessionManager) DeleteSubscription(ctx context.Context, in *SubscriptionIO) (*UserFile, error) {
 	ctx = s.timedContext(ctx)
 	req := reqDeleteSubscription{in: in, out: make(outputChan)}
 	go func() { s.requests <- &req }()
@@ -514,11 +600,11 @@ func (s *SessionManager) DeleteSubscription(ctx context.Context, in *Subscriptio
 }
 
 /*
-	<<< REQUESTS : NEW MASTER SUBSCRIPTION >>> TODO: TEST
+	<<< REQUESTS : NEW MASTER SUBSCRIPTION >>>
 */
 
 type reqNewMaster struct {
-	in  *NewMasterInput
+	in  *NewMasterIO
 	out outputChan
 }
 
@@ -535,36 +621,33 @@ func (s *SessionManager) processNewMaster(r *reqNewMaster) {
 		}
 	}
 	s.user.Masters = append(s.user.Masters, obj.Subscription{
-		PubKey: r.in.pubKey,
-		SecKey: r.in.secKey,
-		Connections: r.in.connections,
+		PubKey:      r.in.pubKey,
+		SecKey:      r.in.secKey,
 	})
+
 	s.changes = true
 	r.out <- output{f: &(*s.user)}
 }
 
 // NewMaster creates a new master subscription.
-func (s *SessionManager) NewMaster(ctx context.Context, in *NewMasterInput) (*UserFile, error) {
-	if e := in.process(); e != nil {
-		return nil, e
-	}
+func (s *SessionManager) NewMaster(ctx context.Context, in *NewMasterIO) (*UserFile, error) {
 	ctx = s.timedContext(ctx)
 	req := reqNewMaster{in: in, out: make(outputChan)}
 	go func() { s.requests <- &req }()
 	select {
 	case <-ctx.Done():
 		return nil, boo.WrapType(ctx.Err(), boo.Internal)
-	case out := <- req.out:
+	case out := <-req.out:
 		return out.get()
 	}
 }
 
 /*
-	<<< REQUESTS : DELETE MASTER SUBSCRIPTION >>> TODO: TEST
+	<<< REQUESTS : DELETE MASTER SUBSCRIPTION >>>
 */
 
 type reqDeleteMaster struct {
-	in *SubscriptionInput
+	in  *SubscriptionIO
 	out outputChan
 }
 
@@ -586,13 +669,10 @@ func (s *SessionManager) processDeleteMaster(r *reqDeleteMaster) {
 }
 
 // DeleteMaster removes a master subscription.
-func (s *SessionManager) DeleteMaster(ctx context.Context, in *SubscriptionInput) (*UserFile, error) {
-	if e := in.process(); e != nil {
-		return nil, e
-	}
+func (s *SessionManager) DeleteMaster(ctx context.Context, in *SubscriptionIO) (*UserFile, error) {
 	ctx = s.timedContext(ctx)
 	req := reqDeleteMaster{in: in, out: make(outputChan)}
-	go func() { s.requests <- &req } ()
+	go func() { s.requests <- &req }()
 	select {
 	case <-ctx.Done():
 		return nil, boo.WrapType(ctx.Err(), boo.Internal)
@@ -602,8 +682,8 @@ func (s *SessionManager) DeleteMaster(ctx context.Context, in *SubscriptionInput
 }
 
 // TODO:
-// - AddMasterConnection
-// - RemoveMasterConnection
+// - NewConnection
+// - DeleteConnection
+
 // - AddMasterSubmissionAddress
 // - RemoveMasterSubmissionAddress
-

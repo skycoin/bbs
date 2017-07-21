@@ -1,7 +1,7 @@
 package btp
 
 import (
-	"github.com/skycoin/bbs/src/boo"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/obj"
 	"github.com/skycoin/bbs/src/store/obj/view"
 	"github.com/skycoin/cxo/node"

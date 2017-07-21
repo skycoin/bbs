@@ -69,7 +69,6 @@ type User struct {
 }
 
 type Subscription struct {
-	PubKey      cipher.PubKey `json:"pk"`
-	SecKey      cipher.SecKey `json:"sk,omitempty"`
-	Connections []string      `json:"conns,omitempty"`
+	PubKey cipher.PubKey `json:"pk"`
+	SecKey cipher.SecKey `json:"sk,omitempty"`
 }

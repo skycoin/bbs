@@ -42,7 +42,11 @@ type UserView struct {
 }
 
 type SubscriptionView struct {
-	PubKey      string   `json:"public_key"`
-	SecKey      string   `json:"secret_key,omitempty"`
-	Connections []string `json:"conns,omitempty"`
+	PubKey string `json:"public_key"`
+	SecKey string `json:"secret_key,omitempty"`
+}
+
+type ConnectionView struct {
+	Address string `json:"address"`
+	Active  bool   `json:"active"`
 }

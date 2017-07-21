@@ -2,28 +2,41 @@ package state
 
 import (
 	"context"
+	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/skycoin/src/cipher"
 	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"testing"
-	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/bbs/src/misc/keys"
 )
 
 const (
-	removeTempDir = true
+	removeTempDir = false
+)
+
+var (
+	master       = false
+	testMode     = false
+	memoryMode   = false
+	cxoPort      = 8998
+	cxoRPCEnable = false
+	cxoRPCPort   = 8997
 )
 
 func createUserState() (*SessionManager, func()) {
-	memory := false
 	configDir, e := ioutil.TempDir("", "skybbs")
 	if e != nil {
 		log.Panic(e)
 	}
 	us, e := NewSessionManager(&SessionManagerConfig{
-		ConfigDir: &configDir,
-		Memory:    &memory,
+		Master:       &master,
+		TestMode:     &testMode,
+		MemoryMode:   &memoryMode,
+		ConfigDir:    &configDir,
+		CXOPort:      &cxoPort,
+		CXORPCEnable: &cxoRPCEnable,
+		CXORPCPort:   &cxoRPCPort,
 	})
 	if e != nil {
 		log.Panic(e)
@@ -39,7 +52,7 @@ func createUserState() (*SessionManager, func()) {
 func createUsers(t *testing.T, us *SessionManager, n int) {
 	for i := 0; i < n; i++ {
 		iStr := strconv.Itoa(i)
-		_, e := us.NewUser(context.Background(), &NewUserInput{
+		_, e := us.NewUser(context.Background(), &NewUserIO{
 			Alias:    "person" + iStr,
 			Seed:     "user" + iStr,
 			Password: "password" + iStr,
@@ -80,14 +93,14 @@ func checkCount(t *testing.T, got, exp int) {
 }
 
 func login(ctx context.Context, t *testing.T, us *SessionManager, n int) {
-	file, e := us.Login(ctx, &LoginInput{
-		Alias: "person"+strconv.Itoa(n),
-		Password: "password"+strconv.Itoa(n),
+	file, e := us.Login(ctx, &LoginIO{
+		Alias:    "person" + strconv.Itoa(n),
+		Password: "password" + strconv.Itoa(n),
 	})
 	if e != nil {
 		t.Fatal("failed to login:", e)
 	}
-	t.Log("User File:", *file.GenerateView())
+	t.Log("User File:", *file.GenerateView(us.cxo))
 }
 
 func TestUserState_GetUsers(t *testing.T) {
@@ -159,7 +172,7 @@ func TestUserState_Login(t *testing.T) {
 		if e != nil {
 			t.Error(e)
 		} else {
-			t.Log("GetInfo:", *file.GenerateView())
+			t.Log("GetInfo:", *file.GenerateView(us.cxo))
 		}
 
 		if e := us.Logout(ctx); e != nil {
@@ -168,9 +181,9 @@ func TestUserState_Login(t *testing.T) {
 
 		file, e = us.GetInfo(ctx)
 		if e != nil {
-			t.Log("Got error as expected:", *file.GenerateView(), e)
+			t.Log("Got error as expected:", *file.GenerateView(us.cxo), e)
 		} else {
-			t.Error("Didn't get error:", *file.GenerateView())
+			t.Error("Didn't get error:", *file.GenerateView(us.cxo))
 		}
 	}
 }
@@ -188,9 +201,9 @@ func TestSessionManager_NewSubscription(t *testing.T) {
 	login(ctx, t, us, 0)
 
 	for i := 0; i < initCount; i++ {
-		file, e := us.NewSubscription(ctx, &SubscriptionInput{
-			PubKey: pks[i].Hex(),
-		})
+		in := SubscriptionIO{PubKey: pks[i].Hex()}
+		in.Process()
+		file, e := us.NewSubscription(ctx, &in)
 		if e != nil {
 			t.Error("Failed to subscribe:", e)
 		} else {
@@ -198,10 +211,10 @@ func TestSessionManager_NewSubscription(t *testing.T) {
 		}
 	}
 
-	for i := initCount-1; i >= 0; i-- {
-		file, e := us.DeleteSubscription(ctx, &SubscriptionInput{
-			PubKey: pks[i].Hex(),
-		})
+	for i := initCount - 1; i >= 0; i-- {
+		in := SubscriptionIO{PubKey: pks[i].Hex()}
+		in.Process()
+		file, e := us.DeleteSubscription(ctx, &in)
 		if e != nil {
 			t.Error("Failed to unsubscribe:", e)
 		} else {
@@ -224,11 +237,13 @@ func TestSessionManager_NewMaster(t *testing.T) {
 	login(ctx, t, us, 0)
 
 	for i := 0; i < initCount; i++ {
-		file, e := us.NewMaster(ctx, &NewMasterInput{
+		in := NewMasterIO{
 			Seed: seeds[i],
 			Name: "Master Board " + strconv.Itoa(i),
 			Desc: "A generated test board of index " + strconv.Itoa(i),
-		})
+		}
+		in.Process()
+		file, e := us.NewMaster(ctx, &in)
 		if e != nil {
 			t.Error(e)
 		} else {
@@ -237,10 +252,12 @@ func TestSessionManager_NewMaster(t *testing.T) {
 		}
 	}
 
-	for i := initCount-1; i >= 0; i-- {
-		file, e := us.DeleteMaster(ctx, &SubscriptionInput{
+	for i := initCount - 1; i >= 0; i-- {
+		in := SubscriptionIO{
 			PubKey: pks[i].Hex(),
-		})
+		}
+		in.Process()
+		file, e := us.DeleteMaster(ctx, &in)
 		if e != nil {
 			t.Error("Failed to delete master subscription:", e)
 		} else {

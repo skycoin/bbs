@@ -1,8 +1,8 @@
 package keys
 
 import (
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher/go-bip39"
-	"github.com/skycoin/bbs/src/boo"
 )
 
 const (

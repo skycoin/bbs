@@ -2,7 +2,7 @@ package keys
 
 import (
 	"encoding/hex"
-	"github.com/skycoin/bbs/src/boo"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 

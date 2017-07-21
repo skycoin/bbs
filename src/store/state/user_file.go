@@ -1,8 +1,8 @@
 package state
 
 import (
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/obj"
-	"github.com/skycoin/bbs/src/boo"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
@@ -20,6 +20,7 @@ type UserFile struct {
 	User          obj.User           `json:"user"`
 	Subscriptions []obj.Subscription `json:"subscriptions"`
 	Masters       []obj.Subscription `json:"masters"`
+	Connections   []string           `json:"connections"`
 }
 
 // Check ensures the validity of the UserFile.
@@ -51,37 +52,54 @@ func (f *UserFile) Check() error {
 }
 
 // GenerateView generates something readable for front end.
-func (f *UserFile) GenerateView() *UserFileView {
+func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
+	view := new(UserFileView)
+
 	if e := f.Check(); e != nil {
-		return &UserFileView{}
-	}
-	view := &UserFileView{
-		User: obj.UserView{
-			Alias:     f.User.Alias,
-			PublicKey: f.User.PublicKey.Hex(),
-			SecretKey: f.User.SecretKey.Hex(),
-		},
+		return view
 	}
 
+	// Fill "User".
+	view.User = obj.UserView{
+		Alias:     f.User.Alias,
+		PublicKey: f.User.PublicKey.Hex(),
+		SecretKey: f.User.SecretKey.Hex(),
+	}
+
+	// Fill "Subscriptions".
 	subscriptions := make([]obj.SubscriptionView, len(f.Subscriptions))
 	for i, s := range f.Subscriptions {
 		subscriptions[i] = obj.SubscriptionView{
-			PubKey:      s.PubKey.Hex(),
-			SecKey:      s.SecKey.Hex(),
-			Connections: s.Connections,
+			PubKey: s.PubKey.Hex(),
+			SecKey: s.SecKey.Hex(),
 		}
 	}
 	view.Subscriptions = subscriptions
 
+	// Fill "Masters".
 	masters := make([]obj.SubscriptionView, len(f.Masters))
 	for i, m := range f.Masters {
 		masters[i] = obj.SubscriptionView{
-			PubKey:      m.PubKey.Hex(),
-			SecKey:      m.SecKey.Hex(),
-			Connections: m.Connections,
+			PubKey: m.PubKey.Hex(),
+			SecKey: m.SecKey.Hex(),
 		}
 	}
 	view.Masters = masters
+
+	// Fill "Connections".
+	connections := make([]obj.ConnectionView, len(f.Connections))
+	activeConnectionsMap := make(map[string]bool)
+	activeConnections, _ := cxo.GetConnections()
+	for _, address := range activeConnections {
+		activeConnectionsMap[address] = true
+	}
+	for i, address := range f.Connections {
+		connections[i] = obj.ConnectionView{
+			Address: address,
+			Active: activeConnectionsMap[address],
+		}
+	}
+	view.Connections = connections
 
 	return view
 }
@@ -91,4 +109,5 @@ type UserFileView struct {
 	User          obj.UserView           `json:"user"`
 	Subscriptions []obj.SubscriptionView `json:"subscriptions"`
 	Masters       []obj.SubscriptionView `json:"subscriptions"`
+	Connections   []obj.ConnectionView   `json:"connections"`
 }

@@ -3,7 +3,7 @@ package http
 import (
 	"encoding/json"
 	"github.com/skycoin/bbs/src/access/btp"
-	"github.com/skycoin/bbs/src/boo"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store"
 	"net/http"
 	"time"

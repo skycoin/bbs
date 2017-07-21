@@ -3,7 +3,7 @@ package access
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/skycoin/bbs/src/boo"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/bbs/src/store/obj"
 	"github.com/skycoin/bbs/src/store/obj/view"

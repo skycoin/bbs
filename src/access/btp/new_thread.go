@@ -2,7 +2,7 @@ package btp
 
 import (
 	"fmt"
-	"github.com/skycoin/bbs/src/boo"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc"
 	"github.com/skycoin/bbs/src/store/obj/view"
 )
