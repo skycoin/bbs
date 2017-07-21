@@ -546,7 +546,7 @@ func (s *Session) processNewConnection(r *reqNewConnection) {
 func (s *Session) NewConnection(ctx context.Context, in *ConnectionIO) (*UserFile, error) {
 	ctx = s.timedContext(ctx)
 	req := reqNewConnection{in: in, out: make(outputChan)}
-	go func() { s.requests <- req }()
+	go func() { s.requests <- &req }()
 	select {
 	case <-ctx.Done():
 		return nil, boo.WrapType(ctx.Err(), boo.Internal)
@@ -592,7 +592,7 @@ func (s *Session) processDeleteConnection(r *reqDeleteConnection) {
 func (s *Session) DeleteConnection(ctx context.Context, in *ConnectionIO) (*UserFile, error) {
 	ctx = s.timedContext(ctx)
 	req := reqDeleteConnection{in: in, out: make(outputChan)}
-	go func() { s.requests <- req }()
+	go func() { s.requests <- &req }()
 	select {
 	case <-ctx.Done():
 		return nil, boo.WrapType(ctx.Err(), boo.Internal)

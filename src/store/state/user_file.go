@@ -61,7 +61,7 @@ func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
 
 	// Fill "User".
 	view.User = obj.UserView{
-		Alias:     f.User.Alias,
+		User:      obj.User{Alias: f.User.Alias},
 		PublicKey: f.User.PublicKey.Hex(),
 		SecretKey: f.User.SecretKey.Hex(),
 	}
