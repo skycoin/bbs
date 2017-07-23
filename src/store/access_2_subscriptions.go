@@ -2,13 +2,12 @@ package store
 
 import (
 	"context"
-	"github.com/skycoin/bbs/src/store/obj"
-	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 type SubsOutput struct {
-	Subscriptions       []obj.SubscriptionView `json:"subscriptions"`
-	MasterSubscriptions []obj.SubscriptionView `json:"master_subscriptions"`
+	Subscriptions       []object.SubscriptionView `json:"subscriptions"`
+	MasterSubscriptions []object.SubscriptionView `json:"master_subscriptions"`
 }
 
 func (a *Access) GetSubs(ctx context.Context) (*SubsOutput, error) {
@@ -23,7 +22,7 @@ func (a *Access) GetSubs(ctx context.Context) (*SubsOutput, error) {
 	return out, nil
 }
 
-func (a *Access) NewSub(ctx context.Context, in *state.SubscriptionIO) (*SubsOutput, error) {
+func (a *Access) NewSub(ctx context.Context, in *object.BoardIO) (*SubsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -39,7 +38,7 @@ func (a *Access) NewSub(ctx context.Context, in *state.SubscriptionIO) (*SubsOut
 	return out, nil
 }
 
-func (a *Access) DeleteSub(ctx context.Context, in *state.SubscriptionIO) (*SubsOutput, error) {
+func (a *Access) DeleteSub(ctx context.Context, in *object.BoardIO) (*SubsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}

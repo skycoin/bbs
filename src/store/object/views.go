@@ -1,4 +1,4 @@
-package obj
+package object
 
 type BoardView struct {
 	Board
@@ -45,7 +45,7 @@ type UserView struct {
 	User
 	PublicKey string       `json:"public_key,omitempty"`
 	SecretKey string       `json:"secret_key,omitempty"`
-	Votes     *VoteSummary `json:"votes"`
+	Votes     *VoteSummary `json:"votes,omitempty"`
 }
 
 type SubscriptionView struct {

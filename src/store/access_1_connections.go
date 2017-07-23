@@ -2,12 +2,12 @@ package store
 
 import (
 	"context"
-	"github.com/skycoin/bbs/src/store/obj"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 )
 
 type ConnectionsOutput struct {
-	Connections []obj.ConnectionView `json:"connections"`
+	Connections []object.ConnectionView `json:"connections"`
 }
 
 func generateConnectionsOutput(cxo *state.CXO, file *state.UserFile) (*ConnectionsOutput, error) {
@@ -22,7 +22,7 @@ func generateConnectionsOutput(cxo *state.CXO, file *state.UserFile) (*Connectio
 
 	out := new(ConnectionsOutput)
 	for _, address := range file.Connections {
-		out.Connections = append(out.Connections, obj.ConnectionView{
+		out.Connections = append(out.Connections, object.ConnectionView{
 			Address: address,
 			Active:  activeMap[address],
 		})
@@ -39,7 +39,7 @@ func (a *Access) GetConnections(ctx context.Context) (*ConnectionsOutput, error)
 	return generateConnectionsOutput(a.Session.GetCXO(), file)
 }
 
-func (a *Access) NewConnection(ctx context.Context, in *state.ConnectionIO) (*ConnectionsOutput, error) {
+func (a *Access) NewConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -50,7 +50,7 @@ func (a *Access) NewConnection(ctx context.Context, in *state.ConnectionIO) (*Co
 	return generateConnectionsOutput(a.Session.GetCXO(), file)
 }
 
-func (a *Access) DeleteConnection(ctx context.Context, in *state.ConnectionIO) (*ConnectionsOutput, error) {
+func (a *Access) DeleteConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}

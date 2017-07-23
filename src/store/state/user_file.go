@@ -2,25 +2,33 @@ package state
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/obj"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
 var (
 	// ErrEmpty occurs when object is nil.
-	ErrEmpty = boo.New(boo.ObjectNotFound, "nil error")
+	ErrEmpty = boo.New(boo.NotFound, "nil error")
 )
 
 func corruptWrap(e error) error {
 	return boo.WrapType(e, boo.InvalidRead, "corrupt user file")
 }
 
+// UserFileView represents a user user as displayed to end user.
+type UserFileView struct {
+	User          object.UserView           `json:"user"`
+	Subscriptions []object.SubscriptionView `json:"subscriptions"`
+	Masters       []object.SubscriptionView `json:"master_subscriptions"`
+	Connections   []object.ConnectionView   `json:"connections"`
+}
+
 // UserFile represents a user of user configuration.
 type UserFile struct {
-	User          obj.User           `json:"user"`
-	Subscriptions []obj.Subscription `json:"subscriptions"`
-	Masters       []obj.Subscription `json:"masters"`
-	Connections   []string           `json:"connections"`
+	User          object.User           `json:"user"`
+	Subscriptions []object.Subscription `json:"subscriptions"`
+	Masters       []object.Subscription `json:"master_subscriptions"`
+	Connections   []string              `json:"connections"`
 }
 
 // Check ensures the validity of the UserFile.
@@ -60,16 +68,16 @@ func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
 	}
 
 	// Fill "User".
-	view.User = obj.UserView{
-		User:      obj.User{Alias: f.User.Alias},
+	view.User = object.UserView{
+		User:      object.User{Alias: f.User.Alias},
 		PublicKey: f.User.PublicKey.Hex(),
 		SecretKey: f.User.SecretKey.Hex(),
 	}
 
 	// Fill "Subscriptions".
-	subscriptions := make([]obj.SubscriptionView, len(f.Subscriptions))
+	subscriptions := make([]object.SubscriptionView, len(f.Subscriptions))
 	for i, s := range f.Subscriptions {
-		subscriptions[i] = obj.SubscriptionView{
+		subscriptions[i] = object.SubscriptionView{
 			PubKey: s.PubKey.Hex(),
 			SecKey: s.SecKey.Hex(),
 		}
@@ -77,9 +85,9 @@ func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
 	view.Subscriptions = subscriptions
 
 	// Fill "Masters".
-	masters := make([]obj.SubscriptionView, len(f.Masters))
+	masters := make([]object.SubscriptionView, len(f.Masters))
 	for i, m := range f.Masters {
-		masters[i] = obj.SubscriptionView{
+		masters[i] = object.SubscriptionView{
 			PubKey: m.PubKey.Hex(),
 			SecKey: m.SecKey.Hex(),
 		}
@@ -87,14 +95,14 @@ func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
 	view.Masters = masters
 
 	// Fill "Connections".
-	connections := make([]obj.ConnectionView, len(f.Connections))
+	connections := make([]object.ConnectionView, len(f.Connections))
 	activeConnectionsMap := make(map[string]bool)
 	activeConnections, _ := cxo.GetConnections()
 	for _, address := range activeConnections {
 		activeConnectionsMap[address] = true
 	}
 	for i, address := range f.Connections {
-		connections[i] = obj.ConnectionView{
+		connections[i] = object.ConnectionView{
 			Address: address,
 			Active:  activeConnectionsMap[address],
 		}
@@ -104,10 +112,11 @@ func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
 	return view
 }
 
-// UserFileView represents a user user as displayed to end user.
-type UserFileView struct {
-	User          obj.UserView           `json:"user"`
-	Subscriptions []obj.SubscriptionView `json:"subscriptions"`
-	Masters       []obj.SubscriptionView `json:"subscriptions"`
-	Connections   []obj.ConnectionView   `json:"connections"`
+func (f *UserFile) FindMaster(pk cipher.PubKey) (int, error) {
+	for i, sub := range f.Masters {
+		if sub.PubKey == pk {
+			return i, nil
+		}
+	}
+	return -1, boo.Newf(boo.NotFound, "board %s not found as master", pk.Hex())
 }
