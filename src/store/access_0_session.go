@@ -2,7 +2,7 @@ package store
 
 import (
 	"context"
-	"github.com/skycoin/bbs/src/store/obj"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 )
 
@@ -12,17 +12,17 @@ func (a *Access) GetUsers(ctx context.Context) (*UsersOutput, error) {
 		return nil, e
 	}
 	out := &UsersOutput{
-		Users: make([]obj.UserView, len(aliases)),
+		Users: make([]object.UserView, len(aliases)),
 	}
 	for i, alias := range aliases {
-		out.Users[i] = obj.UserView{
-			User: obj.User{Alias: alias},
+		out.Users[i] = object.UserView{
+			User: object.User{Alias: alias},
 		}
 	}
 	return out, nil
 }
 
-func (a *Access) NewUser(ctx context.Context, in *state.NewUserIO) (*UsersOutput, error) {
+func (a *Access) NewUser(ctx context.Context, in *object.NewUserIO) (*UsersOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -39,7 +39,7 @@ func (a *Access) DeleteUser(ctx context.Context, alias string) (*UsersOutput, er
 	return a.GetUsers(ctx)
 }
 
-func (a *Access) Login(ctx context.Context, in *state.LoginIO) (*obj.UserView, error) {
+func (a *Access) Login(ctx context.Context, in *object.LoginIO) (*object.UserView, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -47,8 +47,8 @@ func (a *Access) Login(ctx context.Context, in *state.LoginIO) (*obj.UserView, e
 	if e != nil {
 		return nil, e
 	}
-	out := &obj.UserView{
-		User:      obj.User{Alias: file.User.Alias},
+	out := &object.UserView{
+		User:      object.User{Alias: file.User.Alias},
 		PublicKey: file.User.PublicKey.Hex(),
 		SecretKey: file.User.SecretKey.Hex(),
 	}

@@ -1,4 +1,4 @@
-package state
+package object
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
@@ -47,8 +47,8 @@ func CheckAddress(address string) error {
 
 // RetryIO represents io required on connection/subscription retries.
 type RetryIO struct {
-	pks       []cipher.PubKey
-	addresses []string
+	PublicKeys []cipher.PubKey
+	Addresses  []string
 }
 
 func (io *RetryIO) Process() error {
@@ -56,12 +56,12 @@ func (io *RetryIO) Process() error {
 }
 
 func (io *RetryIO) IsEmpty() bool {
-	return len(io.pks) == 0 && len(io.addresses) == 0
+	return len(io.PublicKeys) == 0 && len(io.Addresses) == 0
 }
 
 func (io *RetryIO) HasPK(pk cipher.PubKey) int {
 	out := -1
-	for i, gotPK := range io.pks {
+	for i, gotPK := range io.PublicKeys {
 		if gotPK == pk {
 			return i
 		}
@@ -71,7 +71,7 @@ func (io *RetryIO) HasPK(pk cipher.PubKey) int {
 
 func (io *RetryIO) HasAddress(address string) int {
 	out := -1
-	for i, gotAddress := range io.addresses {
+	for i, gotAddress := range io.Addresses {
 		if gotAddress == address {
 			return i
 		}
@@ -85,9 +85,9 @@ func (io *RetryIO) Add(in *RetryIO) {
 	}
 	// Add unique public keys.
 	pksToAdd := []cipher.PubKey{}
-	for _, newPK := range in.pks {
+	for _, newPK := range in.PublicKeys {
 		got := false
-		for _, oldPK := range io.pks {
+		for _, oldPK := range io.PublicKeys {
 			if newPK == oldPK {
 				got = true
 				break
@@ -97,13 +97,13 @@ func (io *RetryIO) Add(in *RetryIO) {
 			pksToAdd = append(pksToAdd, newPK)
 		}
 	}
-	io.pks = append(io.pks, pksToAdd...)
+	io.PublicKeys = append(io.PublicKeys, pksToAdd...)
 
 	// Add unique addresses.
 	addressesToAdd := []string{}
-	for _, newAddress := range in.addresses {
+	for _, newAddress := range in.Addresses {
 		got := false
-		for _, oldAddress := range io.addresses {
+		for _, oldAddress := range io.Addresses {
 			if newAddress == oldAddress {
 				got = true
 				break
@@ -113,21 +113,18 @@ func (io *RetryIO) Add(in *RetryIO) {
 			addressesToAdd = append(addressesToAdd, newAddress)
 		}
 	}
-	io.addresses = append(io.addresses, addressesToAdd...)
+	io.Addresses = append(io.Addresses, addressesToAdd...)
 }
 
-func (io *RetryIO) Fill(file *UserFile) *RetryIO {
-	if file == nil {
-		return io
-	}
-	for _, sub := range append(file.Subscriptions, file.Masters...) {
+func (io *RetryIO) Fill(subscriptions []Subscription, connections []string) *RetryIO {
+	for _, sub := range subscriptions {
 		if io.HasPK(sub.PubKey) == -1 {
-			io.pks = append(io.pks, sub.PubKey)
+			io.PublicKeys = append(io.PublicKeys, sub.PubKey)
 		}
 	}
-	for _, address := range file.Connections {
+	for _, address := range connections {
 		if io.HasAddress(address) == -1 {
-			io.addresses = append(io.addresses, address)
+			io.Addresses = append(io.Addresses, address)
 		}
 	}
 	return io
@@ -153,7 +150,7 @@ func (io *NewUserIO) Process() error {
 	return nil
 }
 
-// LoginIO represents input required when logging in.
+// LoginIO represents input required when logging io.
 type LoginIO struct {
 	Alias    string `json:"alias"`
 	Password string `json:"password"`
@@ -181,20 +178,53 @@ func (io *ConnectionIO) Process() error {
 	return nil
 }
 
-// SubscriptionIO represents a subscription input.
-type SubscriptionIO struct {
+// BoardIO represents a subscription input.
+type BoardIO struct {
 	PubKey string `json:"public_key"`
+	SecKey cipher.SecKey
 	pubKey cipher.PubKey
 }
 
-// Process checks and processes input for SubscriptionIO.
-func (in *SubscriptionIO) Process() (e error) {
-	in.pubKey, e = keys.GetPubKey(in.PubKey)
+// Process checks and processes input for BoardIO.
+func (io *BoardIO) Process() (e error) {
+	io.pubKey, e = keys.GetPubKey(io.PubKey)
 	return
 }
 
-// NewMasterIO represents input required to create master board.
-type NewMasterIO struct {
+func (io *BoardIO) GetPK() cipher.PubKey {
+	return io.pubKey
+}
+
+func (io *BoardIO) GetSK() cipher.SecKey {
+	return io.SecKey
+}
+
+// AddressIO represents input/output regarding addresses.
+type AddressIO struct {
+	PubKey  string `json:"public_key"`
+	SecKey  cipher.SecKey
+	Address string `json:"string"`
+	pubKey  cipher.PubKey
+}
+
+func (io *AddressIO) Process() error {
+	var e error
+	io.pubKey, e = keys.GetPubKey(io.PubKey)
+	if e != nil {
+		return e
+	}
+	if e = CheckAddress(io.Address); e != nil {
+		return e
+	}
+	return nil
+}
+
+func (io *AddressIO) GetPK() cipher.PubKey {
+	return io.pubKey
+}
+
+// NewBoardIO represents input required to create master board.
+type NewBoardIO struct {
 	Seed                string `json:"seed"`
 	Name                string `json:"name"`
 	Desc                string `json:"description"`
@@ -207,30 +237,47 @@ type NewMasterIO struct {
 	secKey              cipher.SecKey
 }
 
-// Process checks and processes input for NewMasterIO.
-func (in *NewMasterIO) Process() error {
-	if e := CheckSeed(in.Seed); e != nil {
+// Process checks and processes input for NewBoardIO.
+func (io *NewBoardIO) Process() error {
+	if e := CheckSeed(io.Seed); e != nil {
 		return e
 	}
-	if e := CheckName(in.Name); e != nil {
+	if e := CheckName(io.Name); e != nil {
 		return e
 	}
-	if e := CheckDesc(in.Desc); e != nil {
+	if e := CheckDesc(io.Desc); e != nil {
 		return e
 	}
-	in.submissionAddresses =
-		strings.Split(in.SubmissionAddresses, ",")
-	for i := range in.submissionAddresses {
-		in.submissionAddresses[i] =
-			strings.TrimSpace(in.submissionAddresses[i])
+	// TODO: Fix empty addresses.
+	io.submissionAddresses =
+		strings.Split(io.SubmissionAddresses, ",")
+	for i := range io.submissionAddresses {
+		io.submissionAddresses[i] =
+			strings.TrimSpace(io.submissionAddresses[i])
 	}
-	in.connections =
-		strings.Split(in.Connections, ",")
-	for i := range in.connections {
-		in.connections[i] =
-			strings.TrimSpace(in.connections[i])
+	io.connections =
+		strings.Split(io.Connections, ",")
+	for i := range io.connections {
+		io.connections[i] =
+			strings.TrimSpace(io.connections[i])
 	}
-	in.pubKey, in.secKey =
-		cipher.GenerateDeterministicKeyPair([]byte(in.Seed))
+	io.pubKey, io.secKey =
+		cipher.GenerateDeterministicKeyPair([]byte(io.Seed))
 	return nil
+}
+
+func (io *NewBoardIO) GetSubmissionAddresses() []string {
+	return io.submissionAddresses
+}
+
+func (io *NewBoardIO) GetConnections() []string {
+	return io.connections
+}
+
+func (io *NewBoardIO) GetPK() cipher.PubKey {
+	return io.pubKey
+}
+
+func (io *NewBoardIO) GetSK() cipher.SecKey {
+	return io.secKey
 }

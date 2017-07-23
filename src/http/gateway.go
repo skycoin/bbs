@@ -1,11 +1,14 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store"
-	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"net/http"
 	"os"
@@ -44,6 +47,91 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		})
 
 	/*
+		<<< TOOLS >>>
+	*/
+
+	// Generates a seed.
+	mux.HandleFunc("/api/tools/new_seed",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := keys.GenerateSeed()
+			send(w, out, e)
+		})
+
+	// Generates public/private key pair.
+	mux.HandleFunc("/api/tools/new_key_pair",
+		func(w http.ResponseWriter, r *http.Request) {
+			var pk cipher.PubKey
+			var sk cipher.SecKey
+			seed := r.FormValue("seed")
+			switch seed {
+			case "":
+				pk, sk = cipher.GenerateKeyPair()
+			default:
+				pk, sk = cipher.GenerateDeterministicKeyPair([]byte(seed))
+			}
+			out := struct {
+				PubKey string `json:"public_key"`
+				SecKey string `json:"secret_key"`
+			}{
+				PubKey: pk.Hex(),
+				SecKey: sk.Hex(),
+			}
+			send(w, out, nil)
+		})
+
+	/*
+		<<< SESSION >>>
+	*/
+
+	// Lists all users.
+	mux.HandleFunc("/api/session/users/get_all",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.GetUsers(r.Context())
+			send(w, out, e)
+		})
+
+	// Creates a new user.
+	mux.HandleFunc("/api/session/users/new",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.NewUser(r.Context(), &object.NewUserIO{
+				Seed:     r.FormValue("seed"),
+				Alias:    r.FormValue("alias"),
+				Password: r.FormValue("password"),
+			})
+			send(w, out, e)
+		})
+
+	// Deletes a user.
+	mux.HandleFunc("/api/session/users/delete",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.DeleteUser(r.Context(), r.FormValue("alias"))
+			send(w, out, e)
+		})
+
+	// User login.
+	mux.HandleFunc("/api/session/login",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.Login(r.Context(), &object.LoginIO{
+				Alias:    r.FormValue("alias"),
+				Password: r.FormValue("password"),
+			})
+			send(w, out, e)
+		})
+
+	// User logout.
+	mux.HandleFunc("/api/session/logout",
+		func(w http.ResponseWriter, r *http.Request) {
+			e := g.Access.Logout(r.Context())
+			send(w, true, e)
+		})
+
+	mux.HandleFunc("/api/session/get_info",
+		func(w http.ResponseWriter, r *http.Request) {
+			file, e := g.Access.GetSession(r.Context())
+			send(w, file, e)
+		})
+
+	/*
 		<<< CONNECTIONS >>>
 	*/
 
@@ -57,7 +145,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Creates a new connection.
 	mux.HandleFunc("/api/connections/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewConnection(r.Context(), &state.ConnectionIO{
+			out, e := g.Access.NewConnection(r.Context(), &object.ConnectionIO{
 				Address: r.FormValue("address"),
 			})
 			send(w, out, e)
@@ -66,7 +154,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Deletes a connection.
 	mux.HandleFunc("/api/connections/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.DeleteConnection(r.Context(), &state.ConnectionIO{
+			out, e := g.Access.DeleteConnection(r.Context(), &object.ConnectionIO{
 				Address: r.FormValue("address"),
 			})
 			send(w, out, e)
@@ -86,16 +174,16 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Creates a new subscription.
 	mux.HandleFunc("/api/subscriptions/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewSub(r.Context(), &state.SubscriptionIO{
+			out, e := g.Access.NewSub(r.Context(), &object.BoardIO{
 				PubKey: r.FormValue("public_key"),
 			})
 			send(w, out, e)
 		})
 
 	// Deletes a subscription.
-	mux.HandleFunc("/api/subscriptions/remove",
+	mux.HandleFunc("/api/subscriptions/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.DeleteSub(r.Context(), &state.SubscriptionIO{
+			out, e := g.Access.DeleteSub(r.Context(), &object.BoardIO{
 				PubKey: r.FormValue("public_key"),
 			})
 			send(w, out, e)
@@ -105,17 +193,56 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		<<< BOARDS >>>
 	*/
 
-	// Gets all boards (non-master and master). TODO
+	// Gets all boards (non-master and master).
 	mux.HandleFunc("/api/boards/get_all",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w, true, nil)
+			out, e := g.Access.GetBoards(r.Context())
+			send(w, out, e)
 		})
 
-	// Creates a new board. TODO
+	// Creates a new board.
 	mux.HandleFunc("/api/boards/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w, true, nil)
+			out, e := g.Access.NewBoard(r.Context(), &object.NewBoardIO{
+				Seed:                r.FormValue("seed"),
+				Name:                r.FormValue("name"),
+				Desc:                r.FormValue("description"),
+				SubmissionAddresses: r.FormValue("submission_addresses"),
+				Connections:         r.FormValue("connections"),
+			})
+			send(w, out, e)
 		})
+
+	// Deletes a board (That you own).
+	mux.HandleFunc("/api/boards/delete",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.DeleteBoard(r.Context(), &object.BoardIO{
+				PubKey: r.FormValue("public_key"),
+			})
+			send(w, out, e)
+		})
+
+	// Adds a new submission address to specified board.
+	mux.HandleFunc("/api/boards/submission_addresses/new",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.NewSubmissionAddress(r.Context(), &object.AddressIO{
+				PubKey:  r.FormValue("public_key"),
+				Address: r.FormValue("address"),
+			})
+			send(w, out, e)
+		})
+
+	// Deletes a submission address from specified board.
+	mux.HandleFunc("/api/boards/submission_addresses/delete",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.DeleteSubmissionAddress(r.Context(), &object.AddressIO{
+				PubKey: r.FormValue("public_key"),
+				Address: r.FormValue("address"),
+			})
+			send(w, out, e)
+		})
+
+
 
 	return nil
 }
@@ -126,7 +253,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 
 type Error struct {
 	Type    int    `json:"type"`
-	Message string `json:"message"`
+	Title   string `json:"title"`
 	Details string `json:"details"`
 }
 
@@ -152,28 +279,34 @@ func sendErr(w http.ResponseWriter, e error) error {
 	if e == nil {
 		return sendOK(w, true)
 	}
+
 	eType := boo.Type(e)
-	eMsg := boo.Message(eType)
+	eTitle := boo.Message(eType)
+
 	var status int
+
 	switch eType {
 	case boo.Unknown, boo.Internal:
 		status = http.StatusInternalServerError
 	case boo.NotAuthorised, boo.NotMaster:
 		status = http.StatusUnauthorized
-	case boo.ObjectNotFound:
+	case boo.NotFound:
 		status = http.StatusNotFound
-	case boo.ObjectAlreadyExists:
+	case boo.AlreadyExists:
 		status = http.StatusConflict
 	default:
 		status = http.StatusBadRequest
 	}
 
+	d := e.Error()
+	details := string(bytes.ToUpper([]byte{d[0]})) + d[1:] + "."
+
 	response := Response{
 		Okay: false,
 		Error: &Error{
 			Type:    eType,
-			Message: eMsg,
-			Details: e.Error(),
+			Title:   eTitle,
+			Details: details,
 		},
 	}
 	return sendStatus(w, response, status)

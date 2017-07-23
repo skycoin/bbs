@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/skycoin/bbs/src/store/obj"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 )
 
@@ -11,5 +11,5 @@ type Access struct {
 }
 
 type UsersOutput struct {
-	Users []obj.UserView `json:"users"`
+	Users []object.UserView `json:"users"`
 }

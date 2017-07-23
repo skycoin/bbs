@@ -3,7 +3,7 @@ package state
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/store/obj"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/skyobject"
@@ -48,7 +48,7 @@ func NewCXO(config *SessionConfig, updater func(root *node.Root)) *CXO {
 }
 
 // Sets up CXO node.
-func (c *CXO) Open(alias string, in *RetryIO) (*RetryIO, error) {
+func (c *CXO) Open(alias string, in *object.RetryIO) (*object.RetryIO, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -57,12 +57,16 @@ func (c *CXO) Open(alias string, in *RetryIO) (*RetryIO, error) {
 	}
 	// Setup registry.
 	r := skyobject.NewRegistry()
-	r.Register("Board", obj.Board{})
-	r.Register("Thread", obj.Thread{})
-	r.Register("Post", obj.Post{})
-	r.Register("ThreadPage", obj.ThreadPage{})
-	r.Register("BoardPage", obj.BoardPage{})
-	r.Register("ExternalRoot", obj.ExternalRoot{})
+	r.Register("Board", object.Board{})
+	r.Register("Thread", object.Thread{})
+	r.Register("Post", object.Post{})
+	r.Register("Vote", object.Vote{})
+	r.Register("ThreadPage", object.ThreadPage{})
+	r.Register("BoardPage", object.BoardPage{})
+	r.Register("VotesPage", object.VotesPage{})
+	r.Register("ThreadVotesPage", object.ThreadVotesPage{})
+	r.Register("PostVotesPage", object.PostVotesPage{})
+	r.Register("ExternalRoot", object.ExternalRoot{})
 	r.Done()
 
 	// Setup CXO Configurations.
@@ -111,21 +115,25 @@ func (c *CXO) lock() func() {
 
 // Initialize attempts to connect/subscribe to public keys/addresses provided.
 // Failed attempts are outputted.
-func (c *CXO) Initialize(in *RetryIO) *RetryIO {
+func (c *CXO) Initialize(in *object.RetryIO) *object.RetryIO {
 	defer c.lock()()
 	if c.node == nil {
-		return &RetryIO{}
+		return &object.RetryIO{}
 	}
 	return c.initialize(in)
 }
 
-func (c *CXO) initialize(in *RetryIO) *RetryIO {
-	failed := new(RetryIO)
+// TODO: Differentiate between master subscriptions and non-master subscriptions.
+// - For master : Self subscription results in pass.
+// - For non-master : Self subscription is not enough.
+
+func (c *CXO) initialize(in *object.RetryIO) *object.RetryIO {
+	failed := new(object.RetryIO)
 	// Connect to all addresses and record those that fail.
-	for _, address := range in.addresses {
-		if e := c.connect(address); e != nil {
+	for _, address := range in.Addresses {
+		if _, e := c.connect(address); e != nil {
 			c.l.Printf("Failed to connect to '%s'. Error: '%v'.", address, e)
-			failed.addresses = append(failed.addresses, address)
+			failed.Addresses = append(failed.Addresses, address)
 		} else {
 			c.l.Printf("Connected to '%s'.", address)
 		}
@@ -138,30 +146,33 @@ func (c *CXO) initialize(in *RetryIO) *RetryIO {
 		if e != nil {
 			c.l.Printf("Failed to get list of feeds from '%s'. Error: '%v'.",
 				address, e)
-			continue
-		}
-		for _, gotPK := range gotPKs {
-			pkMap[gotPK] = append(pkMap[gotPK], address)
+		} else {
+			for _, gotPK := range gotPKs {
+				pkMap[gotPK] = append(pkMap[gotPK], address)
+			}
 		}
 	}
 	// Subscribe to all public keys.
-	for _, pk := range in.pks {
+	for _, pk := range in.PublicKeys {
 		c.l.Printf("(START) SUBSCRIBE TO '%s'.", pk.Hex())
 		passed := false
 		// Self subscribe.
 		if e := c.subscribe("", pk); e != nil {
-			c.l.Printf("\t-Self subscribe failed.")
+			c.l.Printf("\t- Self subscribe failed.")
+		} else {
+			c.l.Printf("\t- Self subscribe successful.")
+			passed = true
 		}
 		for _, address := range pkMap[pk] {
 			if e := c.subscribe(address, pk); e != nil {
 				c.l.Printf("\t-Failed for '%s'.", address)
-				continue
+			} else {
+				c.l.Printf("\t- Success for '%s'.", address)
+				passed = true
 			}
-			c.l.Printf("\t-Success for '%s'.", address)
-			passed = true
 		}
 		if !passed {
-			failed.pks = append(failed.pks, pk)
+			failed.PublicKeys = append(failed.PublicKeys, pk)
 		}
 		c.l.Printf("(  END) SUBSCRIBE TO '%s' (result '%v').", pk.Hex(), passed)
 	}
@@ -193,17 +204,19 @@ func (c *CXO) GetRoot(pk cipher.PubKey) (*node.Root, error) {
 }
 
 // NewRoot creates a new root.
-func (c *CXO) NewRoot(seed []byte, modifier RootModifier) (cipher.PubKey, cipher.SecKey, error) {
-	pk, sk := cipher.GenerateDeterministicKeyPair(seed)
+func (c *CXO) NewRoot(pk cipher.PubKey, sk cipher.SecKey, modifier RootModifier) error {
 	defer c.lock()()
 	if c.node == nil {
-		return pk, sk, ErrCXONotOpened
+		return ErrCXONotOpened
 	}
 	root, e := c.node.Container().NewRoot(pk, sk)
 	if e != nil {
-		return pk, sk, boo.WrapType(e, boo.Internal, "failed to create root")
+		return boo.WrapType(e, boo.Internal, "failed to create root")
 	}
-	return pk, sk, modifier(root)
+	if e := modifier(root); e != nil {
+		return e
+	}
+	return c.subscribe("", pk)
 }
 
 // RootModifier modifies the root.
@@ -215,7 +228,12 @@ func (c *CXO) ModifyRoot(pk cipher.PubKey, sk cipher.SecKey, modifier RootModifi
 	if c.node == nil {
 		return ErrCXONotOpened
 	}
-	return modifier(c.node.Container().LastRootSk(pk, sk))
+	root := c.node.Container().LastRootSk(pk, sk)
+	if root == nil {
+		return boo.Newf(boo.NotFound,
+			"board %s is either not downloaded, does not exist, or is deleted", pk.Hex())
+	}
+	return modifier(root)
 }
 
 // IsMaster returns whether master or not.
@@ -255,15 +273,13 @@ func (c *CXO) subscribe(address string, pk cipher.PubKey) error {
 		c.node.Subscribe(nil, pk)
 		return nil
 	}
-	conn, e := c.node.Pool().Dial(address)
-	if e != nil {
-		switch e {
-		case gnet.ErrAlreadyListen:
-		default:
-			return e
-		}
+
+	connection, e := c.connect(address)
+	if e != nil && boo.Type(e) != boo.AlreadyExists {
+		return e
 	}
-	return c.node.SubscribeResponse(conn, pk)
+
+	return c.node.SubscribeResponse(connection, pk)
 }
 
 // Unsubscribe unsubscribes from a cxo feed.
@@ -280,12 +296,12 @@ func (c *CXO) unsubscribe(address string, pk cipher.PubKey) error {
 		c.node.Unsubscribe(nil, pk)
 		return nil
 	}
-	conn := c.node.Pool().Connection(address)
-	if conn == nil {
+	connection := c.node.Pool().Connection(address)
+	if connection == nil {
 		c.node.Unsubscribe(nil, pk)
 		return nil
 	}
-	c.node.Unsubscribe(conn, pk)
+	c.node.Unsubscribe(connection, pk)
 	return nil
 }
 
@@ -295,9 +311,9 @@ func (c *CXO) GetConnections() ([]string, error) {
 	if c.node == nil {
 		return nil, ErrCXONotOpened
 	}
-	conns := c.node.Pool().Connections()
-	addresses := make([]string, len(conns))
-	for i, conn := range conns {
+	connections := c.node.Pool().Connections()
+	addresses := make([]string, len(connections))
+	for i, conn := range connections {
 		addresses[i] = conn.Address()
 	}
 	return addresses, nil
@@ -309,14 +325,28 @@ func (c *CXO) Connect(address string) error {
 	if c.node == nil {
 		return ErrCXONotOpened
 	}
-	return c.connect(address)
-}
-
-func (c *CXO) connect(address string) error {
-	if _, e := c.node.Pool().Dial(address); e != nil {
+	if _, e := c.connect(address); e != nil {
+		if boo.Type(e) == boo.AlreadyExists {
+			return nil
+		}
 		return e
 	}
 	return nil
+}
+
+func (c *CXO) connect(address string) (*gnet.Conn, error) {
+	if connection, e := c.node.Pool().Dial(address); e != nil {
+		switch e {
+		case gnet.ErrClosed, gnet.ErrConnectionsLimit:
+			return nil, boo.WrapType(e, boo.Internal)
+		case gnet.ErrAlreadyListen:
+			return nil, boo.WrapType(e, boo.AlreadyExists)
+		default:
+			return nil, boo.WrapType(e, boo.InvalidInput)
+		}
+	} else {
+		return connection, nil
+	}
 }
 
 // Disconnect removes a connection.
