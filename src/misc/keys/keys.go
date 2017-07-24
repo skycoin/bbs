@@ -3,6 +3,7 @@ package keys
 import (
 	"encoding/hex"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
@@ -10,9 +11,11 @@ import (
 func GetPubKey(s string) (cipher.PubKey, error) {
 	b, e := hex.DecodeString(s)
 	if e != nil {
-		return cipher.PubKey{}, boo.WrapType(e, boo.InvalidInput, "invalid public key hex string")
+		return cipher.PubKey{}, boo.WrapType(e, boo.InvalidInput,
+			"invalid public key hex string")
 	} else if len(b) != len(cipher.PubKey{}) {
-		return cipher.PubKey{}, boo.New(boo.InvalidInput, "invalid public key hex string length")
+		return cipher.PubKey{}, boo.New(boo.InvalidInput,
+			"invalid public key hex string length")
 	}
 	return cipher.NewPubKey(b), nil
 }
@@ -21,9 +24,21 @@ func GetPubKey(s string) (cipher.PubKey, error) {
 func GetSecKey(s string) (cipher.SecKey, error) {
 	b, e := hex.DecodeString(s)
 	if e != nil {
-		return cipher.SecKey{}, boo.WrapType(e, boo.InvalidInput, "invalid secret key hex string")
+		return cipher.SecKey{}, boo.WrapType(e, boo.InvalidInput,
+			"invalid secret key hex string")
 	} else if len(b) != len(cipher.SecKey{}) {
-		return cipher.SecKey{}, boo.New(boo.InvalidInput, "invalid secret key hex string length")
+		return cipher.SecKey{}, boo.New(boo.InvalidInput,
+			"invalid secret key hex string length")
 	}
 	return cipher.NewSecKey(b), nil
+}
+
+// GetReference obtains a skyobject reference from hex string.
+func GetReference(s string) (skyobject.Reference, error) {
+	h, e := cipher.SHA256FromHex(s)
+	if e != nil {
+		return skyobject.Reference{}, boo.WrapType(e, boo.InvalidInput,
+			"invalid reference")
+	}
+	return skyobject.Reference(h), e
 }

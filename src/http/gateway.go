@@ -236,13 +236,45 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/boards/submission_addresses/delete",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.DeleteSubmissionAddress(r.Context(), &object.AddressIO{
-				PubKey: r.FormValue("public_key"),
+				PubKey:  r.FormValue("public_key"),
 				Address: r.FormValue("address"),
 			})
 			send(w, out, e)
 		})
 
+	// Gets a view of a board (Includes board information and threads).
+	mux.HandleFunc("/api/boards/page/get",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.GetBoardPage(r.Context(), &object.BoardIO{
+				PubKey: r.FormValue("public_key"),
+			})
+			send(w, out, e)
+		})
 
+	/*
+		<<< THREADS >>>
+	*/
+
+	// Creates a new thread (Uses RPC for non-master).
+	mux.HandleFunc("/api/threads/new",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.NewThread(r.Context(), &object.NewThreadIO{
+				BoardPubKey: r.FormValue("board_public_key"),
+				Name:        r.FormValue("name"),
+				Desc:        r.FormValue("description"),
+			})
+			send(w, out, e)
+		})
+
+	// Deletes a thread from specified board.
+	mux.HandleFunc("/api/threads/delete",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.DeleteThread(r.Context(), &object.ThreadIO{
+				BoardPubKey: r.FormValue("board_public_key"),
+				ThreadRef:   r.FormValue("thread_reference"),
+			})
+			send(w, out, e)
+		})
 
 	return nil
 }

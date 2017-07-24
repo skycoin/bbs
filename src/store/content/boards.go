@@ -56,9 +56,9 @@ func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressI
 	result := NewResult(cxo, in.GetPK(), in.SecKey).
 		getBoardPage().getBoard()
 
-	if e := result.Error(); e != nil {
-		return e
-	}
+	//if e := result.Error(); e != nil {
+	//	return e
+	//}
 
 	for _, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {
@@ -81,9 +81,10 @@ func DeleteSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.Addre
 	result := NewResult(cxo, in.GetPK(), in.SecKey).
 		getBoardPage().getBoard()
 
-	if e := result.Error(); e != nil {
-		return e
-	}
+	//if e := result.Error(); e != nil {
+	//	return e
+	//}
+
 	for i, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {
 			result.Board.SubmissionAddresses = append(

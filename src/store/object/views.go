@@ -1,7 +1,7 @@
 package object
 
 type BoardView struct {
-	Board
+	*Board
 	PublicKey     string              `json:"public_key"`
 	ExternalRoots []*ExternalRootView `json:"external_roots,omitempty"`
 	Threads       []*ThreadView       `json:"threads,omitempty"`
@@ -13,13 +13,12 @@ type ExternalRootView struct {
 }
 
 type ThreadView struct {
-	Thread
-	Ref            string       `json:"reference"`
-	AuthorRef      string       `json:"author_reference,omitempty"`
-	AuthorAlias    string       `json:"author_alias,omitempty"`
-	MasterBoardRef string       `json:"master_board_reference"`
-	Votes          *VoteSummary `json:"votes,omitempty"`
-	Posts          []*PostView  `json:"posts,omitempty"`
+	*Thread
+	Ref         string       `json:"reference"`
+	AuthorRef   string       `json:"author_reference,omitempty"`
+	AuthorAlias string       `json:"author_alias,omitempty"`
+	Votes       *VoteSummary `json:"votes,omitempty"`
+	Posts       []*PostView  `json:"posts,omitempty"`
 }
 
 type PostView struct {
