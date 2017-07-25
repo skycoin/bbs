@@ -11,16 +11,18 @@ import (
 )
 
 type Result struct {
-	e               error
-	root            *node.Root
-	BoardPage       *object.BoardPage
-	Board           *object.Board
-	ThreadPage      *object.ThreadPage
-	ThreadPageIndex int
-	ThreadPages     []*object.ThreadPage
-	Thread          *object.Thread
-	Threads         []*object.Thread
-	Posts           []*object.Post
+	e           error
+	root        *node.Root
+	BoardPage   *object.BoardPage
+	Board       *object.Board
+	ThreadPage  *object.ThreadPage
+	ThreadPages []*object.ThreadPage
+	Thread      *object.Thread
+	Threads     []*object.Thread
+	ThreadIndex int
+	Post        *object.Post
+	Posts       []*object.Post
+	PostIndex   int
 }
 
 func NewResult(cxo *state.CXO, pk cipher.PubKey, sk ...cipher.SecKey) *Result {
@@ -40,7 +42,7 @@ func NewResult(cxo *state.CXO, pk cipher.PubKey, sk ...cipher.SecKey) *Result {
 	if len(sk) == 1 {
 		root.Edit(sk[0])
 	}
-	return &Result{root: root, ThreadPageIndex: -1}
+	return &Result{root: root, ThreadIndex: -1, PostIndex: -1}
 }
 
 func (r *Result) Error() error {
@@ -91,7 +93,7 @@ func (r *Result) getThreadPage(tRef skyobject.Reference) *Result {
 			return r
 		}
 		if tp.Thread == tRef {
-			r.ThreadPageIndex = i
+			r.ThreadIndex = i
 			r.ThreadPage = &tp
 			r.ThreadPage.R = toSHA256(tpRef)
 			return r
@@ -147,9 +149,44 @@ func (r *Result) getThreads() *Result {
 		}
 		if e := r.deserialize(tPage.Thread, r.Threads[i]); e != nil {
 			r.e = boo.WrapTypef(e, boo.InvalidRead,
-				"thread %s of board %s is corrupt", tPage.Thread.String(), r.Board.R.Hex())
+				"thread %s of board %s is corrupt",
+				tPage.Thread.String(), r.Board.R.Hex())
 			return r
 		}
+	}
+	return r
+}
+
+func (r *Result) getPosts() *Result {
+	if r.e != nil {
+		return r
+	}
+	r.Posts = make([]*object.Post, len(r.ThreadPage.Posts))
+	for i, pRef := range r.ThreadPage.Posts {
+		r.Posts[i] = &object.Post{
+			R: toSHA256(pRef),
+		}
+		if e := r.deserialize(pRef, r.Posts[i]); e != nil {
+			r.e = boo.WrapTypef(e, boo.InvalidRead,
+				"post %s of thread %s of board %s is corrupt",
+				pRef.String(), r.Thread.R.Hex(), r.Board.R.Hex())
+			return r
+		}
+	}
+	return r
+}
+
+func (r *Result) savePost() *Result {
+	if r.e != nil {
+		return r
+	}
+	r.Post.R = toSHA256(r.root.Save(r.Post))
+	if r.PostIndex == -1 {
+		r.ThreadPage.Posts = append(
+			r.ThreadPage.Posts, toRef(r.Post.R))
+	} else {
+		r.ThreadPage.Posts[r.PostIndex] =
+			toRef(r.Post.R)
 	}
 	return r
 }
@@ -171,16 +208,13 @@ func (r *Result) saveThreadPage() *Result {
 		return r
 	}
 	r.ThreadPage.R = toSHA256(r.root.Save(r.ThreadPage))
-	r.BoardPage.ThreadPages = append(
-		r.BoardPage.ThreadPages, toRef(r.ThreadPage.R))
-	return r
-}
-
-func (r *Result) saveThreadPages() *Result {
-	if r.e != nil {
-		return r
+	if r.ThreadIndex == -1 {
+		r.BoardPage.ThreadPages = append(
+			r.BoardPage.ThreadPages, toRef(r.ThreadPage.R))
+	} else {
+		r.BoardPage.ThreadPages[r.ThreadIndex] =
+			toRef(r.ThreadPage.R)
 	}
-
 	return r
 }
 

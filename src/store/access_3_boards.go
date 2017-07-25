@@ -4,47 +4,7 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/store/content"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state"
 )
-
-type BoardsOutput struct {
-	Boards       []object.BoardView `json:"boards"`
-	MasterBoards []object.BoardView `json:"master_boards"`
-}
-
-func getBoards(ctx context.Context, cxo *state.CXO, file *state.UserFile) *BoardsOutput {
-
-	masters := make([]object.BoardView, len(file.Masters))
-	for i, sub := range file.Masters {
-		masters[i].PublicKey = sub.PubKey.Hex()
-		result, e := content.GetBoardResult(ctx, cxo, sub.PubKey)
-		if e != nil {
-			masters[i].Board = &object.Board{
-				Name: "Unavailable Board",
-				Desc: e.Error(),
-			}
-		} else {
-			masters[i].Board = result.Board
-		}
-
-	}
-
-	subs := make([]object.BoardView, len(file.Subscriptions))
-	for i, sub := range file.Subscriptions {
-		subs[i].PublicKey = sub.PubKey.Hex()
-		result, e := content.GetBoardResult(ctx, cxo, sub.PubKey)
-		if e != nil {
-			subs[i].Board = &object.Board{
-				Name: "Unavailable Board",
-				Desc: e.Error(),
-			}
-		} else {
-			subs[i].Board = result.Board
-		}
-	}
-
-	return &BoardsOutput{MasterBoards: masters, Boards: subs}
-}
 
 func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
 	cxo := a.Session.GetCXO()
@@ -149,34 +109,6 @@ func (a *Access) DeleteSubmissionAddress(ctx context.Context, in *object.Address
 	return getBoards(ctx, cxo, file), nil
 }
 
-type BoardPageOutput struct {
-	Board   object.BoardView
-	Threads []object.ThreadView
-}
-
-func getBoardPage(_ context.Context, result *content.Result) *BoardPageOutput {
-
-	out := &BoardPageOutput{
-		Board: object.BoardView{
-			Board:     result.Board,
-			PublicKey: result.GetPK().Hex(),
-		},
-		Threads: make([]object.ThreadView, len(result.Threads)),
-	}
-
-	for i, thread := range result.Threads {
-		out.Threads[i] = object.ThreadView{
-			Thread:      thread,
-			Ref:         thread.R.Hex(),
-			AuthorRef:   thread.User.Hex(),
-			AuthorAlias: "-", // TODO: Implement.
-			Votes:       nil, // TODO: Implement.
-		}
-	}
-
-	return out
-}
-
 func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (*BoardPageOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
@@ -184,7 +116,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (*BoardPa
 
 	cxo := a.Session.GetCXO()
 
-	result, e := content.GetThreadsResult(ctx, cxo, in)
+	result, e := content.GetBoardPageResult(ctx, cxo, in)
 	if e != nil {
 		return nil, e
 	}
@@ -203,6 +135,8 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 	if e != nil {
 		return nil, e
 	}
+	in.UserPubKey = file.User.PublicKey
+	in.UserSecKey = file.User.SecretKey
 
 	i, e := file.FindMaster(in.GetBoardPK())
 	if e != nil {
@@ -211,8 +145,6 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 	}
 
 	in.BoardSecKey = file.Masters[i].SecKey
-	in.UserPubKey = file.User.PublicKey
-	in.UserSecKey = file.User.SecretKey
 
 	result, e := content.NewThread(ctx, cxo, in)
 	if e != nil {
@@ -248,4 +180,76 @@ func (a *Access) DeleteThread(ctx context.Context, in *object.ThreadIO) (*BoardP
 	}
 
 	return getBoardPage(ctx, result), nil
+}
+
+func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (*ThreadPageOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+
+	cxo := a.Session.GetCXO()
+
+	result, e := content.GetThreadPageResult(ctx, cxo, in)
+	if e != nil {
+		return nil, e
+	}
+
+	return getThreadPage(ctx, result), nil
+}
+
+func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPageOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+
+	cxo := a.Session.GetCXO()
+
+	file, e := a.Session.GetInfo(ctx)
+	if e != nil {
+		return nil, e
+	}
+	in.UserPubKey = file.User.PublicKey
+	in.UserSecKey = file.User.SecretKey
+
+	i, e := file.FindMaster(in.GetBoardPK())
+	if e != nil {
+		// TODO: Via RPC.
+		return nil, e
+	}
+	in.BoardSecKey = file.Masters[i].SecKey
+
+	result, e := content.NewPost(ctx, cxo, in)
+	if e != nil {
+		return nil, e
+	}
+
+	return getThreadPage(ctx, result), nil
+}
+
+func (a *Access) DeletePost(ctx context.Context, in *object.PostIO) (*ThreadPageOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+
+	cxo := a.Session.GetCXO()
+
+	file, e := a.Session.GetInfo(ctx)
+	if e != nil {
+		return nil, e
+	}
+
+	i, e := file.FindMaster(in.GetBoardPK())
+	if e != nil {
+		// TODO: RPC.
+		return nil, e
+	}
+
+	in.BoardSecKey = file.Masters[i].SecKey
+
+	result, e := content.DeletePost(ctx, cxo, in)
+	if e != nil {
+		return nil, e
+	}
+
+	return getThreadPage(ctx, result), nil
 }

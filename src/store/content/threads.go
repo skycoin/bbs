@@ -2,14 +2,15 @@ package content
 
 import (
 	"context"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/verify"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"time"
-	"github.com/skycoin/bbs/src/misc/boo"
 )
 
-func GetThreadsResult(_ context.Context, cxo *state.CXO, in *object.BoardIO) (*Result, error) {
+// GetBoardPageResult gets the page of board of public key.
+func GetBoardPageResult(_ context.Context, cxo *state.CXO, in *object.BoardIO) (*Result, error) {
 	result := NewResult(cxo, in.GetPK()).
 		getBoardPage().
 		getBoard().
@@ -23,6 +24,7 @@ func GetThreadsResult(_ context.Context, cxo *state.CXO, in *object.BoardIO) (*R
 	return result, nil
 }
 
+// NewThread creates a new thread on board of specified public key.
 func NewThread(_ context.Context, cxo *state.CXO, in *object.NewThreadIO) (*Result, error) {
 	result := NewResult(cxo, in.GetBoardPK(), in.BoardSecKey).
 		getBoardPage().
@@ -32,8 +34,8 @@ func NewThread(_ context.Context, cxo *state.CXO, in *object.NewThreadIO) (*Resu
 
 	result.Thread = &object.Thread{
 		Post: object.Post{
-			Title: in.Name,
-			Body:  in.Desc,
+			Title: in.Title,
+			Body:  in.Body,
 		},
 	}
 
@@ -56,6 +58,7 @@ func NewThread(_ context.Context, cxo *state.CXO, in *object.NewThreadIO) (*Resu
 	return result, nil
 }
 
+// DeleteThread removes a thread of reference from board of public key.
 func DeleteThread(_ context.Context, cxo *state.CXO, in *object.ThreadIO) (*Result, error) {
 	result := NewResult(cxo, in.GetBoardPK(), in.BoardSecKey).
 		getBoardPage().
@@ -89,5 +92,6 @@ func DeleteThread(_ context.Context, cxo *state.CXO, in *object.ThreadIO) (*Resu
 		}
 	}
 	return nil, boo.Newf(boo.NotFound,
-		"thread of reference %s not found in board %s", in.ThreadRef, in.BoardPubKey)
+		"thread of reference %s not found in board %s",
+		in.ThreadRef, in.BoardPubKey)
 }

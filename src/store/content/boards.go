@@ -56,10 +56,6 @@ func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressI
 	result := NewResult(cxo, in.GetPK(), in.SecKey).
 		getBoardPage().getBoard()
 
-	//if e := result.Error(); e != nil {
-	//	return e
-	//}
-
 	for _, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {
 			return boo.Newf(boo.AlreadyExists,
@@ -77,13 +73,10 @@ func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressI
 	return nil
 }
 
+// DeleteSubmissionAddress removes a specified submission address from board.
 func DeleteSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressIO) error {
 	result := NewResult(cxo, in.GetPK(), in.SecKey).
 		getBoardPage().getBoard()
-
-	//if e := result.Error(); e != nil {
-	//	return e
-	//}
 
 	for i, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {

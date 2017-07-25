@@ -33,7 +33,7 @@ type ThreadPage struct {
 	R       cipher.SHA256        `json:"-" enc:"-"`
 	Thread  skyobject.Reference  `skyobject:"schema=Thread"`
 	Posts   skyobject.References `skyobject:"schema=Post"`
-	Deleted cipher.SHA256
+	Deleted []cipher.SHA256
 }
 
 type Thread struct {

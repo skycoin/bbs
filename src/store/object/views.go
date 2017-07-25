@@ -4,7 +4,6 @@ type BoardView struct {
 	*Board
 	PublicKey     string              `json:"public_key"`
 	ExternalRoots []*ExternalRootView `json:"external_roots,omitempty"`
-	Threads       []*ThreadView       `json:"threads,omitempty"`
 }
 
 type ExternalRootView struct {
@@ -18,11 +17,10 @@ type ThreadView struct {
 	AuthorRef   string       `json:"author_reference,omitempty"`
 	AuthorAlias string       `json:"author_alias,omitempty"`
 	Votes       *VoteSummary `json:"votes,omitempty"`
-	Posts       []*PostView  `json:"posts,omitempty"`
 }
 
 type PostView struct {
-	Post
+	*Post
 	Ref         string       `json:"reference"`
 	AuthorRef   string       `json:"author_reference,omitempty"`
 	AuthorAlias string       `json:"author_alias,omitempty"`

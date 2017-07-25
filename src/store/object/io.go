@@ -308,8 +308,8 @@ type NewThreadIO struct {
 	BoardSecKey cipher.SecKey
 	UserPubKey  cipher.PubKey
 	UserSecKey  cipher.SecKey
-	Name        string `json:"name"`
-	Desc        string `json:"description"`
+	Title       string `json:"title"`
+	Body        string `json:"body"`
 
 	boardPubKey cipher.PubKey
 }
@@ -319,10 +319,10 @@ func (io *NewThreadIO) Process() (e error) {
 	if e != nil {
 		return e
 	}
-	if e := CheckName(io.Name); e != nil {
+	if e := CheckName(io.Title); e != nil {
 		return e
 	}
-	if e := CheckDesc(io.Desc); e != nil {
+	if e := CheckDesc(io.Body); e != nil {
 		return e
 	}
 	return nil
@@ -330,4 +330,44 @@ func (io *NewThreadIO) Process() (e error) {
 
 func (io *NewThreadIO) GetBoardPK() cipher.PubKey {
 	return io.boardPubKey
+}
+
+type PostIO struct {
+	ThreadIO
+	PostRef string `json:"post_reference"`
+	postRef skyobject.Reference
+}
+
+func (io *PostIO) Process() (e error) {
+	if e = io.ThreadIO.Process(); e != nil {
+		return
+	}
+	if io.postRef, e = keys.GetReference(io.PostRef); e != nil {
+		return
+	}
+	return
+}
+
+func (io *PostIO) GetPostRef() skyobject.Reference {
+	return io.postRef
+}
+
+type NewPostIO struct {
+	NewThreadIO
+	ThreadRef string `json:"thread_reference"`
+	threadRef skyobject.Reference
+}
+
+func (io *NewPostIO) Process() (e error) {
+	if e = io.NewThreadIO.Process(); e != nil {
+		return
+	}
+	if io.threadRef, e = keys.GetReference(io.ThreadRef); e != nil {
+		return
+	}
+	return
+}
+
+func (io *NewPostIO) GetThreadRef() skyobject.Reference {
+	return io.threadRef
 }
