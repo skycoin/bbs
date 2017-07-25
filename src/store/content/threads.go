@@ -31,6 +31,7 @@ func NewThread(_ context.Context, cxo *state.CXO, in *object.NewThreadIO) (*Resu
 		getBoard().
 		getThreadPages().
 		getThreads()
+	defer cxo.Lock()()
 
 	result.Thread = &object.Thread{
 		Post: object.Post{
@@ -65,6 +66,7 @@ func DeleteThread(_ context.Context, cxo *state.CXO, in *object.ThreadIO) (*Resu
 		getBoard().
 		getThreadPages().
 		getThreads()
+	defer cxo.Lock()()
 
 	for i, tp := range result.ThreadPages {
 		if tp.Thread == in.GetThreadRef() {

@@ -55,6 +55,7 @@ func DeleteBoard(_ context.Context, cxo *state.CXO, in *object.BoardIO) error {
 func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressIO) error {
 	result := NewResult(cxo, in.GetPK(), in.SecKey).
 		getBoardPage().getBoard()
+	defer cxo.Lock()()
 
 	for _, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {
@@ -77,6 +78,7 @@ func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressI
 func DeleteSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressIO) error {
 	result := NewResult(cxo, in.GetPK(), in.SecKey).
 		getBoardPage().getBoard()
+	defer cxo.Lock()()
 
 	for i, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {

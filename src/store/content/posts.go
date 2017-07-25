@@ -33,6 +33,7 @@ func NewPost(_ context.Context, cxo *state.CXO, in *object.NewPostIO) (*Result, 
 		getThreadPage(in.GetThreadRef()).
 		getThread().
 		getPosts()
+	defer cxo.Lock()()
 
 	result.Post = &object.Post{
 		Title: in.Title,
@@ -64,16 +65,17 @@ func DeletePost(_ context.Context, cxo *state.CXO, in *object.PostIO) (*Result, 
 		getThreadPage(in.GetThreadRef()).
 		getThread().
 		getPosts()
+	defer cxo.Lock()()
 
-	for i, p := range result.ThreadPage.Posts {
-		if p == in.GetPostRef() {
+	for i, p := range result.Posts {
+		if toRef(p.R) == in.GetPostRef() {
 			result.ThreadPage.Posts = append(
 				result.ThreadPage.Posts[:i],
 				result.ThreadPage.Posts[i+1:]...,
 			)
 			result.ThreadPage.Deleted = append(
 				result.ThreadPage.Deleted,
-				toSHA256(p),
+				p.R,
 			)
 			result.Posts = append(
 				result.Posts[:i],

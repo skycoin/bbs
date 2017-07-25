@@ -99,7 +99,7 @@ func (c *CXO) Open(alias string, in *object.RetryIO) (*object.RetryIO, error) {
 	return failed, nil
 }
 
-func (c *CXO) lock() func() {
+func (c *CXO) Lock() func() {
 	c.mux.Lock()
 	if c.node != nil {
 		c.node.Container().LockGC()
@@ -116,7 +116,7 @@ func (c *CXO) lock() func() {
 // Initialize attempts to connect/subscribe to public keys/addresses provided.
 // Failed attempts are outputted.
 func (c *CXO) Initialize(in *object.RetryIO) *object.RetryIO {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return &object.RetryIO{}
 	}
@@ -196,7 +196,7 @@ func (c *CXO) Close() error {
 
 // GetRoot obtains a root.
 func (c *CXO) GetRoot(pk cipher.PubKey) (*node.Root, error) {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return nil, ErrCXONotOpened
 	}
@@ -205,7 +205,7 @@ func (c *CXO) GetRoot(pk cipher.PubKey) (*node.Root, error) {
 
 // NewRoot creates a new root.
 func (c *CXO) NewRoot(pk cipher.PubKey, sk cipher.SecKey, modifier RootModifier) error {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return ErrCXONotOpened
 	}
@@ -224,7 +224,7 @@ type RootModifier func(r *node.Root) error
 
 // GetMasterWalker obtains walker of root that node can edit.
 func (c *CXO) ModifyRoot(pk cipher.PubKey, sk cipher.SecKey, modifier RootModifier) error {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return ErrCXONotOpened
 	}
@@ -243,7 +243,7 @@ func (c *CXO) IsMaster() bool {
 
 // Feeds returns a list of all feeds we are subscribed to.
 func (c *CXO) Feeds() []cipher.PubKey {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return nil
 	}
@@ -252,7 +252,7 @@ func (c *CXO) Feeds() []cipher.PubKey {
 
 // GetAddress gets the address of the node.
 func (c *CXO) GetAddress() (string, error) {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return "", ErrCXONotOpened
 	}
@@ -261,7 +261,7 @@ func (c *CXO) GetAddress() (string, error) {
 
 // Subscribe subscribes to a cxo feed.
 func (c *CXO) Subscribe(address string, pk cipher.PubKey) error {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return ErrCXONotOpened
 	}
@@ -284,7 +284,7 @@ func (c *CXO) subscribe(address string, pk cipher.PubKey) error {
 
 // Unsubscribe unsubscribes from a cxo feed.
 func (c *CXO) Unsubscribe(address string, pk cipher.PubKey) error {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return ErrCXONotOpened
 	}
@@ -307,7 +307,7 @@ func (c *CXO) unsubscribe(address string, pk cipher.PubKey) error {
 
 // GetConnections gets connections.
 func (c *CXO) GetConnections() ([]string, error) {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return nil, ErrCXONotOpened
 	}
@@ -321,7 +321,7 @@ func (c *CXO) GetConnections() ([]string, error) {
 
 // Connect adds a connection.
 func (c *CXO) Connect(address string) error {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return ErrCXONotOpened
 	}
@@ -351,7 +351,7 @@ func (c *CXO) connect(address string) (*gnet.Conn, error) {
 
 // Disconnect removes a connection.
 func (c *CXO) Disconnect(address string) error {
-	defer c.lock()()
+	defer c.Lock()()
 	if c.node == nil {
 		return ErrCXONotOpened
 	}

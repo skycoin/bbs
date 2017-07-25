@@ -768,6 +768,7 @@ func (s *Session) processDeleteMaster(r *reqDeleteMaster) {
 			)
 			s.changes = true
 			r.out <- output{f: &(*s.user)}
+			return
 		}
 	}
 	r.out <- output{e: boo.Newf(boo.NotFound,
