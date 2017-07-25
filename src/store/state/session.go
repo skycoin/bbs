@@ -761,14 +761,18 @@ func (s *Session) processDeleteMaster(r *reqDeleteMaster) {
 	}
 	for i, sub := range s.user.Masters {
 		if sub.PubKey == r.in.GetPK() {
+			r.in.SecKey = sub.SecKey // Get secret key.
 			s.user.Masters = append(
 				s.user.Masters[:i],
 				s.user.Masters[i+1:]...,
 			)
 			s.changes = true
+			r.out <- output{f: &(*s.user)}
+			return
 		}
 	}
-	r.out <- output{f: &(*s.user)}
+	r.out <- output{e: boo.Newf(boo.NotFound,
+		"master board of public key %s not found", r.in.PubKey)}
 }
 
 // DeleteMaster removes a master subscription.
@@ -787,6 +791,3 @@ func (s *Session) DeleteMaster(ctx context.Context, in *object.BoardIO) (*UserFi
 // TODO:
 // - NewConnection
 // - DeleteConnection
-
-// - AddMasterSubmissionAddress
-// - RemoveMasterSubmissionAddress

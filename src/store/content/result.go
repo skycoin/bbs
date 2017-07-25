@@ -15,14 +15,24 @@ type Result struct {
 	root        *node.Root
 	BoardPage   *object.BoardPage
 	Board       *object.Board
+	ThreadPage  *object.ThreadPage
 	ThreadPages []*object.ThreadPage
+	Thread      *object.Thread
+	Threads     []*object.Thread
+	ThreadIndex int
+	Post        *object.Post
 	Posts       []*object.Post
+	PostIndex   int
 }
 
 func NewResult(cxo *state.CXO, pk cipher.PubKey, sk ...cipher.SecKey) *Result {
 	root, e := cxo.GetRoot(pk)
 	if e != nil {
-		return &Result{e: boo.WrapType(e, boo.NotFound,
+		return &Result{e: boo.WrapType(e, boo.Internal,
+			"failed to obtain board root")}
+	}
+	if root == nil {
+		return &Result{e: boo.New(boo.NotFound,
 			"this board is not yet downloaded or does not exist")}
 	}
 	if len(root.Refs()) != 3 {
@@ -32,11 +42,15 @@ func NewResult(cxo *state.CXO, pk cipher.PubKey, sk ...cipher.SecKey) *Result {
 	if len(sk) == 1 {
 		root.Edit(sk[0])
 	}
-	return &Result{root: root}
+	return &Result{root: root, ThreadIndex: -1, PostIndex: -1}
 }
 
 func (r *Result) Error() error {
 	return r.e
+}
+
+func (r *Result) GetPK() cipher.PubKey {
+	return r.root.Pub()
 }
 
 func (r *Result) getBoardPage() *Result {
@@ -63,6 +77,143 @@ func (r *Result) getBoard() *Result {
 	if e := r.deserialize(toRef(r.Board.R), r.Board); e != nil {
 		r.e = boo.Wrap(e, "invalid board")
 		return r
+	}
+	return r
+}
+
+func (r *Result) getThreadPage(tRef skyobject.Reference) *Result {
+	if r.e != nil {
+		return r
+	}
+	for i, tpRef := range r.BoardPage.ThreadPages {
+		var tp object.ThreadPage
+		if e := r.deserialize(tpRef, &tp); e != nil {
+			r.e = boo.WrapTypef(e, boo.InvalidRead,
+				"thread page %s of board %s is corrupt", tpRef.String(), r.Board.R.Hex())
+			return r
+		}
+		if tp.Thread == tRef {
+			r.ThreadIndex = i
+			r.ThreadPage = &tp
+			r.ThreadPage.R = toSHA256(tpRef)
+			return r
+		}
+	}
+	r.e = boo.Newf(boo.NotFound,
+		"thread of reference %s is not found under board %s", tRef.String(), r.Board.R.Hex())
+	return r
+}
+
+func (r *Result) getThread() *Result {
+	if r.e != nil {
+		return r
+	}
+	r.Thread = &object.Thread{
+		R: toSHA256(r.ThreadPage.Thread),
+	}
+	if e := r.deserialize(r.ThreadPage.Thread, r.Thread); e != nil {
+		r.e = boo.WrapTypef(e, boo.InvalidRead,
+			"thread object of reference %s is corrupt", r.Thread.R.Hex())
+		return r
+	}
+	return r
+}
+
+func (r *Result) getThreadPages() *Result {
+	if r.e != nil {
+		return r
+	}
+	refs := r.BoardPage.ThreadPages
+	r.ThreadPages = make([]*object.ThreadPage, len(refs))
+	for i, ref := range refs {
+		r.ThreadPages[i] = &object.ThreadPage{
+			R: toSHA256(ref),
+		}
+		if e := r.deserialize(ref, r.ThreadPages[i]); e != nil {
+			r.e = boo.WrapTypef(e, boo.InvalidRead,
+				"thread page %s of board %s is corrupt", ref.String(), r.Board.R.Hex())
+			return r
+		}
+	}
+	return r
+}
+
+func (r *Result) getThreads() *Result {
+	if r.e != nil {
+		return r
+	}
+	r.Threads = make([]*object.Thread, len(r.ThreadPages))
+	for i, tPage := range r.ThreadPages {
+		r.Threads[i] = &object.Thread{
+			R: toSHA256(tPage.Thread),
+		}
+		if e := r.deserialize(tPage.Thread, r.Threads[i]); e != nil {
+			r.e = boo.WrapTypef(e, boo.InvalidRead,
+				"thread %s of board %s is corrupt",
+				tPage.Thread.String(), r.Board.R.Hex())
+			return r
+		}
+	}
+	return r
+}
+
+func (r *Result) getPosts() *Result {
+	if r.e != nil {
+		return r
+	}
+	r.Posts = make([]*object.Post, len(r.ThreadPage.Posts))
+	for i, pRef := range r.ThreadPage.Posts {
+		r.Posts[i] = &object.Post{
+			R: toSHA256(pRef),
+		}
+		if e := r.deserialize(pRef, r.Posts[i]); e != nil {
+			r.e = boo.WrapTypef(e, boo.InvalidRead,
+				"post %s of thread %s of board %s is corrupt",
+				pRef.String(), r.Thread.R.Hex(), r.Board.R.Hex())
+			return r
+		}
+	}
+	return r
+}
+
+func (r *Result) savePost() *Result {
+	if r.e != nil {
+		return r
+	}
+	r.Post.R = toSHA256(r.root.Save(r.Post))
+	if r.PostIndex == -1 {
+		r.ThreadPage.Posts = append(
+			r.ThreadPage.Posts, toRef(r.Post.R))
+	} else {
+		r.ThreadPage.Posts[r.PostIndex] =
+			toRef(r.Post.R)
+	}
+	return r
+}
+
+func (r *Result) saveThread() *Result {
+	if r.e != nil {
+		return r
+	}
+	r.Thread.R = toSHA256(r.root.Save(r.Thread))
+	if r.ThreadPage == nil {
+		r.ThreadPage = new(object.ThreadPage)
+	}
+	r.ThreadPage.Thread = toRef(r.Thread.R)
+	return r
+}
+
+func (r *Result) saveThreadPage() *Result {
+	if r.e != nil {
+		return r
+	}
+	r.ThreadPage.R = toSHA256(r.root.Save(r.ThreadPage))
+	if r.ThreadIndex == -1 {
+		r.BoardPage.ThreadPages = append(
+			r.BoardPage.ThreadPages, toRef(r.ThreadPage.R))
+	} else {
+		r.BoardPage.ThreadPages[r.ThreadIndex] =
+			toRef(r.ThreadPage.R)
 	}
 	return r
 }

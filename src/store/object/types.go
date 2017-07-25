@@ -10,7 +10,7 @@ type BoardPage struct {
 	R           cipher.SHA256        `json:"-" enc:"-"`
 	Board       skyobject.Reference  `skyobject:"schema=Board"`
 	ThreadPages skyobject.References `skyobject:"schema=ThreadPage"`
-	Deleted     cipher.SHA256
+	Deleted     []cipher.SHA256
 }
 
 type Board struct {
@@ -33,13 +33,12 @@ type ThreadPage struct {
 	R       cipher.SHA256        `json:"-" enc:"-"`
 	Thread  skyobject.Reference  `skyobject:"schema=Thread"`
 	Posts   skyobject.References `skyobject:"schema=Post"`
-	Deleted cipher.SHA256
+	Deleted []cipher.SHA256
 }
 
 type Thread struct {
 	R cipher.SHA256 `json:"-" enc:"-"`
 	Post
-	MasterBoardRef skyobject.Reference `json:"-" skyobject:"schema=Board"`
 }
 
 type Post struct {

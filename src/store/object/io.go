@@ -1,18 +1,10 @@
 package object
 
 import (
-	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"strings"
-)
-
-var (
-	ErrInvalidSeed     = boo.New(boo.InvalidInput, "invalid seed provided")
-	ErrInvalidName     = boo.New(boo.InvalidInput, "invalid name provided")
-	ErrInvalidDesc     = boo.New(boo.InvalidInput, "invalid description provided")
-	ErrInvalidAlias    = boo.New(boo.InvalidInput, "invalid alias provided")
-	ErrInvalidPassword = boo.New(boo.InvalidInput, "invalid password provided")
 )
 
 // CheckSeed ensures validity of seed. TODO
@@ -280,4 +272,102 @@ func (io *NewBoardIO) GetPK() cipher.PubKey {
 
 func (io *NewBoardIO) GetSK() cipher.SecKey {
 	return io.secKey
+}
+
+type ThreadIO struct {
+	BoardPubKey string `json:"board_public_key"`
+	BoardSecKey cipher.SecKey
+	ThreadRef   string `json:"thread_reference"`
+
+	boardPubKey cipher.PubKey
+	threadRef   skyobject.Reference
+}
+
+func (io *ThreadIO) Process() (e error) {
+	io.boardPubKey, e = keys.GetPubKey(io.BoardPubKey)
+	if e != nil {
+		return
+	}
+	io.threadRef, e = keys.GetReference(io.ThreadRef)
+	if e != nil {
+		return
+	}
+	return
+}
+
+func (io *ThreadIO) GetBoardPK() cipher.PubKey {
+	return io.boardPubKey
+}
+
+func (io *ThreadIO) GetThreadRef() skyobject.Reference {
+	return io.threadRef
+}
+
+type NewThreadIO struct {
+	BoardPubKey string `json:"board_public_key"`
+	BoardSecKey cipher.SecKey
+	UserPubKey  cipher.PubKey
+	UserSecKey  cipher.SecKey
+	Title       string `json:"title"`
+	Body        string `json:"body"`
+
+	boardPubKey cipher.PubKey
+}
+
+func (io *NewThreadIO) Process() (e error) {
+	io.boardPubKey, e = keys.GetPubKey(io.BoardPubKey)
+	if e != nil {
+		return e
+	}
+	if e := CheckName(io.Title); e != nil {
+		return e
+	}
+	if e := CheckDesc(io.Body); e != nil {
+		return e
+	}
+	return nil
+}
+
+func (io *NewThreadIO) GetBoardPK() cipher.PubKey {
+	return io.boardPubKey
+}
+
+type PostIO struct {
+	ThreadIO
+	PostRef string `json:"post_reference"`
+	postRef skyobject.Reference
+}
+
+func (io *PostIO) Process() (e error) {
+	if e = io.ThreadIO.Process(); e != nil {
+		return
+	}
+	if io.postRef, e = keys.GetReference(io.PostRef); e != nil {
+		return
+	}
+	return
+}
+
+func (io *PostIO) GetPostRef() skyobject.Reference {
+	return io.postRef
+}
+
+type NewPostIO struct {
+	NewThreadIO
+	ThreadRef string `json:"thread_reference"`
+	threadRef skyobject.Reference
+}
+
+func (io *NewPostIO) Process() (e error) {
+	if e = io.NewThreadIO.Process(); e != nil {
+		return
+	}
+	if io.threadRef, e = keys.GetReference(io.ThreadRef); e != nil {
+		return
+	}
+	return
+}
+
+func (io *NewPostIO) GetThreadRef() skyobject.Reference {
+	return io.threadRef
 }

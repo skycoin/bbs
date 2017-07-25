@@ -39,7 +39,7 @@
 								},
 								{
 									"key": "name",
-									"value": "Test Board",
+									"value": "Test Board A",
 									"description": "Name of the board.",
 									"type": "text"
 								},
@@ -139,6 +139,27 @@
 							]
 						},
 						"description": "Removes a submission address from a board which the user owns."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Board Page",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/boards/page/get",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to obtain board page.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Obtains a view of a board and it's threads."
 					},
 					"response": []
 				}
@@ -391,6 +412,99 @@
 			]
 		},
 		{
+			"name": "Threads",
+			"description": "",
+			"item": [
+				{
+					"name": "New Thread",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/threads/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to create thread on.",
+									"type": "text"
+								},
+								{
+									"key": "title",
+									"value": "Test Thread 10",
+									"description": "Title of thread to create.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "What what what!!!!?",
+									"description": "Body of thread to create.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Creates a new thread on specified board. If user does not own the board, it communicates via RPC interface to node that does."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Thread",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/threads/delete",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to delete thread from.",
+									"type": "text"
+								},
+								{
+									"key": "thread_reference",
+									"value": "411c86d279e737a763758dacaa6d9649efba4c2b5a3456c7b41d2b744e571cad",
+									"description": "Reference of thread to delete.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Removes a thread from specified board."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Thread Page",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/threads/page/get",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board.",
+									"type": "text"
+								},
+								{
+									"key": "thread_reference",
+									"value": "f0e64fb5bcfc8fd02598eee292d34fa51b41806edb1da4009b1a5cd04554aa12",
+									"description": "Reference of thread to obtain.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Obtains a view of a thread; contains board, thread information, and lists posts of the thread."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Tools",
 			"description": "",
 			"item": [
@@ -423,6 +537,84 @@
 							]
 						},
 						"description": "Generates a public/private key pair from seed (if provided). Otherwise a random key pair will be generated."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Posts",
+			"description": "",
+			"item": [
+				{
+					"name": "New Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/posts/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to submit post.",
+									"type": "text"
+								},
+								{
+									"key": "thread_reference",
+									"value": "8ee1f899d683f361571c59fb4bbba14e492f3cf1279a6f9cfb1ba6c6e75e74a8",
+									"description": "Thread reference to submit post.",
+									"type": "text"
+								},
+								{
+									"key": "title",
+									"value": "Hello 3",
+									"description": "Title of post.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is just a greeting.",
+									"description": "Body of post.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Creates a new post on thread of board."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/posts/delete",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board.",
+									"type": "text"
+								},
+								{
+									"key": "thread_reference",
+									"value": "ea919029b80523b0c56624b788175b8026a9734edf58a0bd761491f96107f2ee",
+									"description": "Reference of thread.",
+									"type": "text"
+								},
+								{
+									"key": "post_reference",
+									"value": "98a4035012bda3949829bd8b6a0c62bd8addae803e3ca21504801817cb1f2051",
+									"description": "Reference of post.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Deletes a post of reference from specified thread of reference and board of public key."
 					},
 					"response": []
 				}
