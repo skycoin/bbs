@@ -1,9 +1,11 @@
 package object
 
 import (
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"strconv"
 	"strings"
 )
 
@@ -35,6 +37,28 @@ func CheckPassword(password string) error {
 // CheckAddress ensures validity of address. TODO
 func CheckAddress(address string) error {
 	return nil
+}
+
+// CheckMode check's the vote's mode.
+func CheckMode(mode int8) error {
+	switch mode {
+	case -1, 0, +1:
+		return nil
+	default:
+		return boo.Newf(boo.InvalidInput,
+			"invalid vote mode of %d provided", mode)
+	}
+}
+
+// CheckTag check's the vote's tag.
+func CheckTag(tag []byte) error {
+	switch string(tag) {
+	case "", "spam":
+		return nil
+	default:
+		return boo.Newf(boo.InvalidInput,
+			"invalid vote tag of %s provided", string(tag))
+	}
 }
 
 // RetryIO represents io required on connection/subscription retries.
@@ -331,6 +355,51 @@ func (io *NewThreadIO) Process() (e error) {
 func (io *NewThreadIO) GetBoardPK() cipher.PubKey {
 	return io.boardPubKey
 }
+
+type VoteThreadIO struct {
+	BoardPubKey string `json:"board_public_key"`
+	BoardSecKey cipher.SecKey
+	ThreadRef   string `json:"thread_reference"`
+	UserPubKey  cipher.PubKey
+	UserSecKey  cipher.SecKey
+	Mode        string `json:"mode"`
+	Tag         string `json:"tag"`
+
+	boardPubKey cipher.PubKey
+	threadRef   skyobject.Reference
+	mode        int8
+	tag         []byte
+}
+
+func (io *VoteThreadIO) Process() (e error) {
+	io.boardPubKey, e = keys.GetPubKey(io.BoardPubKey)
+	if e != nil {
+		return
+	}
+	io.threadRef, e = keys.GetReference(io.ThreadRef)
+	if e != nil {
+		return
+	}
+	var mode int
+	mode, e = strconv.Atoi(io.Mode)
+	if e != nil {
+		return
+	}
+	io.mode = int8(mode)
+	if e = CheckMode(io.mode); e != nil {
+		return
+	}
+	io.tag = []byte(io.Tag)
+	if e = CheckTag(io.tag); e != nil {
+		return
+	}
+	return
+}
+
+func (io *VoteThreadIO) GetBoardPK() cipher.PubKey         { return io.boardPubKey }
+func (io *VoteThreadIO) GetThreadRef() skyobject.Reference { return io.threadRef }
+func (io *VoteThreadIO) GetMode() int8                     { return io.mode }
+func (io *VoteThreadIO) GetTag() []byte                    { return io.tag }
 
 type PostIO struct {
 	ThreadIO

@@ -13,7 +13,8 @@ import (
 // GetBoardResult get's the specified board of public key.
 func GetBoardResult(_ context.Context, cxo *state.CXO, pk cipher.PubKey) (*Result, error) {
 	result := NewResult(cxo, pk).
-		getBoardPage().getBoard()
+		getPages(true, false, false).
+		getBoard()
 
 	if e := result.Error(); e != nil {
 		return nil, e
@@ -31,7 +32,7 @@ func NewBoard(_ context.Context, cxo *state.CXO, in *object.NewBoardIO) error {
 					Desc:                in.Desc,
 					Created:             time.Now().UnixNano(),
 					SubmissionAddresses: in.GetSubmissionAddresses(),
-					Meta:                []byte("{}"),
+					Meta:                []byte("{}"), // TODO
 				}),
 			}),
 			r.MustDynamic("ThreadVotesPage", object.ThreadVotesPage{}),
@@ -54,7 +55,8 @@ func DeleteBoard(_ context.Context, cxo *state.CXO, in *object.BoardIO) error {
 // NewSubmissionAddress adds a new submission address to board.
 func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressIO) error {
 	result := NewResult(cxo, in.GetPK(), in.SecKey).
-		getBoardPage().getBoard()
+		getPages(true, false, false).
+		getBoard()
 	defer cxo.Lock()()
 
 	for _, address := range result.Board.SubmissionAddresses {
@@ -66,7 +68,7 @@ func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressI
 	result.Board.SubmissionAddresses = append(
 		result.Board.SubmissionAddresses, in.Address)
 
-	result.saveBoard().saveBoardPage()
+	result.saveBoard().savePages(true, false, false)
 
 	if e := result.Error(); e != nil {
 		return boo.WrapType(e, boo.NotAuthorised, "secret key invalid")
@@ -77,7 +79,8 @@ func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressI
 // DeleteSubmissionAddress removes a specified submission address from board.
 func DeleteSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressIO) error {
 	result := NewResult(cxo, in.GetPK(), in.SecKey).
-		getBoardPage().getBoard()
+		getPages(true, false, false).
+		getBoard()
 	defer cxo.Lock()()
 
 	for i, address := range result.Board.SubmissionAddresses {
@@ -87,7 +90,7 @@ func DeleteSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.Addre
 				result.Board.SubmissionAddresses[i+1:]...,
 			)
 
-			result.saveBoard().saveBoardPage()
+			result.saveBoard().savePages(true, false, false)
 
 			if e := result.Error(); e != nil {
 				return boo.WrapType(e, boo.NotAuthorised, "secret key invalid")

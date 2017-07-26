@@ -10,7 +10,6 @@ type BoardPage struct {
 	R           cipher.SHA256        `json:"-" enc:"-"`
 	Board       skyobject.Reference  `skyobject:"schema=Board"`
 	ThreadPages skyobject.References `skyobject:"schema=ThreadPage"`
-	Deleted     []cipher.SHA256
 }
 
 type Board struct {
@@ -33,7 +32,6 @@ type ThreadPage struct {
 	R       cipher.SHA256        `json:"-" enc:"-"`
 	Thread  skyobject.Reference  `skyobject:"schema=Thread"`
 	Posts   skyobject.References `skyobject:"schema=Post"`
-	Deleted []cipher.SHA256
 }
 
 type Thread struct {
@@ -56,21 +54,24 @@ func (p Post) Verify() error { return verify.Check(&p) }
 
 // Vote represents a post by a user.
 type Vote struct {
-	R    cipher.SHA256 `json:"-" enc:"-"`
-	User cipher.PubKey // User who voted.
-	Mode int8          // +1 is up, -1 is down.
-	Tag  []byte        // What's this?
-	Sig  cipher.Sig    // Signature.
+	R       cipher.SHA256 `json:"-" enc:"-"`
+	User    cipher.PubKey `json:"-" verify:"pk"` // User who voted.
+	Mode    int8          `json:"-"`             // +1 is up, -1 is down.
+	Tag     []byte        `json:"-"`             // What's this?
+	Created int64         `json:"created"`
+	Sig     cipher.Sig    `json:"-" verify:"sig"` // Signature.
 }
 
 type ThreadVotesPage struct {
-	R     cipher.SHA256 `json:"-" enc:"-"`
-	Store []VotesPage
+	R       cipher.SHA256 `json:"-" enc:"-"`
+	Store   []VotesPage
+	Deleted []cipher.SHA256
 }
 
 type PostVotesPage struct {
-	R     cipher.SHA256 `json:"-" enc:"-"`
-	Store []VotesPage
+	R       cipher.SHA256 `json:"-" enc:"-"`
+	Store   []VotesPage
+	Deleted []cipher.SHA256
 }
 
 type VotesPage struct {
