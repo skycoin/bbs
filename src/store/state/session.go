@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"github.com/skycoin/skycoin/src/util/file"
@@ -60,6 +61,7 @@ type Session struct {
 	retries      chan *object.RetryIO // Channel for retrying failed subscriptions/connections.
 	clearRetries chan chan struct{}   // Channel for clearing retry queue (i.e. logout).
 	requests     chan interface{}     // Channel for user requests.
+	newRoots     chan *skyobject.Root // Channel for processing new roots.
 	quit         chan struct{}        // Channel for quitting Session.
 	wg           sync.WaitGroup
 }
@@ -74,6 +76,7 @@ func NewSession(config *SessionConfig) (*Session, error) {
 		retries:      make(chan *object.RetryIO, 5),
 		clearRetries: make(chan chan struct{}),
 		requests:     make(chan interface{}, 5),
+		newRoots:     make(chan *skyobject.Root, 20),
 		quit:         make(chan struct{}),
 	}
 	if e := os.MkdirAll(s.folderPath(), os.FileMode(0700)); e != nil {
@@ -176,6 +179,28 @@ func (s *Session) retryLoop() {
 	}
 }
 
+func (s *Session) compilerLoop() {
+	s.wg.Add(1)
+	defer s.wg.Done()
+
+	for {
+		select {
+		case root := <-s.newRoots:
+			for len(s.newRoots) > 1 {
+				s.l.Printf("newRoots: Discarded root: %s",
+					root.Pub().Hex())
+				root = <-s.newRoots
+			}
+
+			s.l.Printf("newRoots: Root to process: %s",
+				root.Pub().Hex())
+
+		case <-s.quit:
+			return
+		}
+	}
+}
+
 /*
 	<<< TRIGGERS : SAVE >>>
 */
@@ -198,6 +223,14 @@ func (s *Session) processSave() {
 		s.l.Printf("Error: %v", e)
 		return
 	}
+}
+
+/*
+	<<< TRIGGERS : COMPILE STATE >>>
+*/
+
+func (s *Session) processNewRoot(root *node.Root) {
+	s.newRoots <- root.Root
 }
 
 /*

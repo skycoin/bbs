@@ -8,21 +8,30 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
+	"sync"
 )
 
 type Result struct {
-	e           error
-	root        *node.Root
-	BoardPage   *object.BoardPage
-	Board       *object.Board
-	ThreadPage  *object.ThreadPage
-	ThreadPages []*object.ThreadPage
-	Thread      *object.Thread
-	Threads     []*object.Thread
-	ThreadIndex int
-	Post        *object.Post
-	Posts       []*object.Post
-	PostIndex   int
+	e                    error
+	root                 *node.Root
+	BoardPage            *object.BoardPage
+	Board                *object.Board
+	ThreadPage           *object.ThreadPage
+	ThreadPages          []*object.ThreadPage
+	Thread               *object.Thread
+	Threads              []*object.Thread
+	ThreadVotesPage      *object.ThreadVotesPage
+	ThreadVotesPageIndex int
+	ThreadVotes          []*object.Vote
+	ThreadIndex          int
+	ThreadRefMap         map[cipher.SHA256]int
+	Post                 *object.Post
+	Posts                []*object.Post
+	PostVotesPage        *object.PostVotesPage
+	PostVotesPageIndex   int
+	PostVotes            []*object.Vote
+	PostIndex            int
+	PostRefMap           map[cipher.SHA256]int
 }
 
 func NewResult(cxo *state.CXO, pk cipher.PubKey, sk ...cipher.SecKey) *Result {
@@ -42,7 +51,13 @@ func NewResult(cxo *state.CXO, pk cipher.PubKey, sk ...cipher.SecKey) *Result {
 	if len(sk) == 1 {
 		root.Edit(sk[0])
 	}
-	return &Result{root: root, ThreadIndex: -1, PostIndex: -1}
+	return &Result{
+		root:                 root,
+		ThreadIndex:          -1,
+		PostIndex:            -1,
+		ThreadVotesPageIndex: -1,
+		PostVotesPageIndex:   -1,
+	}
 }
 
 func (r *Result) Error() error {
@@ -53,17 +68,55 @@ func (r *Result) GetPK() cipher.PubKey {
 	return r.root.Pub()
 }
 
-func (r *Result) getBoardPage() *Result {
+func (r *Result) getPages(b, t, p bool) *Result {
 	if r.e != nil {
 		return r
 	}
-	r.BoardPage = &object.BoardPage{
-		R: toSHA256(r.root.Refs()[0].Object),
+	var wg sync.WaitGroup
+	if b {
+		r.BoardPage = &object.BoardPage{
+			R: toSHA256(r.root.Refs()[0].Object),
+		}
+		if e := r.deserialize(toRef(r.BoardPage.R), r.BoardPage); e != nil {
+			r.e = boo.WrapType(e, boo.InvalidRead, "invalid board page")
+			return r
+		}
 	}
-	if e := r.deserialize(toRef(r.BoardPage.R), r.BoardPage); e != nil {
-		r.e = boo.Wrap(e, "invalid board page")
-		return r
+	if t {
+		r.ThreadVotesPage = &object.ThreadVotesPage{
+			R: toSHA256(r.root.Refs()[1].Object),
+		}
+		if e := r.deserialize(toRef(r.ThreadVotesPage.R), r.ThreadVotesPage); e != nil {
+			r.e = boo.WrapType(e, boo.InvalidRead, "invalid thread votes page")
+			return r
+		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r.ThreadRefMap = make(map[cipher.SHA256]int)
+			for i, tvp := range r.ThreadVotesPage.Store {
+				r.ThreadRefMap[tvp.Ref] = i
+			}
+		}()
 	}
+	if p {
+		r.PostVotesPage = &object.PostVotesPage{
+			R: toSHA256(r.root.Refs()[2].Object),
+		}
+		if e := r.deserialize(toRef(r.PostVotesPage.R), r.PostVotesPage); e != nil {
+			r.e = boo.WrapType(e, boo.InvalidRead, "invalid post votes page")
+			return r
+		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r.PostRefMap = make(map[cipher.SHA256]int)
+			for i, pvp := range r.PostVotesPage.Store {
+				r.PostRefMap[pvp.Ref] = i
+			}
+		}()
+	}
+	wg.Wait()
 	return r
 }
 
@@ -181,6 +234,17 @@ func (r *Result) savePost() *Result {
 		return r
 	}
 	r.Post.R = toSHA256(r.root.Save(r.Post))
+	if _, has := r.PostRefMap[r.Post.R]; has {
+		r.e = boo.Newf(boo.AlreadyExists,
+			"this exact post of reference %s already exists in board %s",
+			r.Post.R.Hex(), r.root.Pub().Hex())
+		return r
+	} else {
+		r.PostVotesPage.Store = append(
+			r.PostVotesPage.Store,
+			object.VotesPage{Ref: r.Post.R},
+		)
+	}
 	if r.PostIndex == -1 {
 		r.ThreadPage.Posts = append(
 			r.ThreadPage.Posts, toRef(r.Post.R))
@@ -196,6 +260,17 @@ func (r *Result) saveThread() *Result {
 		return r
 	}
 	r.Thread.R = toSHA256(r.root.Save(r.Thread))
+	if _, has := r.ThreadRefMap[r.Thread.R]; has {
+		r.e = boo.Newf(boo.AlreadyExists,
+			"this exact thread of reference %s already exists in board %s",
+			r.Thread.R.Hex(), r.root.Pub().Hex())
+		return r
+	} else {
+		r.ThreadVotesPage.Store = append(
+			r.ThreadVotesPage.Store,
+			object.VotesPage{Ref: r.Thread.R},
+		)
+	}
 	if r.ThreadPage == nil {
 		r.ThreadPage = new(object.ThreadPage)
 	}
@@ -227,16 +302,115 @@ func (r *Result) saveBoard() *Result {
 	return r
 }
 
-func (r *Result) saveBoardPage() *Result {
+func (r *Result) savePages(b, t, p bool) *Result {
 	if r.e != nil {
 		return r
 	}
-	r.BoardPage.R = toSHA256(r.root.Save(r.BoardPage))
 	refs := r.root.Refs()
-	refs[0].Object = toRef(r.BoardPage.R)
+	if b {
+		r.BoardPage.R = toSHA256(r.root.Save(r.BoardPage))
+		refs[0].Object = toRef(r.BoardPage.R)
+	}
+	if t {
+		r.ThreadVotesPage.R = toSHA256(r.root.Save(r.ThreadVotesPage))
+		refs[1].Object = toRef(r.ThreadVotesPage.R)
+	}
+	if p {
+		r.PostVotesPage.R = toSHA256(r.root.Save(r.PostVotesPage))
+		refs[2].Object = toRef(r.PostVotesPage.R)
+	}
 	if _, e := r.root.Replace(refs); e != nil {
 		r.e = e
 	}
+	return r
+}
+
+func (r *Result) deleteThreadVote(tRef skyobject.Reference) *Result {
+	if r.e != nil {
+		return r
+	}
+	di := r.ThreadRefMap[toSHA256(tRef)]
+	r.ThreadVotesPage.Store = append(
+		r.ThreadVotesPage.Store[:di],
+		r.ThreadVotesPage.Store[di+1:]...,
+	)
+	r.ThreadVotesPage.Deleted = append(
+		r.ThreadVotesPage.Deleted,
+		toSHA256(tRef),
+	)
+	return r
+}
+
+func (r *Result) deletePostVote(pRef skyobject.Reference) *Result {
+	if r.e != nil {
+		return r
+	}
+	di := r.PostRefMap[toSHA256(pRef)]
+	r.PostVotesPage.Store = append(
+		r.PostVotesPage.Store[:di],
+		r.PostVotesPage.Store[di+1:]...,
+	)
+	r.PostVotesPage.Deleted = append(
+		r.PostVotesPage.Deleted,
+		toSHA256(pRef),
+	)
+	return r
+}
+
+func (r *Result) deletePostVotes(pRefs skyobject.References) *Result {
+	if r.e != nil {
+		return r
+	}
+	for _, pRef := range pRefs {
+		di := r.PostRefMap[toSHA256(pRef)]
+		r.PostVotesPage.Store = append(
+			[]object.VotesPage{{}},
+			append(
+				r.PostVotesPage.Store[:di],
+				r.PostVotesPage.Store[di+1:]...,
+			)...,
+		)
+		r.PostVotesPage.Deleted = append(
+			r.PostVotesPage.Deleted,
+			toSHA256(pRef),
+		)
+	}
+	r.PostVotesPage.Store =
+		r.PostVotesPage.Store[len(pRefs):]
+	return r
+}
+
+func (r *Result) deleteThread(i int) *Result {
+	if r.e != nil {
+		return r
+	}
+	r.BoardPage.ThreadPages = append(
+		r.BoardPage.ThreadPages[:i],
+		r.BoardPage.ThreadPages[i+1:]...,
+	)
+	r.ThreadPages = append(
+		r.ThreadPages[:i],
+		r.ThreadPages[i+1:]...,
+	)
+	r.Threads = append(
+		r.Threads[:i],
+		r.Threads[i+1:]...,
+	)
+	return r
+}
+
+func (r *Result) deletePost(i int) *Result {
+	if r.e != nil {
+		return r
+	}
+	r.ThreadPage.Posts = append(
+		r.ThreadPage.Posts[:i],
+		r.ThreadPage.Posts[i+1:]...,
+	)
+	r.Posts = append(
+		r.Posts[:i],
+		r.Posts[i+1:]...,
+	)
 	return r
 }
 
