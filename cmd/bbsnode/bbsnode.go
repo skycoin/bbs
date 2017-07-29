@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/skycoin/bbs/src/http"
 	"github.com/skycoin/bbs/src/store"
+	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/file"
 	"gopkg.in/urfave/cli.v1"
@@ -24,11 +25,13 @@ const (
 	defaultCXOROCPort      = 8997
 	defaultSubPort         = 6421
 	defaultHTTPPort        = 7410
+
 )
 
 var (
 	devMode  = false
 	testMode = false
+	compilerWorkers = 5
 )
 
 // Config represents configuration for node.
@@ -117,15 +120,21 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		quit := CatchInterrupt()
 		defer log.Println("Goodbye.")
 
-		session, e := state.NewSession(&state.SessionConfig{
-			Master:       &c.Master,
-			TestMode:     &testMode,
-			MemoryMode:   &c.Memory,
-			ConfigDir:    &c.ConfigDir,
-			CXOPort:      &c.CXOPort,
-			CXORPCEnable: &c.CXORPC,
-			CXORPCPort:   &c.CXORPCPort,
-		})
+		session, e := session.NewManager(
+			&session.ManagerConfig{
+				Master:       &c.Master,
+				TestMode:     &testMode,
+				MemoryMode:   &c.Memory,
+				ConfigDir:    &c.ConfigDir,
+				CXOPort:      &c.CXOPort,
+				CXORPCEnable: &c.CXORPC,
+				CXORPCPort:   &c.CXORPCPort,
+			},
+			&state.CompilerConfig{
+				Workers: &compilerWorkers,
+			},
+		)
+
 		CatchError(e, "failed to create session manager")
 		defer session.Close()
 

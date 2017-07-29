@@ -1,4 +1,4 @@
-package state
+package session
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
@@ -31,7 +31,7 @@ var (
 // CXO updates events from cxo.
 type CXO struct {
 	mux  sync.Mutex
-	c    *SessionConfig
+	c    *ManagerConfig
 	l    *log.Logger
 	node *node.Node
 
@@ -39,12 +39,16 @@ type CXO struct {
 }
 
 // NewCXO creates a new CXO.
-func NewCXO(config *SessionConfig, updater func(root *node.Root)) *CXO {
+func NewCXO(config *ManagerConfig) *CXO {
 	return &CXO{
 		c:       config,
 		l:       inform.NewLogger(true, os.Stdout, cxoLogPrefix),
-		updater: updater,
+		updater: func(*node.Root) {},
 	}
+}
+
+func (c *CXO) SetUpdater(updater func(root *node.Root)) {
+	c.updater = updater
 }
 
 // Sets up CXO node.
@@ -195,45 +199,36 @@ func (c *CXO) Close() error {
 }
 
 // GetRoot obtains a root.
-func (c *CXO) GetRoot(pk cipher.PubKey) (*node.Root, error) {
-	defer c.Lock()()
+func (c *CXO) GetRoot(pk cipher.PubKey, sk ...cipher.SecKey) (*node.Root, error) {
+	//defer c.Lock()()
 	if c.node == nil {
 		return nil, ErrCXONotOpened
 	}
-	return c.node.Container().LastFullRoot(pk), nil
+	var root *node.Root
+	if len(sk) == 1 {
+		root = c.node.Container().LastRootSk(pk, sk[0])
+	} else {
+		root = c.node.Container().LastFullRoot(pk)
+	}
+	if root == nil {
+		return nil, boo.New(boo.NotFound,
+			"the root is not yet downloaded or does not exist")
+	} else {
+		return root, nil
+	}
 }
 
 // NewRoot creates a new root.
-func (c *CXO) NewRoot(pk cipher.PubKey, sk cipher.SecKey, modifier RootModifier) error {
-	defer c.Lock()()
+func (c *CXO) NewRoot(pk cipher.PubKey, sk cipher.SecKey) (*node.Root, error) {
+	//defer c.Lock()()
 	if c.node == nil {
-		return ErrCXONotOpened
+		return nil, ErrCXONotOpened
 	}
 	root, e := c.node.Container().NewRoot(pk, sk)
 	if e != nil {
-		return boo.WrapType(e, boo.Internal, "failed to create root")
+		return nil, boo.WrapType(e, boo.Internal, "failed to create root")
 	}
-	if e := modifier(root); e != nil {
-		return e
-	}
-	return c.subscribe("", pk)
-}
-
-// RootModifier modifies the root.
-type RootModifier func(r *node.Root) error
-
-// GetMasterWalker obtains walker of root that node can edit.
-func (c *CXO) ModifyRoot(pk cipher.PubKey, sk cipher.SecKey, modifier RootModifier) error {
-	defer c.Lock()()
-	if c.node == nil {
-		return ErrCXONotOpened
-	}
-	root := c.node.Container().LastRootSk(pk, sk)
-	if root == nil {
-		return boo.Newf(boo.NotFound,
-			"board %s is either not downloaded, does not exist, or is deleted", pk.Hex())
-	}
-	return modifier(root)
+	return root, c.subscribe("", pk)
 }
 
 // IsMaster returns whether master or not.

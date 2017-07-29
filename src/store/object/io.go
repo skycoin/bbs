@@ -440,3 +440,48 @@ func (io *NewPostIO) Process() (e error) {
 func (io *NewPostIO) GetThreadRef() skyobject.Reference {
 	return io.threadRef
 }
+
+type VotePostIO struct {
+	BoardPubKey string `json:"board_public_key"`
+	BoardSecKey cipher.SecKey
+	PostRef     string `json:"post_reference"`
+	UserPubKey  cipher.PubKey
+	UserSecKey  cipher.SecKey
+	Mode        string `json:"mode"`
+	Tag         string `json:"tag"`
+
+	boardPubKey cipher.PubKey
+	postRef     skyobject.Reference
+	mode        int8
+	tag         []byte
+}
+
+func (io *VotePostIO) Process() (e error) {
+	io.boardPubKey, e = keys.GetPubKey(io.BoardPubKey)
+	if e != nil {
+		return
+	}
+	io.postRef, e = keys.GetReference(io.PostRef)
+	if e != nil {
+		return
+	}
+	var mode int
+	mode, e = strconv.Atoi(io.Mode)
+	if e != nil {
+		return
+	}
+	io.mode = int8(mode)
+	if e = CheckMode(io.mode); e != nil {
+		return
+	}
+	io.tag = []byte(io.Tag)
+	if e = CheckTag(io.tag); e != nil {
+		return
+	}
+	return
+}
+
+func (io *VotePostIO) GetBoardPK() cipher.PubKey       { return io.boardPubKey }
+func (io *VotePostIO) GetPostRef() skyobject.Reference { return io.postRef }
+func (io *VotePostIO) GetMode() int8                   { return io.mode }
+func (io *VotePostIO) GetTag() []byte                  { return io.tag }

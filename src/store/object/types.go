@@ -29,9 +29,9 @@ type ExternalRoot struct {
 }
 
 type ThreadPage struct {
-	R       cipher.SHA256        `json:"-" enc:"-"`
-	Thread  skyobject.Reference  `skyobject:"schema=Thread"`
-	Posts   skyobject.References `skyobject:"schema=Post"`
+	R      cipher.SHA256        `json:"-" enc:"-"`
+	Thread skyobject.Reference  `skyobject:"schema=Thread"`
+	Posts  skyobject.References `skyobject:"schema=Post"`
 }
 
 type Thread struct {
@@ -61,6 +61,8 @@ type Vote struct {
 	Created int64         `json:"created"`
 	Sig     cipher.Sig    `json:"-" verify:"sig"` // Signature.
 }
+
+func (v Vote) Verify() error { return verify.Check(&v) }
 
 type ThreadVotesPage struct {
 	R       cipher.SHA256 `json:"-" enc:"-"`

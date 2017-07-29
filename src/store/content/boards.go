@@ -3,19 +3,18 @@ package content
 import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/verify"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/cxo/node"
-	"github.com/skycoin/skycoin/src/cipher"
+	"sync"
 	"time"
 )
 
 // GetBoardResult get's the specified board of public key.
-func GetBoardResult(_ context.Context, cxo *state.CXO, pk cipher.PubKey) (*Result, error) {
-	result := NewResult(cxo, pk).
-		getPages(true, false, false).
-		getBoard()
-
+func GetBoardResult(_ context.Context, root *node.Root) (*Result, error) {
+	result := NewResult(root).
+		GetPages(true, false, false).
+		GetBoard()
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
@@ -23,42 +22,37 @@ func GetBoardResult(_ context.Context, cxo *state.CXO, pk cipher.PubKey) (*Resul
 }
 
 // NewBoard creates a new board and returns an error on failure.
-func NewBoard(_ context.Context, cxo *state.CXO, in *object.NewBoardIO) error {
-	e := cxo.NewRoot(in.GetPK(), in.GetSK(), func(r *node.Root) error {
-		_, e := r.Append(
-			r.MustDynamic("BoardPage", object.BoardPage{
-				Board: r.Save(object.Board{
-					Name:                in.Name,
-					Desc:                in.Desc,
-					Created:             time.Now().UnixNano(),
-					SubmissionAddresses: in.GetSubmissionAddresses(),
-					Meta:                []byte("{}"), // TODO
-				}),
+func NewBoard(_ context.Context, root *node.Root, in *object.NewBoardIO) error {
+	_, e := root.Append(
+		root.MustDynamic("BoardPage", object.BoardPage{
+			Board: root.Save(object.Board{
+				Name:                in.Name,
+				Desc:                in.Desc,
+				Created:             time.Now().UnixNano(),
+				SubmissionAddresses: in.GetSubmissionAddresses(),
+				Meta:                []byte("{}"), // TODO
 			}),
-			r.MustDynamic("ThreadVotesPage", object.ThreadVotesPage{}),
-			r.MustDynamic("PostVotesPage", object.PostVotesPage{}),
-		)
-		return e
-	})
+		}),
+		root.MustDynamic("ThreadVotesPage", object.ThreadVotesPage{}),
+		root.MustDynamic("PostVotesPage", object.PostVotesPage{}),
+	)
 	return boo.WrapType(e, boo.Internal, "failed to create board")
 }
 
 // DeleteBoard deletes a board.
-func DeleteBoard(_ context.Context, cxo *state.CXO, in *object.BoardIO) error {
-	e := cxo.ModifyRoot(in.GetPK(), in.GetSK(), func(r *node.Root) error {
-		_, e := r.Replace(nil)
-		return e
-	})
+func DeleteBoard(_ context.Context, root *node.Root, _ *object.BoardIO) error {
+	_, e := root.Replace(nil)
 	return boo.WrapType(e, boo.Internal, "failed on replacing root references")
 }
 
 // NewSubmissionAddress adds a new submission address to board.
-func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressIO) error {
-	result := NewResult(cxo, in.GetPK(), in.SecKey).
-		getPages(true, false, false).
-		getBoard()
-	defer cxo.Lock()()
-
+func NewSubmissionAddress(_ context.Context, root *node.Root, in *object.AddressIO) error {
+	result := NewResult(root).
+		GetPages(true, false, false).
+		GetBoard()
+	if e := result.Error(); e != nil {
+		return e
+	}
 	for _, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {
 			return boo.Newf(boo.AlreadyExists,
@@ -77,21 +71,20 @@ func NewSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressI
 }
 
 // DeleteSubmissionAddress removes a specified submission address from board.
-func DeleteSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.AddressIO) error {
-	result := NewResult(cxo, in.GetPK(), in.SecKey).
-		getPages(true, false, false).
-		getBoard()
-	defer cxo.Lock()()
-
+func DeleteSubmissionAddress(_ context.Context, root *node.Root, in *object.AddressIO) error {
+	result := NewResult(root).
+		GetPages(true, false, false).
+		GetBoard()
+	if e := result.Error(); e != nil {
+		return e
+	}
 	for i, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {
 			result.Board.SubmissionAddresses = append(
 				result.Board.SubmissionAddresses[:i],
 				result.Board.SubmissionAddresses[i+1:]...,
 			)
-
 			result.saveBoard().savePages(true, false, false)
-
 			if e := result.Error(); e != nil {
 				return boo.WrapType(e, boo.NotAuthorised, "secret key invalid")
 			}
@@ -100,4 +93,221 @@ func DeleteSubmissionAddress(_ context.Context, cxo *state.CXO, in *object.Addre
 	}
 	return boo.Newf(boo.NotFound,
 		"submission address %s not found in board %s", in.Address, in.PubKey)
+}
+
+// GetBoardPageResult gets the page of board of public key.
+func GetBoardPageResult(_ context.Context, root *node.Root, _ *object.BoardIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(true, false, false).
+		GetBoard().
+		GetThreadPages().
+		GetThreads()
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	return result, nil
+}
+
+// NewThread creates a new thread on board of specified public key.
+func NewThread(_ context.Context, root *node.Root, in *object.NewThreadIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(true, true, false).
+		GetBoard().
+		GetThreadPages().
+		GetThreads()
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	result.Thread = &object.Thread{
+		Post: object.Post{
+			Title: in.Title,
+			Body:  in.Body,
+		},
+	}
+	_, e := verify.Sign(&result.Thread.Post, in.UserPubKey, in.UserSecKey)
+	if e != nil {
+		return nil, e
+	}
+	result.Thread.Post.Created = time.Now().UnixNano()
+	result.ThreadPages = append(result.ThreadPages, result.ThreadPage)
+	result.Threads = append(result.Threads, result.Thread)
+	result.
+		saveThread().
+		saveThreadPage().
+		savePages(true, true, false)
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	return result, nil
+}
+
+// DeleteThread removes a thread of reference from board of public key.
+func DeleteThread(_ context.Context, root *node.Root, in *object.ThreadIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(true, true, true).
+		GetBoard().
+		GetThreadPages().
+		GetThreads()
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	for i, tp := range result.ThreadPages {
+		if tp.Thread == in.GetThreadRef() {
+			var wg sync.WaitGroup
+			wg.Add(3)
+			go func() {
+				defer wg.Done()
+				result.deleteThreadVote(in.GetThreadRef())
+			}()
+			go func() {
+				defer wg.Done()
+				result.deletePostVotes(tp.Posts)
+			}()
+			go func() {
+				defer wg.Done()
+				result.deleteThread(i)
+			}()
+			wg.Wait()
+			result.
+				savePages(true, true, true)
+			if e := result.Error(); e != nil {
+				return nil, e
+			}
+			return result, nil
+		}
+	}
+	return nil, boo.Newf(boo.NotFound,
+		"thread of reference %s not found in board %s",
+		in.ThreadRef, in.BoardPubKey)
+}
+
+// VoteThread adds/modifies/removes vote from thread.
+func VoteThread(_ context.Context, root *node.Root, in *object.VoteThreadIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(false, true, false)
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	result.ThreadVote = &object.Vote{
+		Mode:    in.GetMode(),
+		Tag:     in.GetTag(),
+		Created: time.Now().UnixNano(),
+	}
+	if _, e := verify.Sign(result.ThreadVote, in.UserPubKey, in.UserSecKey); e != nil {
+		return nil, e
+	}
+	result.
+		saveThreadVote(in.GetThreadRef()).
+		savePages(false, true, false)
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	return result, nil
+}
+
+// GetThreadPageResult gets the page of thread of reference from board of public key.
+func GetThreadPageResult(_ context.Context, root *node.Root, in *object.ThreadIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(true, false, false).
+		GetBoard().
+		GetThreadPage(in.GetThreadRef()).
+		GetThread().
+		GetPosts()
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	return result, nil
+}
+
+// NewPost creates a new post on thread of reference from board of public key.
+func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(true, true, true).
+		GetBoard().
+		GetThreadPage(in.GetThreadRef()).
+		GetThread().
+		GetPosts()
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	result.Post = &object.Post{
+		Title: in.Title,
+		Body:  in.Body,
+	}
+	_, e := verify.Sign(result.Post, in.UserPubKey, in.UserSecKey)
+	if e != nil {
+		return nil, e
+	}
+	result.Post.Created = time.Now().UnixNano()
+	result.Posts = append(result.Posts, result.Post)
+	result.
+		savePost().
+		saveThreadPage().
+		savePages(true, true, true)
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	return result, nil
+}
+
+// DeletePost removes a post of reference from thread of reference and board of public key.
+func DeletePost(_ context.Context, root *node.Root, in *object.PostIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(true, false, true).
+		GetBoard().
+		GetThreadPage(in.GetThreadRef()).
+		GetThread().
+		GetPosts()
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	for i, p := range result.Posts {
+		if toRef(p.R) == in.GetPostRef() {
+			var wg sync.WaitGroup
+			wg.Add(2)
+			go func() {
+				defer wg.Done()
+				result.deletePostVote(in.GetPostRef())
+			}()
+			go func() {
+				defer wg.Done()
+				result.deletePost(i)
+			}()
+			wg.Wait()
+			result.
+				saveThreadPage().
+				savePages(true, false, true)
+			if e := result.Error(); e != nil {
+				return nil, e
+			}
+			return result, nil
+		}
+	}
+	return nil, boo.Newf(boo.NotFound,
+		"post of reference %s not found on thread %s of board %s",
+		in.PostRef, in.ThreadRef, in.BoardPubKey)
+}
+
+// VotePost adds/modifies/removes vote from thread.
+func VotePost(_ context.Context, root *node.Root, in *object.VotePostIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(false, false, true)
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	result.PostVote = &object.Vote{
+		Mode:    in.GetMode(),
+		Tag:     in.GetTag(),
+		Created: time.Now().UnixNano(),
+	}
+	if _, e := verify.Sign(result.PostVote, in.UserPubKey, in.UserSecKey); e != nil {
+		return nil, e
+	}
+	result.
+		savePostVote(in.GetPostRef()).
+		savePages(false, false, true)
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	return result, nil
 }
