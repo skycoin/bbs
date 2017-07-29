@@ -4,20 +4,75 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/store/content"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/bbs/src/store/session"
 )
+
+type UsersOutput struct {
+	Users []object.UserView `json:"users"`
+}
+
+func getUsers(ctx context.Context, aliases []string) *UsersOutput {
+	out := &UsersOutput{
+		Users: make([]object.UserView, len(aliases)),
+	}
+	for i, alias := range aliases {
+		out.Users[i] = object.UserView{
+			User: object.User{Alias: alias},
+		}
+	}
+	return out
+}
+
+type ConnectionsOutput struct {
+	Connections []object.ConnectionView `json:"connections"`
+}
+
+func getConnections(cxo *session.CXO, file *session.UserFile) (*ConnectionsOutput, error) {
+	actives, e := cxo.GetConnections()
+	if e != nil {
+		return nil, e
+	}
+	activeMap := make(map[string]bool)
+	for _, address := range actives {
+		activeMap[address] = true
+	}
+
+	out := new(ConnectionsOutput)
+	for _, address := range file.Connections {
+		out.Connections = append(out.Connections, object.ConnectionView{
+			Address: address,
+			Active:  activeMap[address],
+		})
+	}
+
+	return out, nil
+}
+
+type SubsOutput struct {
+	Subscriptions       []object.SubscriptionView `json:"subscriptions"`
+	MasterSubscriptions []object.SubscriptionView `json:"master_subscriptions"`
+}
+
+func getSubs(_ context.Context, cxo *session.CXO, file *session.UserFile) *SubsOutput {
+	view := file.GenerateView(cxo)
+	return &SubsOutput{
+		Subscriptions:       view.Subscriptions,
+		MasterSubscriptions: view.Masters,
+	}
+}
 
 type BoardsOutput struct {
 	Boards       []object.BoardView `json:"boards"`
 	MasterBoards []object.BoardView `json:"master_boards"`
 }
 
-func getBoards(ctx context.Context, cxo *state.CXO, file *state.UserFile) *BoardsOutput {
+func getBoards(ctx context.Context, cxo *session.CXO, file *session.UserFile) *BoardsOutput {
 
 	masters := make([]object.BoardView, len(file.Masters))
 	for i, sub := range file.Masters {
 		masters[i].PublicKey = sub.PubKey.Hex()
-		result, e := content.GetBoardResult(ctx, cxo, sub.PubKey)
+		root, _ := cxo.GetRoot(sub.PubKey)
+		result, e := content.GetBoardResult(ctx, root)
 		if e != nil {
 			masters[i].Board = &object.Board{
 				Name: "Unavailable Board",
@@ -31,7 +86,8 @@ func getBoards(ctx context.Context, cxo *state.CXO, file *state.UserFile) *Board
 	subs := make([]object.BoardView, len(file.Subscriptions))
 	for i, sub := range file.Subscriptions {
 		subs[i].PublicKey = sub.PubKey.Hex()
-		result, e := content.GetBoardResult(ctx, cxo, sub.PubKey)
+		root, _ := cxo.GetRoot(sub.PubKey)
+		result, e := content.GetBoardResult(ctx, root)
 		if e != nil {
 			subs[i].Board = &object.Board{
 				Name: "Unavailable Board",

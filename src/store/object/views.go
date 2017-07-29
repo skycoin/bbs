@@ -1,5 +1,7 @@
 package object
 
+import "sync"
+
 type BoardView struct {
 	*Board
 	PublicKey     string              `json:"public_key"`
@@ -34,6 +36,7 @@ type VoteSummary struct {
 }
 
 type VoteView struct {
+	sync.Mutex
 	Voted bool `json:"voted"`
 	Count int  `json:"count"`
 }

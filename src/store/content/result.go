@@ -3,7 +3,6 @@ package content
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -22,34 +21,22 @@ type Result struct {
 	Threads              []*object.Thread
 	ThreadVotesPage      *object.ThreadVotesPage
 	ThreadVotesPageIndex int
-	ThreadVotes          []*object.Vote
+	ThreadVote           *object.Vote
 	ThreadIndex          int
 	ThreadRefMap         map[cipher.SHA256]int
 	Post                 *object.Post
 	Posts                []*object.Post
 	PostVotesPage        *object.PostVotesPage
 	PostVotesPageIndex   int
-	PostVotes            []*object.Vote
+	PostVote             *object.Vote
 	PostIndex            int
 	PostRefMap           map[cipher.SHA256]int
 }
 
-func NewResult(cxo *state.CXO, pk cipher.PubKey, sk ...cipher.SecKey) *Result {
-	root, e := cxo.GetRoot(pk)
-	if e != nil {
-		return &Result{e: boo.WrapType(e, boo.Internal,
-			"failed to obtain board root")}
-	}
-	if root == nil {
-		return &Result{e: boo.New(boo.NotFound,
-			"this board is not yet downloaded or does not exist")}
-	}
+func NewResult(root *node.Root) *Result {
 	if len(root.Refs()) != 3 {
 		return &Result{e: boo.New(boo.InvalidRead,
 			"corrupt board - reference count is not 3")}
-	}
-	if len(sk) == 1 {
-		root.Edit(sk[0])
 	}
 	return &Result{
 		root:                 root,
@@ -68,7 +55,7 @@ func (r *Result) GetPK() cipher.PubKey {
 	return r.root.Pub()
 }
 
-func (r *Result) getPages(b, t, p bool) *Result {
+func (r *Result) GetPages(b, t, p bool) *Result {
 	if r.e != nil {
 		return r
 	}
@@ -120,7 +107,7 @@ func (r *Result) getPages(b, t, p bool) *Result {
 	return r
 }
 
-func (r *Result) getBoard() *Result {
+func (r *Result) GetBoard() *Result {
 	if r.e != nil {
 		return r
 	}
@@ -134,7 +121,7 @@ func (r *Result) getBoard() *Result {
 	return r
 }
 
-func (r *Result) getThreadPage(tRef skyobject.Reference) *Result {
+func (r *Result) GetThreadPage(tRef skyobject.Reference) *Result {
 	if r.e != nil {
 		return r
 	}
@@ -157,7 +144,7 @@ func (r *Result) getThreadPage(tRef skyobject.Reference) *Result {
 	return r
 }
 
-func (r *Result) getThread() *Result {
+func (r *Result) GetThread() *Result {
 	if r.e != nil {
 		return r
 	}
@@ -172,7 +159,7 @@ func (r *Result) getThread() *Result {
 	return r
 }
 
-func (r *Result) getThreadPages() *Result {
+func (r *Result) GetThreadPages() *Result {
 	if r.e != nil {
 		return r
 	}
@@ -191,7 +178,7 @@ func (r *Result) getThreadPages() *Result {
 	return r
 }
 
-func (r *Result) getThreads() *Result {
+func (r *Result) GetThreads() *Result {
 	if r.e != nil {
 		return r
 	}
@@ -210,7 +197,7 @@ func (r *Result) getThreads() *Result {
 	return r
 }
 
-func (r *Result) getPosts() *Result {
+func (r *Result) GetPosts() *Result {
 	if r.e != nil {
 		return r
 	}
@@ -322,6 +309,76 @@ func (r *Result) savePages(b, t, p bool) *Result {
 	if _, e := r.root.Replace(refs); e != nil {
 		r.e = e
 	}
+	return r
+}
+
+func (r *Result) saveThreadVote(tRef skyobject.Reference) *Result {
+	if r.e != nil {
+		return r
+	}
+	r.ThreadVote.R = toSHA256(r.root.Save(r.ThreadVote))
+
+	tvi, has := r.ThreadRefMap[toSHA256(tRef)]
+	if !has {
+		r.e = boo.Newf(boo.NotFound,
+			"thread of reference %s not found in board %s",
+			tRef.String(), r.root.Pub().Hex())
+		return r
+	}
+
+	var temp object.Vote
+	for i, vRef := range r.ThreadVotesPage.Store[tvi].Votes {
+		if e := r.deserialize(vRef, &temp); e != nil {
+			r.e = boo.WrapTypef(e, boo.InvalidRead,
+				"vote %d from thread %s of board %s is corrupt",
+				i, tRef.String(), r.root.Pub().Hex())
+			return r
+		}
+		if temp.User == r.ThreadVote.User {
+			r.ThreadVotesPage.Store[tvi].Votes[i] =
+				toRef(r.ThreadVote.R)
+			return r
+		}
+	}
+	r.ThreadVotesPage.Store[tvi].Votes = append(
+		r.ThreadVotesPage.Store[tvi].Votes,
+		toRef(r.ThreadVote.R),
+	)
+	return r
+}
+
+func (r *Result) savePostVote(pRef skyobject.Reference) *Result {
+	if r.e != nil {
+		return r
+	}
+	r.PostVote.R = toSHA256(r.root.Save(r.PostVote))
+
+	pvi, has := r.PostRefMap[toSHA256(pRef)]
+	if !has {
+		r.e = boo.Newf(boo.NotFound,
+			"post of reference %s not found in board %s",
+			pRef.String(), r.root.Pub().Hex())
+		return r
+	}
+
+	var temp object.Vote
+	for i, vRef := range r.PostVotesPage.Store[pvi].Votes {
+		if e := r.deserialize(vRef, &temp); e != nil {
+			r.e = boo.WrapTypef(e, boo.InvalidRead,
+				"vote %d from thread %s of board %s is corrupt",
+				pRef.String(), r.root.Pub().Hex())
+			return r
+		}
+		if temp.User == r.PostVote.User {
+			r.PostVotesPage.Store[pvi].Votes[i] =
+				toRef(r.PostVote.R)
+			return r
+		}
+	}
+	r.PostVotesPage.Store[pvi].Votes = append(
+		r.PostVotesPage.Store[pvi].Votes,
+		toRef(r.PostVote.R),
+	)
 	return r
 }
 

@@ -1,8 +1,9 @@
-package state
+package session
 
 import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 	"io/ioutil"
 	"log"
@@ -24,12 +25,12 @@ var (
 	cxoRPCPort   = 8997
 )
 
-func createUserState() (*Session, func()) {
+func createUserState() (*Manager, func()) {
 	configDir, e := ioutil.TempDir("", "skybbs")
 	if e != nil {
 		log.Panic(e)
 	}
-	us, e := NewSession(&SessionConfig{
+	us, e := NewManager(&ManagerConfig{
 		Master:       &master,
 		TestMode:     &testMode,
 		MemoryMode:   &memoryMode,
@@ -49,10 +50,10 @@ func createUserState() (*Session, func()) {
 	}
 }
 
-func createUsers(t *testing.T, us *Session, n int) {
+func createUsers(t *testing.T, us *Manager, n int) {
 	for i := 0; i < n; i++ {
 		iStr := strconv.Itoa(i)
-		_, e := us.NewUser(context.Background(), &NewUserIO{
+		_, e := us.NewUser(context.Background(), &object.NewUserIO{
 			Alias:    "person" + iStr,
 			Seed:     "user" + iStr,
 			Password: "password" + iStr,
@@ -92,8 +93,8 @@ func checkCount(t *testing.T, got, exp int) {
 	}
 }
 
-func login(ctx context.Context, t *testing.T, us *Session, n int) {
-	file, e := us.Login(ctx, &LoginIO{
+func login(ctx context.Context, t *testing.T, us *Manager, n int) {
+	file, e := us.Login(ctx, &object.LoginIO{
 		Alias:    "person" + strconv.Itoa(n),
 		Password: "password" + strconv.Itoa(n),
 	})
@@ -201,7 +202,7 @@ func TestSessionManager_NewSubscription(t *testing.T) {
 	login(ctx, t, us, 0)
 
 	for i := 0; i < initCount; i++ {
-		in := SubscriptionIO{PubKey: pks[i].Hex()}
+		in := object.BoardIO{PubKey: pks[i].Hex()}
 		in.Process()
 		file, e := us.NewSubscription(ctx, &in)
 		if e != nil {
@@ -212,7 +213,7 @@ func TestSessionManager_NewSubscription(t *testing.T) {
 	}
 
 	for i := initCount - 1; i >= 0; i-- {
-		in := SubscriptionIO{PubKey: pks[i].Hex()}
+		in := object.BoardIO{PubKey: pks[i].Hex()}
 		in.Process()
 		file, e := us.DeleteSubscription(ctx, &in)
 		if e != nil {
@@ -237,7 +238,7 @@ func TestSessionManager_NewMaster(t *testing.T) {
 	login(ctx, t, us, 0)
 
 	for i := 0; i < initCount; i++ {
-		in := NewMasterIO{
+		in := object.NewBoardIO{
 			Seed: seeds[i],
 			Name: "Master Board " + strconv.Itoa(i),
 			Desc: "A generated test board of index " + strconv.Itoa(i),
@@ -253,7 +254,7 @@ func TestSessionManager_NewMaster(t *testing.T) {
 	}
 
 	for i := initCount - 1; i >= 0; i-- {
-		in := SubscriptionIO{
+		in := object.BoardIO{
 			PubKey: pks[i].Hex(),
 		}
 		in.Process()
