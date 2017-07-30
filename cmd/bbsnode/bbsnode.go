@@ -25,12 +25,11 @@ const (
 	defaultCXOROCPort      = 8997
 	defaultSubPort         = 6421
 	defaultHTTPPort        = 7410
-
 )
 
 var (
-	devMode  = false
-	testMode = false
+	devMode         = false
+	testMode        = false
 	compilerWorkers = 5
 )
 
@@ -134,7 +133,6 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 				Workers: &compilerWorkers,
 			},
 		)
-
 		CatchError(e, "failed to create session manager")
 		defer session.Close()
 

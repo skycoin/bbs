@@ -441,6 +441,7 @@ func (s *Manager) processLogin(r *reqLogin) {
 		if e != nil {
 			s.l.Printf("Error obtaining root %s", bpk.PubKey.Hex())
 		} else {
+			s.l.Printf("Processing state for root %s", root.Pub().Hex())
 			s.compiler.Trigger(root)
 		}
 	}

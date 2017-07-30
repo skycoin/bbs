@@ -55,6 +55,10 @@ func (r *Result) GetPK() cipher.PubKey {
 	return r.root.Pub()
 }
 
+func (r *Result) GetSeq() uint64 {
+	return r.root.Seq()
+}
+
 func (r *Result) GetPages(b, t, p bool) *Result {
 	if r.e != nil {
 		return r

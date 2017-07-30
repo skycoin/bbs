@@ -38,6 +38,7 @@ func NewCompiler(config *CompilerConfig) *Compiler {
 
 // Open opens the compiler.
 func (c *Compiler) Open(user cipher.PubKey) {
+	c.l.Printf("Opening for user %s ...", user.Hex())
 	c.user = user
 	for i := 0; i < *c.c.Workers; i++ {
 		go c.workerLoop()
@@ -51,6 +52,8 @@ func (c *Compiler) Close() {
 	for _, bs := range c.boards {
 		bs.Close()
 	}
+	c.boards = make(map[cipher.PubKey]*BoardState)
+
 	for {
 		select {
 		case c.quit <- struct{}{}:
