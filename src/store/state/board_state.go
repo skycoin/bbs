@@ -2,7 +2,6 @@ package state
 
 import (
 	"context"
-	"fmt"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/content"
 	"github.com/skycoin/bbs/src/store/object"
@@ -35,7 +34,7 @@ type BoardState struct {
 
 func NewBoardState(bpk, user cipher.PubKey, workers chan<- func()) *BoardState {
 	bs := &BoardState{
-		l:          inform.NewLogger(true, os.Stdout, "BOARDSTATE:"+bpk.Hex()),
+		l:          inform.NewLogger(false, os.Stdout, "BOARDSTATE:"+bpk.Hex()),
 		bpk:        bpk,
 		user:       user,
 		t:          make(map[skyobject.Reference]*object.VoteSummary),
@@ -178,21 +177,25 @@ func (s *BoardState) processVote(
 	}
 	updateSummary := func() {
 		defer summaryWG.Done()
-		e := i.Run()
-		fmt.Println(e)
+		if e := i.Run(); e != nil {
+			s.l.Printf("Error: %s", e.Error())
+		}
 	}
 	s.workers <- updateSummary
 }
 
 func (s *BoardState) GetThreadVotes(tRef skyobject.Reference) *object.VoteSummary {
+	s.l.Printf("GetThreadVotes : thread '%s'.", tRef.String())
 	summary, has := s.getThreadVotes(tRef)
 	if !has {
+		s.l.Println("/t- (NOT HAS)")
 		summary = new(object.VoteSummary)
 	}
 	return summary
 }
 
-func (s *BoardState) GetThreadVotesSeq(ctx context.Context, tRef skyobject.Reference, seq uint64) *object.VoteSummary {
+func (s *BoardState) GetThreadVotesSeq(
+	ctx context.Context, tRef skyobject.Reference, seq uint64) *object.VoteSummary {
 	seqW := &seqWaiter{
 		seq:  seq,
 		done: make(chan struct{}),
@@ -215,7 +218,8 @@ func (s *BoardState) GetPostVotes(pRef skyobject.Reference) *object.VoteSummary 
 	return summary
 }
 
-func (s *BoardState) GetPostVotesSeq(ctx context.Context, pRef skyobject.Reference, seq uint64) *object.VoteSummary {
+func (s *BoardState) GetPostVotesSeq(
+	ctx context.Context, pRef skyobject.Reference, seq uint64) *object.VoteSummary {
 	seqW := &seqWaiter{
 		seq:  seq,
 		done: make(chan struct{}),
@@ -244,6 +248,7 @@ func (s *BoardState) setThreadVotes(
 ) {
 	s.tMux.Lock()
 	defer s.tMux.Unlock()
+	s.l.Printf("setThreadVotes : thread '%s' data '%v'", tRef.String(), data)
 	s.t[tRef] = data
 }
 
