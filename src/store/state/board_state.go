@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/content"
@@ -13,6 +14,11 @@ import (
 	"sync"
 )
 
+type seqWaiter struct {
+	seq  uint64
+	done chan struct{}
+}
+
 // BoardState represents an internal state of a board.
 type BoardState struct {
 	l          *log.Logger
@@ -21,6 +27,7 @@ type BoardState struct {
 	t, p       map[skyobject.Reference]*object.VoteSummary
 	seq        uint64 // Last processed sequence of root.
 	workers    chan<- func()
+	seqWaiters chan *seqWaiter
 	newRoots   chan *node.Root
 	quit       chan struct{}
 	wg         sync.WaitGroup
@@ -28,14 +35,15 @@ type BoardState struct {
 
 func NewBoardState(bpk, user cipher.PubKey, workers chan<- func()) *BoardState {
 	bs := &BoardState{
-		l:        inform.NewLogger(true, os.Stdout, "BOARDSTATE:"+bpk.Hex()),
-		bpk:      bpk,
-		user:     user,
-		t:        make(map[skyobject.Reference]*object.VoteSummary),
-		p:        make(map[skyobject.Reference]*object.VoteSummary),
-		workers:  workers,
-		newRoots: make(chan *node.Root),
-		quit:     make(chan struct{}),
+		l:          inform.NewLogger(true, os.Stdout, "BOARDSTATE:"+bpk.Hex()),
+		bpk:        bpk,
+		user:       user,
+		t:          make(map[skyobject.Reference]*object.VoteSummary),
+		p:          make(map[skyobject.Reference]*object.VoteSummary),
+		workers:    workers,
+		seqWaiters: make(chan *seqWaiter),
+		newRoots:   make(chan *node.Root),
+		quit:       make(chan struct{}),
 	}
 	go bs.service()
 	return bs
@@ -61,6 +69,9 @@ func (s *BoardState) Close() {
 func (s *BoardState) service() {
 	s.wg.Add(1)
 	defer s.wg.Done()
+
+	var seqWaiters []*seqWaiter
+
 	for {
 		select {
 		case root := <-s.newRoots:
@@ -71,6 +82,29 @@ func (s *BoardState) service() {
 			s.l.Printf("PROCESSING root of seq (%d)", root.Seq())
 			s.seq = root.Seq()
 			s.processRoot(root)
+
+			for i := len(seqWaiters) - 1; i >= 0; i++ {
+				if seqWaiters[i].seq < root.Seq() {
+					select {
+					case seqWaiters[i].done <- struct{}{}:
+					default:
+					}
+					seqWaiters[i], seqWaiters[0] =
+						seqWaiters[0], seqWaiters[i]
+					seqWaiters = seqWaiters[1:]
+				}
+			}
+
+		case temp := <-s.seqWaiters:
+			s.l.Printf("WAITING for seq > %d ...", temp.seq)
+			if temp.seq <= s.seq {
+				select {
+				case temp.done <- struct{}{}:
+				default:
+				}
+			} else {
+				seqWaiters = append(seqWaiters, temp)
+			}
 
 		case <-s.quit:
 			return
@@ -90,7 +124,7 @@ func (s *BoardState) processRoot(root *node.Root) {
 	var pageWG sync.WaitGroup
 	pageWG.Add(
 		len(result.ThreadVotesPage.Store) +
-		len(result.PostVotesPage.Store),
+			len(result.PostVotesPage.Store),
 	)
 
 	for _, page := range result.ThreadVotesPage.Store {
@@ -150,16 +184,53 @@ func (s *BoardState) processVote(
 	s.workers <- updateSummary
 }
 
-func (s *BoardState) votePageWorker() {
-	for {
-		select {
-		case <-s.quit:
-			return
-		}
+func (s *BoardState) GetThreadVotes(tRef skyobject.Reference) *object.VoteSummary {
+	summary, has := s.getThreadVotes(tRef)
+	if !has {
+		summary = new(object.VoteSummary)
 	}
+	return summary
 }
 
-func (s *BoardState) GetThreadVotes(
+func (s *BoardState) GetThreadVotesSeq(ctx context.Context, tRef skyobject.Reference, seq uint64) *object.VoteSummary {
+	seqW := &seqWaiter{
+		seq:  seq,
+		done: make(chan struct{}),
+	}
+	go func(ctx context.Context) {
+		select {
+		case s.seqWaiters <- seqW:
+		case <-ctx.Done():
+		}
+	}(ctx)
+	<-seqW.done
+	return s.GetThreadVotes(tRef)
+}
+
+func (s *BoardState) GetPostVotes(pRef skyobject.Reference) *object.VoteSummary {
+	summary, has := s.getPostVotes(pRef)
+	if !has {
+		summary = new(object.VoteSummary)
+	}
+	return summary
+}
+
+func (s *BoardState) GetPostVotesSeq(ctx context.Context, pRef skyobject.Reference, seq uint64) *object.VoteSummary {
+	seqW := &seqWaiter{
+		seq:  seq,
+		done: make(chan struct{}),
+	}
+	go func(ctx context.Context) {
+		select {
+		case s.seqWaiters <- seqW:
+		case <-ctx.Done():
+		}
+	}(ctx)
+	<-seqW.done
+	return s.GetPostVotes(pRef)
+}
+
+func (s *BoardState) getThreadVotes(
 	tRef skyobject.Reference) (*object.VoteSummary, bool,
 ) {
 	s.tMux.Lock()
@@ -173,11 +244,10 @@ func (s *BoardState) setThreadVotes(
 ) {
 	s.tMux.Lock()
 	defer s.tMux.Unlock()
-	//s.l.Printf("SETTING votes for thread '%s' : %v", tRef.String(), data)
 	s.t[tRef] = data
 }
 
-func (s *BoardState) GetPostVotes(
+func (s *BoardState) getPostVotes(
 	pRef skyobject.Reference) (*object.VoteSummary, bool,
 ) {
 	s.pMux.Lock()
@@ -191,6 +261,5 @@ func (s *BoardState) setPostVotes(
 ) {
 	s.pMux.Lock()
 	defer s.pMux.Unlock()
-	//s.l.Printf("SETTING votes for post '%s' : %v", pRef.String(), data)
 	s.p[pRef] = data
 }

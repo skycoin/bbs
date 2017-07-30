@@ -5,6 +5,8 @@ import (
 	"github.com/skycoin/bbs/src/store/content"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/session"
+	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/cxo/skyobject"
 )
 
 type UsersOutput struct {
@@ -106,7 +108,7 @@ type BoardPageOutput struct {
 	Threads []object.ThreadView `json:"threads,omitempty"`
 }
 
-func getBoardPage(_ context.Context, result *content.Result) *BoardPageOutput {
+func getBoardPage(_ context.Context, compiler *state.Compiler, result *content.Result) *BoardPageOutput {
 
 	out := &BoardPageOutput{
 		Board: object.BoardView{
@@ -116,13 +118,15 @@ func getBoardPage(_ context.Context, result *content.Result) *BoardPageOutput {
 		Threads: make([]object.ThreadView, len(result.Threads)),
 	}
 
+	bState := compiler.GetBoard(result.GetPK())
+
 	for i, thread := range result.Threads {
 		out.Threads[i] = object.ThreadView{
 			Thread:      thread,
 			Ref:         thread.R.Hex(),
 			AuthorRef:   thread.User.Hex(),
 			AuthorAlias: "-", // TODO: Implement.
-			Votes:       nil, // TODO: Implement.
+			Votes:       bState.GetThreadVotes(skyobject.Reference(thread.R)),
 		}
 	}
 
@@ -135,10 +139,10 @@ type ThreadPageOutput struct {
 	Posts  []object.PostView `json:"posts"`
 }
 
-func getThreadPage(ctx context.Context, result *content.Result) *ThreadPageOutput {
+func getThreadPage(ctx context.Context, compiler *state.Compiler, result *content.Result) *ThreadPageOutput {
 
 	out := &ThreadPageOutput{
-		BoardPageOutput: getBoardPage(ctx, result),
+		BoardPageOutput: getBoardPage(ctx, compiler, result),
 		Thread: object.ThreadView{
 			Thread:      result.Thread,
 			Ref:         result.Thread.R.Hex(),
@@ -149,15 +153,44 @@ func getThreadPage(ctx context.Context, result *content.Result) *ThreadPageOutpu
 		Posts: make([]object.PostView, len(result.Posts)),
 	}
 
+	bState := compiler.GetBoard(result.GetPK())
+
 	for i, post := range result.Posts {
 		out.Posts[i] = object.PostView{
 			Post:        post,
 			Ref:         post.R.Hex(),
 			AuthorRef:   post.User.Hex(),
 			AuthorAlias: "-", // TODO: Implement.
-			Votes:       nil, // TODO: Implement.
+			Votes:       bState.GetPostVotes(skyobject.Reference(post.R)),
 		}
 	}
 
 	return out
+}
+
+type VotesOutput struct {
+	Reference string              `json:"reference"`
+	Votes     *object.VoteSummary `json:"votes"`
+}
+
+func getThreadVotes(
+	ctx context.Context, compiler *state.Compiler, result *content.Result, tRef skyobject.Reference,
+) *VotesOutput {
+	return &VotesOutput{
+		Reference: tRef.String(),
+		Votes: compiler.
+			GetBoard(result.GetPK()).
+			GetThreadVotesSeq(ctx, tRef, result.GetSeq()),
+	}
+}
+
+func getPostVotes(
+	ctx context.Context, compiler *state.Compiler, result *content.Result, pRef skyobject.Reference,
+) *VotesOutput {
+	return &VotesOutput{
+		Reference: pRef.String(),
+		Votes: compiler.
+			GetBoard(result.GetPK()).
+			GetPostVotesSeq(ctx, pRef, result.GetSeq()),
+	}
 }

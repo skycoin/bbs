@@ -276,6 +276,18 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			send(w, out, e)
 		})
 
+	// Adds/changes vote for a thread.
+	mux.HandleFunc("/api/threads/vote",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.VoteThread(r.Context(), &object.VoteThreadIO{
+				BoardPubKey: r.FormValue("board_public_key"),
+				ThreadRef:   r.FormValue("thread_reference"),
+				Mode:        r.FormValue("mode"),
+				Tag:         r.FormValue("tag"),
+			})
+			send(w, out, e)
+		})
+
 	// Gets a view of a thread (Includes board, thread information and posts).
 	mux.HandleFunc("/api/threads/page/get",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -285,6 +297,10 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			})
 			send(w, out, e)
 		})
+
+	/*
+		<<< POSTS >>>
+	*/
 
 	// Creates a new post on thread of board (Uses RPC for non-master).
 	mux.HandleFunc("/api/posts/new",
@@ -309,6 +325,18 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 					ThreadRef:   r.FormValue("thread_reference"),
 				},
 				PostRef: r.FormValue("post_reference"),
+			})
+			send(w, out, e)
+		})
+
+	// Adds/changes vote for post.
+	mux.HandleFunc("/api/posts/vote",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.VotePost(r.Context(), &object.VotePostIO{
+				BoardPubKey: r.FormValue("board_public_key"),
+				PostRef:     r.FormValue("post_reference"),
+				Mode:        r.FormValue("mode"),
+				Tag:         r.FormValue("tag"),
 			})
 			send(w, out, e)
 		})

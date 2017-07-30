@@ -268,6 +268,10 @@ func (a *Access) DeleteSubmissionAddress(ctx context.Context, in *object.Address
 	return getBoards(ctx, cxo, file), nil
 }
 
+/*
+	<<< THREADS >>>
+*/
+
 // GetBoardPage obtains a page that displays board information and lists the board's threads.
 func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (*BoardPageOutput, error) {
 	if e := in.Process(); e != nil {
@@ -275,6 +279,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (*BoardPa
 	}
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
+	compiler := a.Session.GetCompiler()
 	root, e := cxo.GetRoot(in.GetPK())
 	if e != nil {
 		return nil, e
@@ -283,7 +288,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (*BoardPa
 	if e != nil {
 		return nil, e
 	}
-	return getBoardPage(ctx, result), nil
+	return getBoardPage(ctx, compiler, result), nil
 }
 
 // NewThread creates a new thread on a board.
@@ -299,6 +304,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 	in.UserSecKey = file.User.SecretKey
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
+	compiler := a.Session.GetCompiler()
 	i, e := file.FindMaster(in.GetBoardPK())
 	if e != nil {
 		// TODO: RPC.
@@ -314,7 +320,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 		return nil, e
 	}
 	a.Session.GetCompiler().Trigger(root)
-	return getBoardPage(ctx, result), nil
+	return getBoardPage(ctx, compiler, result), nil
 }
 
 // DeleteThread removes a thread from a board.
@@ -328,6 +334,7 @@ func (a *Access) DeleteThread(ctx context.Context, in *object.ThreadIO) (*BoardP
 	}
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
+	compiler := a.Session.GetCompiler()
 	i, e := file.FindMaster(in.GetBoardPK())
 	if e != nil {
 		// TODO: RPC.
@@ -343,10 +350,43 @@ func (a *Access) DeleteThread(ctx context.Context, in *object.ThreadIO) (*BoardP
 		return nil, e
 	}
 	a.Session.GetCompiler().Trigger(root)
-	return getBoardPage(ctx, result), nil
+	return getBoardPage(ctx, compiler, result), nil
 }
 
-//TODO: func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) () {}
+func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*VotesOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	file, e := a.Session.GetInfo(ctx)
+	if e != nil {
+		return nil, e
+	}
+	in.UserPubKey = file.User.PublicKey
+	in.UserSecKey = file.User.SecretKey
+	cxo := a.Session.GetCXO()
+	defer cxo.Lock()()
+	compiler := a.Session.GetCompiler()
+	i, e := file.FindMaster(in.GetBoardPK())
+	if e != nil {
+		// TODO: RPC
+		return nil, e
+	}
+	in.BoardSecKey = file.Masters[i].SecKey
+	root, e := cxo.GetRoot(in.GetBoardPK(), in.BoardSecKey)
+	if e != nil {
+		return nil, e
+	}
+	result, e := content.VoteThread(ctx, root, in)
+	if e != nil {
+		return nil, e
+	}
+	compiler.Trigger(root)
+	return getThreadVotes(ctx, compiler, result, in.GetThreadRef()), nil
+}
+
+/*
+	<<< POSTS >>>
+*/
 
 // GetThreadPage obtains a page that displays thread information and lists the thread's posts.
 func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (*ThreadPageOutput, error) {
@@ -355,6 +395,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (*Threa
 	}
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
+	compiler := a.Session.GetCompiler()
 	root, e := cxo.GetRoot(in.GetBoardPK())
 	if e != nil {
 		return nil, e
@@ -363,7 +404,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (*Threa
 	if e != nil {
 		return nil, e
 	}
-	return getThreadPage(ctx, result), nil
+	return getThreadPage(ctx, compiler, result), nil
 }
 
 // NewPost creates a new post on specified thead and board.
@@ -379,6 +420,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 	in.UserSecKey = file.User.SecretKey
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
+	compiler := a.Session.GetCompiler()
 	i, e := file.FindMaster(in.GetBoardPK())
 	if e != nil {
 		// TODO: Via RPC.
@@ -394,7 +436,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 		return nil, e
 	}
 	a.Session.GetCompiler().Trigger(root)
-	return getThreadPage(ctx, result), nil
+	return getThreadPage(ctx, compiler, result), nil
 }
 
 // DeletePost removes a post from specified thread and board.
@@ -408,6 +450,7 @@ func (a *Access) DeletePost(ctx context.Context, in *object.PostIO) (*ThreadPage
 	}
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
+	compiler := a.Session.GetCompiler()
 	i, e := file.FindMaster(in.GetBoardPK())
 	if e != nil {
 		// TODO: RPC.
@@ -423,7 +466,36 @@ func (a *Access) DeletePost(ctx context.Context, in *object.PostIO) (*ThreadPage
 		return nil, e
 	}
 	a.Session.GetCompiler().Trigger(root)
-	return getThreadPage(ctx, result), nil
+	return getThreadPage(ctx, compiler, result), nil
 }
 
-//TODO: func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) () {}
+func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	file, e := a.Session.GetInfo(ctx)
+	if e != nil {
+		return nil, e
+	}
+	in.UserPubKey = file.User.PublicKey
+	in.UserSecKey = file.User.SecretKey
+	cxo := a.Session.GetCXO()
+	defer cxo.Lock()()
+	compiler := a.Session.GetCompiler()
+	i, e := file.FindMaster(in.GetBoardPK())
+	if e != nil {
+		// TODO: RPC
+		return nil, e
+	}
+	in.BoardSecKey = file.Masters[i].SecKey
+	root, e := cxo.GetRoot(in.GetBoardPK(), in.BoardSecKey)
+	if e != nil {
+		return nil, e
+	}
+	result, e := content.VotePost(ctx, root, in)
+	if e != nil {
+		return nil, e
+	}
+	compiler.Trigger(root)
+	return getPostVotes(ctx, compiler, result, in.GetPostRef()), nil
+}
