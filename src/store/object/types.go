@@ -1,7 +1,7 @@
 package object
 
 import (
-	"github.com/skycoin/bbs/src/misc/verify"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )
@@ -50,7 +50,7 @@ type Post struct {
 }
 
 // Verify verifies the post.
-func (p Post) Verify() error { return verify.Check(&p) }
+func (p Post) Verify() error { return tag.Verify(&p) }
 
 // Vote represents a post by a user.
 type Vote struct {
@@ -62,7 +62,7 @@ type Vote struct {
 	Sig     cipher.Sig    `json:"-" verify:"sig"` // Signature.
 }
 
-func (v Vote) Verify() error { return verify.Check(&v) }
+func (v Vote) Verify() error { return tag.Verify(&v) }
 
 type ThreadVotesPage struct {
 	R       cipher.SHA256 `json:"-" enc:"-"`

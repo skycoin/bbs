@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/content"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/session"
@@ -27,7 +28,7 @@ func (a *Access) GetUsers(ctx context.Context) (*UsersOutput, error) {
 
 // NewUser creates a new user.
 func (a *Access) NewUser(ctx context.Context, in *object.NewUserIO) (*UsersOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	if _, e := a.Session.NewUser(ctx, in); e != nil {
@@ -46,7 +47,7 @@ func (a *Access) DeleteUser(ctx context.Context, alias string) (*UsersOutput, er
 
 // Login logs a user in.
 func (a *Access) Login(ctx context.Context, in *object.LoginIO) (*object.UserView, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.Login(ctx, in)
@@ -91,7 +92,7 @@ func (a *Access) GetConnections(ctx context.Context) (*ConnectionsOutput, error)
 
 // NewConnection creates a new connection.
 func (a *Access) NewConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.NewConnection(ctx, in)
@@ -103,7 +104,7 @@ func (a *Access) NewConnection(ctx context.Context, in *object.ConnectionIO) (*C
 
 // DeleteConnection removes a connection.
 func (a *Access) DeleteConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.DeleteConnection(ctx, in)
@@ -129,7 +130,7 @@ func (a *Access) GetSubs(ctx context.Context) (*SubsOutput, error) {
 
 // NewSub subscribes node/user to a board that this user does not own.
 func (a *Access) NewSub(ctx context.Context, in *object.BoardIO) (*SubsOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	cxo := a.Session.GetCXO()
@@ -142,7 +143,7 @@ func (a *Access) NewSub(ctx context.Context, in *object.BoardIO) (*SubsOutput, e
 
 // DeleteSub removes a subscription to a board that this user does not own.
 func (a *Access) DeleteSub(ctx context.Context, in *object.BoardIO) (*SubsOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	cxo := a.Session.GetCXO()
@@ -169,7 +170,7 @@ func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
 
 // NewBoard creates a new board that this user owns.
 func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.NewMaster(ctx, in)
@@ -184,7 +185,7 @@ func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOu
 	}
 	if e := content.NewBoard(ctx, root, in); e != nil {
 		in := &object.BoardIO{PubKeyStr: in.BoardPubKey.Hex()}
-		object.Process(in)
+		tag.Process(in)
 		a.Session.DeleteMaster(ctx, in)
 		return nil, e
 	}
@@ -194,7 +195,7 @@ func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOu
 
 // DeleteBoard removes a board that this user owns.
 func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.DeleteMaster(ctx, in)
@@ -216,7 +217,7 @@ func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOu
 
 // NewSubmissionAddress adds a submission address to a board which this user owns.
 func (a *Access) NewSubmissionAddress(ctx context.Context, in *object.AddressIO) (*BoardsOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -241,7 +242,7 @@ func (a *Access) NewSubmissionAddress(ctx context.Context, in *object.AddressIO)
 
 // DeleteSubmissionAddress removes a submission address from a board that this user owns.
 func (a *Access) DeleteSubmissionAddress(ctx context.Context, in *object.AddressIO) (*BoardsOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -270,7 +271,7 @@ func (a *Access) DeleteSubmissionAddress(ctx context.Context, in *object.Address
 
 // GetBoardPage obtains a page that displays board information and lists the board's threads.
 func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (*BoardPageOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	cxo := a.Session.GetCXO()
@@ -289,7 +290,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (*BoardPa
 
 // NewThread creates a new thread on a board.
 func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardPageOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -299,7 +300,6 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 	file.FillUser(in)
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
-	compiler := a.Session.GetCompiler()
 	if e := file.FillMaster(in); e != nil {
 		//TODO: RPC
 		return nil, e
@@ -312,13 +312,14 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 	if e != nil {
 		return nil, e
 	}
+	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
 	return getBoardPage(ctx, compiler, result), nil
 }
 
 // DeleteThread removes a thread from a board.
 func (a *Access) DeleteThread(ctx context.Context, in *object.ThreadIO) (*BoardPageOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -327,7 +328,6 @@ func (a *Access) DeleteThread(ctx context.Context, in *object.ThreadIO) (*BoardP
 	}
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
-	compiler := a.Session.GetCompiler()
 	if e := file.FillMaster(in); e != nil {
 		// TODO: RPC
 		return nil, e
@@ -340,12 +340,13 @@ func (a *Access) DeleteThread(ctx context.Context, in *object.ThreadIO) (*BoardP
 	if e != nil {
 		return nil, e
 	}
+	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
 	return getBoardPage(ctx, compiler, result), nil
 }
 
 func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*VotesOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -355,7 +356,6 @@ func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*Vote
 	file.FillUser(in)
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
-	compiler := a.Session.GetCompiler()
 	if e := file.FillMaster(in); e != nil {
 		// TODO: RPC
 		return nil, e
@@ -368,6 +368,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*Vote
 	if e != nil {
 		return nil, e
 	}
+	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
 	return getThreadVotes(ctx, compiler, result, in.ThreadRef), nil
 }
@@ -378,12 +379,11 @@ func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*Vote
 
 // GetThreadPage obtains a page that displays thread information and lists the thread's posts.
 func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (*ThreadPageOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
-	compiler := a.Session.GetCompiler()
 	root, e := cxo.GetRoot(in.BoardPubKey)
 	if e != nil {
 		return nil, e
@@ -392,12 +392,13 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (*Threa
 	if e != nil {
 		return nil, e
 	}
+	compiler := a.Session.GetCompiler()
 	return getThreadPage(ctx, compiler, result), nil
 }
 
 // NewPost creates a new post on specified thead and board.
 func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPageOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -407,7 +408,6 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 	file.FillUser(in)
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
-	compiler := a.Session.GetCompiler()
 	if e := file.FillMaster(in); e != nil {
 		// TODO: RPC
 		return nil, e
@@ -420,13 +420,14 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 	if e != nil {
 		return nil, e
 	}
+	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
 	return getThreadPage(ctx, compiler, result), nil
 }
 
 // DeletePost removes a post from specified thread and board.
 func (a *Access) DeletePost(ctx context.Context, in *object.PostIO) (*ThreadPageOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -435,7 +436,6 @@ func (a *Access) DeletePost(ctx context.Context, in *object.PostIO) (*ThreadPage
 	}
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
-	compiler := a.Session.GetCompiler()
 	if e := file.FillMaster(in); e != nil {
 		// TODO: RPC
 		return nil, e
@@ -448,12 +448,13 @@ func (a *Access) DeletePost(ctx context.Context, in *object.PostIO) (*ThreadPage
 	if e != nil {
 		return nil, e
 	}
+	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
 	return getThreadPage(ctx, compiler, result), nil
 }
 
 func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOutput, error) {
-	if e := object.Process(in); e != nil {
+	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -463,7 +464,6 @@ func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOut
 	file.FillUser(in)
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
-	compiler := a.Session.GetCompiler()
 	if e := file.FillMaster(in); e != nil {
 		// TODO: RPC
 		return nil, e
@@ -476,6 +476,7 @@ func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOut
 	if e != nil {
 		return nil, e
 	}
+	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
 	return getPostVotes(ctx, compiler, result, in.PostRef), nil
 }

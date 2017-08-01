@@ -1,4 +1,4 @@
-package verify
+package tag
 
 import (
 	"errors"
@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	tagKey         = "verify"
-	ignoreValue    = "-"
-	signatureValue = "sig"
-	publicKeyValue = "pk"
+	verifyKey = "verify"
+	verifyIgn = "-"
+	verifySig = "sig"
+	verifyPK  = "pk"
 )
 
 var (
@@ -27,14 +27,14 @@ func Sign(obj interface{}, pk cipher.PubKey, sk cipher.SecKey) (cipher.Sig, erro
 	sig := cipher.Sig{}
 	rVal := reflect.ValueOf(obj)
 
-	// Check if interface is pointer.
+	// Verify if interface is pointer.
 	if rVal.Kind() != reflect.Ptr || rVal.IsNil() {
 		return sig, ErrInterfaceNotPointer
 	}
 
 	rVal = rVal.Elem()
 
-	// Check if pointer points to struct.
+	// Verify if pointer points to struct.
 	if rVal.Kind() != reflect.Struct {
 		return sig, ErrInterfaceNotStructPointer
 	}
@@ -45,21 +45,21 @@ func Sign(obj interface{}, pk cipher.PubKey, sk cipher.SecKey) (cipher.Sig, erro
 	// Look through fields of struct.
 	// Apply action based on tag.
 	for i := 0; i < rTyp.NumField(); i++ {
-		tagVal, has := rTyp.Field(i).Tag.Lookup(tagKey)
+		tagVal, has := rTyp.Field(i).Tag.Lookup(verifyKey)
 		if !has {
 			continue
 		}
 		field := rVal.Field(i)
 		switch tagVal {
-		case ignoreValue:
+		case verifyIgn:
 			clearField(field)
-		case signatureValue:
+		case verifySig:
 			if field.Type() != reflect.TypeOf(cipher.Sig{}) {
 				return sig, ErrInvalidSignatureField
 			}
 			clearField(field)
 			sigInt = i
-		case publicKeyValue:
+		case verifyPK:
 			if field.Type() != reflect.TypeOf(cipher.PubKey{}) {
 				return sig, ErrInvalidPublicKeyField
 			}
@@ -77,8 +77,8 @@ func Sign(obj interface{}, pk cipher.PubKey, sk cipher.SecKey) (cipher.Sig, erro
 	return sig, nil
 }
 
-// Check checks the signature of object.
-func Check(obj interface{}, pks ...cipher.PubKey) error {
+// Verify checks the signature of object.
+func Verify(obj interface{}, pks ...cipher.PubKey) error {
 	sig := cipher.Sig{}
 	pk := cipher.PubKey{}
 	switch len(pks) {
@@ -88,14 +88,14 @@ func Check(obj interface{}, pks ...cipher.PubKey) error {
 	case 0:
 		rVal := reflect.ValueOf(obj)
 
-		// Check if interface is pointer.
+		// Verify if interface is pointer.
 		if rVal.Kind() != reflect.Ptr || rVal.IsNil() {
 			return ErrInterfaceNotPointer
 		}
 
 		rVal = rVal.Elem()
 
-		// Check if pointer points to struct.
+		// Verify if pointer points to struct.
 		if rVal.Kind() != reflect.Struct {
 			return ErrInterfaceNotStructPointer
 		}
@@ -103,36 +103,32 @@ func Check(obj interface{}, pks ...cipher.PubKey) error {
 		rTyp := rVal.Type()
 
 		for i := 0; i < rTyp.NumField(); i++ {
-			tagVal, has := rTyp.Field(i).Tag.Lookup(tagKey)
+			tagVal, has := rTyp.Field(i).Tag.Lookup(verifyKey)
 			if !has {
 				continue
 			}
 			field := rVal.Field(i)
 			switch tagVal {
-			case ignoreValue:
+			case verifyIgn:
 				clearField(field)
-			case signatureValue:
+			case verifySig:
 				if field.Type() != reflect.TypeOf(cipher.Sig{}) {
 					return ErrInvalidSignatureField
 				}
 				sig = field.Interface().(cipher.Sig)
 				clearField(field)
-			case publicKeyValue:
+			case verifyPK:
 				if field.Type() != reflect.TypeOf(cipher.PubKey{}) {
 					return ErrInvalidPublicKeyField
 				}
 				pk = field.Interface().(cipher.PubKey)
 			}
 		}
-		// Check signature.
+		// Verify signature.
 		return cipher.VerifySignature(pk, sig,
 			cipher.SumSHA256(encoder.Serialize(obj)))
 
 	default:
 		return ErrInput
 	}
-}
-
-func clearField(fv reflect.Value) {
-	fv.Set(reflect.Zero(fv.Type()))
 }

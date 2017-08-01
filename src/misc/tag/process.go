@@ -1,17 +1,14 @@
-package object
+package tag
 
 import (
-	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/skycoin/src/cipher"
-	"reflect"
 	"strconv"
-	"strings"
 )
 
 const (
-	tagKey          = "bbs"
+	processKey      = "bbs"
 	valUserPKStr    = "upkStr"
 	valUserPK       = "upk"
 	valUserSK       = "usk"
@@ -39,27 +36,22 @@ const (
 	valTag          = "tag"
 )
 
-type TagMap map[string]reflect.Value
-
-func (tm TagMap) Set(key string, v interface{}) {
-	tm[key].Set(reflect.ValueOf(v))
-}
-
 func Process(obj interface{}) error {
-	if e := process(makeTagMap(getReflectPair(obj))); e != nil {
+	rVal, rTyp := getReflectPair(obj)
+	if e := process(makeTagMap(processKey, rVal, rTyp)); e != nil {
 		return e
 	}
 	return nil
 }
 
-func process(tm TagMap) error {
+func process(tm tMap) error {
 	// User public key.
 	if upkStr, has := tm[valUserPKStr]; has {
 		upk, e := keys.GetPubKey(upkStr.String())
 		if e != nil {
 			return wrapErr(e, "user public key")
 		}
-		tm.Set(valUserPK, upk)
+		tm.set(valUserPK, upk)
 	}
 	// Board public key.
 	if bpkStr, has := tm[valBoardPKStr]; has {
@@ -67,7 +59,7 @@ func process(tm TagMap) error {
 		if e != nil {
 			return wrapErr(e, "board public key")
 		}
-		tm.Set(valBoardPK, bpk)
+		tm.set(valBoardPK, bpk)
 	}
 	// Thread reference.
 	if tRefStr, has := tm[valThreadRefStr]; has {
@@ -75,7 +67,7 @@ func process(tm TagMap) error {
 		if e != nil {
 			return wrapErr(e, "thread reference")
 		}
-		tm.Set(valThreadRef, tRef)
+		tm.set(valThreadRef, tRef)
 	}
 	// Post reference.
 	if pRefStr, has := tm[valPostRefStr]; has {
@@ -83,7 +75,7 @@ func process(tm TagMap) error {
 		if e != nil {
 			return wrapErr(e, "post reference")
 		}
-		tm.Set(valPostRef, pRef)
+		tm.set(valPostRef, pRef)
 	}
 	// Submission addresses.
 	if subAddrsStr, has := tm[valSubAddrsStr]; has {
@@ -93,7 +85,7 @@ func process(tm TagMap) error {
 		if e != nil {
 			return wrapErr(e, "submission addresses")
 		}
-		tm.Set(valSubAddrs, subAddrs)
+		tm.set(valSubAddrs, subAddrs)
 	}
 	// Connections.
 	if consStr, has := tm[valConsStr]; has {
@@ -103,7 +95,7 @@ func process(tm TagMap) error {
 		if e != nil {
 			return wrapErr(e, "connections")
 		}
-		tm.Set(valCons, cons)
+		tm.set(valCons, cons)
 	}
 	// Vote mode.
 	if modeStr, has := tm[valModeStr]; has {
@@ -118,7 +110,7 @@ func process(tm TagMap) error {
 			return boo.New(boo.InvalidInput,
 				"invalid vote mode input")
 		}
-		tm.Set(valMode, int8(mode))
+		tm.set(valMode, int8(mode))
 	}
 	// Vote tag.
 	if tagStr, has := tm[valTagStr]; has {
@@ -129,7 +121,7 @@ func process(tm TagMap) error {
 			return boo.New(boo.InvalidInput,
 				"invalid vote tag input")
 		}
-		tm.Set(valTag, []byte(tag))
+		tm.set(valTag, []byte(tag))
 	}
 	// User seed.
 	if uSeed, has := tm[valUserSeed]; has {
@@ -138,8 +130,8 @@ func process(tm TagMap) error {
 		}
 		pk, sk := cipher.GenerateDeterministicKeyPair(
 			[]byte(uSeed.String()))
-		tm.Set(valUserPK, pk)
-		tm.Set(valUserSK, sk)
+		tm.set(valUserPK, pk)
+		tm.set(valUserSK, sk)
 	}
 	// Board seed.
 	if bSeed, has := tm[valBoardSeed]; has {
@@ -148,8 +140,8 @@ func process(tm TagMap) error {
 		}
 		pk, sk := cipher.GenerateDeterministicKeyPair(
 			[]byte(bSeed.String()))
-		tm.Set(valBoardPK, pk)
-		tm.Set(valBoardSK, sk)
+		tm.set(valBoardPK, pk)
+		tm.set(valBoardSK, sk)
 	}
 	// Heading text.
 	if heading, has := tm[valHeading]; has {
@@ -238,44 +230,4 @@ func CheckTag(tag []byte) error {
 		return boo.Newf(boo.InvalidInput,
 			"invalid vote tag of %s provided", string(tag))
 	}
-}
-
-/*
-	<<< HELPER FUNCTIONS >>>
-*/
-
-func splitStr(str string, check func(v string) bool) ([]string, error) {
-	out := strings.Split(str, ",")
-	for i := len(out) - 1; i >= 0; i-- {
-		out[i] = strings.TrimSpace(out[i])
-		if !check(out[i]) {
-			out[i], out[0] = out[0], out[i]
-			out = out[1:]
-		}
-	}
-	return out, nil
-}
-
-func wrapErr(e error, what string) error {
-	return boo.WrapType(e, boo.Internal,
-		fmt.Sprintln("failed to process", what))
-}
-
-func makeTagMap(rVal reflect.Value, rTyp reflect.Type) TagMap {
-	out := make(TagMap)
-	for i := 0; i < rTyp.NumField(); i++ {
-		if tagVal, has := getTagKey(rTyp, i); has {
-			out[tagVal] = rVal.Field(i)
-		}
-	}
-	return out
-}
-
-func getReflectPair(v interface{}) (reflect.Value, reflect.Type) {
-	rVal := reflect.ValueOf(v).Elem()
-	return rVal, rVal.Type()
-}
-
-func getTagKey(rTyp reflect.Type, i int) (string, bool) {
-	return rTyp.Field(i).Tag.Lookup(tagKey)
 }

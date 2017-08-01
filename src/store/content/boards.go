@@ -3,7 +3,7 @@ package content
 import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/verify"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
 	"sync"
@@ -124,7 +124,7 @@ func NewThread(_ context.Context, root *node.Root, in *object.NewThreadIO) (*Res
 			Body:  in.Body,
 		},
 	}
-	_, e := verify.Sign(&result.Thread.Post, in.UserPubKey, in.UserSecKey)
+	_, e := tag.Sign(&result.Thread.Post, in.UserPubKey, in.UserSecKey)
 	if e != nil {
 		return nil, e
 	}
@@ -193,7 +193,7 @@ func VoteThread(_ context.Context, root *node.Root, in *object.VoteThreadIO) (*R
 		Tag:     in.Tag,
 		Created: time.Now().UnixNano(),
 	}
-	if _, e := verify.Sign(result.ThreadVote, in.UserPubKey, in.UserSecKey); e != nil {
+	if _, e := tag.Sign(result.ThreadVote, in.UserPubKey, in.UserSecKey); e != nil {
 		return nil, e
 	}
 	result.
@@ -234,7 +234,7 @@ func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result,
 		Title: in.Title,
 		Body:  in.Body,
 	}
-	_, e := verify.Sign(result.Post, in.UserPubKey, in.UserSecKey)
+	_, e := tag.Sign(result.Post, in.UserPubKey, in.UserSecKey)
 	if e != nil {
 		return nil, e
 	}
@@ -300,7 +300,7 @@ func VotePost(_ context.Context, root *node.Root, in *object.VotePostIO) (*Resul
 		Tag:     in.Tag,
 		Created: time.Now().UnixNano(),
 	}
-	if _, e := verify.Sign(result.PostVote, in.UserPubKey, in.UserSecKey); e != nil {
+	if _, e := tag.Sign(result.PostVote, in.UserPubKey, in.UserSecKey); e != nil {
 		return nil, e
 	}
 	result.

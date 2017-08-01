@@ -1,4 +1,4 @@
-package verify
+package tag
 
 import (
 	"encoding/json"
@@ -35,7 +35,7 @@ func TestSign(t *testing.T) {
 	t.Log("Post:", *post)
 
 	tempPost := *post
-	if e := Check(&tempPost); e != nil {
+	if e := Verify(&tempPost); e != nil {
 		t.Error(e)
 	}
 	t.Log("Post:", *post)
