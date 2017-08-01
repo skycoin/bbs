@@ -29,7 +29,7 @@ func NewBoard(_ context.Context, root *node.Root, in *object.NewBoardIO) error {
 				Name:                in.Name,
 				Desc:                in.Desc,
 				Created:             time.Now().UnixNano(),
-				SubmissionAddresses: in.GetSubmissionAddresses(),
+				SubmissionAddresses: in.SubmissionAddresses,
 				Meta:                []byte("{}"), // TODO
 			}),
 		}),
@@ -56,7 +56,7 @@ func NewSubmissionAddress(_ context.Context, root *node.Root, in *object.Address
 	for _, address := range result.Board.SubmissionAddresses {
 		if address == in.Address {
 			return boo.Newf(boo.AlreadyExists,
-				"submission address %s already exists in board %s", in.Address, in.PubKey)
+				"submission address %s already exists in board %s", in.Address, in.PubKeyStr)
 		}
 	}
 	result.Board.SubmissionAddresses = append(
@@ -92,7 +92,7 @@ func DeleteSubmissionAddress(_ context.Context, root *node.Root, in *object.Addr
 		}
 	}
 	return boo.Newf(boo.NotFound,
-		"submission address %s not found in board %s", in.Address, in.PubKey)
+		"submission address %s not found in board %s", in.Address, in.PubKeyStr)
 }
 
 // GetBoardPageResult gets the page of board of public key.
@@ -152,12 +152,12 @@ func DeleteThread(_ context.Context, root *node.Root, in *object.ThreadIO) (*Res
 		return nil, e
 	}
 	for i, tp := range result.ThreadPages {
-		if tp.Thread == in.GetThreadRef() {
+		if tp.Thread == in.ThreadRef {
 			var wg sync.WaitGroup
 			wg.Add(3)
 			go func() {
 				defer wg.Done()
-				result.deleteThreadVote(in.GetThreadRef())
+				result.deleteThreadVote(in.ThreadRef)
 			}()
 			go func() {
 				defer wg.Done()
@@ -178,7 +178,7 @@ func DeleteThread(_ context.Context, root *node.Root, in *object.ThreadIO) (*Res
 	}
 	return nil, boo.Newf(boo.NotFound,
 		"thread of reference %s not found in board %s",
-		in.ThreadRef, in.BoardPubKey)
+		in.ThreadRefStr, in.BoardPubKeyStr)
 }
 
 // VoteThread adds/modifies/removes vote from thread.
@@ -189,15 +189,15 @@ func VoteThread(_ context.Context, root *node.Root, in *object.VoteThreadIO) (*R
 		return nil, e
 	}
 	result.ThreadVote = &object.Vote{
-		Mode:    in.GetMode(),
-		Tag:     in.GetTag(),
+		Mode:    in.Mode,
+		Tag:     in.Tag,
 		Created: time.Now().UnixNano(),
 	}
 	if _, e := verify.Sign(result.ThreadVote, in.UserPubKey, in.UserSecKey); e != nil {
 		return nil, e
 	}
 	result.
-		saveThreadVote(in.GetThreadRef()).
+		saveThreadVote(in.ThreadRef).
 		savePages(false, true, false)
 	if e := result.Error(); e != nil {
 		return nil, e
@@ -210,7 +210,7 @@ func GetThreadPageResult(_ context.Context, root *node.Root, in *object.ThreadIO
 	result := NewResult(root).
 		GetPages(true, false, false).
 		GetBoard().
-		GetThreadPage(in.GetThreadRef()).
+		GetThreadPage(in.ThreadRef).
 		GetThread().
 		GetPosts()
 	if e := result.Error(); e != nil {
@@ -224,7 +224,7 @@ func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result,
 	result := NewResult(root).
 		GetPages(true, true, true).
 		GetBoard().
-		GetThreadPage(in.GetThreadRef()).
+		GetThreadPage(in.ThreadRef).
 		GetThread().
 		GetPosts()
 	if e := result.Error(); e != nil {
@@ -255,19 +255,19 @@ func DeletePost(_ context.Context, root *node.Root, in *object.PostIO) (*Result,
 	result := NewResult(root).
 		GetPages(true, false, true).
 		GetBoard().
-		GetThreadPage(in.GetThreadRef()).
+		GetThreadPage(in.ThreadRef).
 		GetThread().
 		GetPosts()
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
 	for i, p := range result.Posts {
-		if toRef(p.R) == in.GetPostRef() {
+		if toRef(p.R) == in.PostRef {
 			var wg sync.WaitGroup
 			wg.Add(2)
 			go func() {
 				defer wg.Done()
-				result.deletePostVote(in.GetPostRef())
+				result.deletePostVote(in.PostRef)
 			}()
 			go func() {
 				defer wg.Done()
@@ -285,7 +285,7 @@ func DeletePost(_ context.Context, root *node.Root, in *object.PostIO) (*Result,
 	}
 	return nil, boo.Newf(boo.NotFound,
 		"post of reference %s not found on thread %s of board %s",
-		in.PostRef, in.ThreadRef, in.BoardPubKey)
+		in.PostRefStr, in.ThreadRefStr, in.BoardPubKeyStr)
 }
 
 // VotePost adds/modifies/removes vote from thread.
@@ -296,15 +296,15 @@ func VotePost(_ context.Context, root *node.Root, in *object.VotePostIO) (*Resul
 		return nil, e
 	}
 	result.PostVote = &object.Vote{
-		Mode:    in.GetMode(),
-		Tag:     in.GetTag(),
+		Mode:    in.Mode,
+		Tag:     in.Tag,
 		Created: time.Now().UnixNano(),
 	}
 	if _, e := verify.Sign(result.PostVote, in.UserPubKey, in.UserSecKey); e != nil {
 		return nil, e
 	}
 	result.
-		savePostVote(in.GetPostRef()).
+		savePostVote(in.PostRef).
 		savePages(false, false, true)
 	if e := result.Error(); e != nil {
 		return nil, e

@@ -175,7 +175,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/subscriptions/new",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.NewSub(r.Context(), &object.BoardIO{
-				PubKey: r.FormValue("public_key"),
+				PubKeyStr: r.FormValue("public_key"),
 			})
 			send(w, out, e)
 		})
@@ -184,7 +184,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/subscriptions/delete",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.DeleteSub(r.Context(), &object.BoardIO{
-				PubKey: r.FormValue("public_key"),
+				PubKeyStr: r.FormValue("public_key"),
 			})
 			send(w, out, e)
 		})
@@ -204,11 +204,11 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/boards/new",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.NewBoard(r.Context(), &object.NewBoardIO{
-				Seed:                r.FormValue("seed"),
-				Name:                r.FormValue("name"),
-				Desc:                r.FormValue("description"),
-				SubmissionAddresses: r.FormValue("submission_addresses"),
-				Connections:         r.FormValue("connections"),
+				Seed: r.FormValue("seed"),
+				Name: r.FormValue("name"),
+				Desc: r.FormValue("description"),
+				SubmissionAddressesStr: r.FormValue("submission_addresses"),
+				ConnectionsStr:         r.FormValue("connections"),
 			})
 			send(w, out, e)
 		})
@@ -217,7 +217,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/boards/delete",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.DeleteBoard(r.Context(), &object.BoardIO{
-				PubKey: r.FormValue("public_key"),
+				PubKeyStr: r.FormValue("public_key"),
 			})
 			send(w, out, e)
 		})
@@ -226,8 +226,8 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/boards/submission_addresses/new",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.NewSubmissionAddress(r.Context(), &object.AddressIO{
-				PubKey:  r.FormValue("public_key"),
-				Address: r.FormValue("address"),
+				PubKeyStr: r.FormValue("public_key"),
+				Address:   r.FormValue("address"),
 			})
 			send(w, out, e)
 		})
@@ -236,8 +236,8 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/boards/submission_addresses/delete",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.DeleteSubmissionAddress(r.Context(), &object.AddressIO{
-				PubKey:  r.FormValue("public_key"),
-				Address: r.FormValue("address"),
+				PubKeyStr: r.FormValue("public_key"),
+				Address:   r.FormValue("address"),
 			})
 			send(w, out, e)
 		})
@@ -246,7 +246,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/boards/page/get",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.GetBoardPage(r.Context(), &object.BoardIO{
-				PubKey: r.FormValue("public_key"),
+				PubKeyStr: r.FormValue("public_key"),
 			})
 			send(w, out, e)
 		})
@@ -259,9 +259,9 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/threads/new",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.NewThread(r.Context(), &object.NewThreadIO{
-				BoardPubKey: r.FormValue("board_public_key"),
-				Title:       r.FormValue("title"),
-				Body:        r.FormValue("body"),
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				Title:          r.FormValue("title"),
+				Body:           r.FormValue("body"),
 			})
 			send(w, out, e)
 		})
@@ -270,8 +270,8 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/threads/delete",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.DeleteThread(r.Context(), &object.ThreadIO{
-				BoardPubKey: r.FormValue("board_public_key"),
-				ThreadRef:   r.FormValue("thread_reference"),
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				ThreadRefStr:   r.FormValue("thread_reference"),
 			})
 			send(w, out, e)
 		})
@@ -280,10 +280,10 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/threads/vote",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.VoteThread(r.Context(), &object.VoteThreadIO{
-				BoardPubKey: r.FormValue("board_public_key"),
-				ThreadRef:   r.FormValue("thread_reference"),
-				Mode:        r.FormValue("mode"),
-				Tag:         r.FormValue("tag"),
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				ThreadRefStr:   r.FormValue("thread_reference"),
+				ModeStr:        r.FormValue("mode"),
+				TagStr:         r.FormValue("tag"),
 			})
 			send(w, out, e)
 		})
@@ -292,8 +292,8 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/threads/page/get",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.GetThreadPage(r.Context(), &object.ThreadIO{
-				BoardPubKey: r.FormValue("board_public_key"),
-				ThreadRef:   r.FormValue("thread_reference"),
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				ThreadRefStr:   r.FormValue("thread_reference"),
 			})
 			send(w, out, e)
 		})
@@ -307,11 +307,11 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.NewPost(r.Context(), &object.NewPostIO{
 				NewThreadIO: object.NewThreadIO{
-					BoardPubKey: r.FormValue("board_public_key"),
-					Title:       r.FormValue("title"),
-					Body:        r.FormValue("body"),
+					BoardPubKeyStr: r.FormValue("board_public_key"),
+					Title:          r.FormValue("title"),
+					Body:           r.FormValue("body"),
 				},
-				ThreadRef: r.FormValue("thread_reference"),
+				ThreadRefStr: r.FormValue("thread_reference"),
 			})
 			send(w, out, e)
 		})
@@ -321,10 +321,10 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.DeletePost(r.Context(), &object.PostIO{
 				ThreadIO: object.ThreadIO{
-					BoardPubKey: r.FormValue("board_public_key"),
-					ThreadRef:   r.FormValue("thread_reference"),
+					BoardPubKeyStr: r.FormValue("board_public_key"),
+					ThreadRefStr:   r.FormValue("thread_reference"),
 				},
-				PostRef: r.FormValue("post_reference"),
+				PostRefStr: r.FormValue("post_reference"),
 			})
 			send(w, out, e)
 		})
@@ -333,10 +333,10 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/posts/vote",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.VotePost(r.Context(), &object.VotePostIO{
-				BoardPubKey: r.FormValue("board_public_key"),
-				PostRef:     r.FormValue("post_reference"),
-				Mode:        r.FormValue("mode"),
-				Tag:         r.FormValue("tag"),
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				PostRefStr:     r.FormValue("post_reference"),
+				ModeStr:        r.FormValue("mode"),
+				TagStr:         r.FormValue("tag"),
 			})
 			send(w, out, e)
 		})

@@ -1,65 +1,9 @@
 package object
 
 import (
-	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"strconv"
-	"strings"
 )
-
-// CheckSeed ensures validity of seed. TODO
-func CheckSeed(seed string) error {
-	return nil
-}
-
-// CheckName ensures validity of board/thread/post name. TODO
-func CheckName(name string) error {
-	return nil
-}
-
-// CheckDesc ensures validity of board/thread/post description. TODO
-func CheckDesc(desc string) error {
-	return nil
-}
-
-// CheckAlias ensures validity of user alias. TODO
-func CheckAlias(alias string) error {
-	return nil
-}
-
-// CheckPassword ensures validity of password. TODO
-func CheckPassword(password string) error {
-	return nil
-}
-
-// CheckAddress ensures validity of address. TODO
-func CheckAddress(address string) error {
-	return nil
-}
-
-// CheckMode check's the vote's mode.
-func CheckMode(mode int8) error {
-	switch mode {
-	case -1, 0, +1:
-		return nil
-	default:
-		return boo.Newf(boo.InvalidInput,
-			"invalid vote mode of %d provided", mode)
-	}
-}
-
-// CheckTag check's the vote's tag.
-func CheckTag(tag []byte) error {
-	switch string(tag) {
-	case "", "spam":
-		return nil
-	default:
-		return boo.Newf(boo.InvalidInput,
-			"invalid vote tag of %s provided", string(tag))
-	}
-}
 
 // RetryIO represents io required on connection/subscription retries.
 type RetryIO struct {
@@ -148,340 +92,106 @@ func (io *RetryIO) Fill(subscriptions []Subscription, connections []string) *Ret
 
 // NewUserIO represents io required when creating a new user.
 type NewUserIO struct {
-	Alias    string `json:"alias"`
-	Seed     string `json:"seed"`
-	Password string `json:"password"`
-}
-
-func (io *NewUserIO) Process() error {
-	if e := CheckAlias(io.Alias); e != nil {
-		return e
-	}
-	if e := CheckSeed(io.Seed); e != nil {
-		return e
-	}
-	if e := CheckPassword(io.Password); e != nil {
-		return e
-	}
-	return nil
+	Alias      string        `bbs:"alias"`
+	Seed       string        `bbs:"uSeed"`
+	Password   string        `bbs:"password"`
+	UserPubKey cipher.PubKey `bbs:"upk"`
+	UserSecKey cipher.SecKey `bbs:"usk"`
 }
 
 // LoginIO represents input required when logging io.
 type LoginIO struct {
-	Alias    string `json:"alias"`
-	Password string `json:"password"`
-}
-
-func (io *LoginIO) Process() error {
-	if e := CheckAlias(io.Alias); e != nil {
-		return e
-	}
-	if e := CheckPassword(io.Password); e != nil {
-		return e
-	}
-	return nil
+	Alias    string `bbs:"alias"`
+	Password string `bbs:"password"`
 }
 
 // ConnectionIO represents input/output required when connection/disconnecting from address.
 type ConnectionIO struct {
-	Address string `json:"address"`
-}
-
-func (io *ConnectionIO) Process() error {
-	if e := CheckAddress(io.Address); e != nil {
-		return e
-	}
-	return nil
+	Address string `bbs:"address"`
 }
 
 // BoardIO represents a subscription input.
 type BoardIO struct {
-	PubKey string `json:"public_key"`
-	SecKey cipher.SecKey
-	pubKey cipher.PubKey
-}
-
-// Process checks and processes input for BoardIO.
-func (io *BoardIO) Process() (e error) {
-	io.pubKey, e = keys.GetPubKey(io.PubKey)
-	return
-}
-
-func (io *BoardIO) GetPK() cipher.PubKey {
-	return io.pubKey
-}
-
-func (io *BoardIO) GetSK() cipher.SecKey {
-	return io.SecKey
+	PubKeyStr string        `bbs:"bpkStr"`
+	PubKey    cipher.PubKey `bbs:"bpk"`
+	SecKey    cipher.SecKey `bbs:"bsk"`
 }
 
 // AddressIO represents input/output regarding addresses.
 type AddressIO struct {
-	PubKey  string `json:"public_key"`
-	SecKey  cipher.SecKey
-	Address string `json:"string"`
-	pubKey  cipher.PubKey
-}
-
-func (io *AddressIO) Process() error {
-	var e error
-	io.pubKey, e = keys.GetPubKey(io.PubKey)
-	if e != nil {
-		return e
-	}
-	if e = CheckAddress(io.Address); e != nil {
-		return e
-	}
-	return nil
-}
-
-func (io *AddressIO) GetPK() cipher.PubKey {
-	return io.pubKey
+	PubKeyStr string        `bbs:"bpkStr"`
+	PubKey    cipher.PubKey `bbs:"bpk"`
+	SecKey    cipher.SecKey `bbs:"bsk"`
+	Address   string        `bbs:"address"`
 }
 
 // NewBoardIO represents input required to create master board.
 type NewBoardIO struct {
-	Seed                string `json:"seed"`
-	Name                string `json:"name"`
-	Desc                string `json:"description"`
-	SubmissionAddresses string `json:"submission_addresses"` // Separated with commas.
-	Connections         string `json:"connections"`          // Separated with commas.
-
-	submissionAddresses []string
-	connections         []string
-	pubKey              cipher.PubKey
-	secKey              cipher.SecKey
-}
-
-// Process checks and processes input for NewBoardIO.
-func (io *NewBoardIO) Process() error {
-	if e := CheckSeed(io.Seed); e != nil {
-		return e
-	}
-	if e := CheckName(io.Name); e != nil {
-		return e
-	}
-	if e := CheckDesc(io.Desc); e != nil {
-		return e
-	}
-	// TODO: Fix empty addresses.
-	io.submissionAddresses =
-		strings.Split(io.SubmissionAddresses, ",")
-	for i := range io.submissionAddresses {
-		io.submissionAddresses[i] =
-			strings.TrimSpace(io.submissionAddresses[i])
-	}
-	io.connections =
-		strings.Split(io.Connections, ",")
-	for i := range io.connections {
-		io.connections[i] =
-			strings.TrimSpace(io.connections[i])
-	}
-	io.pubKey, io.secKey =
-		cipher.GenerateDeterministicKeyPair([]byte(io.Seed))
-	return nil
-}
-
-func (io *NewBoardIO) GetSubmissionAddresses() []string {
-	return io.submissionAddresses
-}
-
-func (io *NewBoardIO) GetConnections() []string {
-	return io.connections
-}
-
-func (io *NewBoardIO) GetPK() cipher.PubKey {
-	return io.pubKey
-}
-
-func (io *NewBoardIO) GetSK() cipher.SecKey {
-	return io.secKey
+	Seed                   string        `bbs:"bSeed"`
+	Name                   string        `bbs:"name"`
+	Desc                   string        `bbs:"description"`
+	SubmissionAddressesStr string        `bbs:"subAddrsStr"` // Separated with commas.
+	SubmissionAddresses    []string      `bbs:"subAddrs"`
+	ConnectionsStr         string        `bbs:"consStr"` // Separated with commas.
+	Connections            []string      `bbs:"cons"`
+	BoardPubKey            cipher.PubKey `bbs:"bpk"`
+	BoardSecKey            cipher.SecKey `bbs:"bsk"`
 }
 
 type ThreadIO struct {
-	BoardPubKey string `json:"board_public_key"`
-	BoardSecKey cipher.SecKey
-	ThreadRef   string `json:"thread_reference"`
-
-	boardPubKey cipher.PubKey
-	threadRef   skyobject.Reference
-}
-
-func (io *ThreadIO) Process() (e error) {
-	io.boardPubKey, e = keys.GetPubKey(io.BoardPubKey)
-	if e != nil {
-		return
-	}
-	io.threadRef, e = keys.GetReference(io.ThreadRef)
-	if e != nil {
-		return
-	}
-	return
-}
-
-func (io *ThreadIO) GetBoardPK() cipher.PubKey {
-	return io.boardPubKey
-}
-
-func (io *ThreadIO) GetThreadRef() skyobject.Reference {
-	return io.threadRef
+	BoardPubKeyStr string              `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey       `bbs:"bpk"`
+	BoardSecKey    cipher.SecKey       `bbs:"bsk"`
+	ThreadRefStr   string              `bbs:"tRefStr"`
+	ThreadRef      skyobject.Reference `bbs:"tRef"`
 }
 
 type NewThreadIO struct {
-	BoardPubKey string `json:"board_public_key"`
-	BoardSecKey cipher.SecKey
-	UserPubKey  cipher.PubKey
-	UserSecKey  cipher.SecKey
-	Title       string `json:"title"`
-	Body        string `json:"body"`
-
-	boardPubKey cipher.PubKey
-}
-
-func (io *NewThreadIO) Process() (e error) {
-	io.boardPubKey, e = keys.GetPubKey(io.BoardPubKey)
-	if e != nil {
-		return e
-	}
-	if e := CheckName(io.Title); e != nil {
-		return e
-	}
-	if e := CheckDesc(io.Body); e != nil {
-		return e
-	}
-	return nil
-}
-
-func (io *NewThreadIO) GetBoardPK() cipher.PubKey {
-	return io.boardPubKey
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	BoardSecKey    cipher.SecKey `bbs:"bsk"`
+	UserPubKey     cipher.PubKey `bbs:"upk"`
+	UserSecKey     cipher.SecKey `bbs:"usk"`
+	Title          string        `bbs:"heading"`
+	Body           string        `bbs:"body"`
 }
 
 type VoteThreadIO struct {
-	BoardPubKey string `json:"board_public_key"`
-	BoardSecKey cipher.SecKey
-	ThreadRef   string `json:"thread_reference"`
-	UserPubKey  cipher.PubKey
-	UserSecKey  cipher.SecKey
-	Mode        string `json:"mode"`
-	Tag         string `json:"tag"`
-
-	boardPubKey cipher.PubKey
-	threadRef   skyobject.Reference
-	mode        int8
-	tag         []byte
+	BoardPubKeyStr string              `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey       `bbs:"bpk"`
+	BoardSecKey    cipher.SecKey       `bbs:"bsk"`
+	ThreadRefStr   string              `bbs:"tRefStr"`
+	ThreadRef      skyobject.Reference `bbs:"tRef"`
+	UserPubKey     cipher.PubKey       `bbs:"upk"`
+	UserSecKey     cipher.SecKey       `bbs:"usk"`
+	ModeStr        string              `bbs:"modeStr"`
+	Mode           int8                `bbs:"mode"`
+	TagStr         string              `bbs:"tagStr"`
+	Tag            []byte              `bbs:"tag"`
 }
-
-func (io *VoteThreadIO) Process() (e error) {
-	io.boardPubKey, e = keys.GetPubKey(io.BoardPubKey)
-	if e != nil {
-		return
-	}
-	io.threadRef, e = keys.GetReference(io.ThreadRef)
-	if e != nil {
-		return
-	}
-	var mode int
-	mode, e = strconv.Atoi(io.Mode)
-	if e != nil {
-		return
-	}
-	io.mode = int8(mode)
-	if e = CheckMode(io.mode); e != nil {
-		return
-	}
-	io.tag = []byte(io.Tag)
-	if e = CheckTag(io.tag); e != nil {
-		return
-	}
-	return
-}
-
-func (io *VoteThreadIO) GetBoardPK() cipher.PubKey         { return io.boardPubKey }
-func (io *VoteThreadIO) GetThreadRef() skyobject.Reference { return io.threadRef }
-func (io *VoteThreadIO) GetMode() int8                     { return io.mode }
-func (io *VoteThreadIO) GetTag() []byte                    { return io.tag }
 
 type PostIO struct {
 	ThreadIO
-	PostRef string `json:"post_reference"`
-	postRef skyobject.Reference
-}
-
-func (io *PostIO) Process() (e error) {
-	if e = io.ThreadIO.Process(); e != nil {
-		return
-	}
-	if io.postRef, e = keys.GetReference(io.PostRef); e != nil {
-		return
-	}
-	return
-}
-
-func (io *PostIO) GetPostRef() skyobject.Reference {
-	return io.postRef
+	PostRefStr string              `bbs:"pRefStr"`
+	PostRef    skyobject.Reference `bbs:"pRef"`
 }
 
 type NewPostIO struct {
 	NewThreadIO
-	ThreadRef string `json:"thread_reference"`
-	threadRef skyobject.Reference
-}
-
-func (io *NewPostIO) Process() (e error) {
-	if e = io.NewThreadIO.Process(); e != nil {
-		return
-	}
-	if io.threadRef, e = keys.GetReference(io.ThreadRef); e != nil {
-		return
-	}
-	return
-}
-
-func (io *NewPostIO) GetThreadRef() skyobject.Reference {
-	return io.threadRef
+	ThreadRefStr string              `bbs:"tRefStr"`
+	ThreadRef    skyobject.Reference `bbs:"tRef"`
 }
 
 type VotePostIO struct {
-	BoardPubKey string `json:"board_public_key"`
-	BoardSecKey cipher.SecKey
-	PostRef     string `json:"post_reference"`
-	UserPubKey  cipher.PubKey
-	UserSecKey  cipher.SecKey
-	Mode        string `json:"mode"`
-	Tag         string `json:"tag"`
-
-	boardPubKey cipher.PubKey
-	postRef     skyobject.Reference
-	mode        int8
-	tag         []byte
+	BoardPubKeyStr string              `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey       `bbs:"bpk"`
+	BoardSecKey    cipher.SecKey       `bbs:"bsk"`
+	PostRefStr     string              `bbs:"pRefStr"`
+	PostRef        skyobject.Reference `bbs:"pRef"`
+	UserPubKey     cipher.PubKey       `bbs:"upk"`
+	UserSecKey     cipher.SecKey       `bbs:"usk"`
+	ModeStr        string              `bbs:"modeStr"`
+	Mode           int8                `bbs:"mode"`
+	TagStr         string              `bbs:"tagStr"`
+	Tag            []byte              `bbs:"tag"`
 }
-
-func (io *VotePostIO) Process() (e error) {
-	io.boardPubKey, e = keys.GetPubKey(io.BoardPubKey)
-	if e != nil {
-		return
-	}
-	io.postRef, e = keys.GetReference(io.PostRef)
-	if e != nil {
-		return
-	}
-	var mode int
-	mode, e = strconv.Atoi(io.Mode)
-	if e != nil {
-		return
-	}
-	io.mode = int8(mode)
-	if e = CheckMode(io.mode); e != nil {
-		return
-	}
-	io.tag = []byte(io.Tag)
-	if e = CheckTag(io.tag); e != nil {
-		return
-	}
-	return
-}
-
-func (io *VotePostIO) GetBoardPK() cipher.PubKey       { return io.boardPubKey }
-func (io *VotePostIO) GetPostRef() skyobject.Reference { return io.postRef }
-func (io *VotePostIO) GetMode() int8                   { return io.mode }
-func (io *VotePostIO) GetTag() []byte                  { return io.tag }

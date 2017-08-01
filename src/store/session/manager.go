@@ -316,13 +316,12 @@ type reqNewUser struct {
 }
 
 func (s *Manager) processNewUser(r *reqNewUser) {
-	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(r.in.Seed))
 	key := []byte(r.in.Password)
 	uFile := UserFile{
 		User: object.User{
 			Alias:     r.in.Alias,
-			PublicKey: pk,
-			SecretKey: sk,
+			PublicKey: r.in.UserPubKey,
+			SecretKey: r.in.UserSecKey,
 		},
 	}
 	data, e := hide.Encrypt(key, encoder.Serialize(uFile))
@@ -642,16 +641,16 @@ func (s *Manager) processNewSubscription(r *reqNewSubscription) {
 	}
 
 	for _, sub := range s.user.Subscriptions {
-		if sub.PubKey == r.in.GetPK() {
+		if sub.PubKey == r.in.PubKey {
 			r.out <- output{
-				e: boo.Newf(boo.AlreadyExists, "already subscribed to board %s", r.in.GetPK().Hex())}
+				e: boo.Newf(boo.AlreadyExists, "already subscribed to board %s", r.in.PubKeyStr)}
 			return
 		}
 	}
 
-	s.retries <- &object.RetryIO{PublicKeys: []cipher.PubKey{r.in.GetPK()}}
+	s.retries <- &object.RetryIO{PublicKeys: []cipher.PubKey{r.in.PubKey}}
 
-	s.user.Subscriptions = append(s.user.Subscriptions, object.Subscription{PubKey: r.in.GetPK()})
+	s.user.Subscriptions = append(s.user.Subscriptions, object.Subscription{PubKey: r.in.PubKey})
 	s.changes = true
 	r.out <- output{f: &(*s.user)}
 }
@@ -685,7 +684,7 @@ func (s *Manager) processDeleteSubscription(r *reqDeleteSubscription) {
 	}
 
 	for i, sub := range s.user.Subscriptions {
-		if sub.PubKey == r.in.GetPK() {
+		if sub.PubKey == r.in.PubKey {
 			s.user.Subscriptions = append(
 				s.user.Subscriptions[:i],
 				s.user.Subscriptions[i+1:]...,
@@ -697,9 +696,9 @@ func (s *Manager) processDeleteSubscription(r *reqDeleteSubscription) {
 	cleared := make(chan struct{})
 	s.clearRetries <- cleared
 	<-cleared
-	s.cxo.Unsubscribe("", r.in.GetPK())
+	s.cxo.Unsubscribe("", r.in.PubKey)
 	for _, address := range s.user.Connections {
-		s.cxo.Unsubscribe(address, r.in.GetPK())
+		s.cxo.Unsubscribe(address, r.in.PubKey)
 	}
 	s.retries <- s.cxo.Initialize(new(object.RetryIO).Fill(
 		append(s.user.Subscriptions, s.user.Masters...),
@@ -737,15 +736,15 @@ func (s *Manager) processNewMaster(r *reqNewMaster) {
 		return
 	}
 	for _, sub := range s.user.Masters {
-		if sub.PubKey == r.in.GetPK() {
+		if sub.PubKey == r.in.BoardPubKey {
 			r.out <- output{e: boo.Newf(boo.AlreadyExists,
-				"you already own a board with public key %s", r.in.GetPK().Hex())}
+				"you already own a board with public key %s", r.in.BoardPubKey.Hex())}
 			return
 		}
 	}
 	s.user.Masters = append(s.user.Masters, object.Subscription{
-		PubKey: r.in.GetPK(),
-		SecKey: r.in.GetSK(),
+		PubKey: r.in.BoardPubKey,
+		SecKey: r.in.BoardSecKey,
 	})
 
 	s.changes = true
@@ -780,7 +779,7 @@ func (s *Manager) processDeleteMaster(r *reqDeleteMaster) {
 		return
 	}
 	for i, sub := range s.user.Masters {
-		if sub.PubKey == r.in.GetPK() {
+		if sub.PubKey == r.in.PubKey {
 			r.in.SecKey = sub.SecKey // Get secret key.
 			s.user.Masters = append(
 				s.user.Masters[:i],
@@ -792,7 +791,7 @@ func (s *Manager) processDeleteMaster(r *reqDeleteMaster) {
 		}
 	}
 	r.out <- output{e: boo.Newf(boo.NotFound,
-		"master board of public key %s not found", r.in.PubKey)}
+		"master board of public key %s not found", r.in.PubKeyStr)}
 }
 
 // DeleteMaster removes a master subscription.

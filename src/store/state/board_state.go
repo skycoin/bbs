@@ -74,9 +74,13 @@ func (s *BoardState) service() {
 	for {
 		select {
 		case root := <-s.newRoots:
-			for len(s.newRoots) > 1 || root.Seq() <= s.seq {
+			for len(s.newRoots) > 1 {
 				s.l.Printf("SKIPPING root of seq (%d).", root.Seq())
 				root = <-s.newRoots
+			}
+			if root.Seq() <= s.seq {
+				s.l.Printf("SKIPPING root of seq (%d).", root.Seq())
+				break
 			}
 			s.l.Printf("PROCESSING root of seq (%d)", root.Seq())
 			s.seq = root.Seq()

@@ -110,6 +110,8 @@ type BoardPageOutput struct {
 
 func getBoardPage(_ context.Context, compiler *state.Compiler, result *content.Result) *BoardPageOutput {
 
+	bState := compiler.GetBoard(result.GetPK())
+
 	out := &BoardPageOutput{
 		Board: object.BoardView{
 			Board:     result.Board,
@@ -117,8 +119,6 @@ func getBoardPage(_ context.Context, compiler *state.Compiler, result *content.R
 		},
 		Threads: make([]object.ThreadView, len(result.Threads)),
 	}
-
-	bState := compiler.GetBoard(result.GetPK())
 
 	for i, thread := range result.Threads {
 		out.Threads[i] = object.ThreadView{
@@ -141,6 +141,8 @@ type ThreadPageOutput struct {
 
 func getThreadPage(ctx context.Context, compiler *state.Compiler, result *content.Result) *ThreadPageOutput {
 
+	bState := compiler.GetBoard(result.GetPK())
+
 	out := &ThreadPageOutput{
 		BoardPageOutput: getBoardPage(ctx, compiler, result),
 		Thread: object.ThreadView{
@@ -148,12 +150,10 @@ func getThreadPage(ctx context.Context, compiler *state.Compiler, result *conten
 			Ref:         result.Thread.R.Hex(),
 			AuthorRef:   result.Thread.User.Hex(),
 			AuthorAlias: "-",
-			Votes:       nil, // TODO: Implement.
+			Votes:       bState.GetThreadVotes(skyobject.Reference(result.Thread.R)),
 		},
 		Posts: make([]object.PostView, len(result.Posts)),
 	}
-
-	bState := compiler.GetBoard(result.GetPK())
 
 	for i, post := range result.Posts {
 		out.Posts[i] = object.PostView{
