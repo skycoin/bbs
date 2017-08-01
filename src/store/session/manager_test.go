@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/cipher"
 	"io/ioutil"
 	"log"
@@ -17,12 +18,13 @@ const (
 )
 
 var (
-	master       = false
-	testMode     = false
-	memoryMode   = false
-	cxoPort      = 8998
-	cxoRPCEnable = false
-	cxoRPCPort   = 8997
+	master          = false
+	testMode        = false
+	memoryMode      = false
+	cxoPort         = 8998
+	cxoRPCEnable    = false
+	cxoRPCPort      = 8997
+	compilerWorkers = 10
 )
 
 func createUserState() (*Manager, func()) {
@@ -30,15 +32,20 @@ func createUserState() (*Manager, func()) {
 	if e != nil {
 		log.Panic(e)
 	}
-	us, e := NewManager(&ManagerConfig{
-		Master:       &master,
-		TestMode:     &testMode,
-		MemoryMode:   &memoryMode,
-		ConfigDir:    &configDir,
-		CXOPort:      &cxoPort,
-		CXORPCEnable: &cxoRPCEnable,
-		CXORPCPort:   &cxoRPCPort,
-	})
+	us, e := NewManager(
+		&ManagerConfig{
+			Master:       &master,
+			TestMode:     &testMode,
+			MemoryMode:   &memoryMode,
+			ConfigDir:    &configDir,
+			CXOPort:      &cxoPort,
+			CXORPCEnable: &cxoRPCEnable,
+			CXORPCPort:   &cxoRPCPort,
+		},
+		&state.CompilerConfig{
+			Workers: &compilerWorkers,
+		},
+	)
 	if e != nil {
 		log.Panic(e)
 	}
@@ -202,8 +209,8 @@ func TestSessionManager_NewSubscription(t *testing.T) {
 	login(ctx, t, us, 0)
 
 	for i := 0; i < initCount; i++ {
-		in := object.BoardIO{PubKey: pks[i].Hex()}
-		in.Process()
+		in := object.BoardIO{PubKeyStr: pks[i].Hex()}
+		object.Process(in)
 		file, e := us.NewSubscription(ctx, &in)
 		if e != nil {
 			t.Error("Failed to subscribe:", e)
@@ -213,8 +220,8 @@ func TestSessionManager_NewSubscription(t *testing.T) {
 	}
 
 	for i := initCount - 1; i >= 0; i-- {
-		in := object.BoardIO{PubKey: pks[i].Hex()}
-		in.Process()
+		in := object.BoardIO{PubKeyStr: pks[i].Hex()}
+		object.Process(in)
 		file, e := us.DeleteSubscription(ctx, &in)
 		if e != nil {
 			t.Error("Failed to unsubscribe:", e)
@@ -243,7 +250,7 @@ func TestSessionManager_NewMaster(t *testing.T) {
 			Name: "Master Board " + strconv.Itoa(i),
 			Desc: "A generated test board of index " + strconv.Itoa(i),
 		}
-		in.Process()
+		object.Process(in)
 		file, e := us.NewMaster(ctx, &in)
 		if e != nil {
 			t.Error(e)
@@ -255,9 +262,9 @@ func TestSessionManager_NewMaster(t *testing.T) {
 
 	for i := initCount - 1; i >= 0; i-- {
 		in := object.BoardIO{
-			PubKey: pks[i].Hex(),
+			PubKeyStr: pks[i].Hex(),
 		}
-		in.Process()
+		object.Process(in)
 		file, e := us.DeleteMaster(ctx, &in)
 		if e != nil {
 			t.Error("Failed to delete master subscription:", e)

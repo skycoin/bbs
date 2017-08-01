@@ -4,6 +4,15 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
+	"reflect"
+)
+
+const (
+	tagKey       = "bbs"
+	boardPKValue = "bpk"
+	boardSKValue = "bsk"
+	userPKValue  = "upk"
+	userSKValue  = "usk"
 )
 
 var (
@@ -112,11 +121,68 @@ func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
 	return view
 }
 
+// FindMaster finds the index of a master subscription.
+// If not found, returns an error.
 func (f *UserFile) FindMaster(pk cipher.PubKey) (int, error) {
 	for i, sub := range f.Masters {
 		if sub.PubKey == pk {
 			return i, nil
 		}
 	}
-	return -1, boo.Newf(boo.NotFound, "board %s not found as master", pk.Hex())
+	return -1, boo.Newf(boo.NotFound,
+		"board %s not found as master", pk.Hex())
+}
+
+func (f *UserFile) FillMaster(v interface{}) error {
+	rVal, rTyp := getReflectPair(v)
+
+	var e error
+	var mIndex = -1
+
+	for i := 0; i < rTyp.NumField(); i++ {
+		if tagVal, has := getTagKey(rTyp, i); has {
+			field := rVal.Field(i)
+			switch tagVal {
+			case boardPKValue:
+				mIndex, e = f.FindMaster(field.Interface().(cipher.PubKey))
+				if e != nil {
+					return e
+				}
+			case boardSKValue:
+				if mIndex == -1 {
+					panic(boo.New(boo.Internal,
+						"struct has no field with '%s' tag", boardPKValue))
+				}
+				field.Set(reflect.ValueOf(
+					f.Masters[mIndex].SecKey))
+				return nil
+			}
+		}
+	}
+	return nil
+}
+
+func (f *UserFile) FillUser(v interface{}) {
+	rVal, rTyp := getReflectPair(v)
+	for i := 0; i < rTyp.NumField(); i++ {
+		if tagVal, has := getTagKey(rTyp, i); has {
+			field := rVal.Field(i)
+			switch tagVal {
+			case userPKValue:
+				field.Set(reflect.ValueOf(f.User.PublicKey))
+			case userSKValue:
+				field.Set(reflect.ValueOf(f.User.SecretKey))
+				return
+			}
+		}
+	}
+}
+
+func getReflectPair(v interface{}) (reflect.Value, reflect.Type) {
+	rVal := reflect.ValueOf(v).Elem()
+	return rVal, rVal.Type()
+}
+
+func getTagKey(rTyp reflect.Type, i int) (string, bool) {
+	return rTyp.Field(i).Tag.Lookup(tagKey)
 }
