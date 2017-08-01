@@ -71,7 +71,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) (*M
 		c:            config,
 		l:            inform.NewLogger(true, os.Stdout, usersLogPrefix),
 		cxo:          NewCXO(config),
-		compiler:     state.NewCompiler(compilerConfig),
+		compiler:     state.NewCompiler(compilerConfig, state.SetV1State()),
 		changes:      false,
 		retries:      make(chan *object.RetryIO, 5),
 		clearRetries: make(chan chan struct{}),

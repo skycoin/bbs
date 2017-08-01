@@ -298,6 +298,10 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 		return nil, e
 	}
 	file.FillUser(in)
+	in.Thread = new(object.Thread)
+	tag.Transfer(in, &in.Thread.Post)
+	tag.Sign(&in.Thread.Post, in.UserPubKey, in.UserSecKey)
+
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
 	if e := file.FillMaster(in); e != nil {
@@ -354,6 +358,10 @@ func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*Vote
 		return nil, e
 	}
 	file.FillUser(in)
+	in.Vote = new(object.Vote)
+	tag.Transfer(in, in.Vote)
+	tag.Sign(in.Vote, in.UserPubKey, in.UserSecKey)
+
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
 	if e := file.FillMaster(in); e != nil {
@@ -406,6 +414,10 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 		return nil, e
 	}
 	file.FillUser(in)
+	in.Post = new(object.Post)
+	tag.Transfer(in, in.Post)
+	tag.Sign(in.Post, in.UserPubKey, in.UserSecKey)
+
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
 	if e := file.FillMaster(in); e != nil {
@@ -462,6 +474,10 @@ func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOut
 		return nil, e
 	}
 	file.FillUser(in)
+	in.Vote = new(object.Vote)
+	tag.Transfer(in, in.Vote)
+	tag.Sign(in.Vote, in.UserPubKey, in.UserSecKey)
+
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
 	if e := file.FillMaster(in); e != nil {

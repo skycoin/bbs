@@ -15,31 +15,15 @@ const (
 )
 
 var (
-	ErrInterfaceNotPointer       = errors.New("interface is not pointer")
-	ErrInterfaceNotStructPointer = errors.New("interface is not struct pointer")
-	ErrInvalidSignatureField     = errors.New("signature field has invalid type")
-	ErrInvalidPublicKeyField     = errors.New("public key field has invalid type")
-	ErrInput                     = errors.New("invalid input")
+	ErrInvalidSignatureField = errors.New("signature field has invalid type")
+	ErrInvalidPublicKeyField = errors.New("public key field has invalid type")
+	ErrInput                 = errors.New("invalid input")
 )
 
 // Sign signs an object.
-func Sign(obj interface{}, pk cipher.PubKey, sk cipher.SecKey) (cipher.Sig, error) {
+func Sign(obj interface{}, pk cipher.PubKey, sk cipher.SecKey) {
+	rVal, rTyp := getReflectPair(obj)
 	sig := cipher.Sig{}
-	rVal := reflect.ValueOf(obj)
-
-	// Verify if interface is pointer.
-	if rVal.Kind() != reflect.Ptr || rVal.IsNil() {
-		return sig, ErrInterfaceNotPointer
-	}
-
-	rVal = rVal.Elem()
-
-	// Verify if pointer points to struct.
-	if rVal.Kind() != reflect.Struct {
-		return sig, ErrInterfaceNotStructPointer
-	}
-
-	rTyp := rVal.Type()
 	sigInt := -1
 
 	// Look through fields of struct.
@@ -55,17 +39,17 @@ func Sign(obj interface{}, pk cipher.PubKey, sk cipher.SecKey) (cipher.Sig, erro
 			clearField(field)
 		case verifySig:
 			if field.Type() != reflect.TypeOf(cipher.Sig{}) {
-				return sig, ErrInvalidSignatureField
+				panic(ErrInvalidSignatureField)
 			}
 			clearField(field)
 			sigInt = i
 		case verifyPK:
 			if field.Type() != reflect.TypeOf(cipher.PubKey{}) {
-				return sig, ErrInvalidPublicKeyField
+				panic(ErrInvalidPublicKeyField)
 			}
 			field.Set(reflect.ValueOf(pk))
 		default:
-			return sig, errors.New("invalid tag")
+			panic(errors.New("invalid tag"))
 		}
 	}
 
@@ -74,7 +58,6 @@ func Sign(obj interface{}, pk cipher.PubKey, sk cipher.SecKey) (cipher.Sig, erro
 	if sigInt >= 0 {
 		rVal.Field(sigInt).Set(reflect.ValueOf(sig))
 	}
-	return sig, nil
 }
 
 // Verify checks the signature of object.
@@ -86,21 +69,7 @@ func Verify(obj interface{}, pks ...cipher.PubKey) error {
 		pk = pks[0]
 		fallthrough
 	case 0:
-		rVal := reflect.ValueOf(obj)
-
-		// Verify if interface is pointer.
-		if rVal.Kind() != reflect.Ptr || rVal.IsNil() {
-			return ErrInterfaceNotPointer
-		}
-
-		rVal = rVal.Elem()
-
-		// Verify if pointer points to struct.
-		if rVal.Kind() != reflect.Struct {
-			return ErrInterfaceNotStructPointer
-		}
-
-		rTyp := rVal.Type()
+		rVal, rTyp := getReflectPair(obj)
 
 		for i := 0; i < rTyp.NumField(); i++ {
 			tagVal, has := rTyp.Field(i).Tag.Lookup(verifyKey)

@@ -19,14 +19,14 @@ type Result struct {
 	ThreadPages          []*object.ThreadPage
 	Thread               *object.Thread
 	Threads              []*object.Thread
-	ThreadVotesPage      *object.ThreadVotesPage
+	ThreadVotesPage      *object.ThreadVotesPages
 	ThreadVotesPageIndex int
 	ThreadVote           *object.Vote
 	ThreadIndex          int
 	ThreadRefMap         map[cipher.SHA256]int
 	Post                 *object.Post
 	Posts                []*object.Post
-	PostVotesPage        *object.PostVotesPage
+	PostVotesPage        *object.PostVotesPages
 	PostVotesPageIndex   int
 	PostVote             *object.Vote
 	PostIndex            int
@@ -74,7 +74,7 @@ func (r *Result) GetPages(b, t, p bool) *Result {
 		}
 	}
 	if t {
-		r.ThreadVotesPage = &object.ThreadVotesPage{
+		r.ThreadVotesPage = &object.ThreadVotesPages{
 			R: toSHA256(r.root.Refs()[1].Object),
 		}
 		if e := r.deserialize(toRef(r.ThreadVotesPage.R), r.ThreadVotesPage); e != nil {
@@ -91,7 +91,7 @@ func (r *Result) GetPages(b, t, p bool) *Result {
 		}()
 	}
 	if p {
-		r.PostVotesPage = &object.PostVotesPage{
+		r.PostVotesPage = &object.PostVotesPages{
 			R: toSHA256(r.root.Refs()[2].Object),
 		}
 		if e := r.deserialize(toRef(r.PostVotesPage.R), r.PostVotesPage); e != nil {

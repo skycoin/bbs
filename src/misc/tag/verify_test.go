@@ -29,9 +29,7 @@ func TestSign(t *testing.T) {
 	t.Log("Post:", *post)
 
 	pk, sk := cipher.GenerateKeyPair()
-	if _, e := Sign(post, pk, sk); e != nil {
-		t.Error(e)
-	}
+	Sign(post, pk, sk)
 	t.Log("Post:", *post)
 
 	tempPost := *post

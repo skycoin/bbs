@@ -14,10 +14,10 @@ type BoardPage struct {
 
 type Board struct {
 	R                   cipher.SHA256  `json:"-" enc:"-"`
-	Name                string         `json:"name"`
-	Desc                string         `json:"description"`
+	Name                string         `json:"name" transfer:"heading"`
+	Desc                string         `json:"description" transfer:"body"`
 	Created             int64          `json:"created"`
-	SubmissionAddresses []string       `json:"submission_addresses"`
+	SubmissionAddresses []string       `json:"submission_addresses" transfer:"subAddrs"`
 	ExternalRoots       []ExternalRoot `json:"-"`
 	Meta                []byte         `json:"-"`
 }
@@ -41,10 +41,10 @@ type Thread struct {
 
 type Post struct {
 	R       cipher.SHA256 `json:"-" enc:"-"`
-	Title   string        `json:"title"`
-	Body    string        `json:"body"`
+	Title   string        `json:"title" transfer:"heading"`
+	Body    string        `json:"body" transfer:"body"`
 	Created int64         `json:"created"`
-	User    cipher.PubKey `json:"-" verify:"pk"`
+	User    cipher.PubKey `json:"-" verify:"pk" transfer:"upk"`
 	Sig     cipher.Sig    `json:"-" verify:"sig"`
 	Meta    []byte        `json:"-"`
 }
@@ -55,25 +55,29 @@ func (p Post) Verify() error { return tag.Verify(&p) }
 // Vote represents a post by a user.
 type Vote struct {
 	R       cipher.SHA256 `json:"-" enc:"-"`
-	User    cipher.PubKey `json:"-" verify:"pk"` // User who voted.
-	Mode    int8          `json:"-"`             // +1 is up, -1 is down.
-	Tag     []byte        `json:"-"`             // What's this?
+	User    cipher.PubKey `json:"-" verify:"pk" transfer:"upk"` // User who voted.
+	Mode    int8          `json:"-" transfer:"mode"`            // +1 is up, -1 is down.
+	Tag     []byte        `json:"-" transfer:"tag"`             // What's this?
 	Created int64         `json:"created"`
 	Sig     cipher.Sig    `json:"-" verify:"sig"` // Signature.
 }
 
 func (v Vote) Verify() error { return tag.Verify(&v) }
 
-type ThreadVotesPage struct {
-	R       cipher.SHA256 `json:"-" enc:"-"`
-	Store   []VotesPage
-	Deleted []cipher.SHA256
+type ThreadVotesPages struct {
+	R           cipher.SHA256 `json:"-" enc:"-"`
+	StoreHash   cipher.SHA256 `enc:"-"`
+	DeletedHash cipher.SHA256 `enc:"-"`
+	Store       []VotesPage
+	Deleted     []cipher.SHA256
 }
 
-type PostVotesPage struct {
-	R       cipher.SHA256 `json:"-" enc:"-"`
-	Store   []VotesPage
-	Deleted []cipher.SHA256
+type PostVotesPages struct {
+	R           cipher.SHA256 `json:"-" enc:"-"`
+	StoreHash   cipher.SHA256 `enc:"-"`
+	DeletedHash cipher.SHA256 `enc:"-"`
+	Store       []VotesPage
+	Deleted     []cipher.SHA256
 }
 
 type VotesPage struct {
@@ -83,13 +87,13 @@ type VotesPage struct {
 
 type User struct {
 	R         cipher.SHA256 `json:"-" enc:"-"`
-	Alias     string        `json:"alias"`
-	PublicKey cipher.PubKey `json:"-"`
-	SecretKey cipher.SecKey `json:"-"`
+	Alias     string        `json:"alias" transfer:"alias"`
+	PublicKey cipher.PubKey `json:"-" transfer:"upk"`
+	SecretKey cipher.SecKey `json:"-" transfer:"usk"`
 }
 
 type Subscription struct {
 	R      cipher.SHA256 `json:"-" enc:"-"`
-	PubKey cipher.PubKey `json:"pk"`
-	SecKey cipher.SecKey `json:"sk,omitempty"`
+	PubKey cipher.PubKey `json:"pk" transfer:"bpk"`
+	SecKey cipher.SecKey `json:"sk,omitempty" transfer:"bsk"`
 }

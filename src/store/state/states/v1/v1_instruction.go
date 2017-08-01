@@ -1,4 +1,4 @@
-package state
+package v1
 
 import (
 	"github.com/skycoin/bbs/src/store/object"

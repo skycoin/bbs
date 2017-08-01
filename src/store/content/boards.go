@@ -3,7 +3,6 @@ package content
 import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
 	"sync"
@@ -33,8 +32,8 @@ func NewBoard(_ context.Context, root *node.Root, in *object.NewBoardIO) error {
 				Meta:                []byte("{}"), // TODO
 			}),
 		}),
-		root.MustDynamic("ThreadVotesPage", object.ThreadVotesPage{}),
-		root.MustDynamic("PostVotesPage", object.PostVotesPage{}),
+		root.MustDynamic("ThreadVotesPages", object.ThreadVotesPages{}),
+		root.MustDynamic("PostVotesPages", object.PostVotesPages{}),
 	)
 	return boo.WrapType(e, boo.Internal, "failed to create board")
 }
@@ -118,17 +117,10 @@ func NewThread(_ context.Context, root *node.Root, in *object.NewThreadIO) (*Res
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
-	result.Thread = &object.Thread{
-		Post: object.Post{
-			Title: in.Title,
-			Body:  in.Body,
-		},
-	}
-	_, e := tag.Sign(&result.Thread.Post, in.UserPubKey, in.UserSecKey)
-	if e != nil {
+	if e := in.Thread.Verify(); e != nil {
 		return nil, e
 	}
-	result.Thread.Post.Created = time.Now().UnixNano()
+	result.Thread = in.Thread
 	result.ThreadPages = append(result.ThreadPages, result.ThreadPage)
 	result.Threads = append(result.Threads, result.Thread)
 	result.
@@ -188,14 +180,10 @@ func VoteThread(_ context.Context, root *node.Root, in *object.VoteThreadIO) (*R
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
-	result.ThreadVote = &object.Vote{
-		Mode:    in.Mode,
-		Tag:     in.Tag,
-		Created: time.Now().UnixNano(),
-	}
-	if _, e := tag.Sign(result.ThreadVote, in.UserPubKey, in.UserSecKey); e != nil {
+	if e := in.Vote.Verify(); e != nil {
 		return nil, e
 	}
+	result.ThreadVote = in.Vote
 	result.
 		saveThreadVote(in.ThreadRef).
 		savePages(false, true, false)
@@ -230,14 +218,10 @@ func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result,
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
-	result.Post = &object.Post{
-		Title: in.Title,
-		Body:  in.Body,
-	}
-	_, e := tag.Sign(result.Post, in.UserPubKey, in.UserSecKey)
-	if e != nil {
+	if e := in.Post.Verify(); e != nil {
 		return nil, e
 	}
+	result.Post = in.Post
 	result.Post.Created = time.Now().UnixNano()
 	result.Posts = append(result.Posts, result.Post)
 	result.
@@ -295,14 +279,10 @@ func VotePost(_ context.Context, root *node.Root, in *object.VotePostIO) (*Resul
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
-	result.PostVote = &object.Vote{
-		Mode:    in.Mode,
-		Tag:     in.Tag,
-		Created: time.Now().UnixNano(),
-	}
-	if _, e := tag.Sign(result.PostVote, in.UserPubKey, in.UserSecKey); e != nil {
+	if e := in.Vote.Verify(); e != nil {
 		return nil, e
 	}
+	result.PostVote = in.Vote
 	result.
 		savePostVote(in.PostRef).
 		savePages(false, false, true)
