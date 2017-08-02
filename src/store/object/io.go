@@ -92,11 +92,11 @@ func (io *RetryIO) Fill(subscriptions []Subscription, connections []string) *Ret
 
 // NewUserIO represents io required when creating a new user.
 type NewUserIO struct {
-	Alias      string        `bbs:"alias"`
+	Alias      string        `bbs:"alias" transfer:"alias"`
 	Seed       string        `bbs:"uSeed"`
 	Password   string        `bbs:"password"`
-	UserPubKey cipher.PubKey `bbs:"upk"`
-	UserSecKey cipher.SecKey `bbs:"usk"`
+	UserPubKey cipher.PubKey `bbs:"upk" transfer:"upk"`
+	UserSecKey cipher.SecKey `bbs:"usk" transfer:"usk"`
 }
 
 // LoginIO represents input required when logging io.
@@ -128,14 +128,15 @@ type AddressIO struct {
 // NewBoardIO represents input required to create master board.
 type NewBoardIO struct {
 	Seed                   string        `bbs:"bSeed"`
-	Name                   string        `bbs:"name"`
-	Desc                   string        `bbs:"description"`
+	Name                   string        `bbs:"heading" transfer:"heading"`
+	Desc                   string        `bbs:"body" transfer:"body"`
 	SubmissionAddressesStr string        `bbs:"subAddrsStr"` // Separated with commas.
-	SubmissionAddresses    []string      `bbs:"subAddrs"`
+	SubmissionAddresses    []string      `bbs:"subAddrs" transfer:"subAddrs"`
 	ConnectionsStr         string        `bbs:"consStr"` // Separated with commas.
-	Connections            []string      `bbs:"cons"`
-	BoardPubKey            cipher.PubKey `bbs:"bpk"`
-	BoardSecKey            cipher.SecKey `bbs:"bsk"`
+	Connections            []string      `bbs:"cons" transfer:"cons"`
+	BoardPubKey            cipher.PubKey `bbs:"bpk" transfer:"bpk"`
+	BoardSecKey            cipher.SecKey `bbs:"bsk" transfer:"bsk"`
+	Board                  *Board
 }
 
 type ThreadIO struct {
@@ -150,10 +151,11 @@ type NewThreadIO struct {
 	BoardPubKeyStr string        `bbs:"bpkStr"`
 	BoardPubKey    cipher.PubKey `bbs:"bpk"`
 	BoardSecKey    cipher.SecKey `bbs:"bsk"`
-	UserPubKey     cipher.PubKey `bbs:"upk"`
+	UserPubKey     cipher.PubKey `bbs:"upk" transfer:"upk"`
 	UserSecKey     cipher.SecKey `bbs:"usk"`
-	Title          string        `bbs:"heading"`
-	Body           string        `bbs:"body"`
+	Title          string        `bbs:"heading" transfer:"heading"`
+	Body           string        `bbs:"body" transfer:"body"`
+	Thread         *Thread
 }
 
 type VoteThreadIO struct {
@@ -162,12 +164,13 @@ type VoteThreadIO struct {
 	BoardSecKey    cipher.SecKey       `bbs:"bsk"`
 	ThreadRefStr   string              `bbs:"tRefStr"`
 	ThreadRef      skyobject.Reference `bbs:"tRef"`
-	UserPubKey     cipher.PubKey       `bbs:"upk"`
+	UserPubKey     cipher.PubKey       `bbs:"upk" transfer:"upk"`
 	UserSecKey     cipher.SecKey       `bbs:"usk"`
 	ModeStr        string              `bbs:"modeStr"`
-	Mode           int8                `bbs:"mode"`
+	Mode           int8                `bbs:"mode" transfer:"mode"`
 	TagStr         string              `bbs:"tagStr"`
-	Tag            []byte              `bbs:"tag"`
+	Tag            []byte              `bbs:"tag" transfer:"tag"`
+	Vote           *Vote
 }
 
 type PostIO struct {
@@ -180,6 +183,7 @@ type NewPostIO struct {
 	NewThreadIO
 	ThreadRefStr string              `bbs:"tRefStr"`
 	ThreadRef    skyobject.Reference `bbs:"tRef"`
+	Post         *Post
 }
 
 type VotePostIO struct {
@@ -188,10 +192,11 @@ type VotePostIO struct {
 	BoardSecKey    cipher.SecKey       `bbs:"bsk"`
 	PostRefStr     string              `bbs:"pRefStr"`
 	PostRef        skyobject.Reference `bbs:"pRef"`
-	UserPubKey     cipher.PubKey       `bbs:"upk"`
+	UserPubKey     cipher.PubKey       `bbs:"upk" transfer:"upk"`
 	UserSecKey     cipher.SecKey       `bbs:"usk"`
 	ModeStr        string              `bbs:"modeStr"`
-	Mode           int8                `bbs:"mode"`
+	Mode           int8                `bbs:"mode" transfer:"mode"`
 	TagStr         string              `bbs:"tagStr"`
-	Tag            []byte              `bbs:"tag"`
+	Tag            []byte              `bbs:"tag" transfer:"tag"`
+	Vote           *Vote
 }

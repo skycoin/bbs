@@ -1,4 +1,4 @@
-package state
+package v1
 
 import (
 	"context"
@@ -8,9 +8,11 @@ import (
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"log"
 	"os"
 	"sync"
+	"github.com/skycoin/bbs/src/store/state/states"
 )
 
 type seqWaiter struct {
@@ -20,32 +22,33 @@ type seqWaiter struct {
 
 // BoardState represents an internal state of a board.
 type BoardState struct {
-	l          *log.Logger
-	bpk, user  cipher.PubKey
-	tMux, pMux sync.Mutex
-	t, p       map[skyobject.Reference]*object.VoteSummary
-	seq        uint64 // Last processed sequence of root.
-	workers    chan<- func()
-	seqWaiters chan *seqWaiter
-	newRoots   chan *node.Root
-	quit       chan struct{}
-	wg         sync.WaitGroup
+	l                  *log.Logger
+	bpk, user          cipher.PubKey
+	tMux, pMux         sync.Mutex
+	t, p               map[skyobject.Reference]*object.VoteSummary
+	seq                uint64        // Last processed sequence of root.
+	tsh, tdh, psh, pdh cipher.SHA256 // Hashes (thread (store, deleted), post (store, deleted)).
+	workers            chan<- func()
+	seqWaiters         chan *seqWaiter
+	newRoots           chan *node.Root
+	quit               chan struct{}
+	wg                 sync.WaitGroup
 }
 
-func NewBoardState(bpk, user cipher.PubKey, workers chan<- func()) *BoardState {
-	bs := &BoardState{
+func NewBoardState(bpk, upk cipher.PubKey, workerChan chan<- func()) states.State {
+	s := &BoardState{
 		l:          inform.NewLogger(false, os.Stdout, "BOARDSTATE:"+bpk.Hex()),
 		bpk:        bpk,
-		user:       user,
+		user:       upk,
 		t:          make(map[skyobject.Reference]*object.VoteSummary),
 		p:          make(map[skyobject.Reference]*object.VoteSummary),
-		workers:    workers,
+		workers:    workerChan,
 		seqWaiters: make(chan *seqWaiter),
 		newRoots:   make(chan *node.Root),
 		quit:       make(chan struct{}),
 	}
-	go bs.service()
-	return bs
+	go s.service()
+	return s
 }
 
 func (s *BoardState) Close() {
@@ -62,6 +65,14 @@ func (s *BoardState) Close() {
 			s.wg.Wait()
 			return
 		}
+	}
+}
+
+func (s *BoardState) Trigger(ctx context.Context, root *node.Root) {
+	select {
+	case s.newRoots <- root:
+	case <-ctx.Done():
+		s.l.Println(ctx.Err())
 	}
 }
 
@@ -124,18 +135,48 @@ func (s *BoardState) processRoot(root *node.Root) {
 		return
 	}
 
-	var pageWG sync.WaitGroup
-	pageWG.Add(
-		len(result.ThreadVotesPage.Store) +
-			len(result.PostVotesPage.Store),
-	)
-
-	for _, page := range result.ThreadVotesPage.Store {
-		s.processVotesPage(root, &page, &pageWG, s.setThreadVotes)
+	// Get pages hash.
+	temp := struct{ tsh, tdh, psh, pdh cipher.SHA256 }{
+		tsh: cipher.SumSHA256(encoder.Serialize(result.ThreadVotesPage.Store)),
+		tdh: cipher.SumSHA256(encoder.Serialize(result.ThreadVotesPage.Deleted)),
+		psh: cipher.SumSHA256(encoder.Serialize(result.PostVotesPage.Store)),
+		pdh: cipher.SumSHA256(encoder.Serialize(result.PostVotesPage.Deleted)),
 	}
 
-	for _, page := range result.PostVotesPage.Store {
-		s.processVotesPage(root, &page, &pageWG, s.setPostVotes)
+	var pageWG sync.WaitGroup
+
+	if temp.tsh != s.tsh {
+		pageWG.Add(len(result.ThreadVotesPage.Store))
+		for _, page := range result.ThreadVotesPage.Store {
+			s.processVotesPage(root, &page, &pageWG, s.GetThreadVotes, s.setThreadVotes)
+		}
+		s.tsh = temp.tsh
+	}
+
+	if temp.tdh != s.tdh {
+		for _, dRef := range result.ThreadVotesPage.Deleted {
+			s.tMux.Lock()
+			delete(s.t, skyobject.Reference(dRef))
+			s.tMux.Unlock()
+		}
+		s.tdh = temp.tdh
+	}
+
+	if temp.psh != s.psh {
+		pageWG.Add(len(result.PostVotesPage.Store))
+		for _, page := range result.PostVotesPage.Store {
+			s.processVotesPage(root, &page, &pageWG, s.GetPostVotes, s.setPostVotes)
+		}
+		s.psh = temp.psh
+	}
+
+	if temp.pdh != s.pdh {
+		for _, dRef := range result.PostVotesPage.Deleted {
+			s.pMux.Lock()
+			delete(s.p, skyobject.Reference(dRef))
+			s.pMux.Unlock()
+		}
+		s.pdh = temp.pdh
 	}
 
 	pageWG.Wait()
@@ -145,22 +186,30 @@ func (s *BoardState) processVotesPage(
 	root *node.Root,
 	page *object.VotesPage,
 	pageWG *sync.WaitGroup,
-	setter func(skyobject.Reference, *object.VoteSummary),
+	get func(skyobject.Reference) *object.VoteSummary,
+	set func(skyobject.Reference, *object.VoteSummary),
 ) {
-	summary := new(object.VoteSummary)
-	var summaryWG sync.WaitGroup
-	summaryWG.Add(len(page.Votes))
-
-	for _, vRef := range page.Votes {
-		s.processVote(root, vRef, summary, &summaryWG)
+	summary := &object.VoteSummary{
+		VotesHash: cipher.SumSHA256(encoder.Serialize(page)),
 	}
 
-	saveSummary := func() {
-		defer pageWG.Done()
-		summaryWG.Wait()
-		setter(skyobject.Reference(page.Ref), summary)
+	if summary.VotesHash != get(skyobject.Reference(page.Ref)).VotesHash {
+		var summaryWG sync.WaitGroup
+		summaryWG.Add(len(page.Votes))
+
+		for _, vRef := range page.Votes {
+			s.processVote(root, vRef, summary, &summaryWG)
+		}
+
+		saveSummary := func() {
+			defer pageWG.Done()
+			summaryWG.Wait()
+			set(skyobject.Reference(page.Ref), summary)
+		}
+		s.workers <- saveSummary
+	} else {
+		pageWG.Done()
 	}
-	s.workers <- saveSummary
 }
 
 func (s *BoardState) processVote(

@@ -7,6 +7,9 @@ import (
 	"log"
 	"os"
 	"sync"
+	"context"
+	"time"
+	"github.com/skycoin/bbs/src/store/state/states"
 )
 
 type CompilerConfig struct {
@@ -15,23 +18,32 @@ type CompilerConfig struct {
 
 // Compiler compiles board states.
 type Compiler struct {
-	user    cipher.PubKey
-	c       *CompilerConfig
-	l       *log.Logger
-	mux     sync.Mutex
-	boards  map[cipher.PubKey]*BoardState
-	workers chan func()
-	quit    chan struct{}
-	wg      sync.WaitGroup
+	user      cipher.PubKey
+	c         *CompilerConfig
+	l         *log.Logger
+	mux       sync.Mutex
+	newBState states.NewState
+	bStates   map[cipher.PubKey]states.State
+	workers   chan func()
+	quit      chan struct{}
+	wg        sync.WaitGroup
 }
 
-func NewCompiler(config *CompilerConfig) *Compiler {
+func NewCompiler(config *CompilerConfig, options ...Option) *Compiler {
 	compiler := &Compiler{
 		c:       config,
 		l:       inform.NewLogger(true, os.Stdout, "COMPILER"),
-		boards:  make(map[cipher.PubKey]*BoardState),
+		bStates: make(map[cipher.PubKey]states.State),
 		workers: make(chan func()),
 		quit:    make(chan struct{}),
+	}
+	for _, option := range options {
+		if e := option(compiler); e != nil {
+			compiler.l.Fatal(e)
+		}
+	}
+	if compiler.newBState == nil {
+		compiler.l.Fatal("newBState not set")
 	}
 	return compiler
 }
@@ -49,10 +61,10 @@ func (c *Compiler) Open(user cipher.PubKey) {
 func (c *Compiler) Close() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	for _, bs := range c.boards {
+	for _, bs := range c.bStates {
 		bs.Close()
 	}
-	c.boards = make(map[cipher.PubKey]*BoardState)
+	c.bStates = make(map[cipher.PubKey]states.State)
 
 	for {
 		select {
@@ -78,25 +90,25 @@ func (c *Compiler) workerLoop() {
 }
 
 func (c *Compiler) Trigger(root *node.Root) {
-	c.getBoardState(root.Pub()).
-		newRoots <- root
+	ctx, _ := context.WithTimeout(context.Background(), time.Second * 10)
+	c.getBoardState(root.Pub()).Trigger(ctx, root)
 }
 
 func (c *Compiler) DeleteBoard(bpk cipher.PubKey) {
 	c.deleteBoardState(bpk)
 }
 
-func (c *Compiler) GetBoard(bpk cipher.PubKey) *BoardState {
+func (c *Compiler) GetBoard(bpk cipher.PubKey) states.State {
 	return c.getBoardState(bpk)
 }
 
-func (c *Compiler) getBoardState(bpk cipher.PubKey) *BoardState {
+func (c *Compiler) getBoardState(bpk cipher.PubKey) states.State {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	bs, has := c.boards[bpk]
+	bs, has := c.bStates[bpk]
 	if !has {
-		c.boards[bpk] = NewBoardState(bpk, c.user, c.workers)
-		bs = c.boards[bpk]
+		c.bStates[bpk] = c.newBState(bpk, c.user, c.workers)
+		bs = c.bStates[bpk]
 	}
 	return bs
 }
@@ -104,8 +116,8 @@ func (c *Compiler) getBoardState(bpk cipher.PubKey) *BoardState {
 func (c *Compiler) deleteBoardState(bpk cipher.PubKey) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	if bs, has := c.boards[bpk]; has {
+	if bs, has := c.bStates[bpk]; has {
 		bs.Close()
-		delete(c.boards, bpk)
+		delete(c.bStates, bpk)
 	}
 }

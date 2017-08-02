@@ -1,6 +1,9 @@
 package object
 
-import "sync"
+import (
+	"github.com/skycoin/skycoin/src/cipher"
+	"sync"
+)
 
 type BoardView struct {
 	*Board
@@ -30,9 +33,10 @@ type PostView struct {
 }
 
 type VoteSummary struct {
-	Up   VoteView `json:"up"`
-	Down VoteView `json:"down"`
-	Spam VoteView `json:"spam"`
+	VotesHash cipher.SHA256 `json:"-"`
+	Up        VoteView      `json:"up"`
+	Down      VoteView      `json:"down"`
+	Spam      VoteView      `json:"spam"`
 }
 
 type VoteView struct {

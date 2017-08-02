@@ -68,8 +68,8 @@ func (c *CXO) Open(alias string, in *object.RetryIO) (*object.RetryIO, error) {
 	r.Register("ThreadPage", object.ThreadPage{})
 	r.Register("BoardPage", object.BoardPage{})
 	r.Register("VotesPage", object.VotesPage{})
-	r.Register("ThreadVotesPage", object.ThreadVotesPage{})
-	r.Register("PostVotesPage", object.PostVotesPage{})
+	r.Register("ThreadVotesPages", object.ThreadVotesPages{})
+	r.Register("PostVotesPages", object.PostVotesPages{})
 	r.Register("ExternalRoot", object.ExternalRoot{})
 	r.Done()
 
