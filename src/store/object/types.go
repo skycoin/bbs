@@ -16,7 +16,7 @@ type Board struct {
 	R                   cipher.SHA256  `json:"-" enc:"-"`
 	Name                string         `json:"name" transfer:"heading"`
 	Desc                string         `json:"description" transfer:"body"`
-	Created             int64          `json:"created"`
+	Created             int64          `json:"created" transfer:"time"`
 	SubmissionAddresses []string       `json:"submission_addresses" transfer:"subAddrs"`
 	ExternalRoots       []ExternalRoot `json:"-"`
 	Meta                []byte         `json:"-"`
@@ -43,7 +43,7 @@ type Post struct {
 	R       cipher.SHA256 `json:"-" enc:"-"`
 	Title   string        `json:"title" transfer:"heading"`
 	Body    string        `json:"body" transfer:"body"`
-	Created int64         `json:"created"`
+	Created int64         `json:"created" transfer:"time"`
 	User    cipher.PubKey `json:"-" verify:"pk" transfer:"upk"`
 	Sig     cipher.Sig    `json:"-" verify:"sig"`
 	Meta    []byte        `json:"-"`
@@ -58,7 +58,7 @@ type Vote struct {
 	User    cipher.PubKey `json:"-" verify:"pk" transfer:"upk"` // User who voted.
 	Mode    int8          `json:"-" transfer:"mode"`            // +1 is up, -1 is down.
 	Tag     []byte        `json:"-" transfer:"tag"`             // What's this?
-	Created int64         `json:"created"`
+	Created int64         `json:"created" transfer:"time"`
 	Sig     cipher.Sig    `json:"-" verify:"sig"` // Signature.
 }
 

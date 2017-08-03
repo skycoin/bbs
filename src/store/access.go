@@ -6,20 +6,23 @@ import (
 	"github.com/skycoin/bbs/src/store/content"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/session"
+	"github.com/skycoin/bbs/src/store/users"
+	"fmt"
 )
 
 // Access allows access to store.
 type Access struct {
 	Session *session.Manager
+	Users   *users.Manager
 }
 
 /*
 	<<< SESSION >>>
 */
 
-// GetUsers gets a list of all available users.
+// GetUsers gets a list of available users.
 func (a *Access) GetUsers(ctx context.Context) (*UsersOutput, error) {
-	aliases, e := a.Session.GetUsers(ctx)
+	aliases, e := a.Users.GetUsers()
 	if e != nil {
 		return nil, e
 	}
@@ -31,7 +34,7 @@ func (a *Access) NewUser(ctx context.Context, in *object.NewUserIO) (*UsersOutpu
 	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
-	if _, e := a.Session.NewUser(ctx, in); e != nil {
+	if e := a.Users.NewUser(in); e != nil {
 		return nil, e
 	}
 	return a.GetUsers(ctx)
@@ -39,42 +42,39 @@ func (a *Access) NewUser(ctx context.Context, in *object.NewUserIO) (*UsersOutpu
 
 // DeleteUser deletes a user.
 func (a *Access) DeleteUser(ctx context.Context, alias string) (*UsersOutput, error) {
-	if e := a.Session.DeleteUser(ctx, alias); e != nil {
+	if e := tag.CheckAlias(alias); e != nil {
+		return nil, e
+	}
+	if e := a.Users.DeleteUser(alias); e != nil {
 		return nil, e
 	}
 	return a.GetUsers(ctx)
 }
 
 // Login logs a user in.
-func (a *Access) Login(ctx context.Context, in *object.LoginIO) (*object.UserView, error) {
+func (a *Access) Login(ctx context.Context, in *object.LoginIO) (*users.FileView, error) {
 	if e := tag.Process(in); e != nil {
 		return nil, e
 	}
-	file, e := a.Session.Login(ctx, in)
+	out, e := a.Users.Login(in)
 	if e != nil {
 		return nil, e
 	}
-	out := &object.UserView{
-		User:      object.User{Alias: file.User.Alias},
-		PublicKey: file.User.PublicKey.Hex(),
-		SecretKey: file.User.SecretKey.Hex(),
-	}
-	return out, nil
+	return out.GenerateView(), nil
 }
 
 // Logout logs a user out.
 func (a *Access) Logout(ctx context.Context) error {
-	return a.Session.Logout(ctx)
+	return a.Users.Logout()
 }
 
 // GetSession obtains the current session information.
-func (a *Access) GetSession(ctx context.Context) (*session.UserFileView, error) {
+func (a *Access) GetSession(ctx context.Context) (*session.FileView, error) {
 	file, e := a.Session.GetInfo(ctx)
 	if e != nil {
 		return nil, e
 	}
-	view := file.GenerateView(a.Session.GetCXO())
-	return view, nil
+	return file.GenerateView(a.Session.GetCXO()), nil
 }
 
 /*
@@ -285,7 +285,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (*BoardPa
 	if e != nil {
 		return nil, e
 	}
-	return getBoardPage(ctx, compiler, result), nil
+	return getBoardPage(ctx, compiler, result, a.Users.GetUPK()), nil
 }
 
 // NewThread creates a new thread on a board.
@@ -297,10 +297,10 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 	if e != nil {
 		return nil, e
 	}
-	file.FillUser(in)
+
 	in.Thread = new(object.Thread)
 	tag.Transfer(in, &in.Thread.Post)
-	tag.Sign(&in.Thread.Post, in.UserPubKey, in.UserSecKey)
+	a.Users.Sign(&in.Thread.Post)
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
@@ -318,7 +318,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 	}
 	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
-	return getBoardPage(ctx, compiler, result), nil
+	return getBoardPage(ctx, compiler, result, a.Users.GetUPK()), nil
 }
 
 // DeleteThread removes a thread from a board.
@@ -346,7 +346,7 @@ func (a *Access) DeleteThread(ctx context.Context, in *object.ThreadIO) (*BoardP
 	}
 	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
-	return getBoardPage(ctx, compiler, result), nil
+	return getBoardPage(ctx, compiler, result, a.Users.GetUPK()), nil
 }
 
 func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*VotesOutput, error) {
@@ -357,10 +357,11 @@ func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*Vote
 	if e != nil {
 		return nil, e
 	}
-	file.FillUser(in)
+
 	in.Vote = new(object.Vote)
 	tag.Transfer(in, in.Vote)
-	tag.Sign(in.Vote, in.UserPubKey, in.UserSecKey)
+	fmt.Printf("%#v", in.Vote)
+	a.Users.Sign(in.Vote)
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
@@ -378,7 +379,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*Vote
 	}
 	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
-	return getThreadVotes(ctx, compiler, result, in.ThreadRef), nil
+	return getThreadVotes(ctx, compiler, result, a.Users.GetUPK(), in.ThreadRef), nil
 }
 
 /*
@@ -401,7 +402,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (*Threa
 		return nil, e
 	}
 	compiler := a.Session.GetCompiler()
-	return getThreadPage(ctx, compiler, result), nil
+	return getThreadPage(ctx, compiler, result, a.Users.GetUPK()), nil
 }
 
 // NewPost creates a new post on specified thead and board.
@@ -413,10 +414,10 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 	if e != nil {
 		return nil, e
 	}
-	file.FillUser(in)
+
 	in.Post = new(object.Post)
 	tag.Transfer(in, in.Post)
-	tag.Sign(in.Post, in.UserPubKey, in.UserSecKey)
+	a.Users.Sign(in.Post)
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
@@ -434,7 +435,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 	}
 	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
-	return getThreadPage(ctx, compiler, result), nil
+	return getThreadPage(ctx, compiler, result, a.Users.GetUPK()), nil
 }
 
 // DeletePost removes a post from specified thread and board.
@@ -462,7 +463,7 @@ func (a *Access) DeletePost(ctx context.Context, in *object.PostIO) (*ThreadPage
 	}
 	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
-	return getThreadPage(ctx, compiler, result), nil
+	return getThreadPage(ctx, compiler, result, a.Users.GetUPK()), nil
 }
 
 func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOutput, error) {
@@ -473,10 +474,10 @@ func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOut
 	if e != nil {
 		return nil, e
 	}
-	file.FillUser(in)
+
 	in.Vote = new(object.Vote)
 	tag.Transfer(in, in.Vote)
-	tag.Sign(in.Vote, in.UserPubKey, in.UserSecKey)
+	a.Users.Sign(in.Vote)
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
@@ -494,5 +495,5 @@ func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOut
 	}
 	compiler := a.Session.GetCompiler()
 	compiler.Trigger(root)
-	return getPostVotes(ctx, compiler, result, in.PostRef), nil
+	return getPostVotes(ctx, compiler, result, a.Users.GetUPK(), in.PostRef), nil
 }

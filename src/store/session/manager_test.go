@@ -62,7 +62,7 @@ func createUsers(t *testing.T, us *Manager, n int) {
 		iStr := strconv.Itoa(i)
 		_, e := us.NewUser(context.Background(), &object.NewUserIO{
 			Alias:    "person" + iStr,
-			Seed:     "user" + iStr,
+			Seed:     "file" + iStr,
 			Password: "password" + iStr,
 		})
 		if e != nil {

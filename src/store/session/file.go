@@ -21,35 +21,27 @@ var (
 )
 
 func corruptWrap(e error) error {
-	return boo.WrapType(e, boo.InvalidRead, "corrupt user file")
+	return boo.WrapType(e, boo.InvalidRead, "corrupt file file")
 }
 
-// UserFileView represents a user user as displayed to end user.
-type UserFileView struct {
-	User          object.UserView           `json:"user"`
+// FileView represents a file file as displayed to end file.
+type FileView struct {
 	Subscriptions []object.SubscriptionView `json:"subscriptions"`
 	Masters       []object.SubscriptionView `json:"master_subscriptions"`
 	Connections   []object.ConnectionView   `json:"connections"`
 }
 
-// UserFile represents a user of user configuration.
-type UserFile struct {
-	User          object.User           `json:"user"`
+// File represents a node configuration.
+type File struct {
 	Subscriptions []object.Subscription `json:"subscriptions"`
 	Masters       []object.Subscription `json:"master_subscriptions"`
 	Connections   []string              `json:"connections"`
 }
 
-// Check ensures the validity of the UserFile.
-func (f *UserFile) Check() error {
+// Check ensures the validity of the File.
+func (f *File) Check() error {
 	if f == nil {
 		return ErrEmpty
-	}
-	if e := f.User.PublicKey.Verify(); e != nil {
-		return corruptWrap(e)
-	}
-	if e := f.User.SecretKey.Verify(); e != nil {
-		return corruptWrap(e)
 	}
 	for i, sub := range f.Subscriptions {
 		if e := sub.PubKey.Verify(); e != nil {
@@ -69,18 +61,11 @@ func (f *UserFile) Check() error {
 }
 
 // GenerateView generates something readable for front end.
-func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
-	view := new(UserFileView)
+func (f *File) GenerateView(cxo *CXO) *FileView {
+	view := new(FileView)
 
 	if e := f.Check(); e != nil {
 		return view
-	}
-
-	// Fill "User".
-	view.User = object.UserView{
-		User:      object.User{Alias: f.User.Alias},
-		PublicKey: f.User.PublicKey.Hex(),
-		SecretKey: f.User.SecretKey.Hex(),
 	}
 
 	// Fill "Subscriptions".
@@ -123,7 +108,7 @@ func (f *UserFile) GenerateView(cxo *CXO) *UserFileView {
 
 // FindMaster finds the index of a master subscription.
 // If not found, returns an error.
-func (f *UserFile) FindMaster(pk cipher.PubKey) (int, error) {
+func (f *File) FindMaster(pk cipher.PubKey) (int, error) {
 	for i, sub := range f.Masters {
 		if sub.PubKey == pk {
 			return i, nil
@@ -133,7 +118,7 @@ func (f *UserFile) FindMaster(pk cipher.PubKey) (int, error) {
 		"board %s not found as master", pk.Hex())
 }
 
-func (f *UserFile) FillMaster(v interface{}) error {
+func (f *File) FillMaster(v interface{}) error {
 	rVal, rTyp := getReflectPair(v)
 
 	var e error
@@ -160,22 +145,6 @@ func (f *UserFile) FillMaster(v interface{}) error {
 		}
 	}
 	return nil
-}
-
-func (f *UserFile) FillUser(v interface{}) {
-	rVal, rTyp := getReflectPair(v)
-	for i := 0; i < rTyp.NumField(); i++ {
-		if tagVal, has := getTagKey(rTyp, i); has {
-			field := rVal.Field(i)
-			switch tagVal {
-			case userPKValue:
-				field.Set(reflect.ValueOf(f.User.PublicKey))
-			case userSKValue:
-				field.Set(reflect.ValueOf(f.User.SecretKey))
-				return
-			}
-		}
-	}
 }
 
 func getReflectPair(v interface{}) (reflect.Value, reflect.Type) {

@@ -94,9 +94,9 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/session/users/new",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.NewUser(r.Context(), &object.NewUserIO{
-				Seed:     r.FormValue("seed"),
-				Alias:    r.FormValue("alias"),
-				Password: r.FormValue("password"),
+				Seed:  r.FormValue("seed"),
+				Alias: r.FormValue("alias"),
+				//Password: r.FormValue("password"), TODO: Remove.
 			})
 			send(w, out, e)
 		})
@@ -112,8 +112,8 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/session/login",
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.Login(r.Context(), &object.LoginIO{
-				Alias:    r.FormValue("alias"),
-				Password: r.FormValue("password"),
+				Alias: r.FormValue("alias"),
+				//Password: r.FormValue("password"), // TODO: Remove.
 			})
 			send(w, out, e)
 		})

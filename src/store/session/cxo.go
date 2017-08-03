@@ -19,7 +19,7 @@ import (
 const (
 	cxoLogPrefix         = "CXO"
 	cxoSubDir            = "/cxo"
-	cxoFileExtension     = ".db"
+	cxoFileName          = "bbsnode.v2.db"
 	cxoConnectionTimeout = time.Second * 10
 )
 
@@ -52,7 +52,7 @@ func (c *CXO) SetUpdater(updater func(root *node.Root)) {
 }
 
 // Sets up CXO node.
-func (c *CXO) Open(alias string, in *object.RetryIO) (*object.RetryIO, error) {
+func (c *CXO) Open(in *object.RetryIO) (*object.RetryIO, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -78,7 +78,7 @@ func (c *CXO) Open(alias string, in *object.RetryIO) (*object.RetryIO, error) {
 	nc.MaxMessageSize = 0 /* TODO: Adjust. */
 	nc.InMemoryDB = *c.c.MemoryMode
 	nc.DataDir = filepath.Join(*c.c.ConfigDir, cxoSubDir)
-	nc.DBPath = filepath.Join(nc.DataDir, alias+cxoFileExtension)
+	nc.DBPath = filepath.Join(nc.DataDir, cxoFileName)
 
 	nc.EnableListener = true
 	nc.Listen = "[::]:" + strconv.Itoa(*c.c.CXOPort)
