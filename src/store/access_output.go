@@ -7,13 +7,14 @@ import (
 	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 type UsersOutput struct {
 	Users []object.UserView `json:"users"`
 }
 
-func getUsers(ctx context.Context, aliases []string) *UsersOutput {
+func getUsers(_ context.Context, aliases []string) *UsersOutput {
 	out := &UsersOutput{
 		Users: make([]object.UserView, len(aliases)),
 	}
@@ -29,7 +30,7 @@ type ConnectionsOutput struct {
 	Connections []object.ConnectionView `json:"connections"`
 }
 
-func getConnections(cxo *session.CXO, file *session.UserFile) (*ConnectionsOutput, error) {
+func getConnections(cxo *session.CXO, file *session.File) (*ConnectionsOutput, error) {
 	actives, e := cxo.GetConnections()
 	if e != nil {
 		return nil, e
@@ -55,7 +56,7 @@ type SubsOutput struct {
 	MasterSubscriptions []object.SubscriptionView `json:"master_subscriptions"`
 }
 
-func getSubs(_ context.Context, cxo *session.CXO, file *session.UserFile) *SubsOutput {
+func getSubs(_ context.Context, cxo *session.CXO, file *session.File) *SubsOutput {
 	view := file.GenerateView(cxo)
 	return &SubsOutput{
 		Subscriptions:       view.Subscriptions,
@@ -68,8 +69,7 @@ type BoardsOutput struct {
 	MasterBoards []object.BoardView `json:"master_boards"`
 }
 
-func getBoards(ctx context.Context, cxo *session.CXO, file *session.UserFile) *BoardsOutput {
-
+func getBoards(ctx context.Context, cxo *session.CXO, file *session.File) *BoardsOutput {
 	masters := make([]object.BoardView, len(file.Masters))
 	for i, sub := range file.Masters {
 		masters[i].PublicKey = sub.PubKey.Hex()
@@ -108,8 +108,10 @@ type BoardPageOutput struct {
 	Threads []object.ThreadView `json:"threads,omitempty"`
 }
 
-func getBoardPage(_ context.Context, compiler *state.Compiler, result *content.Result) *BoardPageOutput {
-
+func getBoardPage(
+	_ context.Context, compiler *state.Compiler, result *content.Result,
+	upk cipher.PubKey,
+) *BoardPageOutput {
 	bState := compiler.GetBoard(result.GetPK())
 
 	out := &BoardPageOutput{
@@ -126,7 +128,9 @@ func getBoardPage(_ context.Context, compiler *state.Compiler, result *content.R
 			Ref:         thread.R.Hex(),
 			AuthorRef:   thread.User.Hex(),
 			AuthorAlias: "-", // TODO: Implement.
-			Votes:       bState.GetThreadVotes(skyobject.Reference(thread.R)),
+			Votes: bState.
+				GetThreadVotes(skyobject.Reference(thread.R)).
+				GenerateView(upk),
 		}
 	}
 
@@ -139,18 +143,22 @@ type ThreadPageOutput struct {
 	Posts  []object.PostView `json:"posts"`
 }
 
-func getThreadPage(ctx context.Context, compiler *state.Compiler, result *content.Result) *ThreadPageOutput {
-
+func getThreadPage(
+	ctx context.Context, compiler *state.Compiler, result *content.Result,
+	upk cipher.PubKey,
+) *ThreadPageOutput {
 	bState := compiler.GetBoard(result.GetPK())
 
 	out := &ThreadPageOutput{
-		BoardPageOutput: getBoardPage(ctx, compiler, result),
+		BoardPageOutput: getBoardPage(ctx, compiler, result, upk),
 		Thread: object.ThreadView{
 			Thread:      result.Thread,
 			Ref:         result.Thread.R.Hex(),
 			AuthorRef:   result.Thread.User.Hex(),
 			AuthorAlias: "-",
-			Votes:       bState.GetThreadVotes(skyobject.Reference(result.Thread.R)),
+			Votes: bState.
+				GetThreadVotes(skyobject.Reference(result.Thread.R)).
+				GenerateView(upk),
 		},
 		Posts: make([]object.PostView, len(result.Posts)),
 	}
@@ -161,7 +169,9 @@ func getThreadPage(ctx context.Context, compiler *state.Compiler, result *conten
 			Ref:         post.R.Hex(),
 			AuthorRef:   post.User.Hex(),
 			AuthorAlias: "-", // TODO: Implement.
-			Votes:       bState.GetPostVotes(skyobject.Reference(post.R)),
+			Votes: bState.
+				GetPostVotes(skyobject.Reference(post.R)).
+				GenerateView(upk),
 		}
 	}
 
@@ -169,28 +179,32 @@ func getThreadPage(ctx context.Context, compiler *state.Compiler, result *conten
 }
 
 type VotesOutput struct {
-	Reference string              `json:"reference"`
-	Votes     *object.VoteSummary `json:"votes"`
+	Reference string                  `json:"reference"`
+	Votes     *object.VoteSummaryView `json:"votes"`
 }
 
 func getThreadVotes(
-	ctx context.Context, compiler *state.Compiler, result *content.Result, tRef skyobject.Reference,
+	ctx context.Context, compiler *state.Compiler, result *content.Result,
+	upk cipher.PubKey, tRef skyobject.Reference,
 ) *VotesOutput {
 	return &VotesOutput{
 		Reference: tRef.String(),
 		Votes: compiler.
 			GetBoard(result.GetPK()).
-			GetThreadVotesSeq(ctx, tRef, result.GetSeq()),
+			GetThreadVotesSeq(ctx, tRef, result.GetSeq()).
+			GenerateView(upk),
 	}
 }
 
 func getPostVotes(
-	ctx context.Context, compiler *state.Compiler, result *content.Result, pRef skyobject.Reference,
+	ctx context.Context, compiler *state.Compiler, result *content.Result,
+	upk cipher.PubKey, pRef skyobject.Reference,
 ) *VotesOutput {
 	return &VotesOutput{
 		Reference: pRef.String(),
 		Votes: compiler.
 			GetBoard(result.GetPK()).
-			GetPostVotesSeq(ctx, pRef, result.GetSeq()),
+			GetPostVotesSeq(ctx, pRef, result.GetSeq()).
+			GenerateView(upk),
 	}
 }

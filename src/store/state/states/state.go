@@ -8,14 +8,26 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
-type NewState func(bpk, upk cipher.PubKey, workerChan chan<- func()) State
+// NewState creates a new State.
+type NewState func(bpk cipher.PubKey, workerChan chan<- func()) State
 
+// State represents the compiled state of a board.
 type State interface {
+	// Close closes the state.
 	Close()
+
+	// Trigger is used to update the state.
 	Trigger(ctx context.Context, root *node.Root)
+
+	// GetThreadVotes obtains the votes of thread of reference.
 	GetThreadVotes(ref skyobject.Reference) *object.VoteSummary
+
+	// GetThreadVotesSeq obtains the thread votes above the specified sequence.
 	GetThreadVotesSeq(ctx context.Context, ref skyobject.Reference, seq uint64) *object.VoteSummary
+
+	// GetPostVotes obtains the votes of post of reference.
 	GetPostVotes(ref skyobject.Reference) *object.VoteSummary
+
+	// GetPostVotesSeq obtains the post votes above the specified sequence.
 	GetPostVotesSeq(ctx context.Context, ref skyobject.Reference, seq uint64) *object.VoteSummary
 }
-

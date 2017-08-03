@@ -29,7 +29,7 @@ func TestUserFile_FillMaster(t *testing.T) {
 		PK cipher.PubKey `bbs:"bpk"`
 		SK cipher.SecKey `bbs:"bsk"`
 	}{}
-	file := &UserFile{
+	file := &File{
 		Masters: generateKeyPairs(mCount),
 	}
 	board.PK = file.Masters[mPick].PubKey
@@ -51,7 +51,7 @@ func TestUserFile_FillUser(t *testing.T) {
 		SK cipher.SecKey `bbs:"usk"`
 	}{}
 	pk, sk := cipher.GenerateKeyPair()
-	file := &UserFile{
+	file := &File{
 		User: object.User{
 			PublicKey: pk,
 			SecretKey: sk,

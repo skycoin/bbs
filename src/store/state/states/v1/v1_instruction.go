@@ -2,13 +2,11 @@ package v1
 
 import (
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 )
 
 // Instruction represents an instruction given to worker.
 type Instruction struct {
-	user    *cipher.PubKey      // Current User.
 	data    []byte              // Raw data of single vote.
 	summary *object.VoteSummary // Summary of votes.
 }
@@ -22,31 +20,22 @@ func (i *Instruction) Run() error {
 	if e := vote.Verify(); e != nil {
 		return e
 	}
-	isUser := vote.User == *i.user
+
+	i.summary.Lock()
+	defer i.summary.Unlock()
+
+	i.summary.Votes[vote.User] = vote
+
 	switch vote.Mode {
 	case -1:
-		i.summary.Down.Lock()
-		i.summary.Down.Count += 1
-		if isUser {
-			i.summary.Down.Voted = true
-		}
-		i.summary.Down.Unlock()
+		i.summary.Downs += 1
 	case +1:
-		i.summary.Up.Lock()
-		i.summary.Up.Count += 1
-		if isUser {
-			i.summary.Up.Voted = true
-		}
-		i.summary.Up.Unlock()
+		i.summary.Ups += 1
 	}
+
 	switch string(vote.Tag) {
 	case "spam":
-		i.summary.Spam.Lock()
-		i.summary.Spam.Count += 1
-		if isUser {
-			i.summary.Spam.Voted = true
-		}
-		i.summary.Spam.Unlock()
+		i.summary.Spams += 1
 	}
 	return nil
 }

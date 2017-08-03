@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/content"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/state/states"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -12,7 +13,6 @@ import (
 	"log"
 	"os"
 	"sync"
-	"github.com/skycoin/bbs/src/store/state/states"
 )
 
 type seqWaiter struct {
@@ -23,7 +23,7 @@ type seqWaiter struct {
 // BoardState represents an internal state of a board.
 type BoardState struct {
 	l                  *log.Logger
-	bpk, user          cipher.PubKey
+	bpk                cipher.PubKey
 	tMux, pMux         sync.Mutex
 	t, p               map[skyobject.Reference]*object.VoteSummary
 	seq                uint64        // Last processed sequence of root.
@@ -35,11 +35,10 @@ type BoardState struct {
 	wg                 sync.WaitGroup
 }
 
-func NewBoardState(bpk, upk cipher.PubKey, workerChan chan<- func()) states.State {
+func NewBoardState(bpk cipher.PubKey, workerChan chan<- func()) states.State {
 	s := &BoardState{
 		l:          inform.NewLogger(false, os.Stdout, "BOARDSTATE:"+bpk.Hex()),
 		bpk:        bpk,
-		user:       upk,
 		t:          make(map[skyobject.Reference]*object.VoteSummary),
 		p:          make(map[skyobject.Reference]*object.VoteSummary),
 		workers:    workerChan,
@@ -190,10 +189,11 @@ func (s *BoardState) processVotesPage(
 	set func(skyobject.Reference, *object.VoteSummary),
 ) {
 	summary := &object.VoteSummary{
-		VotesHash: cipher.SumSHA256(encoder.Serialize(page)),
+		Hash:  cipher.SumSHA256(encoder.Serialize(page)),
+		Votes: make(map[cipher.PubKey]object.Vote),
 	}
 
-	if summary.VotesHash != get(skyobject.Reference(page.Ref)).VotesHash {
+	if summary.Hash != get(skyobject.Reference(page.Ref)).Hash {
 		var summaryWG sync.WaitGroup
 		summaryWG.Add(len(page.Votes))
 
@@ -224,7 +224,6 @@ func (s *BoardState) processVote(
 		return
 	}
 	i := &Instruction{
-		user:    &s.user,
 		data:    data,
 		summary: summary,
 	}
@@ -242,7 +241,7 @@ func (s *BoardState) GetThreadVotes(tRef skyobject.Reference) *object.VoteSummar
 	summary, has := s.getThreadVotes(tRef)
 	if !has {
 		s.l.Println("/t- (NOT HAS)")
-		summary = new(object.VoteSummary)
+		summary = object.NewVoteSummary()
 	}
 	return summary
 }
@@ -266,7 +265,7 @@ func (s *BoardState) GetThreadVotesSeq(
 func (s *BoardState) GetPostVotes(pRef skyobject.Reference) *object.VoteSummary {
 	summary, has := s.getPostVotes(pRef)
 	if !has {
-		summary = new(object.VoteSummary)
+		summary = object.NewVoteSummary()
 	}
 	return summary
 }

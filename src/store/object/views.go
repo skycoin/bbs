@@ -2,6 +2,7 @@ package object
 
 import (
 	"github.com/skycoin/skycoin/src/cipher"
+	"strings"
 	"sync"
 )
 
@@ -18,38 +19,72 @@ type ExternalRootView struct {
 
 type ThreadView struct {
 	*Thread
-	Ref         string       `json:"reference"`
-	AuthorRef   string       `json:"author_reference,omitempty"`
-	AuthorAlias string       `json:"author_alias,omitempty"`
-	Votes       *VoteSummary `json:"votes,omitempty"`
+	Ref         string           `json:"reference"`
+	AuthorRef   string           `json:"author_reference,omitempty"`
+	AuthorAlias string           `json:"author_alias,omitempty"`
+	Votes       *VoteSummaryView `json:"votes,omitempty"`
 }
 
 type PostView struct {
 	*Post
-	Ref         string       `json:"reference"`
-	AuthorRef   string       `json:"author_reference,omitempty"`
-	AuthorAlias string       `json:"author_alias,omitempty"`
-	Votes       *VoteSummary `json:"votes"`
+	Ref         string           `json:"reference"`
+	AuthorRef   string           `json:"author_reference,omitempty"`
+	AuthorAlias string           `json:"author_alias,omitempty"`
+	Votes       *VoteSummaryView `json:"votes"`
 }
 
 type VoteSummary struct {
-	VotesHash cipher.SHA256 `json:"-"`
-	Up        VoteView      `json:"up"`
-	Down      VoteView      `json:"down"`
-	Spam      VoteView      `json:"spam"`
+	sync.Mutex
+	Hash  cipher.SHA256
+	Votes map[cipher.PubKey]Vote
+	Ups   int
+	Downs int
+	Spams int
+}
+
+func NewVoteSummary() *VoteSummary {
+	return &VoteSummary{
+		Votes: make(map[cipher.PubKey]Vote),
+	}
+}
+
+func (s *VoteSummary) GenerateView(upk cipher.PubKey) *VoteSummaryView {
+	s.Lock()
+	uVote := s.Votes[upk]
+	s.Unlock()
+	return &VoteSummaryView{
+		Up: VoteView{
+			Voted: uVote.Mode == +1,
+			Count: s.Ups,
+		},
+		Down: VoteView{
+			Voted: uVote.Mode == -1,
+			Count: s.Downs,
+		},
+		Spam: VoteView{
+			Voted: strings.Contains(
+				string(uVote.Tag), "spam"),
+			Count: s.Spams,
+		},
+	}
+}
+
+type VoteSummaryView struct {
+	Up   VoteView `json:"up"`
+	Down VoteView `json:"down"`
+	Spam VoteView `json:"spam"`
 }
 
 type VoteView struct {
-	sync.Mutex
 	Voted bool `json:"voted"`
 	Count int  `json:"count"`
 }
 
 type UserView struct {
 	User
-	PublicKey string       `json:"public_key,omitempty"`
-	SecretKey string       `json:"secret_key,omitempty"`
-	Votes     *VoteSummary `json:"votes,omitempty"`
+	PublicKey string           `json:"public_key,omitempty"`
+	SecretKey string           `json:"secret_key,omitempty"`
+	Votes     *VoteSummaryView `json:"votes,omitempty"`
 }
 
 type SubscriptionView struct {

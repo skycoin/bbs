@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/bbs/src/store/users"
 	"github.com/skycoin/skycoin/src/util/file"
 	"gopkg.in/urfave/cli.v1"
 	"log"
@@ -136,6 +137,14 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		CatchError(e, "failed to create session manager")
 		defer session.Close()
 
+		users, e := users.NewManager(
+			&users.ManagerConfig{
+				MemoryMode: &c.Memory,
+				ConfigDir:  &c.ConfigDir,
+			},
+		)
+		CatchError(e, "failed to create users manager")
+
 		httpServer, e := http.NewServer(
 			&http.ServerConfig{
 				Port:      &c.HTTPPort,
@@ -145,6 +154,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 			&http.Gateway{
 				Access: &store.Access{
 					Session: session,
+					Users:   users,
 				},
 				Quit: quit,
 			},

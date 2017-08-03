@@ -1,15 +1,15 @@
 package state
 
 import (
+	"context"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/state/states"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"os"
 	"sync"
-	"context"
 	"time"
-	"github.com/skycoin/bbs/src/store/state/states"
 )
 
 type CompilerConfig struct {
@@ -18,7 +18,6 @@ type CompilerConfig struct {
 
 // Compiler compiles board states.
 type Compiler struct {
-	user      cipher.PubKey
 	c         *CompilerConfig
 	l         *log.Logger
 	mux       sync.Mutex
@@ -45,16 +44,10 @@ func NewCompiler(config *CompilerConfig, options ...Option) *Compiler {
 	if compiler.newBState == nil {
 		compiler.l.Fatal("newBState not set")
 	}
-	return compiler
-}
-
-// Open opens the compiler.
-func (c *Compiler) Open(user cipher.PubKey) {
-	c.l.Printf("Opening for user %s ...", user.Hex())
-	c.user = user
-	for i := 0; i < *c.c.Workers; i++ {
-		go c.workerLoop()
+	for i := 0; i < *config.Workers; i++ {
+		go compiler.workerLoop()
 	}
+	return compiler
 }
 
 // Close closes this Compiler.
@@ -90,7 +83,7 @@ func (c *Compiler) workerLoop() {
 }
 
 func (c *Compiler) Trigger(root *node.Root) {
-	ctx, _ := context.WithTimeout(context.Background(), time.Second * 10)
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
 	c.getBoardState(root.Pub()).Trigger(ctx, root)
 }
 
@@ -107,7 +100,7 @@ func (c *Compiler) getBoardState(bpk cipher.PubKey) states.State {
 	defer c.mux.Unlock()
 	bs, has := c.bStates[bpk]
 	if !has {
-		c.bStates[bpk] = c.newBState(bpk, c.user, c.workers)
+		c.bStates[bpk] = c.newBState(bpk, c.workers)
 		bs = c.bStates[bpk]
 	}
 	return bs
