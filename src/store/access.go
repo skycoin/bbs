@@ -300,7 +300,9 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (*BoardP
 
 	in.Thread = new(object.Thread)
 	tag.Transfer(in, &in.Thread.Post)
-	a.Users.Sign(&in.Thread.Post)
+	if e := a.Users.Sign(&in.Thread.Post); e != nil {
+		return nil, e
+	}
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
@@ -361,7 +363,9 @@ func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*Vote
 	in.Vote = new(object.Vote)
 	tag.Transfer(in, in.Vote)
 	fmt.Printf("%#v", in.Vote)
-	a.Users.Sign(in.Vote)
+	if e := a.Users.Sign(in.Vote); e != nil {
+		return nil, e
+	}
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
@@ -417,7 +421,9 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 
 	in.Post = new(object.Post)
 	tag.Transfer(in, in.Post)
-	a.Users.Sign(in.Post)
+	if e := a.Users.Sign(in.Post); e != nil {
+		return nil, e
+	}
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
@@ -477,7 +483,9 @@ func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOut
 
 	in.Vote = new(object.Vote)
 	tag.Transfer(in, in.Vote)
-	a.Users.Sign(in.Vote)
+	if e := a.Users.Sign(in.Vote); e != nil {
+		return nil, e
+	}
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
