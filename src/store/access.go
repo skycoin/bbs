@@ -7,7 +7,6 @@ import (
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/users"
-	"fmt"
 )
 
 // Access allows access to store.
@@ -362,7 +361,6 @@ func (a *Access) VoteThread(ctx context.Context, in *object.VoteThreadIO) (*Vote
 
 	in.Vote = new(object.Vote)
 	tag.Transfer(in, in.Vote)
-	fmt.Printf("%#v", in.Vote)
 	if e := a.Users.Sign(in.Vote); e != nil {
 		return nil, e
 	}
