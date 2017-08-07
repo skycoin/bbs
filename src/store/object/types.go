@@ -58,6 +58,7 @@ type Vote struct {
 	User    cipher.PubKey `json:"-" verify:"pk" transfer:"upk"` // User who voted.
 	Mode    int8          `json:"-" transfer:"mode"`            // +1 is up, -1 is down.
 	Tag     []byte        `json:"-" transfer:"tag"`             // What's this?
+	Tags    []string      `json:"-"`
 	Created int64         `json:"created" transfer:"time"`
 	Sig     cipher.Sig    `json:"-" verify:"sig"` // Signature.
 }
@@ -78,6 +79,19 @@ type PostVotesPages struct {
 	DeletedHash cipher.SHA256 `enc:"-"`
 	Store       []VotesPage
 	Deleted     []cipher.SHA256
+}
+
+type UserVotesPages struct {
+	R           cipher.SHA256 `json:"-" enc:"-"`
+	StoreHash   cipher.SHA256 `enc:"-"`
+	DeletedHash cipher.SHA256 `enc:"-"`
+	Store       []UserVotesPage
+	Deleted     []cipher.PubKey
+}
+
+type UserVotesPage struct {
+	PubKey cipher.PubKey
+	Votes  skyobject.References `skyobject:"schema=Vote"`
 }
 
 type VotesPage struct {

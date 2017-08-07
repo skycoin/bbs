@@ -12,7 +12,7 @@ import (
 // GetBoardResult get's the specified board of public key.
 func GetBoardResult(_ context.Context, root *node.Root) (*Result, error) {
 	result := NewResult(root).
-		GetPages(true, false, false).
+		GetPages(true, false, false, false).
 		GetBoard()
 	if e := result.Error(); e != nil {
 		return nil, e
@@ -34,6 +34,7 @@ func NewBoard(_ context.Context, root *node.Root, in *object.NewBoardIO) error {
 		}),
 		root.MustDynamic("ThreadVotesPages", object.ThreadVotesPages{}),
 		root.MustDynamic("PostVotesPages", object.PostVotesPages{}),
+		root.MustDynamic("UserVotesPages", object.UserVotesPages{}),
 	)
 	return boo.WrapType(e, boo.Internal, "failed to create board")
 }
@@ -47,7 +48,7 @@ func DeleteBoard(_ context.Context, root *node.Root, _ *object.BoardIO) error {
 // NewSubmissionAddress adds a new submission address to board.
 func NewSubmissionAddress(_ context.Context, root *node.Root, in *object.AddressIO) error {
 	result := NewResult(root).
-		GetPages(true, false, false).
+		GetPages(true, false, false, false).
 		GetBoard()
 	if e := result.Error(); e != nil {
 		return e
@@ -61,7 +62,7 @@ func NewSubmissionAddress(_ context.Context, root *node.Root, in *object.Address
 	result.Board.SubmissionAddresses = append(
 		result.Board.SubmissionAddresses, in.Address)
 
-	result.saveBoard().savePages(true, false, false)
+	result.saveBoard().savePages(true, false, false, false)
 
 	if e := result.Error(); e != nil {
 		return boo.WrapType(e, boo.NotAuthorised, "secret key invalid")
@@ -72,7 +73,7 @@ func NewSubmissionAddress(_ context.Context, root *node.Root, in *object.Address
 // DeleteSubmissionAddress removes a specified submission address from board.
 func DeleteSubmissionAddress(_ context.Context, root *node.Root, in *object.AddressIO) error {
 	result := NewResult(root).
-		GetPages(true, false, false).
+		GetPages(true, false, false, false).
 		GetBoard()
 	if e := result.Error(); e != nil {
 		return e
@@ -83,7 +84,7 @@ func DeleteSubmissionAddress(_ context.Context, root *node.Root, in *object.Addr
 				result.Board.SubmissionAddresses[:i],
 				result.Board.SubmissionAddresses[i+1:]...,
 			)
-			result.saveBoard().savePages(true, false, false)
+			result.saveBoard().savePages(true, false, false, false)
 			if e := result.Error(); e != nil {
 				return boo.WrapType(e, boo.NotAuthorised, "secret key invalid")
 			}
@@ -97,7 +98,7 @@ func DeleteSubmissionAddress(_ context.Context, root *node.Root, in *object.Addr
 // GetBoardPageResult gets the page of board of public key.
 func GetBoardPageResult(_ context.Context, root *node.Root, _ *object.BoardIO) (*Result, error) {
 	result := NewResult(root).
-		GetPages(true, false, false).
+		GetPages(true, false, false, false).
 		GetBoard().
 		GetThreadPages().
 		GetThreads()
@@ -110,7 +111,7 @@ func GetBoardPageResult(_ context.Context, root *node.Root, _ *object.BoardIO) (
 // NewThread creates a new thread on board of specified public key.
 func NewThread(_ context.Context, root *node.Root, in *object.NewThreadIO) (*Result, error) {
 	result := NewResult(root).
-		GetPages(true, true, false).
+		GetPages(true, true, false, true).
 		GetBoard().
 		GetThreadPages().
 		GetThreads()
@@ -120,13 +121,19 @@ func NewThread(_ context.Context, root *node.Root, in *object.NewThreadIO) (*Res
 	if e := in.Thread.Verify(); e != nil {
 		return nil, e
 	}
+	if _, has := result.UserMap[in.Thread.User]; !has {
+		result.UserVotesPages.Store = append(
+			result.UserVotesPages.Store,
+			object.UserVotesPage{PubKey: in.Thread.User},
+		)
+	}
 	result.Thread = in.Thread
 	result.ThreadPages = append(result.ThreadPages, result.ThreadPage)
 	result.Threads = append(result.Threads, result.Thread)
 	result.
 		saveThread().
 		saveThreadPage().
-		savePages(true, true, false)
+		savePages(true, true, false, true)
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
@@ -136,7 +143,7 @@ func NewThread(_ context.Context, root *node.Root, in *object.NewThreadIO) (*Res
 // DeleteThread removes a thread of reference from board of public key.
 func DeleteThread(_ context.Context, root *node.Root, in *object.ThreadIO) (*Result, error) {
 	result := NewResult(root).
-		GetPages(true, true, true).
+		GetPages(true, true, true, false).
 		GetBoard().
 		GetThreadPages().
 		GetThreads()
@@ -161,7 +168,7 @@ func DeleteThread(_ context.Context, root *node.Root, in *object.ThreadIO) (*Res
 			}()
 			wg.Wait()
 			result.
-				savePages(true, true, true)
+				savePages(true, true, true, false)
 			if e := result.Error(); e != nil {
 				return nil, e
 			}
@@ -176,17 +183,23 @@ func DeleteThread(_ context.Context, root *node.Root, in *object.ThreadIO) (*Res
 // VoteThread adds/modifies/removes vote from thread.
 func VoteThread(_ context.Context, root *node.Root, in *object.VoteThreadIO) (*Result, error) {
 	result := NewResult(root).
-		GetPages(false, true, false)
+		GetPages(false, true, false, true)
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
 	if e := in.Vote.Verify(); e != nil {
 		return nil, e
 	}
+	if _, has := result.UserMap[in.Vote.User]; !has {
+		result.UserVotesPages.Store = append(
+			result.UserVotesPages.Store,
+			object.UserVotesPage{PubKey: in.Vote.User},
+		)
+	}
 	result.ThreadVote = in.Vote
 	result.
 		saveThreadVote(in.ThreadRef).
-		savePages(false, true, false)
+		savePages(false, true, false, true)
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
@@ -196,7 +209,7 @@ func VoteThread(_ context.Context, root *node.Root, in *object.VoteThreadIO) (*R
 // GetThreadPageResult gets the page of thread of reference from board of public key.
 func GetThreadPageResult(_ context.Context, root *node.Root, in *object.ThreadIO) (*Result, error) {
 	result := NewResult(root).
-		GetPages(true, false, false).
+		GetPages(true, false, false, false).
 		GetBoard().
 		GetThreadPage(in.ThreadRef).
 		GetThread().
@@ -210,7 +223,7 @@ func GetThreadPageResult(_ context.Context, root *node.Root, in *object.ThreadIO
 // NewPost creates a new post on thread of reference from board of public key.
 func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result, error) {
 	result := NewResult(root).
-		GetPages(true, true, true).
+		GetPages(true, true, true, true).
 		GetBoard().
 		GetThreadPage(in.ThreadRef).
 		GetThread().
@@ -221,13 +234,19 @@ func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result,
 	if e := in.Post.Verify(); e != nil {
 		return nil, e
 	}
+	if _, has := result.UserMap[in.Post.User]; !has {
+		result.UserVotesPages.Store = append(
+			result.UserVotesPages.Store,
+			object.UserVotesPage{PubKey: in.Post.User},
+		)
+	}
 	result.Post = in.Post
 	result.Post.Created = time.Now().UnixNano()
 	result.Posts = append(result.Posts, result.Post)
 	result.
 		savePost().
 		saveThreadPage().
-		savePages(true, true, true)
+		savePages(true, true, true, true)
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
@@ -237,7 +256,7 @@ func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result,
 // DeletePost removes a post of reference from thread of reference and board of public key.
 func DeletePost(_ context.Context, root *node.Root, in *object.PostIO) (*Result, error) {
 	result := NewResult(root).
-		GetPages(true, false, true).
+		GetPages(true, false, true, false).
 		GetBoard().
 		GetThreadPage(in.ThreadRef).
 		GetThread().
@@ -260,7 +279,7 @@ func DeletePost(_ context.Context, root *node.Root, in *object.PostIO) (*Result,
 			wg.Wait()
 			result.
 				saveThreadPage().
-				savePages(true, false, true)
+				savePages(true, false, true, false)
 			if e := result.Error(); e != nil {
 				return nil, e
 			}
@@ -275,17 +294,43 @@ func DeletePost(_ context.Context, root *node.Root, in *object.PostIO) (*Result,
 // VotePost adds/modifies/removes vote from thread.
 func VotePost(_ context.Context, root *node.Root, in *object.VotePostIO) (*Result, error) {
 	result := NewResult(root).
-		GetPages(false, false, true)
+		GetPages(false, false, true, true)
 	if e := result.Error(); e != nil {
 		return nil, e
 	}
 	if e := in.Vote.Verify(); e != nil {
 		return nil, e
 	}
+	if _, has := result.UserMap[in.Vote.User]; !has {
+		result.UserVotesPages.Store = append(
+			result.UserVotesPages.Store,
+			object.UserVotesPage{PubKey: in.Vote.User},
+		)
+	}
 	result.PostVote = in.Vote
 	result.
 		savePostVote(in.PostRef).
-		savePages(false, false, true)
+		savePages(false, false, true, true)
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	return result, nil
+}
+
+// VoteUser places a vote on a user.
+func VoteUser(_ context.Context, root *node.Root, in *object.VoteUserIO) (*Result, error) {
+	result := NewResult(root).
+		GetPages(false, false, false, true)
+	if e := result.Error(); e != nil {
+		return nil, e
+	}
+	if e := in.Vote.Verify(); e != nil {
+		return nil, e
+	}
+	result.UserVote = in.Vote
+	result.
+		saveUserVote(in.UserRef).
+		savePages(false, false, false, true)
 	if e := result.Error(); e != nil {
 		return nil, e
 	}

@@ -341,6 +341,30 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			send(w, out, e)
 		})
 
+	/*
+		<<< USERS >>>
+	*/
+
+	mux.HandleFunc("/api/users/get",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.GetUser(r.Context(), &object.UserIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				UserRefStr: r.FormValue("user_reference"),
+			})
+			send(w, out, e)
+		})
+
+	mux.HandleFunc("/api/users/vote",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.VoteUser(r.Context(), &object.VoteUserIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				UserRefStr:     r.FormValue("user_reference"),
+				ModeStr:        r.FormValue("mode"),
+				TagStr:         r.FormValue("tag"),
+			})
+			send(w, out, e)
+		})
+
 	return nil
 }
 

@@ -12,6 +12,8 @@ const (
 	valUserPKStr    = "upkStr"
 	valUserPK       = "upk"
 	valUserSK       = "usk"
+	valUserRefStr   = "uRefStr"
+	valUserRef      = "uRef"
 	valBoardPKStr   = "bpkStr"
 	valBoardPK      = "bpk"
 	valBoardSK      = "bsk"
@@ -52,6 +54,14 @@ func process(tm tMap) error {
 			return wrapErr(e, "user public key")
 		}
 		tm.set(valUserPK, upk)
+	}
+	// User reference.
+	if uRefStr, has := tm[valUserRefStr]; has {
+		uRef, e := keys.GetPubKey(uRefStr.String())
+		if e != nil {
+			return wrapErr(e, "user public key reference")
+		}
+		tm.set(valUserRef, uRef)
 	}
 	// Board public key.
 	if bpkStr, has := tm[valBoardPKStr]; has {

@@ -39,7 +39,7 @@
 								},
 								{
 									"key": "name",
-									"value": "Test Board A",
+									"value": "Test Board",
 									"description": "Name of the board.",
 									"type": "text"
 								},
@@ -258,7 +258,7 @@
 							"formdata": [
 								{
 									"key": "seed",
-									"value": "this is a secret seed",
+									"value": "this is a secret seed that never fails",
 									"description": "Used for generating public/private key pair for user.",
 									"type": "text"
 								},
@@ -291,7 +291,7 @@
 							"formdata": [
 								{
 									"key": "alias",
-									"value": "testuser123",
+									"value": "superman111",
 									"description": "Alias of user to delete.",
 									"type": "text"
 								}
@@ -432,7 +432,7 @@
 								},
 								{
 									"key": "title",
-									"value": "Test Thread 10",
+									"value": "Test Thread",
 									"description": "Title of thread to create.",
 									"type": "text"
 								},
@@ -465,7 +465,7 @@
 								},
 								{
 									"key": "thread_reference",
-									"value": "411c86d279e737a763758dacaa6d9649efba4c2b5a3456c7b41d2b744e571cad",
+									"value": "b3b4a49e0df4959fd9f420cc37067cd5ab97607382154ad9b8363bc59e0b5cb8",
 									"description": "Reference of thread to delete.",
 									"type": "text"
 								}
@@ -492,13 +492,52 @@
 								},
 								{
 									"key": "thread_reference",
-									"value": "f0e64fb5bcfc8fd02598eee292d34fa51b41806edb1da4009b1a5cd04554aa12",
+									"value": "2376df1eee43e868b767a0dd1d743f376a3341b24a859e97bed50eda25f4cd09",
 									"description": "Reference of thread to obtain.",
 									"type": "text"
 								}
 							]
 						},
 						"description": "Obtains a view of a thread; contains board, thread information, and lists posts of the thread."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote Thread",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/threads/vote",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board that thread of question resides.",
+									"type": "text"
+								},
+								{
+									"key": "thread_reference",
+									"value": "9fab22f58583daa6985b5bd4e4cfdf24add3fc66aab2c2edc8c865287f5ccbbc",
+									"description": "Reference of thread.",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "-1",
+									"description": "Vote mode.",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "spam",
+									"description": "Vote tag.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Adds / Changes vote for thread."
 					},
 					"response": []
 				}
@@ -563,13 +602,13 @@
 								},
 								{
 									"key": "thread_reference",
-									"value": "8ee1f899d683f361571c59fb4bbba14e492f3cf1279a6f9cfb1ba6c6e75e74a8",
+									"value": "63c5b02118b9a9fc9cce4991a649dc054cb8c7123f83e46f25759afa64db10cb",
 									"description": "Thread reference to submit post.",
 									"type": "text"
 								},
 								{
 									"key": "title",
-									"value": "Hello 3",
+									"value": "Hello",
 									"description": "Title of post.",
 									"type": "text"
 								},
@@ -602,19 +641,130 @@
 								},
 								{
 									"key": "thread_reference",
-									"value": "ea919029b80523b0c56624b788175b8026a9734edf58a0bd761491f96107f2ee",
+									"value": "b71d65aa63788b38f0ebd3542cc9f945e034ca1516643b6c5dd988a7ed0452a1",
 									"description": "Reference of thread.",
 									"type": "text"
 								},
 								{
 									"key": "post_reference",
-									"value": "98a4035012bda3949829bd8b6a0c62bd8addae803e3ca21504801817cb1f2051",
+									"value": "195c02632bff0ec949f014f1c093a4a630fe7350a02dba2151cdd2a9c294bc0c",
 									"description": "Reference of post.",
 									"type": "text"
 								}
 							]
 						},
 						"description": "Deletes a post of reference from specified thread of reference and board of public key."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/posts/vote",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board that post of question resides.",
+									"type": "text"
+								},
+								{
+									"key": "post_reference",
+									"value": "2376df1eee43e868b767a0dd1d743f376a3341b24a859e97bed50eda25f4cd09",
+									"description": "Reference of post.",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "-1",
+									"description": "Vote mode.",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "",
+									"description": "Vote tag.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Add / Changes vote for post."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"description": "",
+			"item": [
+				{
+					"name": "Get User",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/users/get",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "user_reference",
+									"value": "0324e2087d3a6364c8b0a57e5029eea618a74210a3a3e94702091e5cf41920a622",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Vote User",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/users/vote",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "user_reference",
+									"value": "0324e2087d3a6364c8b0a57e5029eea618a74210a3a3e94702091e5cf41920a622",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "+1",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "spam",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
 					},
 					"response": []
 				}

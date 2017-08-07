@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"github.com/skycoin/skycoin/src/util/file"
 	"io/ioutil"
 	"log"
@@ -13,7 +14,6 @@ import (
 	"path"
 	"strings"
 	"sync"
-	"github.com/skycoin/skycoin/src/cipher/encoder"
 )
 
 const (

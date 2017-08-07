@@ -208,3 +208,16 @@ func getPostVotes(
 			GenerateView(upk),
 	}
 }
+
+func getUserVotes(
+	ctx context.Context, compiler *state.Compiler, result *content.Result,
+	upk, uRef cipher.PubKey,
+) *VotesOutput {
+	return &VotesOutput{
+		Reference: uRef.Hex(),
+		Votes: compiler.
+			GetBoard(result.GetPK()).
+			GetUserVotesSeq(ctx, uRef, result.GetSeq()).
+			GenerateView(upk),
+	}
+}

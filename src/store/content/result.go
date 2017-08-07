@@ -11,39 +11,38 @@ import (
 )
 
 type Result struct {
-	e                    error
-	root                 *node.Root
-	BoardPage            *object.BoardPage
-	Board                *object.Board
-	ThreadPage           *object.ThreadPage
-	ThreadPages          []*object.ThreadPage
-	Thread               *object.Thread
-	Threads              []*object.Thread
-	ThreadVotesPage      *object.ThreadVotesPages
-	ThreadVotesPageIndex int
-	ThreadVote           *object.Vote
-	ThreadIndex          int
-	ThreadRefMap         map[cipher.SHA256]int
-	Post                 *object.Post
-	Posts                []*object.Post
-	PostVotesPage        *object.PostVotesPages
-	PostVotesPageIndex   int
-	PostVote             *object.Vote
-	PostIndex            int
-	PostRefMap           map[cipher.SHA256]int
+	e                error
+	root             *node.Root
+	BoardPage        *object.BoardPage
+	Board            *object.Board
+	ThreadPage       *object.ThreadPage
+	ThreadPages      []*object.ThreadPage
+	Thread           *object.Thread
+	Threads          []*object.Thread
+	ThreadVotesPages *object.ThreadVotesPages
+	ThreadVote       *object.Vote
+	ThreadIndex      int
+	ThreadRefMap     map[cipher.SHA256]int
+	Post             *object.Post
+	Posts            []*object.Post
+	PostVotesPages   *object.PostVotesPages
+	PostVote         *object.Vote
+	PostIndex        int
+	PostRefMap       map[cipher.SHA256]int
+	UserVotesPages   *object.UserVotesPages
+	UserVote         *object.Vote
+	UserMap          map[cipher.PubKey]int
 }
 
 func NewResult(root *node.Root) *Result {
-	if len(root.Refs()) != 3 {
+	if len(root.Refs()) != 4 {
 		return &Result{e: boo.New(boo.InvalidRead,
 			"corrupt board - reference count is not 3")}
 	}
 	return &Result{
-		root:                 root,
-		ThreadIndex:          -1,
-		PostIndex:            -1,
-		ThreadVotesPageIndex: -1,
-		PostVotesPageIndex:   -1,
+		root:        root,
+		ThreadIndex: -1,
+		PostIndex:   -1,
 	}
 }
 
@@ -59,7 +58,7 @@ func (r *Result) GetSeq() uint64 {
 	return r.root.Seq()
 }
 
-func (r *Result) GetPages(b, t, p bool) *Result {
+func (r *Result) GetPages(b, t, p, u bool) *Result {
 	if r.e != nil {
 		return r
 	}
@@ -74,10 +73,10 @@ func (r *Result) GetPages(b, t, p bool) *Result {
 		}
 	}
 	if t {
-		r.ThreadVotesPage = &object.ThreadVotesPages{
+		r.ThreadVotesPages = &object.ThreadVotesPages{
 			R: toSHA256(r.root.Refs()[1].Object),
 		}
-		if e := r.deserialize(toRef(r.ThreadVotesPage.R), r.ThreadVotesPage); e != nil {
+		if e := r.deserialize(toRef(r.ThreadVotesPages.R), r.ThreadVotesPages); e != nil {
 			r.e = boo.WrapType(e, boo.InvalidRead, "invalid thread votes page")
 			return r
 		}
@@ -85,16 +84,16 @@ func (r *Result) GetPages(b, t, p bool) *Result {
 		go func() {
 			defer wg.Done()
 			r.ThreadRefMap = make(map[cipher.SHA256]int)
-			for i, tvp := range r.ThreadVotesPage.Store {
+			for i, tvp := range r.ThreadVotesPages.Store {
 				r.ThreadRefMap[tvp.Ref] = i
 			}
 		}()
 	}
 	if p {
-		r.PostVotesPage = &object.PostVotesPages{
+		r.PostVotesPages = &object.PostVotesPages{
 			R: toSHA256(r.root.Refs()[2].Object),
 		}
-		if e := r.deserialize(toRef(r.PostVotesPage.R), r.PostVotesPage); e != nil {
+		if e := r.deserialize(toRef(r.PostVotesPages.R), r.PostVotesPages); e != nil {
 			r.e = boo.WrapType(e, boo.InvalidRead, "invalid post votes page")
 			return r
 		}
@@ -102,8 +101,25 @@ func (r *Result) GetPages(b, t, p bool) *Result {
 		go func() {
 			defer wg.Done()
 			r.PostRefMap = make(map[cipher.SHA256]int)
-			for i, pvp := range r.PostVotesPage.Store {
+			for i, pvp := range r.PostVotesPages.Store {
 				r.PostRefMap[pvp.Ref] = i
+			}
+		}()
+	}
+	if u {
+		r.UserVotesPages = &object.UserVotesPages{
+			R: toSHA256(r.root.Refs()[3].Object),
+		}
+		if e := r.deserialize(toRef(r.UserVotesPages.R), r.UserVotesPages); e != nil {
+			r.e = boo.WrapType(e, boo.InvalidRead, "invalid user votes page")
+			return r
+		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r.UserMap = make(map[cipher.PubKey]int)
+			for i, uvp := range r.UserVotesPages.Store {
+				r.UserMap[uvp.PubKey] = i
 			}
 		}()
 	}
@@ -231,8 +247,8 @@ func (r *Result) savePost() *Result {
 			r.Post.R.Hex(), r.root.Pub().Hex())
 		return r
 	} else {
-		r.PostVotesPage.Store = append(
-			r.PostVotesPage.Store,
+		r.PostVotesPages.Store = append(
+			r.PostVotesPages.Store,
 			object.VotesPage{Ref: r.Post.R},
 		)
 	}
@@ -257,8 +273,8 @@ func (r *Result) saveThread() *Result {
 			r.Thread.R.Hex(), r.root.Pub().Hex())
 		return r
 	} else {
-		r.ThreadVotesPage.Store = append(
-			r.ThreadVotesPage.Store,
+		r.ThreadVotesPages.Store = append(
+			r.ThreadVotesPages.Store,
 			object.VotesPage{Ref: r.Thread.R},
 		)
 	}
@@ -293,22 +309,26 @@ func (r *Result) saveBoard() *Result {
 	return r
 }
 
-func (r *Result) savePages(b, t, p bool) *Result {
+func (r *Result) savePages(b, t, p, u bool) *Result {
 	if r.e != nil {
 		return r
 	}
 	refs := r.root.Refs()
-	if b {
+	if b && r.BoardPage != nil {
 		r.BoardPage.R = toSHA256(r.root.Save(r.BoardPage))
 		refs[0].Object = toRef(r.BoardPage.R)
 	}
-	if t {
-		r.ThreadVotesPage.R = toSHA256(r.root.Save(r.ThreadVotesPage))
-		refs[1].Object = toRef(r.ThreadVotesPage.R)
+	if t && r.ThreadVotesPages != nil {
+		r.ThreadVotesPages.R = toSHA256(r.root.Save(r.ThreadVotesPages))
+		refs[1].Object = toRef(r.ThreadVotesPages.R)
 	}
-	if p {
-		r.PostVotesPage.R = toSHA256(r.root.Save(r.PostVotesPage))
-		refs[2].Object = toRef(r.PostVotesPage.R)
+	if p && r.PostVotesPages != nil {
+		r.PostVotesPages.R = toSHA256(r.root.Save(r.PostVotesPages))
+		refs[2].Object = toRef(r.PostVotesPages.R)
+	}
+	if u && r.UserVotesPages != nil {
+		r.UserVotesPages.R = toSHA256(r.root.Save(r.UserVotesPages))
+		refs[3].Object = toRef(r.UserVotesPages.R)
 	}
 	if _, e := r.root.Replace(refs); e != nil {
 		r.e = e
@@ -331,7 +351,7 @@ func (r *Result) saveThreadVote(tRef skyobject.Reference) *Result {
 	}
 
 	var temp object.Vote
-	for i, vRef := range r.ThreadVotesPage.Store[tvi].Votes {
+	for i, vRef := range r.ThreadVotesPages.Store[tvi].Votes {
 		if e := r.deserialize(vRef, &temp); e != nil {
 			r.e = boo.WrapTypef(e, boo.InvalidRead,
 				"vote %d from thread %s of board %s is corrupt",
@@ -339,13 +359,13 @@ func (r *Result) saveThreadVote(tRef skyobject.Reference) *Result {
 			return r
 		}
 		if temp.User == r.ThreadVote.User {
-			r.ThreadVotesPage.Store[tvi].Votes[i] =
+			r.ThreadVotesPages.Store[tvi].Votes[i] =
 				toRef(r.ThreadVote.R)
 			return r
 		}
 	}
-	r.ThreadVotesPage.Store[tvi].Votes = append(
-		r.ThreadVotesPage.Store[tvi].Votes,
+	r.ThreadVotesPages.Store[tvi].Votes = append(
+		r.ThreadVotesPages.Store[tvi].Votes,
 		toRef(r.ThreadVote.R),
 	)
 	return r
@@ -366,22 +386,57 @@ func (r *Result) savePostVote(pRef skyobject.Reference) *Result {
 	}
 
 	var temp object.Vote
-	for i, vRef := range r.PostVotesPage.Store[pvi].Votes {
+	for i, vRef := range r.PostVotesPages.Store[pvi].Votes {
 		if e := r.deserialize(vRef, &temp); e != nil {
 			r.e = boo.WrapTypef(e, boo.InvalidRead,
-				"vote %d from thread %s of board %s is corrupt",
+				"vote %d of post %s of board %s is corrupt",
 				pRef.String(), r.root.Pub().Hex())
 			return r
 		}
 		if temp.User == r.PostVote.User {
-			r.PostVotesPage.Store[pvi].Votes[i] =
+			r.PostVotesPages.Store[pvi].Votes[i] =
 				toRef(r.PostVote.R)
 			return r
 		}
 	}
-	r.PostVotesPage.Store[pvi].Votes = append(
-		r.PostVotesPage.Store[pvi].Votes,
+	r.PostVotesPages.Store[pvi].Votes = append(
+		r.PostVotesPages.Store[pvi].Votes,
 		toRef(r.PostVote.R),
+	)
+	return r
+}
+
+func (r *Result) saveUserVote(upk cipher.PubKey) *Result {
+	if r.e != nil {
+		return r
+	}
+	r.UserVote.R = toSHA256(r.root.Save(r.UserVote))
+
+	uvi, has := r.UserMap[upk]
+	if !has {
+		r.e = boo.Newf(boo.NotFound,
+			"user of public key %s not found mentioned in board %s",
+			upk.Hex(), r.root.Pub().Hex())
+		return r
+	}
+
+	var temp object.Vote
+	for i, vRef := range r.UserVotesPages.Store[uvi].Votes {
+		if e := r.deserialize(vRef, &temp); e != nil {
+			r.e = boo.WrapTypef(e, boo.InvalidRead,
+				"vote %d of user %s from board %s is corrupt",
+				upk.Hex(), r.root.Pub().Hex())
+			return r
+		}
+		if temp.User == r.UserVote.User {
+			r.UserVotesPages.Store[uvi].Votes[i] =
+				toRef(r.UserVote.R)
+			return r
+		}
+	}
+	r.UserVotesPages.Store[uvi].Votes = append(
+		r.UserVotesPages.Store[uvi].Votes,
+		toRef(r.UserVote.R),
 	)
 	return r
 }
@@ -391,12 +446,12 @@ func (r *Result) deleteThreadVote(tRef skyobject.Reference) *Result {
 		return r
 	}
 	di := r.ThreadRefMap[toSHA256(tRef)]
-	r.ThreadVotesPage.Store = append(
-		r.ThreadVotesPage.Store[:di],
-		r.ThreadVotesPage.Store[di+1:]...,
+	r.ThreadVotesPages.Store = append(
+		r.ThreadVotesPages.Store[:di],
+		r.ThreadVotesPages.Store[di+1:]...,
 	)
-	r.ThreadVotesPage.Deleted = append(
-		r.ThreadVotesPage.Deleted,
+	r.ThreadVotesPages.Deleted = append(
+		r.ThreadVotesPages.Deleted,
 		toSHA256(tRef),
 	)
 	return r
@@ -407,12 +462,12 @@ func (r *Result) deletePostVote(pRef skyobject.Reference) *Result {
 		return r
 	}
 	di := r.PostRefMap[toSHA256(pRef)]
-	r.PostVotesPage.Store = append(
-		r.PostVotesPage.Store[:di],
-		r.PostVotesPage.Store[di+1:]...,
+	r.PostVotesPages.Store = append(
+		r.PostVotesPages.Store[:di],
+		r.PostVotesPages.Store[di+1:]...,
 	)
-	r.PostVotesPage.Deleted = append(
-		r.PostVotesPage.Deleted,
+	r.PostVotesPages.Deleted = append(
+		r.PostVotesPages.Deleted,
 		toSHA256(pRef),
 	)
 	return r
@@ -424,20 +479,20 @@ func (r *Result) deletePostVotes(pRefs skyobject.References) *Result {
 	}
 	for _, pRef := range pRefs {
 		di := r.PostRefMap[toSHA256(pRef)]
-		r.PostVotesPage.Store = append(
+		r.PostVotesPages.Store = append(
 			[]object.VotesPage{{}},
 			append(
-				r.PostVotesPage.Store[:di],
-				r.PostVotesPage.Store[di+1:]...,
+				r.PostVotesPages.Store[:di],
+				r.PostVotesPages.Store[di+1:]...,
 			)...,
 		)
-		r.PostVotesPage.Deleted = append(
-			r.PostVotesPage.Deleted,
+		r.PostVotesPages.Deleted = append(
+			r.PostVotesPages.Deleted,
 			toSHA256(pRef),
 		)
 	}
-	r.PostVotesPage.Store =
-		r.PostVotesPage.Store[len(pRefs):]
+	r.PostVotesPages.Store =
+		r.PostVotesPages.Store[len(pRefs):]
 	return r
 }
 

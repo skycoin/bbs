@@ -30,4 +30,10 @@ type State interface {
 
 	// GetPostVotesSeq obtains the post votes above the specified sequence.
 	GetPostVotesSeq(ctx context.Context, ref skyobject.Reference, seq uint64) *object.VoteSummary
+
+	// GetUserVotes obtains the votes of users of public key.
+	GetUserVotes(upk cipher.PubKey) *object.VoteSummary
+
+	// GetUserVotesSeq obtains the user votes above the specified sequence.
+	GetUserVotesSeq(ctx context.Context, upk cipher.PubKey, seq uint64) *object.VoteSummary
 }

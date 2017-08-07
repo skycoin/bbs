@@ -33,6 +33,10 @@ type PostView struct {
 	Votes       *VoteSummaryView `json:"votes"`
 }
 
+/*
+	<<< VOTING >>>
+*/
+
 type VoteSummary struct {
 	sync.Mutex
 	Hash  cipher.SHA256

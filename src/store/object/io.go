@@ -200,3 +200,26 @@ type VotePostIO struct {
 	Tag            []byte              `bbs:"tag" transfer:"tag"`
 	Vote           *Vote
 }
+
+type UserIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	BoardSecKey    cipher.SecKey `bbs:"bsk"`
+	UserRefStr     string        `bbs:"uRefStr"`
+	UserRef        cipher.PubKey `bbs:"uRef"`
+}
+
+type VoteUserIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	BoardSecKey    cipher.SecKey `bbs:"bsk"`
+	UserRefStr     string        `bbs:"uRefStr"` // User being voted on.
+	UserRef        cipher.PubKey `bbs:"uRef"`
+	UserPubKey     cipher.PubKey `bbs:"upk" transfer:"upk"` // User doing the vote.
+	UserSecKey     cipher.SecKey `bbs:"usk"`
+	ModeStr        string        `bbs:"modeStr"`
+	Mode           int8          `bbs:"mode" transfer:"mode"`
+	TagStr         string        `bbs:"tagStr"`
+	Tag            []byte        `bbs:"tag" transfer:"tag"`
+	Vote           *Vote
+}

@@ -503,3 +503,61 @@ func (a *Access) VotePost(ctx context.Context, in *object.VotePostIO) (*VotesOut
 	compiler.Trigger(root)
 	return getPostVotes(ctx, compiler, result, a.Users.GetUPK(), in.PostRef), nil
 }
+
+func (a *Access) GetUser(ctx context.Context, in *object.UserIO) (*VotesOutput, error) {
+	if e := tag.Process(in); e != nil {
+		return nil, e
+	}
+	file, e := a.Session.GetInfo(ctx)
+	if e != nil {
+		return nil, e
+	}
+	cxo := a.Session.GetCXO()
+	defer cxo.Lock()()
+	if e := file.FillMaster(in); e != nil {
+		// TODO: RPC
+		return nil, e
+	}
+	root, e := cxo.GetRoot(in.BoardPubKey, in.BoardSecKey)
+	if e != nil {
+		return nil, e
+	}
+	result := content.NewResult(root)
+	compiler := a.Session.GetCompiler()
+	compiler.Trigger(root)
+	return getUserVotes(ctx, compiler, result, a.Users.GetUPK(), in.UserRef), nil
+}
+
+func (a *Access) VoteUser(ctx context.Context, in *object.VoteUserIO) (*VotesOutput, error) {
+	if e := tag.Process(in); e != nil {
+		return nil, e
+	}
+	file, e := a.Session.GetInfo(ctx)
+	if e != nil {
+		return nil, e
+	}
+
+	in.Vote = new(object.Vote)
+	tag.Transfer(in, in.Vote)
+	if e := a.Users.Sign(in.Vote); e != nil {
+		return nil, e
+	}
+
+	cxo := a.Session.GetCXO()
+	defer cxo.Lock()()
+	if e := file.FillMaster(in); e != nil {
+		// TODO: RPC
+		return nil, e
+	}
+	root, e := cxo.GetRoot(in.BoardPubKey, in.BoardSecKey)
+	if e != nil {
+		return nil, e
+	}
+	result, e := content.VoteUser(ctx, root, in)
+	if e != nil {
+		return nil, e
+	}
+	compiler := a.Session.GetCompiler()
+	compiler.Trigger(root)
+	return getUserVotes(ctx, compiler, result, a.Users.GetUPK(), in.UserRef), nil
+}
