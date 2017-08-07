@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"fmt"
 )
 
 const (
@@ -202,7 +203,6 @@ func (c *CXO) Close() error {
 
 // GetRoot obtains a root.
 func (c *CXO) GetRoot(pk cipher.PubKey, sk ...cipher.SecKey) (*node.Root, error) {
-	//defer c.Lock()()
 	if c.node == nil {
 		return nil, ErrCXONotOpened
 	}
@@ -213,6 +213,8 @@ func (c *CXO) GetRoot(pk cipher.PubKey, sk ...cipher.SecKey) (*node.Root, error)
 		root = c.node.Container().LastFullRoot(pk)
 	}
 	if root == nil {
+		fmt.Println("PK:", pk.Hex())
+		fmt.Println("SK:", sk[0].Hex())
 		return nil, boo.New(boo.NotFound,
 			"the root is not yet downloaded or does not exist")
 	} else {
@@ -222,7 +224,6 @@ func (c *CXO) GetRoot(pk cipher.PubKey, sk ...cipher.SecKey) (*node.Root, error)
 
 // NewRoot creates a new root.
 func (c *CXO) NewRoot(pk cipher.PubKey, sk cipher.SecKey) (*node.Root, error) {
-	//defer c.Lock()()
 	if c.node == nil {
 		return nil, ErrCXONotOpened
 	}

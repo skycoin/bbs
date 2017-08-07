@@ -349,7 +349,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		func(w http.ResponseWriter, r *http.Request) {
 			out, e := g.Access.GetUser(r.Context(), &object.UserIO{
 				BoardPubKeyStr: r.FormValue("board_public_key"),
-				UserRefStr: r.FormValue("user_reference"),
+				UserRefStr:     r.FormValue("user_reference"),
 			})
 			send(w, out, e)
 		})

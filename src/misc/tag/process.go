@@ -38,6 +38,15 @@ const (
 	valTag          = "tag"
 )
 
+func MultiProcess(objects ...interface{}) error {
+	for _, obj := range objects {
+		if e := Process(obj); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
 func Process(obj interface{}) error {
 	rVal, rTyp := getReflectPair(obj)
 	if e := process(makeTagMap(processKey, rVal, rTyp)); e != nil {

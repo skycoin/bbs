@@ -409,7 +409,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (*Threa
 
 // NewPost creates a new post on specified thead and board.
 func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPageOutput, error) {
-	if e := tag.Process(in); e != nil {
+	if e := tag.MultiProcess(in, &in.NewThreadIO); e != nil {
 		return nil, e
 	}
 	file, e := a.Session.GetInfo(ctx)
@@ -419,13 +419,14 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (*ThreadPage
 
 	in.Post = new(object.Post)
 	tag.Transfer(in, in.Post)
+	tag.Transfer(&in.NewThreadIO, in.Post)
 	if e := a.Users.Sign(in.Post); e != nil {
 		return nil, e
 	}
 
 	cxo := a.Session.GetCXO()
 	defer cxo.Lock()()
-	if e := file.FillMaster(in); e != nil {
+	if e := file.FillMaster(&in.NewThreadIO); e != nil {
 		// TODO: RPC
 		return nil, e
 	}

@@ -37,7 +37,7 @@ type Result struct {
 func NewResult(root *node.Root) *Result {
 	if len(root.Refs()) != 4 {
 		return &Result{e: boo.New(boo.InvalidRead,
-			"corrupt board - reference count is not 3")}
+			"corrupt board - reference count is not 4")}
 	}
 	return &Result{
 		root:        root,

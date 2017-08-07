@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/cxo/node"
 	"sync"
 	"time"
+	"fmt"
 )
 
 // GetBoardResult get's the specified board of public key.
@@ -229,9 +230,11 @@ func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result,
 		GetThread().
 		GetPosts()
 	if e := result.Error(); e != nil {
+		fmt.Println("233:", e)
 		return nil, e
 	}
 	if e := in.Post.Verify(); e != nil {
+		fmt.Println("237:", e)
 		return nil, e
 	}
 	if _, has := result.UserMap[in.Post.User]; !has {
@@ -248,6 +251,7 @@ func NewPost(_ context.Context, root *node.Root, in *object.NewPostIO) (*Result,
 		saveThreadPage().
 		savePages(true, true, true, true)
 	if e := result.Error(); e != nil {
+		fmt.Println("254:", e)
 		return nil, e
 	}
 	return result, nil
