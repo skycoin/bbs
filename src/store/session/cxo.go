@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"fmt"
 )
 
 const (
@@ -213,8 +212,6 @@ func (c *CXO) GetRoot(pk cipher.PubKey, sk ...cipher.SecKey) (*node.Root, error)
 		root = c.node.Container().LastFullRoot(pk)
 	}
 	if root == nil {
-		fmt.Println("PK:", pk.Hex())
-		fmt.Println("SK:", sk[0].Hex())
 		return nil, boo.New(boo.NotFound,
 			"the root is not yet downloaded or does not exist")
 	} else {
