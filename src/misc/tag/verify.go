@@ -11,7 +11,7 @@ const (
 	verifyKey = "verify"
 	verifyIgn = "-"
 	verifySig = "sig"
-	verifyPK  = "pk"
+	verifyPK  = "upk"
 )
 
 var (

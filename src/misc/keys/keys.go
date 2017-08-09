@@ -34,11 +34,11 @@ func GetSecKey(s string) (cipher.SecKey, error) {
 }
 
 // GetReference obtains a skyobject reference from hex string.
-func GetReference(s string) (skyobject.Reference, error) {
+func GetReference(s string) (skyobject.Ref, error) {
 	h, e := cipher.SHA256FromHex(s)
 	if e != nil {
-		return skyobject.Reference{}, boo.WrapType(e, boo.InvalidInput,
+		return skyobject.Ref{}, boo.WrapType(e, boo.InvalidInput,
 			"invalid reference")
 	}
-	return skyobject.Reference(h), e
+	return skyobject.Ref{Hash: h}, e
 }

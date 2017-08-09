@@ -4,96 +4,147 @@ import (
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"sync"
 )
 
-type BoardPage struct {
-	R           cipher.SHA256        `json:"-" enc:"-"`
-	Board       skyobject.Reference  `skyobject:"schema=Board"`
-	ThreadPages skyobject.References `skyobject:"schema=ThreadPage"`
-}
-
-type Board struct {
-	R                   cipher.SHA256  `json:"-" enc:"-"`
-	Name                string         `json:"name" transfer:"heading"`
-	Desc                string         `json:"description" transfer:"body"`
-	Created             int64          `json:"created" transfer:"time"`
-	SubmissionAddresses []string       `json:"submission_addresses" transfer:"subAddrs"`
-	ExternalRoots       []ExternalRoot `json:"-"`
-	Meta                []byte         `json:"-"`
-}
-
-type ExternalRoot struct {
-	R         cipher.SHA256 `json:"-" enc:"-"`
-	ID        string        `json:"id"`
-	PublicKey cipher.PubKey `json:"-"`
+type ThreadPages struct {
+	Board       skyobject.Ref  `skyobject:"schema=bbs.Board"`
+	ThreadPages skyobject.Refs `skyobject:"schema=bbs.ThreadPage"`
 }
 
 type ThreadPage struct {
-	R      cipher.SHA256        `json:"-" enc:"-"`
-	Thread skyobject.Reference  `skyobject:"schema=Thread"`
-	Posts  skyobject.References `skyobject:"schema=Post"`
+	Thread skyobject.Ref  `skyobject:"schema=bbs.Content"`
+	Posts  skyobject.Refs `skyobject:"schema=bbs.Content"`
 }
 
-type Thread struct {
-	R cipher.SHA256 `json:"-" enc:"-"`
-	Post
+type ThreadVotesPages struct {
+	Store   []ContentVotesPage
+	Deleted []cipher.SHA256
 }
 
-type Post struct {
-	R       cipher.SHA256 `json:"-" enc:"-"`
-	Title   string        `json:"title" transfer:"heading"`
-	Body    string        `json:"body" transfer:"body"`
-	Created int64         `json:"created" transfer:"time"`
-	User    cipher.PubKey `json:"-" verify:"pk" transfer:"upk"`
+type PostVotesPages struct {
+	Store   []ContentVotesPage
+	Deleted []cipher.SHA256
+}
+
+type ContentVotesPage struct {
+	Ref   cipher.SHA256
+	Votes skyobject.Refs `skyobject:"schema=bbs.Vote"`
+}
+
+type UserVotesPages struct {
+	Store   []UserVotesPage
+	Deleted []cipher.PubKey
+}
+
+type UserVotesPage struct {
+	Ref   cipher.PubKey
+	Votes skyobject.Refs `skyobject:"schema=bbs.Vote"`
+}
+
+/*
+	<<< BOARD >>>
+*/
+
+type Board struct {
+	Name    string `json:"name" trans:"heading"`
+	Desc    string `json:"description" trans:"body"`
+	Created int64  `json:"created" trans:"time"`
+	Meta    []byte `json:"-"` // TODO: Recommended Submission Addresses.
+}
+
+type BoardView struct {
+	Board
+	BoardHash cipher.SHA256 `json:"-"`
+	PubKey    string        `json:"public_key"`
+}
+
+/*
+	<<< CONTENT >>>
+*/
+
+type Content struct {
+	Title   string        `json:"title" trans:"heading"`
+	Body    string        `json:"body" trans:"body"`
+	Created int64         `json:"created" trans:"time"`
+	Creator cipher.PubKey `json:"-" verify:"upk" trans:"upk"`
 	Sig     cipher.Sig    `json:"-" verify:"sig"`
 	Meta    []byte        `json:"-"`
 }
 
-// Verify verifies the post.
-func (p Post) Verify() error { return tag.Verify(&p) }
+func (c Content) Verify() error { return tag.Verify(&c) }
 
-// Vote represents a post by a user.
+type ContentView struct {
+	Content
+	Ref     string `json:"reference"`
+	Creator User   `json:"creator"`
+}
+
+/*
+	<<< VOTES >>>
+*/
+
 type Vote struct {
-	R       cipher.SHA256 `json:"-" enc:"-"`
-	User    cipher.PubKey `json:"-" verify:"pk" transfer:"upk"` // User who voted.
-	Mode    int8          `json:"-" transfer:"mode"`            // +1 is up, -1 is down.
-	Tag     []byte        `json:"-" transfer:"tag"`             // What's this?
-	Created int64         `json:"created" transfer:"time"`
-	Sig     cipher.Sig    `json:"-" verify:"sig"` // Signature.
+	Mode    int8          `json:"mode" trans:"mode"`
+	Tag     string        `json:"-" trans:"tag"` // TODO: Fix transfer.
+	Created int64         `json:"created" trans:"time"`
+	Creator cipher.PubKey `json:"-" verify:"upk" trans:"upk"`
+	Sig     cipher.Sig    `json:"-" verify:"sig"`
 }
 
 func (v Vote) Verify() error { return tag.Verify(&v) }
 
-type ThreadVotesPages struct {
-	R           cipher.SHA256 `json:"-" enc:"-"`
-	StoreHash   cipher.SHA256 `enc:"-"`
-	DeletedHash cipher.SHA256 `enc:"-"`
-	Store       []VotesPage
-	Deleted     []cipher.SHA256
+type ContentVotesSummary struct {
+	sync.Mutex
+	Hash  cipher.SHA256
+	Votes map[cipher.PubKey]Vote
+	Up    CompiledVotes
+	Down  CompiledVotes
 }
 
-type PostVotesPages struct {
-	R           cipher.SHA256 `json:"-" enc:"-"`
-	StoreHash   cipher.SHA256 `enc:"-"`
-	DeletedHash cipher.SHA256 `enc:"-"`
-	Store       []VotesPage
-	Deleted     []cipher.SHA256
+func (s *ContentVotesSummary) View(perspective cipher.PubKey) ContentVotesSummaryView {
+	s.Lock()
+	defer s.Unlock()
+	vote := s.Votes[perspective]
+	return ContentVotesSummaryView{
+		Up: CompiledVotesView{
+			CompiledVotes: s.Up,
+			Voted:         vote.Mode == +1,
+		},
+		Down: CompiledVotesView{
+			CompiledVotes: s.Down,
+			Voted:         vote.Mode == -1,
+		},
+	}
 }
 
-type VotesPage struct {
-	Ref   cipher.SHA256
-	Votes skyobject.References `skyobject:"schema=Vote"`
+type ContentVotesSummaryView struct {
+	Up   CompiledVotesView `json:"up"`
+	Down CompiledVotesView `json:"down"`
 }
+
+type CompiledVotes struct {
+	Count int            `json:"count"`
+	Tags  map[string]int `json:"tags"`
+}
+
+type CompiledVotesView struct {
+	CompiledVotes
+	Voted bool `json:"voted"`
+}
+
+/*
+	<<< USER >>>
+*/
 
 type User struct {
-	R         cipher.SHA256 `json:"-" enc:"-"`
-	Alias     string        `json:"alias" transfer:"alias"`
-	PublicKey cipher.PubKey `json:"-" transfer:"upk"`
-	SecretKey cipher.SecKey `json:"-" transfer:"usk"`
+	Alias  string        `json:"alias" trans:"alias"`
+	PubKey cipher.PubKey `json:"-" trans:"upk"`
+	SecKey cipher.SecKey `json:"-" trans:"usk"`
 }
 
-type Subscription struct {
-	R      cipher.SHA256 `json:"-" enc:"-"`
-	PubKey cipher.PubKey `json:"pk" transfer:"bpk"`
-	SecKey cipher.SecKey `json:"sk,omitempty" transfer:"bsk"`
+type UserView struct {
+	User
+	PubKey string `json:"public_key"`
+	SecKey string `json:"secret_key,omitempty"`
 }

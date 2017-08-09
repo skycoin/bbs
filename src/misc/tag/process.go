@@ -12,6 +12,8 @@ const (
 	valUserPKStr    = "upkStr"
 	valUserPK       = "upk"
 	valUserSK       = "usk"
+	valUserRefStr   = "uRefStr"
+	valUserRef      = "uRef"
 	valBoardPKStr   = "bpkStr"
 	valBoardPK      = "bpk"
 	valBoardSK      = "bsk"
@@ -36,6 +38,15 @@ const (
 	valTag          = "tag"
 )
 
+func MultiProcess(objects ...interface{}) error {
+	for _, obj := range objects {
+		if e := Process(obj); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
 func Process(obj interface{}) error {
 	rVal, rTyp := getReflectPair(obj)
 	if e := process(makeTagMap(processKey, rVal, rTyp)); e != nil {
@@ -52,6 +63,14 @@ func process(tm tMap) error {
 			return wrapErr(e, "user public key")
 		}
 		tm.set(valUserPK, upk)
+	}
+	// User reference.
+	if uRefStr, has := tm[valUserRefStr]; has {
+		uRef, e := keys.GetPubKey(uRefStr.String())
+		if e != nil {
+			return wrapErr(e, "user public key reference")
+		}
+		tm.set(valUserRef, uRef)
 	}
 	// Board public key.
 	if bpkStr, has := tm[valBoardPKStr]; has {

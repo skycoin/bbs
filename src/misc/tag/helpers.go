@@ -17,7 +17,9 @@ func makeTagMap(tagKey string, rVal reflect.Value, rTyp reflect.Type) tMap {
 	out := make(tMap)
 	for i := 0; i < rTyp.NumField(); i++ {
 		if vTag, has := getTagKey(tagKey, rTyp, i); has {
-			out[vTag] = rVal.Field(i)
+			field := rVal.Field(i)
+			// TODO: LATER: Have nested fields additions.
+			out[vTag] = field
 		}
 	}
 	return out
