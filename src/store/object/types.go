@@ -148,3 +148,12 @@ type UserView struct {
 	PubKey string `json:"public_key"`
 	SecKey string `json:"secret_key,omitempty"`
 }
+
+/*
+	<<< CONNECTION >>>
+*/
+
+type Connection struct {
+	Address string `json:"address"`
+	State   string `json:"state"`
+}

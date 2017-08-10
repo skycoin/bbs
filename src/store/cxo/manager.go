@@ -109,6 +109,27 @@ func (m *Manager) setup() error {
 			}
 		}()
 	}
+	c.OnCloseConnection = func(n *node.Node, c *gnet.Conn) {
+		m.file.Lock()
+		defer m.file.Unlock()
+		for _, conn := range m.file.Connections {
+			if conn == c.Address() {
+				go func() {
+					m.wg.Add(1)
+					defer m.wg.Done()
+
+					timer := time.NewTimer(5 * time.Second)
+					defer timer.Stop()
+
+					select {
+					case <-m.quit:
+					case <-timer.C:
+						m.node.Pool().Dial(c.Address())
+					}
+				}()
+			}
+		}
+	}
 	var e error
 	if m.node, e = node.NewNode(c); e != nil {
 		return e
@@ -190,6 +211,26 @@ func (m *Manager) retryLoop() {
 	<<< CONNECT >>>
 */
 
+func (m *Manager) GetConnections() []object.Connection {
+	m.file.Lock()
+	defer m.file.Unlock()
+
+	out := make([]object.Connection, len(m.file.Connections))
+	for i, address := range m.file.Connections {
+		conn, state := m.node.Pool().Connection(address), ""
+		if conn == nil {
+			state = "disconnected"
+		} else {
+			state = conn.State().String()
+		}
+		out[i] = object.Connection{
+			Address: address,
+			State:   state,
+		}
+	}
+	return out
+}
+
 func (m *Manager) Connect(address string) error {
 	if e := m.connectFile(address); e != nil {
 		return e
@@ -264,6 +305,10 @@ func (m *Manager) disconnectNode(address string) error {
 /*
 	<<< SUBSCRIBE >>>
 */
+
+func (m *Manager) GetSubscriptions() []cipher.PubKey {
+	return m.node.Feeds()
+}
 
 func (m *Manager) SubscribeRemote(bpk cipher.PubKey) error {
 	if e := m.subscribeFileRemote(bpk); e != nil {
