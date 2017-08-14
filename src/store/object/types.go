@@ -18,13 +18,11 @@ type ThreadPage struct {
 }
 
 type ThreadVotesPages struct {
-	Store   []ContentVotesPage
-	Deleted []cipher.SHA256
+	Threads []ContentVotesPage
 }
 
 type PostVotesPages struct {
-	Store   []ContentVotesPage
-	Deleted []cipher.SHA256
+	Posts []ContentVotesPage
 }
 
 type ContentVotesPage struct {
@@ -33,8 +31,7 @@ type ContentVotesPage struct {
 }
 
 type UserVotesPages struct {
-	Store   []UserVotesPage
-	Deleted []cipher.PubKey
+	Users []UserVotesPage
 }
 
 type UserVotesPage struct {
@@ -64,6 +61,7 @@ type BoardView struct {
 */
 
 type Content struct {
+	R       cipher.SHA256 `json:"-" enc:"-"` // Stores the content's hash for easier processing.
 	Title   string        `json:"title" trans:"heading"`
 	Body    string        `json:"body" trans:"body"`
 	Created int64         `json:"created" trans:"time"`
@@ -80,13 +78,18 @@ type ContentView struct {
 	Creator User   `json:"creator"`
 }
 
+type Deleted struct {
+	Threads []cipher.SHA256
+	Posts   []cipher.SHA256
+}
+
 /*
 	<<< VOTES >>>
 */
 
 type Vote struct {
 	Mode    int8          `json:"mode" trans:"mode"`
-	Tag     string        `json:"-" trans:"tag"` // TODO: Fix transfer.
+	Tag     []byte        `json:"-" trans:"tag"`
 	Created int64         `json:"created" trans:"time"`
 	Creator cipher.PubKey `json:"-" verify:"upk" trans:"upk"`
 	Sig     cipher.Sig    `json:"-" verify:"sig"`
@@ -94,42 +97,38 @@ type Vote struct {
 
 func (v Vote) Verify() error { return tag.Verify(&v) }
 
-type ContentVotesSummary struct {
+type VotesSummary struct {
 	sync.Mutex
-	Hash  cipher.SHA256
+	R     cipher.SHA256 // Content's reference.
+	Hash  cipher.SHA256 // VotesPages' hash.
 	Votes map[cipher.PubKey]Vote
-	Up    CompiledVotes
-	Down  CompiledVotes
+	Up    int
+	Down  int
 }
 
-func (s *ContentVotesSummary) View(perspective cipher.PubKey) ContentVotesSummaryView {
+func (s *VotesSummary) View(perspective cipher.PubKey) VotesSummaryView {
 	s.Lock()
 	defer s.Unlock()
 	vote := s.Votes[perspective]
-	return ContentVotesSummaryView{
+	return VotesSummaryView{
 		Up: CompiledVotesView{
-			CompiledVotes: s.Up,
-			Voted:         vote.Mode == +1,
+			Count: s.Up,
+			Voted: vote.Mode == +1,
 		},
 		Down: CompiledVotesView{
-			CompiledVotes: s.Down,
-			Voted:         vote.Mode == -1,
+			Count: s.Down,
+			Voted: vote.Mode == -1,
 		},
 	}
 }
 
-type ContentVotesSummaryView struct {
+type VotesSummaryView struct {
 	Up   CompiledVotesView `json:"up"`
 	Down CompiledVotesView `json:"down"`
 }
 
-type CompiledVotes struct {
-	Count int            `json:"count"`
-	Tags  map[string]int `json:"tags"`
-}
-
 type CompiledVotesView struct {
-	CompiledVotes
+	Count int  `json:"count"`
 	Voted bool `json:"voted"`
 }
 

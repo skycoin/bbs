@@ -41,15 +41,15 @@ type Manager struct {
 	file *object.UserFile
 }
 
-func NewManager(config *ManagerConfig) (*Manager, error) {
+func NewManager(config *ManagerConfig) *Manager {
 	m := &Manager{
 		c: config,
 		l: inform.NewLogger(true, os.Stdout, usersLogPrefix),
 	}
 	if e := os.MkdirAll(m.folderPath(), os.FileMode(0700)); e != nil {
-		return nil, e
+		m.l.Panicln(e)
 	}
-	return m, nil
+	return m
 }
 
 func (m *Manager) GetUsers() ([]string, error) {

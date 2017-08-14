@@ -5,8 +5,8 @@ type UserFile struct {
 	Seed string
 }
 
-func (f *UserFile) View() UserFileView {
-	return UserFileView{
+func (f *UserFile) View() *UserFileView {
+	return &UserFileView{
 		User: UserView{
 			User:   f.User,
 			PubKey: f.User.PubKey.Hex(),

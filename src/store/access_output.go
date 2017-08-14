@@ -36,7 +36,7 @@ func getSession(_ context.Context, f *object.UserFile) *SessionOutput {
 	} else {
 		return &SessionOutput{
 			LoggedIn: true,
-			Session:  &f.View(),
+			Session:  f.View(),
 		}
 	}
 }
