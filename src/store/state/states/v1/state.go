@@ -5,14 +5,14 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/io"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/states"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"os"
 	"sync"
-	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 const (
@@ -30,16 +30,17 @@ type pubPass struct {
 }
 
 type State struct {
-	c         *states.StateConfig
-	l         *log.Logger
-	flag      skyobject.Flag
-	node      *node.Node
-	packStore *PackStore
-	inChan    chan *io.State   // Need to generate.
-	outChan   chan *io.Changes // Need to generate.
-	pubChan   chan *pubPass    // Need to generate.
-	quitChan  chan struct{}    // Need to generate.
-	wg        sync.WaitGroup
+	c          *states.StateConfig
+	l          *log.Logger
+	flag       skyobject.Flag
+	node       *node.Node
+	currentMux sync.Mutex
+	current    *PackInstance
+	inChan     chan *io.State   // Obtains new sequence.
+	outChan    chan *io.Changes // Outputs updates.
+	pubChan    chan *pubPass    // Need to generate.
+	quitChan   chan struct{}    // Need to generate.
+	wg         sync.WaitGroup
 }
 
 func (s *State) Init(config *states.StateConfig, node *node.Node) error {
@@ -56,17 +57,17 @@ func (s *State) Init(config *states.StateConfig, node *node.Node) error {
 	root, e := node.Container().LastFull(config.PubKey)
 	if e != nil {
 		return boo.WrapType(e, boo.InvalidRead,
-			"unable to obtain root")
+			"failed to obtain root")
 	}
 	pack, e := s.unpackRoot(node, root)
 	if e != nil {
 		return boo.WrapType(e, boo.InvalidRead,
-			"unable to unpack root")
+			"failed to unpack root")
 	}
-	s.packStore = NewPackStore(s.l)
-	if _, e := s.packStore.Extract(pack, root.Seq, true, false); e != nil {
+	s.current, e = NewPackInstance(nil, pack)
+	if e != nil {
 		return boo.WrapType(e, boo.InvalidRead,
-			"failed to extract board root")
+			"failed to initiate pack instance")
 	}
 
 	s.inChan = make(chan *io.State, 10)
@@ -135,37 +136,68 @@ func (s *State) service() {
 	for {
 		select {
 		case in := <-s.inChan:
-			if e := s.processIncoming(in, true); e != nil {
+			// Get rid of accumulated.
+			if len(s.inChan) > 1 {
+				in = <-s.inChan
+			}
+			// Process.
+			if e := s.processIncoming(in); e != nil {
 				s.l.Printf("Failed to process root %s[%d]",
 					in.Root.Pub.Hex(), in.Root.Seq)
 			}
+
 		case pubPass := <-s.pubChan:
-			pubPass.done <- s.packStore.Run(
-				func(pack *skyobject.Pack, seq uint64) error {
-					return pubPass.run(s.node, pack)
-				},
-			)
+			pubPass.done <- pubPass.
+				run(s.node, s.getCurrent().pack)
+
 		case <-s.quitChan:
 			return
 		}
 	}
 }
 
-func (s *State) processIncoming(in *io.State, full bool) error {
+func (s *State) processIncoming(in *io.State) error {
 	pack, e := s.unpackRoot(in.Node, in.Root)
 	if e != nil {
 		return e
 	}
-	changes, e := s.packStore.Extract(pack, in.Root.Seq, full, true)
+	newCurrent, e := NewPackInstance(s.current, pack)
 	if e != nil {
 		return e
 	}
-	s.outChan <- changes
+	s.outChan <- s.
+		replaceCurrent(newCurrent).
+		changes
+
 	return nil
 }
 
+func (s *State) getCurrent() *PackInstance {
+	s.currentMux.Lock()
+	defer s.currentMux.Unlock()
+	return s.current
+}
+
+func (s *State) replaceCurrent(pi *PackInstance) *PackInstance {
+	s.currentMux.Lock()
+	defer s.currentMux.Unlock()
+	s.current = pi
+	return pi
+}
+
 func (s *State) GetBoardPage(ctx context.Context) (*io.BoardPageOut, error) {
-	return nil, nil
+	var out *io.BoardPageOut
+
+	pi := s.getCurrent()
+	pi.Do(func(pack *skyobject.Pack) error {
+		out = &io.BoardPageOut{
+			Seq: pack.Root().Seq,
+			BoardPubKey: pack.Root().Pub,
+		}
+		// TODO: Finish.
+		return nil
+	})
+	return out, nil
 }
 
 func (s *State) GetThreadPage(ctx context.Context, tRef cipher.SHA256) (*io.ThreadPageOut, error) {
@@ -207,16 +239,3 @@ func (s *State) VotePost(ctx context.Context, tRef, pRef cipher.SHA256, vote *ci
 func (s *State) VoteUser(ctx context.Context, upk cipher.PubKey, vote *cipher.SHA256) (*io.VoteUserOut, error) {
 	return nil, nil
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

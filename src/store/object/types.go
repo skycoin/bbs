@@ -88,22 +88,25 @@ type Deleted struct {
 */
 
 type Vote struct {
-	Mode    int8          `json:"mode" trans:"mode"`
-	Tag     []byte        `json:"-" trans:"tag"`
-	Created int64         `json:"created" trans:"time"`
-	Creator cipher.PubKey `json:"-" verify:"upk" trans:"upk"`
-	Sig     cipher.Sig    `json:"-" verify:"sig"`
+	OfUser    cipher.PubKey `json:"-"`
+	OfContent cipher.SHA256 `json:"-"`
+	Mode      int8          `json:"mode" trans:"mode"`
+	Tag       []byte        `json:"-" trans:"tag"`
+	Created   int64         `json:"created" trans:"time"`
+	Creator   cipher.PubKey `json:"-" verify:"upk" trans:"upk"`
+	Sig       cipher.Sig    `json:"-" verify:"sig"`
 }
 
 func (v Vote) Verify() error { return tag.Verify(&v) }
 
 type VotesSummary struct {
 	sync.Mutex
-	R     cipher.SHA256 // Content's reference.
-	Hash  cipher.SHA256 // VotesPages' hash.
-	Votes map[cipher.PubKey]Vote
-	Up    int
-	Down  int
+	OfUser    cipher.PubKey
+	OfContent cipher.SHA256
+	Hash      cipher.SHA256 // VotesPages' hash.
+	Votes     map[cipher.PubKey]Vote
+	Up        int
+	Down      int
 }
 
 func (s *VotesSummary) View(perspective cipher.PubKey) VotesSummaryView {
