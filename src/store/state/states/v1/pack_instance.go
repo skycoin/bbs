@@ -162,10 +162,25 @@ func (p *PackInstance) extract() error {
 	return nil
 }
 
-func (p *PackInstance) Do(action func(pack *skyobject.Pack) error) error {
+func (p *PackInstance) Do(action func(pi *PackInstance) error) error {
 	p.packMux.Lock()
 	defer p.packMux.Unlock()
-	return action(p.pack)
+	return action(p)
+}
+
+func (p *PackInstance) GetThreadPages() (*object.ThreadPages, error) {
+	tPagesVal, e := p.pack.RefByIndex(indexContent)
+	if e != nil {
+		return nil, boo.WrapType(e, boo.InvalidRead,
+			"failed to obtain root child value of index",
+			indexContent)
+	}
+	tPages, ok := tPagesVal.(*object.ThreadPages)
+	if !ok {
+		return nil, boo.WrapType(e, boo.InvalidRead,
+			"root child 'ThreadPages' is invalid")
+	}
+	return tPages, nil
 }
 
 /*

@@ -14,6 +14,7 @@ type BoardPageOut struct {
 
 type ThreadPageOut struct {
 	Seq        uint64
+	BoardPubKey cipher.PubKey
 	Thread     *object.Content
 	ThreadVote *object.VotesSummary
 	Posts      []*object.Content

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/misc/obtain"
 	"github.com/skycoin/bbs/src/store/io"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/states"
@@ -186,26 +187,112 @@ func (s *State) replaceCurrent(pi *PackInstance) *PackInstance {
 }
 
 func (s *State) GetBoardPage(ctx context.Context) (*io.BoardPageOut, error) {
-	var out *io.BoardPageOut
+	var out = new(io.BoardPageOut)
+	var e = s.getCurrent().Do(func(pi *PackInstance) error {
 
-	pi := s.getCurrent()
-	pi.Do(func(pack *skyobject.Pack) error {
-		out = &io.BoardPageOut{
-			Seq: pack.Root().Seq,
-			BoardPubKey: pack.Root().Pub,
+		// Get initials.
+		out.Seq = pi.pack.Root().Seq
+		out.BoardPubKey = pi.pack.Root().Pub
+
+		// Initiate thread pages.
+		tPages, e := pi.GetThreadPages()
+		if e != nil {
+			return e
 		}
-		// TODO: Finish.
-		return nil
+		tPagesLen, e := tPages.ThreadPages.Len()
+		if e != nil {
+			return e
+		}
+		out.Threads = make([]*object.Content, tPagesLen)
+		out.ThreadVotes = make([]*object.VotesSummary, tPagesLen)
+
+		// Get thread pages.
+		return tPages.ThreadPages.Ascend(func(i int, tPageRef *skyobject.Ref) error {
+			tPage, e := obtain.ThreadPage(tPageRef)
+			if e != nil {
+				return e
+			}
+			thread, e := obtain.Content(&tPage.Thread)
+			if e != nil {
+				return e
+			}
+			out.Threads[i] = thread
+			vs, e := pi.tVotesStore.Get(thread.R)
+			out.ThreadVotes[i] = vs
+			return e
+		})
 	})
-	return out, nil
+	return out, e
 }
 
 func (s *State) GetThreadPage(ctx context.Context, tRef cipher.SHA256) (*io.ThreadPageOut, error) {
-	return nil, nil
+	var out = new(io.ThreadPageOut)
+	var e = s.getCurrent().Do(func(pi *PackInstance) error {
+
+		// Get initials.
+		out.Seq = pi.pack.Root().Seq
+		out.BoardPubKey = pi.pack.Root().Pub
+
+		// Get thread pages.
+		tPages, e := pi.GetThreadPages()
+		if e != nil {
+			return e
+		}
+		tPageRef, e := tPages.ThreadPages.RefByHash(tRef)
+		if e != nil {
+			return boo.WrapTypef(e, boo.NotFound,
+				"thread of hash %s is not found", tRef.Hex())
+		}
+
+		// Get thread page.
+		tPage, e := obtain.ThreadPage(tPageRef)
+		if e != nil {
+			return boo.WrapType(e, boo.InvalidRead,
+				"ThreadPage is corrupt")
+		}
+
+		// Get thread.
+		thread, e := obtain.Content(&tPage.Thread)
+		if e != nil {
+			return e
+		}
+		out.Thread = thread
+		vs, e := pi.tVotesStore.Get(thread.R)
+		out.ThreadVote = vs
+		if e != nil {
+			return e
+		}
+
+		// Initiate posts.
+		postsLen, e := tPage.Posts.Len()
+		if e != nil {
+			return e
+		}
+		out.Posts = make([]*object.Content, postsLen)
+		out.PostVotes = make([]*object.VotesSummary, postsLen)
+
+		// Get posts.
+		return tPage.Posts.Ascend(func(i int, pRef *skyobject.Ref) error {
+			post, e := obtain.Content(pRef)
+			if e != nil {
+				return e
+			}
+			out.Posts[i] = post
+			vs, e := pi.pVotesStore.Get(post.R)
+			out.PostVotes[i] = vs
+			return e
+		})
+	})
+	return out, e
 }
 
 func (s *State) GetFollowPage(ctx context.Context, upk cipher.PubKey) (*io.FollowPageOut, error) {
-	return nil, nil
+	var out = new(io.FollowPageOut)
+	var e = s.current.Do(func(pi *PackInstance) error {
+
+		return nil
+	})
+	return out, e
 }
 
 func (s *State) GetUserVotes(ctx context.Context, upk cipher.PubKey) (*io.VoteUserOut, error) {

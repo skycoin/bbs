@@ -16,6 +16,7 @@ func Content(ref *skyobject.Ref) (*object.Content, error) {
 	if !ok {
 		return nil, extErr("Content", ref.Hash)
 	}
+	content.R = ref.Hash
 	return content, nil
 }
 
