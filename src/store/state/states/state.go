@@ -58,7 +58,7 @@ type State interface {
 		*io.BoardPageOut, error)
 
 	// NewPost creates a new post on specified thread and returns ThreadPage.
-	NewPost(ctx context.Context, tRef cipher.SHA256, post *object.Content) (
+	NewPost(ctx context.Context, post *object.Content) (
 		*io.ThreadPageOut, error)
 
 	// DeleteThread removes a thread and returns BoardPage.
@@ -66,21 +66,21 @@ type State interface {
 		*io.BoardPageOut, error)
 
 	// DeletePost removes a post and returns ThreadPage.
-	DeletePost(ctx context.Context, tRef, pRef cipher.SHA256) (
+	DeletePost(ctx context.Context, pRef cipher.SHA256) (
 		*io.ThreadPageOut, error)
 
 	// VoteThread adds/removes/modifies a vote on a thread.
 	// (Remove if vote is nil).
-	VoteThread(ctx context.Context, tRef cipher.SHA256, vote *cipher.SHA256) (
+	VoteThread(ctx context.Context, vote *cipher.SHA256) (
 		*io.VoteThreadOut, error)
 
 	// VotePost adds/removes/modifies a vote on a post.
 	// (Remove if vote is nil).
-	VotePost(ctx context.Context, tRef, pRef cipher.SHA256, vote *cipher.SHA256) (
+	VotePost(ctx context.Context, vote *cipher.SHA256) (
 		*io.VotePostOut, error)
 
 	// VoteUser adds/removes/modifies a vote on a user.
 	// (Remove if vote is nil).
-	VoteUser(ctx context.Context, upk cipher.PubKey, vote *cipher.SHA256) (
+	VoteUser(ctx context.Context, vote *cipher.SHA256) (
 		*io.VoteUserOut, error)
 }

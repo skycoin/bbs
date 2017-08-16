@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"sync"
 )
 
@@ -172,8 +173,7 @@ func (p *PackInstance) GetThreadPages() (*object.ThreadPages, error) {
 	tPagesVal, e := p.pack.RefByIndex(indexContent)
 	if e != nil {
 		return nil, boo.WrapType(e, boo.InvalidRead,
-			"failed to obtain root child value of index",
-			indexContent)
+			"failed to obtain root child value of index", indexContent)
 	}
 	tPages, ok := tPagesVal.(*object.ThreadPages)
 	if !ok {
@@ -181,6 +181,98 @@ func (p *PackInstance) GetThreadPages() (*object.ThreadPages, error) {
 			"root child 'ThreadPages' is invalid")
 	}
 	return tPages, nil
+}
+
+func (p *PackInstance) GetThreadVotesPages() (*object.ThreadVotesPages, error) {
+	tvPagesVal, e := p.pack.RefByIndex(indexThreadVotes)
+	if e != nil {
+		return nil, boo.WrapType(e, boo.InvalidRead,
+			"failed to obtain root child value of index", indexThreadVotes)
+	}
+	tvPages, ok := tvPagesVal.(*object.ThreadVotesPages)
+	if !ok {
+		return nil, boo.WrapType(e, boo.InvalidRead,
+			"root child 'ThreadVotesPages' is invalid")
+	}
+	return tvPages, nil
+}
+
+func (p *PackInstance) GetPostVotesPages() (*object.PostVotesPages, error) {
+	pvPagesVal, e := p.pack.RefByIndex(indexPostVotes)
+	if e != nil {
+		return nil, boo.WrapType(e, boo.InvalidRead,
+			"failed to obtain root child of index", indexPostVotes)
+	}
+	pvPages, ok := pvPagesVal.(*object.PostVotesPages)
+	if !ok {
+		return nil, boo.WrapType(e, boo.InvalidRead,
+			"root child 'PostVotesPages' is invalid")
+	}
+	return pvPages, nil
+}
+
+func (p *PackInstance) AppendThreadVotesPage(tHash cipher.SHA256) error {
+	// Check it's existence in compiled store.
+	// Return if already exists.
+	if _, e := p.tVotesStore.Get(tHash); e == nil {
+		return nil
+	}
+
+	// Append ThreadVotesPage to ThreadVotesPages.
+	tvPages, e := p.GetThreadVotesPages()
+	if e != nil {
+		return e
+	}
+	vPage := object.ContentVotesPage{Ref: tHash}
+	tvPages.Threads = append(tvPages.Threads, vPage)
+
+	// Save to pack.
+	e = p.pack.SetRefByIndex(indexThreadVotes, tvPages)
+	if e != nil {
+		return e
+	}
+
+	// Save to compiled store.
+	p.tVotesStore.Set(tHash, &object.VotesSummary{
+		Index:     len(tvPages.Threads) - 1,
+		OfContent: tHash,
+		Hash:      cipher.SumSHA256(encoder.Serialize(vPage)),
+		Votes:     make(map[cipher.PubKey]object.Vote),
+	})
+
+	return nil
+}
+
+func (p *PackInstance) AppendPostVotesPage(pHash cipher.SHA256) error {
+	// Check it's existence is compiled store.
+	// Return if already exists.
+	if _, e := p.pVotesStore.Get(pHash); e == nil {
+		return nil
+	}
+
+	// Append PostVotesPage to PostVotesPages.
+	pvPages, e := p.GetPostVotesPages()
+	if e != nil {
+		return e
+	}
+	vPage := object.ContentVotesPage{Ref: pHash}
+	pvPages.Posts = append(pvPages.Posts, vPage)
+
+	// Save to pack.
+	e = p.pack.SetRefByIndex(indexPostVotes, pvPages)
+	if e != nil {
+		return e
+	}
+
+	// Save to compiled store.
+	p.pVotesStore.Set(pHash, &object.VotesSummary{
+		Index:     len(pvPages.Posts) - 1,
+		OfContent: pHash,
+		Hash:      cipher.SumSHA256(encoder.Serialize(vPage)),
+		Votes:     make(map[cipher.PubKey]object.Vote),
+	})
+
+	return nil
 }
 
 /*

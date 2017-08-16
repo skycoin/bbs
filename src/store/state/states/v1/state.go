@@ -187,9 +187,399 @@ func (s *State) replaceCurrent(pi *PackInstance) *PackInstance {
 }
 
 func (s *State) GetBoardPage(ctx context.Context) (*io.BoardPageOut, error) {
-	var out = new(io.BoardPageOut)
-	var e = s.getCurrent().Do(func(pi *PackInstance) error {
+	out := new(io.BoardPageOut)
+	if e := s.getCurrent().Do(getBoardPage(out)); e != nil {
+		return nil, e
+	}
+	return out, nil
+}
 
+func (s *State) GetThreadPage(ctx context.Context, tRef cipher.SHA256) (*io.ThreadPageOut, error) {
+	out := new(io.ThreadPageOut)
+	if e := s.getCurrent().Do(getThreadPage(out, tRef)); e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (s *State) GetFollowPage(ctx context.Context, upk cipher.PubKey) (*io.FollowPageOut, error) {
+	out := new(io.FollowPageOut)
+	e := s.getCurrent().Do(func(pi *PackInstance) error {
+		out.Seq = pi.pack.Root().Seq
+		out.BoardPubKey = pi.pack.Root().Pub
+		fPage, e := pi.followStore.Get(upk)
+		out.FollowPage = fPage
+		return e
+	})
+	if e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (s *State) GetUserVotes(ctx context.Context, upk cipher.PubKey) (*io.VoteUserOut, error) {
+	out := new(io.VoteUserOut)
+	e := s.getCurrent().Do(func(pi *PackInstance) error {
+		out.Seq = pi.pack.Root().Seq
+		out.BoardPubKey = pi.pack.Root().Pub
+		out.UserPubKey = upk
+		vs, e := pi.uVotesStore.Get(upk)
+		out.VoteSummary = vs
+		return e
+	})
+	if e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (s *State) NewThread(ctx context.Context, thread *object.Content) (*io.BoardPageOut, error) {
+	if e := thread.Verify(); e != nil {
+		return nil, e
+	}
+	out := new(io.BoardPageOut)
+	e := s.getCurrent().Do(func(pi *PackInstance) error {
+
+		// Get thread ref.
+		threadRef := pi.pack.Ref(thread)
+		thread.R = threadRef.Hash
+
+		// Check existence.
+		if _, has := pi.gotStore.GetThread(threadRef.Hash); has {
+			return boo.Newf(boo.AlreadyExists,
+				"thread of hash '%s' already exists", threadRef.Hash)
+		}
+
+		// Append to thread pages.
+		tPages, e := pi.GetThreadPages()
+		if e != nil {
+			return e
+		}
+		tPage := &object.ThreadPage{Thread: threadRef}
+		if e := tPages.ThreadPages.Append(tPage); e != nil {
+			return e
+		}
+		if e := pi.pack.SetRefByIndex(indexContent, tPages); e != nil {
+			return e
+		}
+
+		// Add to GotStore.
+		if e := pi.gotStore.AddThread(threadRef.Hash, tPage); e != nil {
+			return e
+		}
+
+		// If no such VoteSummary, append it.
+		if e := pi.AppendThreadVotesPage(threadRef.Hash); e != nil {
+			return e
+		}
+
+		// Record changes.
+		// TODO: Record new thread.
+
+		// Prepare output.
+		return getBoardPage(out)(pi)
+	})
+	if e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (s *State) NewPost(ctx context.Context, post *object.Content) (*io.ThreadPageOut, error) {
+	if e := post.Verify(); e != nil {
+		return nil, e
+	}
+	out := new(io.ThreadPageOut)
+	e := s.getCurrent().Do(func(pi *PackInstance) error {
+
+		// Get post ref.
+		postRef := pi.pack.Ref(post)
+		post.R = postRef.Hash
+
+		// Check existence.
+		if pi.gotStore.GetPostOrigin(postRef.Hash) != (cipher.SHA256{}) {
+			return boo.Newf(boo.AlreadyExists,
+				"post of hash '%s' already exists", postRef.Hash)
+		}
+
+		// Get thread info.
+		gotThread, has := pi.gotStore.GetThread(post.Refer)
+		if !has {
+			return boo.Newf(boo.NotFound,
+				"thread of hash '%s' is not found", post.Refer.Hex())
+		}
+
+		// Get thread.
+		tPages, e := pi.GetThreadPages()
+		if e != nil {
+			return e
+		}
+		tPageRef, e := tPages.ThreadPages.RefByHash(gotThread.tPageHash)
+		if e != nil {
+			return e
+		}
+		tPage, e := obtain.ThreadPage(tPageRef)
+		if e != nil {
+			return e
+		}
+		thread, e := obtain.Content(&tPage.Thread)
+		if e != nil {
+			return e
+		}
+
+		// Submit post.
+		if e := tPage.Posts.Append(post); e != nil {
+			return e
+		}
+		if e := tPageRef.SetValue(tPage); e != nil {
+			return e
+		}
+		if e := pi.pack.SetRefByIndex(indexContent, tPages); e != nil {
+			return e
+		}
+
+		// Add to GotStore.
+		if e := pi.gotStore.AddPost(thread.R, post.R); e != nil {
+			return e
+		}
+
+		// If no such VoteSummary, append it.
+		if e := pi.AppendPostVotesPage(postRef.Hash); e != nil {
+			return e
+		}
+
+		// Record Changes.
+		pi.changes.RecordNewPost(post.R, post)
+
+		// Prepare output.
+		return getThreadPage(out, thread.R)(pi)
+	})
+	if e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (s *State) DeleteThread(ctx context.Context, tRef cipher.SHA256) (*io.BoardPageOut, error) {
+	out := new(io.BoardPageOut)
+	e := s.getCurrent().Do(func(pi *PackInstance) error {
+
+		// Check existence of thread.
+		gotThread, has := pi.gotStore.GetThread(tRef)
+		if !has {
+			return boo.Newf(boo.NotFound,
+				"thread of hash '%s' is not found", tRef.Hex())
+		}
+
+		// Get thread page.
+		tPages, e := pi.GetThreadPages()
+		if e != nil {
+			return e
+		}
+		tPageRef, e := tPages.ThreadPages.RefByHash(gotThread.tPageHash)
+		if e != nil {
+			return e
+		}
+		tPage, e := obtain.ThreadPage(tPageRef)
+		if e != nil {
+			return e
+		}
+
+		// Get post votes pages.
+		pvPages, e := pi.GetPostVotesPages()
+		if e != nil {
+			return e
+		}
+
+		// Delete posts.
+		e = tPage.Posts.Ascend(func(_ int, pRef *skyobject.Ref) error {
+			for i, vPage := range pvPages.Posts {
+				if vPage.Ref == pRef.Hash {
+					pvPages.Posts[0], pvPages.Posts[i] =
+						pvPages.Posts[i], pvPages.Posts[0]
+					pvPages.Posts = pvPages.Posts[1:]
+					break
+				}
+			}
+			pi.pVotesStore.Delete(pRef.Hash)
+			return nil
+		})
+		if e != nil {
+			return e
+		}
+
+		// Save post votes pages.
+		if e := pi.pack.SetRefByIndex(indexPostVotes, pvPages); e != nil {
+			return e
+		}
+
+		// Get thread votes pages.
+		tvPages, e := pi.GetThreadVotesPages()
+		if e != nil {
+			return e
+		}
+
+		// Delete thread votes page.
+		for i, tvPage := range tvPages.Threads {
+			if tvPage.Ref == tRef {
+				tvPages.Threads[0], tvPages.Threads[i] =
+					tvPages.Threads[i], tvPages.Threads[0]
+				tvPages.Threads = tvPages.Threads[1:]
+				break
+			}
+		}
+		pi.tVotesStore.Delete(tRef)
+		pi.gotStore.DeleteThread(tRef)
+
+		// Save thread votes pages.
+		if e := pi.pack.SetRefByIndex(indexThreadVotes, tvPages); e != nil {
+			return e
+		}
+
+		// Delete thread page.
+		if e := tPageRef.Clear(); e != nil {
+			return e
+		}
+		if e := pi.pack.SetRefByIndex(indexContent, tPages); e != nil {
+			return e
+		}
+
+		// Record changes.
+		pi.changes.RecordDeleteThread(tRef)
+
+		// Prepare output.
+		return getBoardPage(out)(pi)
+	})
+	if e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (s *State) DeletePost(ctx context.Context, pHash cipher.SHA256) (*io.ThreadPageOut, error) {
+	out := new(io.ThreadPageOut)
+	e := s.getCurrent().Do(func(pi *PackInstance) error {
+
+		// Get post's origin.
+		tHash := pi.gotStore.GetPostOrigin(pHash)
+		if tHash == (cipher.SHA256{}) {
+			return boo.Newf(boo.NotFound,
+				"post of hash '%s' has no thread of origin", pHash.Hex())
+		}
+
+		gotThread, has := pi.gotStore.GetThread(tHash)
+		if !has {
+			return boo.Newf(boo.NotFound,
+				"thread of hash '%s' is not found in GotStore", tHash.Hex())
+		}
+
+		// Delete post.
+		tPages, e := pi.GetThreadPages()
+		if e != nil {
+			return e
+		}
+		tPageRef, e := tPages.ThreadPages.RefByHash(gotThread.tPageHash)
+		if e != nil {
+			return e
+		}
+		tPage, e := obtain.ThreadPage(tPageRef)
+		if e != nil {
+			return e
+		}
+		pRef, e := tPage.Posts.RefByHash(pHash)
+		if e != nil {
+			return e
+		}
+		if e := pRef.Clear(); e != nil {
+			return e
+		}
+		if e := tPageRef.SetValue(tPage); e != nil {
+			return e
+		}
+		if e := pi.pack.SetRefByIndex(indexContent, tPages); e != nil {
+			return e
+		}
+
+		// Delete post votes.
+		pvPages, e := pi.GetPostVotesPages()
+		if e != nil {
+			return e
+		}
+		for i, vPage := range pvPages.Posts {
+			if vPage.Ref == pHash {
+				pvPages.Posts[0], pvPages.Posts[i] =
+					pvPages.Posts[i], pvPages.Posts[0]
+				pvPages.Posts = pvPages.Posts[1:]
+				break
+			}
+		}
+		if e := pi.pack.SetRefByIndex(indexPostVotes, pvPages); e != nil {
+			return e
+		}
+
+		// Delete compiled stuff.
+		if e := pi.gotStore.DeletePost(pHash); e != nil {
+			return e
+		}
+		pi.pVotesStore.Delete(pHash)
+
+		// Record changes.
+		pi.changes.RecordDeletePost(tHash, pHash)
+
+		// Prepare output
+		return getThreadPage(out, tHash)(pi)
+	})
+	if e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (s *State) VoteThread(ctx context.Context, vote *object.Vote) (*io.VoteThreadOut, error) {
+	out := new(io.VoteThreadOut)
+	e := s.getCurrent().Do(func(pi *PackInstance) error {
+		tvPages, e := pi.GetThreadVotesPages()
+		if e != nil {
+			return e
+		}
+		for _, vPage := range tvPages.Threads {
+			if vPage.Ref == vote.OfContent {
+				// Loop through votes.
+				e := vPage.Votes.Ascend(func(i int, oldVoteRef *skyobject.Ref) error {
+					oldVote, e := obtain.Vote(oldVoteRef)
+					if e != nil {
+						return e
+					}
+					//if oldVote.
+					return nil
+				})
+				if e != nil {
+					return e
+				}
+			}
+		}
+		return nil
+	})
+	if e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (s *State) VotePost(ctx context.Context, vote *cipher.SHA256) (*io.VotePostOut, error) {
+	return nil, nil
+}
+
+func (s *State) VoteUser(ctx context.Context, vote *cipher.SHA256) (*io.VoteUserOut, error) {
+	return nil, nil
+}
+
+/*
+	<<< HELPER FUNCTIONS >>>
+*/
+
+func getBoardPage(out *io.BoardPageOut) func(pi *PackInstance) error {
+	return func(pi *PackInstance) error {
 		// Get initials.
 		out.Seq = pi.pack.Root().Seq
 		out.BoardPubKey = pi.pack.Root().Pub
@@ -221,14 +611,11 @@ func (s *State) GetBoardPage(ctx context.Context) (*io.BoardPageOut, error) {
 			out.ThreadVotes[i] = vs
 			return e
 		})
-	})
-	return out, e
+	}
 }
 
-func (s *State) GetThreadPage(ctx context.Context, tRef cipher.SHA256) (*io.ThreadPageOut, error) {
-	var out = new(io.ThreadPageOut)
-	var e = s.getCurrent().Do(func(pi *PackInstance) error {
-
+func getThreadPage(out *io.ThreadPageOut, tRef cipher.SHA256) func(pi *PackInstance) error {
+	return func(pi *PackInstance) error {
 		// Get initials.
 		out.Seq = pi.pack.Root().Seq
 		out.BoardPubKey = pi.pack.Root().Pub
@@ -282,47 +669,5 @@ func (s *State) GetThreadPage(ctx context.Context, tRef cipher.SHA256) (*io.Thre
 			out.PostVotes[i] = vs
 			return e
 		})
-	})
-	return out, e
-}
-
-func (s *State) GetFollowPage(ctx context.Context, upk cipher.PubKey) (*io.FollowPageOut, error) {
-	var out = new(io.FollowPageOut)
-	var e = s.current.Do(func(pi *PackInstance) error {
-
-		return nil
-	})
-	return out, e
-}
-
-func (s *State) GetUserVotes(ctx context.Context, upk cipher.PubKey) (*io.VoteUserOut, error) {
-	return nil, nil
-}
-
-func (s *State) NewThread(ctx context.Context, thread *object.Content) (*io.BoardPageOut, error) {
-	return nil, nil
-}
-
-func (s *State) NewPost(ctx context.Context, tRef cipher.SHA256, post *object.Content) (*io.ThreadPageOut, error) {
-	return nil, nil
-}
-
-func (s *State) DeleteThread(ctx context.Context, tRef cipher.SHA256) (*io.BoardPageOut, error) {
-	return nil, nil
-}
-
-func (s *State) DeletePost(ctx context.Context, tRef, pRef cipher.SHA256) (*io.ThreadPageOut, error) {
-	return nil, nil
-}
-
-func (s *State) VoteThread(ctx context.Context, tRef cipher.SHA256, vote *cipher.SHA256) (*io.VoteThreadOut, error) {
-	return nil, nil
-}
-
-func (s *State) VotePost(ctx context.Context, tRef, pRef cipher.SHA256, vote *cipher.SHA256) (*io.VotePostOut, error) {
-	return nil, nil
-}
-
-func (s *State) VoteUser(ctx context.Context, upk cipher.PubKey, vote *cipher.SHA256) (*io.VoteUserOut, error) {
-	return nil, nil
+	}
 }

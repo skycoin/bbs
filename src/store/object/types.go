@@ -62,6 +62,7 @@ type BoardView struct {
 
 type Content struct {
 	R       cipher.SHA256 `json:"-" enc:"-"` // Stores the content's hash for easier processing.
+	Refer   cipher.SHA256 `json:"refer"`
 	Title   string        `json:"title" trans:"heading"`
 	Body    string        `json:"body" trans:"body"`
 	Created int64         `json:"created" trans:"time"`
@@ -101,6 +102,7 @@ func (v Vote) Verify() error { return tag.Verify(&v) }
 
 type VotesSummary struct {
 	sync.Mutex
+	Index     int // Index in VotesPages.
 	OfUser    cipher.PubKey
 	OfContent cipher.SHA256
 	Hash      cipher.SHA256 // VotesPages' hash.
@@ -158,4 +160,28 @@ type UserView struct {
 type Connection struct {
 	Address string `json:"address"`
 	State   string `json:"state"`
+}
+
+/*
+	<<< NEW >>>
+*/
+
+type VoteStore struct {
+	Users []cipher.PubKey
+	Votes skyobject.Refs `skyobject:"schema=bbs.Vote"`
+}
+
+// ThreadStore stores threads and associated objects.
+// The fields "Threads", "ThreadVotes" and "ThreadPosts" are all of the same length.
+// i.e. ThreadVotes[i] is the votes of thread Threads[i].
+//      ThreadPosts[i] is the posts in thread Threads[i].
+//
+// BENEFITS:
+// - As threads are in `skyobject.Refs`, so their hashes are directly indexed in Radix true by CXO.
+// - Easily find associated Votes and Posts without creating a map.
+// - Easy deletion of threads and associated content.
+type ThreadStore struct {
+	Threads     skyobject.Refs `skyobject:"schema=bbs.Thread"`
+	ThreadVotes skyobject.Refs `skyobject:"schema=bbs.VoteStore"`
+	ThreadPosts skyobject.Refs `skyobject:"schema=bbs.PostStore"`
 }

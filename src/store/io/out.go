@@ -13,21 +13,23 @@ type BoardPageOut struct {
 }
 
 type ThreadPageOut struct {
-	Seq        uint64
+	Seq         uint64
 	BoardPubKey cipher.PubKey
-	Thread     *object.Content
-	ThreadVote *object.VotesSummary
-	Posts      []*object.Content
-	PostVotes  []*object.VotesSummary
+	Thread      *object.Content
+	ThreadVote  *object.VotesSummary
+	Posts       []*object.Content
+	PostVotes   []*object.VotesSummary
 }
 
 type FollowPageOut struct {
-	Seq        uint64
-	FollowPage *object.FollowPage
+	Seq         uint64
+	BoardPubKey cipher.PubKey
+	FollowPage  *object.FollowPage
 }
 
 type VoteUserOut struct {
 	Seq         uint64
+	BoardPubKey cipher.PubKey
 	UserPubKey  cipher.PubKey
 	VoteSummary *object.VotesSummary
 }

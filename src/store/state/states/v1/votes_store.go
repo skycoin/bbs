@@ -42,7 +42,7 @@ func NewContentVotesStore(
 		pagesHash: pagesHash,
 		store:     make(map[cipher.SHA256]*object.VotesSummary),
 	}
-	for _, votesPage := range pages {
+	for i, votesPage := range pages {
 
 		votesPageHash := cipher.SumSHA256(encoder.Serialize(votesPage))
 
@@ -56,6 +56,7 @@ func NewContentVotesStore(
 		}
 
 		vs = generateSummary(&votesPage.Votes, nil, nil)
+		vs.Index = i
 		vs.OfContent = votesPage.Ref
 		vs.Hash = votesPageHash
 
@@ -132,7 +133,7 @@ func NewUserVotesStore(
 		pagesHash: pagesHash,
 		store:     make(map[cipher.PubKey]*object.VotesSummary),
 	}
-	for _, votesPage := range pages {
+	for i, votesPage := range pages {
 
 		votesPageHash := cipher.SumSHA256(encoder.Serialize(votesPage))
 
@@ -146,6 +147,7 @@ func NewUserVotesStore(
 		}
 
 		vs = generateSummary(&votesPage.Votes, onUp, onDown)
+		vs.Index = i
 		vs.OfUser = votesPage.Ref
 		vs.Hash = votesPageHash
 
@@ -285,6 +287,9 @@ func NewGotThread(
 func (g *GotThread) Do(action func(g *GotThread) error) error {
 	g.Lock()
 	defer g.Unlock()
+	if g == nil {
+		return boo.New(boo.NotFound, "thread not recorded")
+	}
 	return action(g)
 }
 
@@ -355,6 +360,63 @@ func (s *GotStore) GetPostOrigin(pHash cipher.SHA256) cipher.SHA256 {
 	s.Lock()
 	defer s.Unlock()
 	return s.posts[pHash]
+}
+
+func (s *GotStore) AddThread(tHash cipher.SHA256, tPage *object.ThreadPage) error {
+	s.Lock()
+	defer s.Unlock()
+	gt, e := NewGotThread(
+		nil,
+		cipher.SumSHA256(encoder.Serialize(tPage)),
+		tPage,
+		nil,
+		s.posts,
+	)
+	if e != nil {
+		return e
+	}
+	s.threads[tHash] = gt
+	return nil
+}
+
+func (s *GotStore) AddPost(threadHash, postHash cipher.SHA256) error {
+	s.Lock()
+	defer s.Unlock()
+	return s.threads[threadHash].Do(func(g *GotThread) error {
+		g.PostHashes[postHash] = true
+		s.posts[postHash] = threadHash
+		return nil
+	})
+}
+
+func (s *GotStore) DeleteThread(tHash cipher.SHA256) error {
+	s.Lock()
+	defer s.Unlock()
+	gotThread, has := s.threads[tHash]
+	if !has {
+		return boo.Newf(boo.NotFound,
+			"thread of hash '%s' not found on GotStore", tHash.Hex())
+	}
+	gotThread.Do(func(g *GotThread) error {
+		for pHash := range g.PostHashes {
+			delete(s.posts, pHash)
+		}
+		return nil
+	})
+	delete(s.threads, tHash)
+	return nil
+}
+
+func (s *GotStore) DeletePost(pHash cipher.SHA256) error {
+	s.Lock()
+	defer s.Unlock()
+	tHash, has := s.posts[pHash]
+	if !has {
+		return boo.Newf(boo.NotFound,
+			"post of hash '%s' is not found in GotStore", pHash.Hex())
+	}
+	delete(s.threads, tHash)
+	return nil
 }
 
 /*
