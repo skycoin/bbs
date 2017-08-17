@@ -3,6 +3,7 @@ package cxo
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/io"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
@@ -78,14 +79,10 @@ func (m *Manager) Close() {
 func (m *Manager) setup() error {
 	c := node.NewConfig()
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
-		t.Register("bbs.ThreadPages", object.ThreadPages{})
-		t.Register("bbs.ThreadPage", object.ThreadPage{})
-		t.Register("bbs.ThreadVotesPages", object.ThreadVotesPages{})
-		t.Register("bbs.PostVotesPages", object.PostVotesPages{})
-		t.Register("bbs.ContentVotesPage", object.ContentVotesPage{})
-		t.Register("bbs.UserVotesPages", object.UserVotesPages{})
-		t.Register("bbs.UserVotesPage", object.UserVotesPage{})
-		t.Register("bbs.Board", object.Board{})
+		t.Register("bbs.BoardPage", object.BoardPage{})
+		t.Register("bbs.ContentPage", object.ContentPage{})
+		t.Register("bbs.ActivityPage", object.ActivityPage{})
+		t.Register("bbs.UserActivity", object.UserActivity{})
 		t.Register("bbs.Content", object.Content{})
 		t.Register("bbs.Vote", object.Vote{})
 		t.Register("bbs.User", object.User{})
@@ -99,7 +96,6 @@ func (m *Manager) setup() error {
 	c.EnableRPC = *m.c.CXORPCEnable
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
 	c.OnRootFilled = func(n *node.Node, c *gnet.Conn, root *skyobject.Root) {
-		root.Pack()
 		// TODO -> Call back.
 	}
 	c.OnCreateConnection = func(n *node.Node, c *gnet.Conn) {
@@ -387,4 +383,42 @@ func (m *Manager) unsubscribeFileMaster(bpk cipher.PubKey) error {
 
 func (m *Manager) unsubscribeNode(bpk cipher.PubKey) {
 	m.node.Unsubscribe(nil, bpk)
+}
+
+/*
+	<<< CONTENT >>>
+*/
+
+func (m *Manager) NewBoard(in *io.NewBoard) error {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	if e := in.Process(); e != nil {
+		return e
+	}
+	if e := m.subscribeFileMaster(in.BoardPubKey, in.BoardSecKey); e != nil {
+		return e
+	}
+	pack, e := m.node.Container().NewRoot(
+		in.BoardPubKey,
+		in.BoardSecKey,
+		skyobject.HashTableIndex|skyobject.EntireTree,
+		m.node.Container().CoreRegistry().Types(),
+	)
+	if e != nil {
+		return e
+	}
+	pack.Append(
+		&object.BoardPage{
+			Board: pack.Ref(in.Board),
+		},
+		&object.ContentPage{},
+		&object.ActivityPage{},
+	)
+	if _, e := pack.Save(); e != nil {
+		return e
+	}
+
+	m.subscribeNode(in.BoardPubKey)
+	return nil
 }

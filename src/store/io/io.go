@@ -4,7 +4,33 @@ import (
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
+	"time"
 )
+
+// NewBoard represents io required when creating a new board.
+type NewBoard struct {
+	Name        string        `bbs:"heading"`
+	Desc        string        `bbs:"body"`
+	SubAddrsStr string        `bbs:"subAddrsStr"`
+	SubAddrs    []string      `bbs:"subAddrs"`
+	Seed        string        `bbs:"bSeed"`
+	BoardPubKey cipher.PubKey `bbs:"bpk"`
+	BoardSecKey cipher.SecKey `bbs:"bsk"`
+	Board       *object.Board
+}
+
+func (a *NewBoard) Process() error {
+	if e := tag.Process(a); e != nil {
+		return e
+	}
+	a.Board = &object.Board{
+		Name:     a.Name,
+		Desc:     a.Desc,
+		SubAddrs: a.SubAddrs,
+		Created:  time.Now().UnixNano(),
+	}
+	return nil
+}
 
 // NewUser represents io required when creating a new user.
 type NewUser struct {
