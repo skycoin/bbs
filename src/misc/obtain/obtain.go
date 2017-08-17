@@ -16,7 +16,6 @@ func Content(ref *skyobject.Ref) (*object.Content, error) {
 	if !ok {
 		return nil, extErr("Content", ref.Hash)
 	}
-	content.R = ref.Hash
 	return content, nil
 }
 
@@ -32,33 +31,25 @@ func Vote(ref *skyobject.Ref) (*object.Vote, error) {
 	return vote, nil
 }
 
-func ThreadPage(ref *skyobject.Ref) (*object.ThreadPage, error) {
-	value, e := ref.Value()
-	if e != nil {
-		return nil, valErr(e, ref.Hash)
-	}
-	tPage, ok := value.(*object.ThreadPage)
-	if !ok {
-		return nil, extErr("ThreadPage", ref.Hash)
-	}
-	return tPage, nil
-}
-
-func ThreadPages(ref *skyobject.Ref) (*object.ThreadPages, error) {
-	value, e := ref.Value()
-	if e != nil {
-		return nil, valErr(e, ref.Hash)
-	}
-	tPages, ok := value.(*object.ThreadPages)
-	if !ok {
-		return nil, extErr("ThreadPages", ref.Hash)
-	}
-	return tPages, nil
-}
-
 /*
 	<<< HELPER FUNCTIONS >>>
 */
+
+func savePackErr(e error, what string) error {
+	return boo.WrapTypef(e, boo.NotAllowed,
+		"failed to save '%s'", what)
+}
+
+func valIndexErr(e error, i int) error {
+	return boo.WrapType(e, boo.InvalidRead,
+		"failed to obtain root child value of index %d", i)
+}
+
+func extIndexErr(name string, i int) error {
+	return boo.Newf(boo.InvalidRead,
+		"failed to extract '%s' from root child of index %d",
+		name, i)
+}
 
 func valErr(e error, ref cipher.SHA256) error {
 	return boo.WrapTypef(e, boo.InvalidRead,

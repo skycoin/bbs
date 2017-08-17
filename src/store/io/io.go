@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// NewBoard represents io required when creating a new board.
+// NewBoard represents io required to create a new board.
 type NewBoard struct {
 	Name        string        `bbs:"heading"`
 	Desc        string        `bbs:"body"`
@@ -30,6 +30,12 @@ func (a *NewBoard) Process() error {
 		Created:  time.Now().UnixNano(),
 	}
 	return nil
+}
+
+// NewThread represents io required to create a new thread.
+type NewThread struct {
+	Title string `bbs:"heading"`
+	Body  string `bbs:"body"`
 }
 
 // NewUser represents io required when creating a new user.

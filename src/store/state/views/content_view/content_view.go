@@ -6,7 +6,6 @@ import (
 )
 
 type ContentView struct {
-
 }
 
 func (v *ContentView) Init(pack *skyobject.Pack, mux *sync.Mutex) error {
