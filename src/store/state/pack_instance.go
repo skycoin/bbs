@@ -2,202 +2,129 @@ package state
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/obtain"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
 )
 
-type PackAction func(
-	p *skyobject.Pack,
-	h *ActivityHeader,
-) error
+type PackAction func(p *skyobject.Pack, h *PackHeaders) error
 
 type PackInstance struct {
-	mux    sync.Mutex
-	pack   *skyobject.Pack
-	header *ActivityHeader
+	mux     sync.Mutex
+	pack    *skyobject.Pack
+	headers *PackHeaders
 }
 
-func NewPackInstance(oldPI *PackInstance, pack *skyobject.Pack) (*PackInstance, *Changes, error) {
-	header, e := NewPackInstanceHeader(pack)
+func NewPackInstance(oldPI *PackInstance, pack *skyobject.Pack) (*PackInstance, error) {
+	newPI := &PackInstance{pack: pack}
+	var e error
+	newPI.headers, e = NewPackInstanceHeaders(oldPI.headers, pack)
 	if e != nil {
-		return nil, nil, e
+		return nil, e
 	}
-	pi := &PackInstance{
-		pack:   pack,
-		header: header,
-	}
-	var changes *Changes
-	if oldPI != nil {
-		if changes, e = NewChanges(oldPI, pi); e != nil {
-			return nil, nil, e
-		}
-	}
-	return pi, changes, nil
+	return newPI, nil
 }
 
 func (pi *PackInstance) Do(action PackAction) error {
 	pi.mux.Lock()
 	defer pi.mux.Unlock()
-	return action(pi.pack, pi.header)
+	return action(pi.pack, pi.headers)
+}
+
+func (pi *PackInstance) GetSeq() uint64 {
+	return pi.headers.rootSeq
 }
 
 /*
 	<<< HEADERS >>>
 */
 
-type ActivityHeader struct {
-	sync.Mutex
-	store map[cipher.PubKey]cipher.SHA256
+type PackHeaders struct {
+	rootSeq uint64
+	changes *object.Changes
+
+	tMux    sync.Mutex
+	threads map[cipher.SHA256]cipher.SHA256
+
+	uMux  sync.Mutex
+	users map[cipher.PubKey]cipher.SHA256
 }
 
-func NewPackInstanceHeader(p *skyobject.Pack) (*ActivityHeader, error) {
-	if len(p.Root().Refs) != 3 {
-		return nil, boo.New(boo.InvalidRead, "invalid root") // TODO: Rename.
+func NewPackInstanceHeaders(oldHeaders *PackHeaders, p *skyobject.Pack) (*PackHeaders, error) {
+	if len(p.Root().Refs) != object.RootChildrenCount {
+		return nil, boo.New(boo.InvalidRead,
+			"invalid root")
 	}
-	header := &ActivityHeader{
-		store: make(map[cipher.PubKey]cipher.SHA256),
+	headers := &PackHeaders{
+		threads: make(map[cipher.SHA256]cipher.SHA256),
+		users:   make(map[cipher.PubKey]cipher.SHA256),
 	}
 
-	// Fill activity header.
-	aPage, e := object.GetActivityPage(p, nil)
+	// Get required root children.
+	bPage, dPage, uPage, e := object.GetPages(p, nil,
+		true, true, true)
 	if e != nil {
 		return nil, e
 	}
-	e = aPage.Users.Ascend(func(i int, uaRef *skyobject.Ref) error {
-		ua, e := object.GetUserActivity(uaRef)
+
+	// Fill threads header data.
+	e = bPage.Threads.Ascend(func(i int, tpRef *skyobject.Ref) error {
+		tp, e := object.GetThreadPage(tpRef, nil)
 		if e != nil {
 			return e
 		}
-		header.store[ua.PubKey] = uaRef.Hash
+		headers.threads[tp.Thread.Hash] = tpRef.Hash
 		return nil
 	})
 	if e != nil {
 		return nil, e
 	}
 
-	return header, nil
-}
-
-func (h *ActivityHeader) Len() int {
-	h.Lock()
-	defer h.Unlock()
-	return len(h.store)
-}
-
-func (h *ActivityHeader) Get(upk cipher.PubKey) (cipher.SHA256, bool) {
-	h.Lock()
-	defer h.Unlock()
-	uaHash, has := h.store[upk]
-	return uaHash, has
-}
-
-func (h *ActivityHeader) Add(upk cipher.PubKey, uaHash cipher.SHA256) {
-	h.Lock()
-	defer h.Unlock()
-	h.store[upk] = uaHash
-}
-
-/*
-	<<< CHANGES >>>
-*/
-
-type Changes struct {
-	NewContent     []*object.Content
-	DeletedContent []cipher.SHA256
-	NewVotes       []*object.Vote
-}
-
-func NewChanges(oldPI, newPI *PackInstance) (*Changes, error) {
-	changes := new(Changes)
-
-	// Get old data.
-	var oldContentLen, oldDeletedLen, oldVotesLen int
-	if e := oldPI.Do(func(p *skyobject.Pack, h *ActivityHeader) (e error) {
-		cPage, e := object.GetContentPage(p, nil)
+	// Fill users header data.
+	e = uPage.Users.Ascend(func(i int, uapRef *skyobject.Ref) error {
+		uap, e := object.GetUserActivityPage(uapRef, nil)
 		if e != nil {
 			return e
 		}
-		oldContentLen, e = cPage.Content.Len()
-		if e != nil {
-			return e
-		}
-		oldDeletedLen, e = cPage.Deleted.Len()
-		if e != nil {
-			return e
-		}
-		oldVotesLen, e = cPage.Votes.Len()
-		if e != nil {
-			return e
-		}
+		headers.users[uap.PubKey] = uapRef.Hash
 		return nil
-	}); e != nil {
+	})
+	if e != nil {
 		return nil, e
 	}
 
-	// Get new data.
-	var newContentLen, newDeletedLen, newVotesLen int
-	if e := newPI.Do(func(p *skyobject.Pack, h *ActivityHeader) error {
-		cPage, e := object.GetContentPage(p, nil)
-		if e != nil {
-			return e
-		}
-		newContentLen, e = cPage.Content.Len()
-		if e != nil {
-			return e
-		}
-		newDeletedLen, e = cPage.Deleted.Len()
-		if e != nil {
-			return e
-		}
-		newVotesLen, e = cPage.Votes.Len()
-		if e != nil {
-			return e
-		}
-
-		// Append to changes.
-		if newContentLen > oldContentLen {
-			changes.NewContent = make([]*object.Content, newContentLen-oldContentLen)
-			for i := oldContentLen; i < newContentLen; i++ {
-				ref, e := cPage.Content.RefBiIndex(i)
-				if e != nil {
-					return e
-				}
-				changes.NewContent[i], e = obtain.Content(ref)
-				if e != nil {
-					return e
-				}
-			}
-		}
-		if newVotesLen > oldVotesLen {
-			changes.NewVotes = make([]*object.Vote, newVotesLen-oldVotesLen)
-			for i := oldVotesLen; i < newVotesLen; i++ {
-				ref, e := cPage.Votes.RefBiIndex(i)
-				if e != nil {
-					return e
-				}
-				changes.NewVotes[i], e = obtain.Vote(ref)
-				if e != nil {
-					return e
-				}
-			}
-		}
-		if newDeletedLen > oldDeletedLen {
-			changes.DeletedContent = make([]cipher.SHA256, newDeletedLen-oldDeletedLen)
-			for i := oldDeletedLen; i < newDeletedLen; i++ {
-				ref, e := cPage.Deleted.RefBiIndex(i)
-				if e != nil {
-					return e
-				}
-				changes.DeletedContent[i] = ref.Hash
-			}
-		}
-		return nil
-	}); e != nil {
+	// Fill initial changes object.
+	var oldChanges *object.Changes
+	if oldHeaders != nil {
+		oldChanges = oldHeaders.GetChanges()
+	}
+	headers.changes, e = dPage.GetChanges(oldChanges, nil)
+	if e != nil {
 		return nil, e
 	}
 
-	return changes, nil
+	return headers, nil
+}
+
+func (h *PackHeaders) GetRootSeq() uint64 {
+	return h.rootSeq
+}
+
+func (h *PackHeaders) GetChanges() *object.Changes {
+	return h.changes
+}
+
+func (h *PackHeaders) GetThreadPageHash(threadHash cipher.SHA256) (cipher.SHA256, bool) {
+	h.tMux.Lock()
+	defer h.tMux.Unlock()
+	tpHash, has := h.threads[threadHash]
+	return tpHash, has
+}
+
+func (h *PackHeaders) GetUserActivityPageHash(UserPubKey cipher.PubKey) (cipher.SHA256, bool) {
+	h.uMux.Lock()
+	defer h.uMux.Unlock()
+	uapHash, has := h.users[UserPubKey]
+	return uapHash, has
 }

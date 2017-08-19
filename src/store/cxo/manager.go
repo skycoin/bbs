@@ -80,9 +80,9 @@ func (m *Manager) setup() error {
 	c := node.NewConfig()
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
 		t.Register("bbs.BoardPage", object.BoardPage{})
-		t.Register("bbs.ContentPage", object.ContentPage{})
-		t.Register("bbs.ActivityPage", object.ActivityPage{})
-		t.Register("bbs.UserActivity", object.UserActivity{})
+		t.Register("bbs.DiffPage", object.DiffPage{})
+		t.Register("bbs.UsersPage", object.UsersPage{})
+		t.Register("bbs.UserActivityPage", object.UserActivityPage{})
 		t.Register("bbs.Content", object.Content{})
 		t.Register("bbs.Vote", object.Vote{})
 		t.Register("bbs.User", object.User{})
@@ -412,8 +412,8 @@ func (m *Manager) NewBoard(in *io.NewBoard) error {
 		&object.BoardPage{
 			Board: pack.Ref(in.Board),
 		},
-		&object.ContentPage{},
-		&object.ActivityPage{},
+		&object.DiffPage{},
+		&object.UsersPage{},
 	)
 	if _, e := pack.Save(); e != nil {
 		return e
