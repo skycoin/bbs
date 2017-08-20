@@ -1,9 +1,10 @@
 package state
 
 import (
-	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/state/pack"
+	"github.com/skycoin/cxo/skyobject"
 )
 
 func (bi *BoardInstance) NewThread(thread *object.Thread) (uint64, error) {
@@ -14,7 +15,7 @@ func (bi *BoardInstance) NewThread(thread *object.Thread) (uint64, error) {
 	// TODO: Check user permissions.
 
 	var goalSeq uint64
-	e := bi.PackDo(func(p *skyobject.Pack, h *PackHeaders) error {
+	e := bi.PackDo(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal seq.
 		goalSeq = p.Root().Seq + 1
@@ -59,7 +60,7 @@ func (bi *BoardInstance) NewPost(post *object.Post) (uint64, error) {
 	// TODO: Check user permissions.
 
 	var goalSeq uint64
-	e := bi.PackDo(func(p *skyobject.Pack, h *PackHeaders) error {
+	e := bi.PackDo(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal seq.
 		goalSeq = p.Root().Seq + 1

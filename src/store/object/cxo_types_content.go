@@ -30,8 +30,9 @@ func SetData(c Content, v *ContentData) {
 }
 
 type ContentData struct {
-	Heading string `json:"heading"`
-	Body    string `json:"body"`
+	Heading      string   `json:"heading"`
+	Body         string   `json:"body"`
+	SubAddresses []string `json:"submission_addresses,omitempty"`
 }
 
 type Board struct {

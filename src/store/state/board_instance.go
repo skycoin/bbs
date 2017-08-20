@@ -4,13 +4,14 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/state/pack"
+	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"os"
 	"sync"
 	"time"
-	"github.com/skycoin/cxo/node"
 )
 
 type InitBoardInstance func(ct *skyobject.Container, root *skyobject.Root) (
@@ -54,11 +55,11 @@ func NewBoardInstance(config *BoardInstanceConfig, ct *skyobject.Container, root
 	}
 
 	// Prepare pack instance.
-	pack, e := ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), config.SK)
+	p, e := ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), config.SK)
 	if e != nil {
 		return nil, e
 	}
-	bi.pi, e = NewPackInstance(nil, pack)
+	bi.pi, e = NewPackInstance(nil, p)
 	if e != nil {
 		return nil, e
 	}
@@ -73,8 +74,10 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 
 		// If master of board. First update last changes.
 		if bi.c.Master && bi.UpdateNeeded() {
-			root = oldPI.pack.Root()
-			node.Publish(root)
+			oldPI.Do(func(p *skyobject.Pack, h *pack.Headers) error {
+				node.Publish(p.Root())
+				return nil
+			})
 		}
 
 		// Prepare new pack instance.
@@ -89,17 +92,18 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 		}
 
 		// Broadcast changes.
-		changes := newPI.headers.GetChanges()
-		for {
-			select {
-			case bi.changesChan <- changes:
-				goto FinishBroadcast
-			default:
-				// Empty if too full.
-				<-bi.changesChan
+		newPI.Do(func(p *skyobject.Pack, h *pack.Headers) error {
+			changes := h.GetChanges()
+			for {
+				select {
+				case bi.changesChan <- changes:
+					return nil
+				default:
+					// Empty if too full.
+					<-bi.changesChan
+				}
 			}
-		}
-	FinishBroadcast:
+		})
 		// Set new pack instance.
 		return newPI, nil
 	})
@@ -151,12 +155,14 @@ func (bi *BoardInstance) SetPack(set func(oldPI *PackInstance) (*PackInstance, e
 func (bi *BoardInstance) PackDo(action PackAction) error {
 	bi.piMux.Lock()
 	defer bi.piMux.Unlock()
-	return action(bi.pi.pack, bi.pi.headers)
+	return bi.pi.Do(func(p *skyobject.Pack, h *pack.Headers) error {
+		return action(p, h)
+	})
 }
 
 func (bi *BoardInstance) GetSeq() uint64 {
 	var seq uint64
-	bi.PackDo(func(p *skyobject.Pack, h *PackHeaders) error {
+	bi.PackDo(func(p *skyobject.Pack, h *pack.Headers) error {
 		seq = p.Root().Seq
 		return nil
 	})

@@ -27,7 +27,7 @@ var indexString = [...]string{
 
 type Pages struct {
 	BoardPage *BoardPage
-	DiffPage *DiffPage
+	DiffPage  *DiffPage
 	UsersPage *UsersPage
 }
 
@@ -101,6 +101,18 @@ func (bp *BoardPage) Save(p *skyobject.Pack, mux *sync.Mutex) error {
 		return saveRootChildErr(e, IndexBoardPage)
 	}
 	return nil
+}
+
+func (bp *BoardPage) GetBoard(mux *sync.Mutex) (*Board, error) {
+	bVal, e := bp.Board.Value()
+	if e != nil {
+		return nil, valueErr(e, &bp.Board)
+	}
+	b, ok := bVal.(*Board)
+	if !ok {
+		return nil, extErr(&bp.Board)
+	}
+	return b, nil
 }
 
 func (bp *BoardPage) GetThreadPage(tpHash cipher.SHA256, mux *sync.Mutex) (*skyobject.Ref, *ThreadPage, error) {
