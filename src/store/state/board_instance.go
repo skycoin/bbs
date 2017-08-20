@@ -28,7 +28,7 @@ type BoardInstance struct {
 
 	flag skyobject.Flag // Used for compiling pack.
 
-	piMux sync.RWMutex
+	piMux sync.Mutex
 	pi    *PackInstance
 
 	changesChan chan *object.Changes // Changes to tree (for output - web socket).
@@ -148,22 +148,16 @@ func (bi *BoardInstance) SetPack(set func(oldPI *PackInstance) (*PackInstance, e
 	}
 }
 
-func (bi *BoardInstance) EditPack(edit func(pi *PackInstance) error) error {
+func (bi *BoardInstance) PackDo(action PackAction) error {
 	bi.piMux.Lock()
 	defer bi.piMux.Unlock()
-	return edit(bi.pi)
-}
-
-func (bi *BoardInstance) ReadPack(read func(pi *PackInstance) error) error {
-	bi.piMux.RLock()
-	defer bi.piMux.RUnlock()
-	return read(bi.pi)
+	return action(bi.pi.pack, bi.pi.headers)
 }
 
 func (bi *BoardInstance) GetSeq() uint64 {
 	var seq uint64
-	bi.ReadPack(func(pi *PackInstance) error {
-		seq = pi.GetSeq()
+	bi.PackDo(func(p *skyobject.Pack, h *PackHeaders) error {
+		seq = p.Root().Seq
 		return nil
 	})
 	return seq

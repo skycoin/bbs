@@ -11,7 +11,6 @@ import (
 type PackAction func(p *skyobject.Pack, h *PackHeaders) error
 
 type PackInstance struct {
-	mux     sync.Mutex
 	pack    *skyobject.Pack
 	headers *PackHeaders
 }
@@ -27,13 +26,7 @@ func NewPackInstance(oldPI *PackInstance, pack *skyobject.Pack) (*PackInstance, 
 }
 
 func (pi *PackInstance) Do(action PackAction) error {
-	pi.mux.Lock()
-	defer pi.mux.Unlock()
 	return action(pi.pack, pi.headers)
-}
-
-func (pi *PackInstance) GetSeq() uint64 {
-	return pi.headers.rootSeq
 }
 
 /*

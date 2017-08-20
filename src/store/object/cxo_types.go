@@ -25,27 +25,52 @@ var indexString = [...]string{
 	<<< ROOT CHILDREN >>>
 */
 
-func GetPages(p *skyobject.Pack, mux *sync.Mutex, get ...bool) (
-	bp *BoardPage, cp *DiffPage, up *UsersPage, e error,
-) {
+type Pages struct {
+	BoardPage *BoardPage
+	DiffPage *DiffPage
+	UsersPage *UsersPage
+}
+
+func GetPages(p *skyobject.Pack, mux *sync.Mutex, get ...bool) (out *Pages, e error) {
 	defer dynamicLock(mux)()
+	out = new(Pages)
 
 	if len(get) > IndexBoardPage && get[IndexBoardPage] {
-		if bp, e = GetBoardPage(p, nil); e != nil {
+		if out.BoardPage, e = GetBoardPage(p, nil); e != nil {
 			return
 		}
 	}
 	if len(get) > IndexDiffPage && get[IndexDiffPage] {
-		if cp, e = GetDiffPage(p, nil); e != nil {
+		if out.DiffPage, e = GetDiffPage(p, nil); e != nil {
 			return
 		}
 	}
 	if len(get) > IndexUsersPage && get[IndexUsersPage] {
-		if up, e = GetUsersPage(p, nil); e != nil {
+		if out.UsersPage, e = GetUsersPage(p, nil); e != nil {
 			return
 		}
 	}
 	return
+}
+
+func (p *Pages) Save(pack *skyobject.Pack, mux *sync.Mutex) error {
+	defer dynamicLock(mux)()
+	if p.BoardPage != nil {
+		if e := p.BoardPage.Save(pack, nil); e != nil {
+			return e
+		}
+	}
+	if p.DiffPage != nil {
+		if e := p.DiffPage.Save(pack, nil); e != nil {
+			return e
+		}
+	}
+	if p.UsersPage != nil {
+		if e := p.UsersPage.Save(pack, nil); e != nil {
+			return e
+		}
+	}
+	return nil
 }
 
 /*
@@ -95,6 +120,15 @@ func (bp *BoardPage) GetThreadPage(tpHash cipher.SHA256, mux *sync.Mutex) (*skyo
 	return tpRef, tp, nil
 }
 
+func (bp *BoardPage) AddThread(tRef skyobject.Ref, mux *sync.Mutex) error {
+	defer dynamicLock(mux)()
+	e := bp.Threads.Append(ThreadPage{Thread: tRef})
+	if e != nil {
+		return boo.Wrap(e, "failed to append thread to 'BoardPage.Threads'")
+	}
+	return nil
+}
+
 /*
 	<<< THREAD PAGE >>>
 */
@@ -130,6 +164,25 @@ func (tp *ThreadPage) GetThread(mux *sync.Mutex) (*Thread, error) {
 	return t, nil
 }
 
+func (tp *ThreadPage) AddPost(postHash cipher.SHA256, post *Post, mux *sync.Mutex) error {
+	if _, e := tp.Posts.RefByHash(postHash); e == nil {
+		return boo.Newf(boo.AlreadyExists,
+			"post of hash '%s' already exists in 'ThreadPage.Posts'", postHash)
+	}
+	if e := tp.Posts.Append(post); e != nil {
+		return boo.WrapTypef(e, boo.Internal,
+			"failed to append %v to 'ThreadPage.Posts'", post)
+	}
+	return nil
+}
+
+func (tp *ThreadPage) Save(tpRef *skyobject.Ref) error {
+	if e := tpRef.SetValue(tp); e != nil {
+		return boo.WrapType(e, boo.Internal, "failed to save 'ThreadPage'")
+	}
+	return nil
+}
+
 /*
 	<<< DIFF PAGE >>>
 */
@@ -157,6 +210,30 @@ func (dp *DiffPage) Save(p *skyobject.Pack, mux *sync.Mutex) error {
 	defer dynamicLock(mux)()
 	if e := p.SetRefByIndex(IndexDiffPage, dp); e != nil {
 		return saveRootChildErr(e, IndexDiffPage)
+	}
+	return nil
+}
+
+func (dp *DiffPage) Add(v interface{}) error {
+	switch v.(type) {
+	case *Thread:
+		if e := dp.Threads.Append(v); e != nil {
+			return boo.Newf(boo.Internal,
+				"failed to append %v to 'DiffPage.Threads'", v)
+		}
+	case *Post:
+		if e := dp.Posts.Append(v); e != nil {
+			return boo.Newf(boo.Internal,
+				"failed to append %v to 'DiffPage.Posts'", v)
+		}
+	case *Vote:
+		if e := dp.Votes.Append(v); e != nil {
+			return boo.Newf(boo.Internal,
+				"failed to append %v to 'DiffPage.Votes'", v)
+		}
+	default:
+		return boo.Newf(boo.Internal,
+			"failed to add object of type %T to 'DiffPage'", v)
 	}
 	return nil
 }
