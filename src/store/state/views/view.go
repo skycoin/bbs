@@ -27,11 +27,11 @@ func Add(viewsMap map[string]View, add Adder) {
 }
 
 const (
-	NameContent = "content"
+	Content = "content"
 )
 
-func Content() Adder {
+func AddContent() Adder {
 	return func() (string, View) {
-		return NameContent, new(content_view.ContentView)
+		return Content, new(content_view.ContentView)
 	}
 }

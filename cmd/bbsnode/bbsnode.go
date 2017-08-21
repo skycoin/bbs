@@ -29,8 +29,8 @@ const (
 )
 
 var (
-	devMode         = false
-	testMode        = false
+	devMode          = false
+	testMode         = false
 	compilerInternal = 5
 )
 

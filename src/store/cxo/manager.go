@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/skyobject"
@@ -57,8 +58,10 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	if e := manager.setup(); e != nil {
 		manager.l.Panicln("failed to start CXO manager:", e)
 	}
-	manager.compiler =
-		state.NewCompiler(compilerConfig, manager.node)
+	manager.compiler = state.NewCompiler(
+		compilerConfig, manager.node,
+		views.AddContent(),
+	)
 
 	manager.file.Lock()
 	defer manager.file.Unlock()

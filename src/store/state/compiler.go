@@ -3,6 +3,7 @@ package state
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
@@ -27,17 +28,19 @@ type Compiler struct {
 
 	mux    sync.Mutex
 	boards map[cipher.PubKey]*BoardInstance
+	adders []views.Adder
 
 	quit chan struct{}
 	wg   sync.WaitGroup
 }
 
-func NewCompiler(config *CompilerConfig, node *node.Node) *Compiler {
+func NewCompiler(config *CompilerConfig, node *node.Node, adders ...views.Adder) *Compiler {
 	compiler := &Compiler{
 		c:      config,
 		l:      inform.NewLogger(true, os.Stdout, LogPrefix),
 		node:   node,
 		boards: make(map[cipher.PubKey]*BoardInstance),
+		adders: adders,
 		quit:   make(chan struct{}),
 	}
 	go compiler.updateLoop()
@@ -100,7 +103,7 @@ func (c *Compiler) InitBoard(pk cipher.PubKey, sk ...cipher.SecKey) error {
 	case 0:
 		bi, e := NewBoardInstance(
 			&BoardInstanceConfig{Master: false, PK: pk},
-			c.node.Container(), root,
+			c.node.Container(), root, c.adders...,
 		)
 		if e != nil {
 			return e
@@ -110,7 +113,7 @@ func (c *Compiler) InitBoard(pk cipher.PubKey, sk ...cipher.SecKey) error {
 	case 1:
 		bi, e := NewBoardInstance(
 			&BoardInstanceConfig{Master: true, PK: pk, SK: sk[0]},
-			c.node.Container(), root,
+			c.node.Container(), root, c.adders...,
 		)
 		if e != nil {
 			return e

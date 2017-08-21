@@ -5,6 +5,8 @@ import (
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/session"
+	"github.com/skycoin/bbs/src/store/state/views"
+	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"time"
 )
 
@@ -137,5 +139,9 @@ func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (interface
 	if e != nil {
 		return nil, e
 	}
-	return bi, nil
+	view, e := bi.Get(views.Content, content_view.BoardPage)
+	if e != nil {
+		return nil, e
+	}
+	return view, nil
 }

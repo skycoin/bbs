@@ -42,7 +42,7 @@ func getSession(_ context.Context, f *object.UserFile) *SessionOutput {
 }
 
 type ConnectionsOutput struct {
-	Connections      []object.Connection `json:"connections"`
+	Connections []object.Connection `json:"connections"`
 }
 
 func getConnections(_ context.Context, cs []object.Connection) *ConnectionsOutput {

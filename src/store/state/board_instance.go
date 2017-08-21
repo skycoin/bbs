@@ -14,6 +14,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"fmt"
 )
 
 type BoardInstanceConfig struct {
@@ -79,6 +80,7 @@ func NewBoardInstance(
 			return nil, boo.WrapType(e, boo.Internal,
 				"failed to generate view")
 		}
+		fmt.Println("VIEW LOADED:", view)
 	}
 
 	// Output.
