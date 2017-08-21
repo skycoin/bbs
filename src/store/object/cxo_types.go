@@ -492,7 +492,7 @@ type User struct {
 
 type UserView struct {
 	User
-	PubKey string `json:"public_key"`
+	PubKey string `json:"public_key,omitempty"`
 	SecKey string `json:"secret_key,omitempty"`
 }
 

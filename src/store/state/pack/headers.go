@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
+	"fmt"
 )
 
 /*
@@ -24,6 +25,9 @@ type Headers struct {
 }
 
 func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
+	if p == nil {
+		fmt.Println("PACK IS NIL!!!!!")
+	}
 	if len(p.Root().Refs) != object.RootChildrenCount {
 		return nil, boo.New(boo.InvalidRead,
 			"invalid root")

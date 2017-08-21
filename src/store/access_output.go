@@ -43,7 +43,6 @@ func getSession(_ context.Context, f *object.UserFile) *SessionOutput {
 
 type ConnectionsOutput struct {
 	Connections      []object.Connection `json:"connections"`
-	SavedConnections []string            `json:"saved_connections"`
 }
 
 func getConnections(_ context.Context, cs []object.Connection) *ConnectionsOutput {
@@ -64,7 +63,4 @@ func getSubscriptions(_ context.Context, ss []cipher.PubKey) *SubscriptionsOutpu
 		out.Subscriptions[i] = s.Hex()
 	}
 	return out
-}
-
-type BoardsOutput struct {
 }

@@ -19,7 +19,7 @@ import (
 const (
 	usersLogPrefix = "USERS"
 	usersSubDir    = "/users"
-	usersFileExt   = ".v0.2.user"
+	usersFileExt   = ".ucf"
 )
 
 var (
@@ -45,8 +45,10 @@ func NewManager(config *ManagerConfig) *Manager {
 		c: config,
 		l: inform.NewLogger(true, os.Stdout, usersLogPrefix),
 	}
-	if e := os.MkdirAll(m.folderPath(), os.FileMode(0700)); e != nil {
-		m.l.Panicln(e)
+	if !*config.MemoryMode {
+		if e := os.MkdirAll(m.folderPath(), os.FileMode(0700)); e != nil {
+			m.l.Panicln(e)
+		}
 	}
 	return m
 }
@@ -75,6 +77,7 @@ func (m *Manager) NewUser(in *object.NewUserIO) error {
 		return nil
 	}
 	f := in.File
+	m.l.Println(m.filePath(f.User.Alias))
 	return file.SaveBinary(
 		m.filePath(f.User.Alias), encoder.Serialize(f), os.FileMode(0600))
 }

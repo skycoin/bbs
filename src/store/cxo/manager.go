@@ -47,7 +47,7 @@ type Manager struct {
 	quit     chan struct{}
 }
 
-func NewManager(config *ManagerConfig) *Manager {
+func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Manager {
 	manager := &Manager{
 		c:    config,
 		l:    inform.NewLogger(true, os.Stdout, LogPrefix),
@@ -57,6 +57,21 @@ func NewManager(config *ManagerConfig) *Manager {
 	if e := manager.setup(); e != nil {
 		manager.l.Panicln("failed to start CXO manager:", e)
 	}
+	manager.compiler =
+		state.NewCompiler(compilerConfig, manager.node)
+
+	manager.file.Lock()
+	defer manager.file.Unlock()
+	for _, sub := range manager.file.MasterSubs {
+		if e := manager.compiler.InitBoard(sub.PK, sub.SK); e != nil {
+			manager.l.Println("compiler.InitBoard() :", e)
+		}
+	}
+	for _, sub := range manager.file.RemoteSubs {
+		if e := manager.compiler.InitBoard(sub.PK); e != nil {
+			manager.l.Println("compiler.InitBoard() :", e)
+		}
+	}
 	return manager
 }
 
@@ -65,6 +80,7 @@ func (m *Manager) Close() {
 		select {
 		case m.quit <- struct{}{}:
 		default:
+			m.compiler.Close()
 			m.wg.Wait()
 			if e := m.node.Close(); e != nil {
 				m.l.Println("Error on close:", e.Error())
@@ -82,7 +98,7 @@ func (m *Manager) Close() {
 func (m *Manager) setup() error {
 	c := node.NewConfig()
 	c.Log.Prefix = "[CXO] "
-	c.Log.Debug = true
+	c.Log.Debug = false
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
 		t.Register("bbs.BoardPage", object.BoardPage{})
 		t.Register("bbs.ThreadPage", object.ThreadPage{})
@@ -146,7 +162,6 @@ func (m *Manager) setup() error {
 	}
 	m.init()
 	go m.retryLoop()
-
 	return nil
 }
 
@@ -179,6 +194,9 @@ func (m *Manager) save() error {
 }
 
 func (m *Manager) init() {
+	m.file.Lock()
+	defer m.file.Unlock()
+
 	for _, sub := range m.file.MasterSubs {
 		m.subscribeNode(sub.PK)
 	}
@@ -258,7 +276,7 @@ func (m *Manager) connectFile(address string) error {
 		return boo.Newf(boo.AlreadyExists,
 			"connection to address '%s' already exists", address)
 	}
-	return nil
+	return m.save()
 }
 
 func (m *Manager) connectNode(address string) (*gnet.Conn, error) {
@@ -322,6 +340,9 @@ func (m *Manager) SubscribeRemote(bpk cipher.PubKey) error {
 		return e
 	}
 	m.subscribeNode(bpk)
+	if e := m.compiler.InitBoard(bpk); e != nil {
+		return e
+	}
 	return nil
 }
 
@@ -330,6 +351,9 @@ func (m *Manager) SubscribeMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
 		return e
 	}
 	m.subscribeNode(bpk)
+	if e := m.compiler.InitBoard(bpk, bsk); e != nil {
+		return e
+	}
 	return nil
 }
 
@@ -400,21 +424,27 @@ func (m *Manager) unsubscribeNode(bpk cipher.PubKey) {
 	<<< CONTENT >>>
 */
 
-func (m *Manager) NewBoard(in *object.NewBoardIO) error {
+func (m *Manager) NewBoard(in *object.NewBoardIO) (*state.BoardInstance, error) {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	if e := in.Process(); e != nil {
-		return e
-	}
 	if e := m.subscribeFileMaster(in.BoardPubKey, in.BoardSecKey); e != nil {
-		return e
-	}
-	if e := newBoard(m.node, in); e != nil {
-		return e
+		return nil, e
 	}
 	m.subscribeNode(in.BoardPubKey)
-	return nil
+
+	if e := newBoard(m.node, in); e != nil {
+		m.l.Println("Failed here")
+		return nil, e
+	}
+	if e := m.compiler.InitBoard(in.BoardPubKey, in.BoardSecKey); e != nil {
+		return nil, e
+	}
+	bi, e := m.compiler.GetBoard(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	return bi, e
 }
 
 func newBoard(node *node.Node, in *object.NewBoardIO) error {

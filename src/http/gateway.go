@@ -182,6 +182,21 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			send(w, out, e)
 		})
 
+	/*
+		<<< CONTENT >>>
+	*/
+
+	mux.HandleFunc("/api/content/new_board",
+		func(w http.ResponseWriter, r *http.Request) {
+			out, e := g.Access.NewBoard(r.Context(), &object.NewBoardIO{
+				Seed: r.FormValue("seed"),
+				Name: r.FormValue("name"),
+				Body: r.FormValue("body"),
+				SubAddrsStr: r.FormValue("submission_addresses"),
+			})
+			send(w, out, e)
+		})
+
 	return nil
 }
 
@@ -206,6 +221,15 @@ func send(w http.ResponseWriter, v interface{}, e error) error {
 		return sendErr(w, e)
 	}
 	return sendOK(w, v)
+}
+
+func doSend(w http.ResponseWriter) func(v interface{}, e error) error {
+	return func(v interface{}, e error) error {
+		if e != nil {
+			return sendErr(w, e)
+		}
+		return sendOK(w, v)
+	}
 }
 
 func sendOK(w http.ResponseWriter, v interface{}) error {

@@ -29,6 +29,9 @@ func (a *Access) NewUser(ctx context.Context, in *object.NewUserIO) (*UsersOutpu
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
+	if e := a.Session.NewUser(in); e != nil {
+		return nil, e
+	}
 	return a.GetUsers(ctx)
 }
 
@@ -125,3 +128,14 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *object.Subscription
 /*
 	<<< CONTENT >>>
 */
+
+func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (interface{}, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.NewBoard(in)
+	if e != nil {
+		return nil, e
+	}
+	return bi, nil
+}

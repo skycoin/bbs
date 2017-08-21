@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/session"
+	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/file"
 	"gopkg.in/urfave/cli.v1"
 	"log"
@@ -30,7 +31,7 @@ const (
 var (
 	devMode         = false
 	testMode        = false
-	compilerWorkers = 5
+	compilerInternal = 5
 )
 
 // Config represents configuration for node.
@@ -133,13 +134,17 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 							ConfigDir:  &c.ConfigDir,
 						},
 					),
-					CXO: cxo.NewManager(&cxo.ManagerConfig{
-						Memory:       &c.Memory,
-						Config:       &c.ConfigDir,
-						CXOPort:      &c.CXOPort,
-						CXORPCEnable: &c.CXORPC,
-						CXORPCPort:   &c.CXORPCPort,
-					}),
+					CXO: cxo.NewManager(
+						&cxo.ManagerConfig{
+							Memory:       &c.Memory,
+							Config:       &c.ConfigDir,
+							CXOPort:      &c.CXOPort,
+							CXORPCEnable: &c.CXORPC,
+							CXORPCPort:   &c.CXORPCPort,
+						}, &state.CompilerConfig{
+							UpdateInterval: &compilerInternal,
+						},
+					),
 				},
 				Quit: quit,
 			},
