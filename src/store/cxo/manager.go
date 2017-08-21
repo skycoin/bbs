@@ -427,6 +427,10 @@ func (m *Manager) unsubscribeNode(bpk cipher.PubKey) {
 	<<< CONTENT >>>
 */
 
+func (m *Manager) GetBoards() {
+
+}
+
 func (m *Manager) NewBoard(in *object.NewBoardIO) (*state.BoardInstance, error) {
 	m.mux.Lock()
 	defer m.mux.Unlock()

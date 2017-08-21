@@ -86,9 +86,9 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 			log.Println("thread not found")
 			continue
 		} else {
-			unlock := ofThread.Lock()
+			ofThread.Lock()
 			ofThread.Posts = append(ofThread.Posts, post.R)
-			unlock()
+			ofThread.Unlock()
 		}
 		v.pMap[post.R] = new(PostRep).Fill(post, mux)
 	}

@@ -32,13 +32,13 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/node/quit",
 		func(w http.ResponseWriter, r *http.Request) {
 			g.Quit <- 0
-			send(w, true, nil)
+			send(w)(true, nil)
 		})
 
 	// Obtains node states. TODO
 	mux.HandleFunc("/api/node/stats",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w, true, nil)
+			send(w)(true, nil)
 		})
 
 	/*
@@ -48,8 +48,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Generates a seed.
 	mux.HandleFunc("/api/tools/new_seed",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := keys.GenerateSeed()
-			send(w, out, e)
+			send(w)(keys.GenerateSeed())
 		})
 
 	// Generates public/private key pair.
@@ -64,14 +63,16 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			default:
 				pk, sk = cipher.GenerateDeterministicKeyPair([]byte(seed))
 			}
-			out := struct {
-				PubKey string `json:"public_key"`
-				SecKey string `json:"secret_key"`
-			}{
-				PubKey: pk.Hex(),
-				SecKey: sk.Hex(),
-			}
-			send(w, out, nil)
+			send(w)(
+				struct {
+					PubKey string `json:"public_key"`
+					SecKey string `json:"secret_key"`
+				}{
+					PubKey: pk.Hex(),
+					SecKey: sk.Hex(),
+				},
+				nil,
+			)
 		})
 
 	/*
@@ -81,47 +82,41 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Lists all users.
 	mux.HandleFunc("/api/session/users/get_all",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.GetUsers(r.Context())
-			send(w, out, e)
+			send(w)(g.Access.GetUsers(r.Context()))
 		})
 
 	// Creates a new user.
 	mux.HandleFunc("/api/session/users/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewUser(r.Context(), &object.NewUserIO{
+			send(w)(g.Access.NewUser(r.Context(), &object.NewUserIO{
 				Seed:  r.FormValue("seed"),
 				Alias: r.FormValue("alias"),
-			})
-			send(w, out, e)
+			}))
 		})
 
 	// Deletes a user.
 	mux.HandleFunc("/api/session/users/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.DeleteUser(r.Context(), r.FormValue("alias"))
-			send(w, out, e)
+			send(w)(g.Access.DeleteUser(r.Context(), r.FormValue("alias")))
 		})
 
 	// User login.
 	mux.HandleFunc("/api/session/login",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.Login(r.Context(), &object.LoginIO{
+			send(w)(g.Access.Login(r.Context(), &object.LoginIO{
 				Alias: r.FormValue("alias"),
-			})
-			send(w, out, e)
+			}))
 		})
 
 	// User logout.
 	mux.HandleFunc("/api/session/logout",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.Logout(r.Context())
-			send(w, out, e)
+			send(w)(g.Access.Logout(r.Context()))
 		})
 
 	mux.HandleFunc("/api/session/get_info",
 		func(w http.ResponseWriter, r *http.Request) {
-			file, e := g.Access.GetSession(r.Context())
-			send(w, file, e)
+			send(w)(g.Access.GetSession(r.Context()))
 		})
 
 	/*
@@ -131,26 +126,23 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Gets all connections.
 	mux.HandleFunc("/api/connections/get_all",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.GetConnections(r.Context())
-			send(w, out, e)
+			send(w)(g.Access.GetConnections(r.Context()))
 		})
 
 	// Creates a new connection.
 	mux.HandleFunc("/api/connections/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewConnection(r.Context(), &object.ConnectionIO{
+			send(w)(g.Access.NewConnection(r.Context(), &object.ConnectionIO{
 				Address: r.FormValue("address"),
-			})
-			send(w, out, e)
+			}))
 		})
 
 	// Deletes a connection.
 	mux.HandleFunc("/api/connections/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.DeleteConnection(r.Context(), &object.ConnectionIO{
+			send(w)(g.Access.DeleteConnection(r.Context(), &object.ConnectionIO{
 				Address: r.FormValue("address"),
-			})
-			send(w, out, e)
+			}))
 		})
 
 	/*
@@ -160,26 +152,23 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Gets all subscriptions (non-master and master).
 	mux.HandleFunc("/api/subscriptions/get_all",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.GetSubscriptions(r.Context())
-			send(w, out, e)
+			send(w)(g.Access.GetSubscriptions(r.Context()))
 		})
 
 	// Creates a new subscription.
 	mux.HandleFunc("/api/subscriptions/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewSubscription(r.Context(), &object.SubscriptionIO{
+			send(w)(g.Access.NewSubscription(r.Context(), &object.SubscriptionIO{
 				PubKeyStr: r.FormValue("public_key"),
-			})
-			send(w, out, e)
+			}))
 		})
 
 	// Deletes a subscription.
 	mux.HandleFunc("/api/subscriptions/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.DeleteSubscription(r.Context(), &object.SubscriptionIO{
+			send(w)(g.Access.DeleteSubscription(r.Context(), &object.SubscriptionIO{
 				PubKeyStr: r.FormValue("public_key"),
-			})
-			send(w, out, e)
+			}))
 		})
 
 	/*
@@ -188,13 +177,12 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 
 	mux.HandleFunc("/api/content/new_board",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewBoard(r.Context(), &object.NewBoardIO{
+			send(w)(g.Access.NewBoard(r.Context(), &object.NewBoardIO{
 				Seed:        r.FormValue("seed"),
 				Name:        r.FormValue("name"),
 				Body:        r.FormValue("body"),
 				SubAddrsStr: r.FormValue("submission_addresses"),
-			})
-			send(w, out, e)
+			}))
 		})
 
 	return nil
@@ -216,15 +204,12 @@ type Response struct {
 	Error *Error      `json:"error,omitempty"`
 }
 
-func send(w http.ResponseWriter, v interface{}, e error) error {
-	if e != nil {
-		return sendErr(w, e)
-	}
-	return sendOK(w, v)
-}
-
-func doSend(w http.ResponseWriter) func(v interface{}, e error) error {
+func send(w http.ResponseWriter) func(v interface{}, e error) error {
 	return func(v interface{}, e error) error {
+		if lockable, ok := v.(object.Lockable); ok {
+			lockable.Lock()
+			defer lockable.Unlock()
+		}
 		if e != nil {
 			return sendErr(w, e)
 		}

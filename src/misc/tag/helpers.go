@@ -42,7 +42,7 @@ func splitStr(str string, check func(v string) bool) ([]string, error) {
 	out := strings.Split(str, ",")
 	for i := len(out) - 1; i >= 0; i-- {
 		out[i] = strings.TrimSpace(out[i])
-		if !check(out[i]) {
+		if !check(out[i]) || out[0] == "" {
 			out[i], out[0] = out[0], out[i]
 			out = out[1:]
 		}

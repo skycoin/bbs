@@ -8,7 +8,7 @@ import (
 )
 
 type BoardRep struct {
-	mux          sync.Mutex
+	sync.Mutex
 	PubKey       string          `json:"public_key"`
 	Name         string          `json:"name"`
 	Body         string          `json:"body"`
@@ -17,13 +17,10 @@ type BoardRep struct {
 	Threads      []cipher.SHA256 `json:"-"`
 }
 
-func (r *BoardRep) Lock() func() {
-	r.mux.Lock()
-	return r.mux.Unlock
-}
-
 func (r *BoardRep) Fill(pk cipher.PubKey, board *object.Board) *BoardRep {
-	defer r.Lock()()
+	r.Lock()
+	defer r.Unlock()
+
 	data := object.GetData(board)
 	r.PubKey = pk.Hex()
 	r.Name = data.Name
@@ -33,24 +30,8 @@ func (r *BoardRep) Fill(pk cipher.PubKey, board *object.Board) *BoardRep {
 	return r
 }
 
-type ThreadReps []*ThreadRep
-
-func (r ThreadReps) Lock() func() {
-	unlock := func() {}
-	for _, tr := range r {
-		if tr != nil {
-			trUnlock := tr.Lock()
-			unlock = func() {
-				unlock()
-				trUnlock()
-			}
-		}
-	}
-	return unlock
-}
-
 type ThreadRep struct {
-	mux     sync.Mutex
+	sync.Mutex
 	Ref     string          `json:"ref"`
 	Name    string          `json:"name"`
 	Body    string          `json:"body"`
@@ -59,13 +40,10 @@ type ThreadRep struct {
 	Posts   []cipher.SHA256 `json:"-"`
 }
 
-func (r *ThreadRep) Lock() func() {
-	r.mux.Lock()
-	return r.mux.Unlock
-}
-
 func (r *ThreadRep) FillThread(thread *object.Thread, mux *sync.Mutex) *ThreadRep {
-	defer r.Lock()()
+	r.Lock()
+	defer r.Unlock()
+
 	data := object.GetData(thread)
 	r.Ref = thread.R.Hex()
 	r.Name = data.Name
@@ -76,7 +54,9 @@ func (r *ThreadRep) FillThread(thread *object.Thread, mux *sync.Mutex) *ThreadRe
 }
 
 func (r *ThreadRep) Fill(tPage *object.ThreadPage, mux *sync.Mutex) *ThreadRep {
-	defer r.Lock()()
+	r.Lock()
+	defer r.Unlock()
+
 	t, e := tPage.GetThread(mux)
 	if e != nil {
 		log.Println("ThreadRep.Fill() Error:", e)
@@ -92,7 +72,7 @@ func (r *ThreadRep) Fill(tPage *object.ThreadPage, mux *sync.Mutex) *ThreadRep {
 }
 
 type PostRep struct {
-	mux     sync.Mutex
+	sync.Mutex
 	Ref     string `json:"ref"`
 	Name    string `json:"name"`
 	Body    string `json:"body"`
@@ -100,13 +80,10 @@ type PostRep struct {
 	Creator string `json:"creator"`
 }
 
-func (r *PostRep) Lock() func() {
-	r.mux.Lock()
-	return r.mux.Unlock
-}
-
 func (r *PostRep) Fill(post *object.Post, mux *sync.Mutex) *PostRep {
-	defer r.Lock()()
+	r.Lock()
+	defer r.Unlock()
+
 	data := object.GetData(post)
 	r.Ref = post.R.Hex()
 	r.Name = data.Name

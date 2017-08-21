@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
@@ -14,7 +15,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"fmt"
 )
 
 type BoardInstanceConfig struct {

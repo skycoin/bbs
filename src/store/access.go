@@ -139,7 +139,7 @@ func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (interface
 	if e != nil {
 		return nil, e
 	}
-	view, e := bi.Get(views.Content, content_view.BoardPage)
+	view, e := bi.Get(views.Content, content_view.Board)
 	if e != nil {
 		return nil, e
 	}
