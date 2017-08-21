@@ -1,59 +1,60 @@
-package io
+package object
 
 import (
 	"github.com/skycoin/bbs/src/misc/tag"
-	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 	"time"
 )
 
 // NewBoard represents io required to create a new board.
-type NewBoard struct {
-	Name        string        `bbs:"heading"`
-	Desc        string        `bbs:"body"`
+type NewBoardIO struct {
+	Name        string        `bbs:"name"`
+	Body        string        `bbs:"body"`
 	SubAddrsStr string        `bbs:"subAddrsStr"`
 	SubAddrs    []string      `bbs:"subAddrs"`
 	Seed        string        `bbs:"bSeed"`
 	BoardPubKey cipher.PubKey `bbs:"bpk"`
 	BoardSecKey cipher.SecKey `bbs:"bsk"`
-	Board       *object.Board
+	Board       *Board
 }
 
-func (a *NewBoard) Process() error {
+func (a *NewBoardIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Board = &object.Board{
-		Name:     a.Name,
-		Desc:     a.Desc,
-		SubAddrs: a.SubAddrs,
-		Created:  time.Now().UnixNano(),
+	a.Board = &Board{
+		Created: time.Now().UnixNano(),
 	}
+	SetData(a.Board, &ContentData{
+		Name:         a.Name,
+		Body:         a.Body,
+		SubAddresses: a.SubAddrs,
+	})
 	return nil
 }
 
 // NewThread represents io required to create a new thread.
-type NewThread struct {
+type NewThreadIO struct {
 	Title string `bbs:"heading"`
 	Body  string `bbs:"body"`
 }
 
 // NewUser represents io required when creating a new user.
-type NewUser struct {
+type NewUserIO struct {
 	Alias      string        `bbs:"alias" trans:"alias"`
 	Seed       string        `bbs:"uSeed"`
 	Password   string        `bbs:"password"`
 	UserPubKey cipher.PubKey `bbs:"upk" trans:"upk"`
 	UserSecKey cipher.SecKey `bbs:"usk" trans:"usk"`
-	File       *object.UserFile
+	File       *UserFile
 }
 
-func (a *NewUser) Process() error {
+func (a *NewUserIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.File = &object.UserFile{
-		User: object.User{
+	a.File = &UserFile{
+		User: User{
 			Alias:  a.Alias,
 			PubKey: a.UserPubKey,
 			SecKey: a.UserSecKey,
@@ -64,11 +65,11 @@ func (a *NewUser) Process() error {
 }
 
 // Login represents input required when logging io.
-type Login struct {
+type LoginIO struct {
 	Alias string `bbs:"alias"`
 }
 
-func (a *Login) Process() error {
+func (a *LoginIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
@@ -76,11 +77,11 @@ func (a *Login) Process() error {
 }
 
 // Connection represents input/output required when connection/disconnecting from address.
-type Connection struct {
+type ConnectionIO struct {
 	Address string `bbs:"address"`
 }
 
-func (a *Connection) Process() error {
+func (a *ConnectionIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
@@ -88,13 +89,13 @@ func (a *Connection) Process() error {
 }
 
 // Subscription represents a subscription input.
-type Subscription struct {
+type SubscriptionIO struct {
 	PubKeyStr string        `bbs:"bpkStr"`
 	PubKey    cipher.PubKey `bbs:"bpk"`
 	SecKey    cipher.SecKey `bbs:"bsk"`
 }
 
-func (a *Subscription) Process() error {
+func (a *SubscriptionIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}

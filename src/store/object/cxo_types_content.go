@@ -32,7 +32,7 @@ func SetData(c Content, v *ContentData) {
 }
 
 type ContentData struct {
-	Heading      string   `json:"heading"`
+	Name         string   `json:"heading"`
 	Body         string   `json:"body"`
 	SubAddresses []string `json:"submission_addresses,omitempty"`
 }
@@ -70,17 +70,17 @@ type Post struct {
 	Sig      cipher.Sig    `verify:"sig"`
 }
 
-func GetPost(pRef *skyobject.Ref, mux *sync.Mutex) (*Post, error) {
+func GetPost(pElem *skyobject.RefsElem, mux *sync.Mutex) (*Post, error) {
 	defer dynamicLock(mux)()
-	pVal, e := pRef.Value()
+	pVal, e := pElem.Value()
 	if e != nil {
-		return nil, valueErr(e, pRef)
+		return nil, elemValueErr(e, pElem)
 	}
 	p, ok := pVal.(*Post)
 	if !ok {
-		return nil, extErr(pRef)
+		return nil, elemExtErr(pElem)
 	}
-	p.R = pRef.Hash
+	p.R = pElem.Hash
 	return p, nil
 }
 

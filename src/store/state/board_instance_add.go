@@ -15,7 +15,7 @@ func (bi *BoardInstance) NewThread(thread *object.Thread) (uint64, error) {
 	// TODO: Check user permissions.
 
 	var goalSeq uint64
-	e := bi.PackDo(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal seq.
 		goalSeq = p.Root().Seq + 1
@@ -60,7 +60,7 @@ func (bi *BoardInstance) NewPost(post *object.Post) (uint64, error) {
 	// TODO: Check user permissions.
 
 	var goalSeq uint64
-	e := bi.PackDo(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal seq.
 		goalSeq = p.Root().Seq + 1

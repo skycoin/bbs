@@ -2,11 +2,10 @@ package views
 
 import (
 	"github.com/skycoin/bbs/src/store/state/pack"
+	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/skyobject"
 	"sync"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
 )
-
 
 type View interface {
 
@@ -36,4 +35,3 @@ func Content() Adder {
 		return NameContent, new(content_view.ContentView)
 	}
 }
-

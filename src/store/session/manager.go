@@ -4,7 +4,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/tag"
-	"github.com/skycoin/bbs/src/store/io"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
@@ -70,7 +69,7 @@ func (m *Manager) GetUsers() ([]string, error) {
 	return aliases, nil
 }
 
-func (m *Manager) NewUser(in *io.NewUser) error {
+func (m *Manager) NewUser(in *object.NewUserIO) error {
 	defer m.lock()()
 	if *m.c.MemoryMode {
 		return nil
@@ -120,7 +119,7 @@ func (m *Manager) Sign(obj interface{}) error {
 	return nil
 }
 
-func (m *Manager) Login(in *io.Login) (*object.UserFile, error) {
+func (m *Manager) Login(in *object.LoginIO) (*object.UserFile, error) {
 	defer m.lock()()
 	if m.file != nil {
 		return nil, ErrAlreadyLoggedIn

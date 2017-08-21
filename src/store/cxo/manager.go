@@ -1,9 +1,9 @@
 package cxo
 
 import (
+	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/store/io"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
@@ -20,10 +20,11 @@ import (
 )
 
 const (
-	cxoLogPrefix     = "CXO"
-	cxoSubDir        = "cxo"
-	cxoFileName      = "bbs.v0.2.cxo"
-	cxoRetryDuration = time.Second * 5
+	LogPrefix     = "CXO"
+	SubDir        = "cxo"
+	DBName        = "bbs.db"
+	FileName      = "bbs.json"
+	RetryDuration = time.Second * 5
 )
 
 type ManagerConfig struct {
@@ -47,7 +48,7 @@ type Manager struct {
 func NewManager(config *ManagerConfig) *Manager {
 	manager := &Manager{
 		c:    config,
-		l:    inform.NewLogger(true, os.Stdout, cxoLogPrefix),
+		l:    inform.NewLogger(true, os.Stdout, LogPrefix),
 		file: new(object.CXOFile),
 		quit: make(chan struct{}),
 	}
@@ -78,22 +79,30 @@ func (m *Manager) Close() {
 
 func (m *Manager) setup() error {
 	c := node.NewConfig()
+	c.Log.Prefix = "[CXO] "
+	c.Log.Debug = true
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
 		t.Register("bbs.BoardPage", object.BoardPage{})
+		t.Register("bbs.ThreadPage", object.ThreadPage{})
 		t.Register("bbs.DiffPage", object.DiffPage{})
 		t.Register("bbs.UsersPage", object.UsersPage{})
 		t.Register("bbs.UserActivityPage", object.UserActivityPage{})
-		t.Register("bbs.Content", object.Content{})
+		t.Register("bbs.Board", object.Board{})
+		t.Register("bbs.Thread", object.Thread{})
+		t.Register("bbs.Post", object.Post{})
 		t.Register("bbs.Vote", object.Vote{})
 		t.Register("bbs.User", object.User{})
 	})
 	c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
-	c.DataDir = filepath.Join(*m.c.Config, cxoSubDir)
-	c.DBPath = filepath.Join(c.DataDir, cxoFileName)
+	c.DataDir = filepath.Join(*m.c.Config, SubDir)
+	c.DBPath = filepath.Join(c.DataDir, DBName)
 	c.EnableListener = true
+	fmt.Println("[::]:" + strconv.Itoa(*m.c.CXOPort))
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
 	c.EnableRPC = *m.c.CXORPCEnable
+	c.RemoteClose = false
+	fmt.Println("[::]:" + strconv.Itoa(*m.c.CXORPCPort))
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
 	c.OnRootFilled = func(n *node.Node, c *gnet.Conn, root *skyobject.Root) {
 		// TODO -> Call back.
@@ -140,7 +149,7 @@ func (m *Manager) setup() error {
 }
 
 func (m *Manager) filePath() string {
-	return path.Join(*m.c.Config, cxoSubDir, cxoFileName)
+	return path.Join(*m.c.Config, SubDir, FileName)
 }
 
 func (m *Manager) load() error {
@@ -189,7 +198,7 @@ func (m *Manager) retryLoop() {
 	m.wg.Add(1)
 	defer m.wg.Done()
 
-	ticker := time.NewTicker(cxoRetryDuration)
+	ticker := time.NewTicker(RetryDuration)
 	defer ticker.Stop()
 
 	for {
@@ -389,7 +398,7 @@ func (m *Manager) unsubscribeNode(bpk cipher.PubKey) {
 	<<< CONTENT >>>
 */
 
-func (m *Manager) NewBoard(in *io.NewBoard) error {
+func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
@@ -399,11 +408,19 @@ func (m *Manager) NewBoard(in *io.NewBoard) error {
 	if e := m.subscribeFileMaster(in.BoardPubKey, in.BoardSecKey); e != nil {
 		return e
 	}
-	pack, e := m.node.Container().NewRoot(
+	if e := newBoard(m.node, in); e != nil {
+		return e
+	}
+	m.subscribeNode(in.BoardPubKey)
+	return nil
+}
+
+func newBoard(node *node.Node, in *object.NewBoardIO) error {
+	pack, e := node.Container().NewRoot(
 		in.BoardPubKey,
 		in.BoardSecKey,
 		skyobject.HashTableIndex|skyobject.EntireTree,
-		m.node.Container().CoreRegistry().Types(),
+		node.Container().CoreRegistry().Types(),
 	)
 	if e != nil {
 		return e
@@ -418,7 +435,6 @@ func (m *Manager) NewBoard(in *io.NewBoard) error {
 	if _, e := pack.Save(); e != nil {
 		return e
 	}
-
-	m.subscribeNode(in.BoardPubKey)
+	node.Publish(pack.Root())
 	return nil
 }

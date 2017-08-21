@@ -65,3 +65,6 @@ func getSubscriptions(_ context.Context, ss []cipher.PubKey) *SubscriptionsOutpu
 	}
 	return out
 }
+
+type BoardsOutput struct {
+}

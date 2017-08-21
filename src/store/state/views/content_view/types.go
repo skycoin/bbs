@@ -26,7 +26,7 @@ func (r *BoardRep) Fill(pk cipher.PubKey, board *object.Board) *BoardRep {
 	defer r.Lock()()
 	data := object.GetData(board)
 	r.PubKey = pk.Hex()
-	r.Name = data.Heading
+	r.Name = data.Name
 	r.Body = data.Body
 	r.Created = board.Created
 	r.SubAddresses = data.SubAddresses
@@ -68,7 +68,7 @@ func (r *ThreadRep) FillThread(thread *object.Thread, mux *sync.Mutex) *ThreadRe
 	defer r.Lock()()
 	data := object.GetData(thread)
 	r.Ref = thread.R.Hex()
-	r.Name = data.Heading
+	r.Name = data.Name
 	r.Body = data.Body
 	r.Created = thread.Created
 	r.Creator = thread.Creator.Hex()
@@ -84,7 +84,7 @@ func (r *ThreadRep) Fill(tPage *object.ThreadPage, mux *sync.Mutex) *ThreadRep {
 	}
 	data := object.GetData(t)
 	r.Ref = t.R.Hex()
-	r.Name = data.Heading
+	r.Name = data.Name
 	r.Body = data.Body
 	r.Created = t.Created
 	r.Creator = t.Creator.Hex()
@@ -109,7 +109,7 @@ func (r *PostRep) Fill(post *object.Post, mux *sync.Mutex) *PostRep {
 	defer r.Lock()()
 	data := object.GetData(post)
 	r.Ref = post.R.Hex()
-	r.Name = data.Heading
+	r.Name = data.Name
 	r.Body = data.Body
 	r.Created = post.Created
 	r.Creator = post.Creator.Hex()

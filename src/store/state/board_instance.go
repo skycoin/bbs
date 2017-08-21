@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
@@ -13,7 +14,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/misc/boo"
 )
 
 type BoardInstanceConfig struct {
@@ -87,14 +87,26 @@ func NewBoardInstance(
 
 // Update updates the board instance. (External trigger).
 func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
-	return bi.SetPack(func(oldPI *PackInstance) (*PackInstance, error) {
+	return bi.ChangePack(func(oldPI *PackInstance) (*PackInstance, error) {
 
-		// If master of board. First update last changes.
-		if bi.c.Master && bi.UpdateNeeded() {
-			oldPI.Do(func(p *skyobject.Pack, h *pack.Headers) error {
-				node.Publish(p.Root())
-				return nil
-			})
+		if root == nil {
+			// If master of board, update last changes.
+			if bi.c.Master {
+				e := oldPI.Do(func(p *skyobject.Pack, h *pack.Headers) error {
+					_, e := p.Save()
+					if e != nil {
+						return e
+					}
+					node.Publish(p.Root())
+					root, e = node.Container().LastFull(bi.c.PK)
+					return e
+				})
+				if e != nil {
+					return nil, e
+				}
+			} else {
+				return oldPI, nil
+			}
 		}
 
 		// Prepare new pack instance.
@@ -129,6 +141,7 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 				}
 			}
 		})
+
 		// Set new pack instance.
 		return newPI, nil
 	})
@@ -178,10 +191,10 @@ func (bi *BoardInstance) ClearUpdateNeeded() {
 	<<< PACK INSTANCE >>>
 */
 
-func (bi *BoardInstance) SetPack(set func(oldPI *PackInstance) (*PackInstance, error)) error {
+func (bi *BoardInstance) ChangePack(change func(oldPI *PackInstance) (*PackInstance, error)) error {
 	bi.piMux.Lock()
 	defer bi.piMux.Unlock()
-	if pi, e := set(bi.pi); e != nil {
+	if pi, e := change(bi.pi); e != nil {
 		return e
 	} else {
 		bi.pi = pi
@@ -189,12 +202,25 @@ func (bi *BoardInstance) SetPack(set func(oldPI *PackInstance) (*PackInstance, e
 	}
 }
 
-func (bi *BoardInstance) PackDo(action PackAction) error {
+func (bi *BoardInstance) PackRead(action PackAction) error {
 	bi.piMux.Lock()
 	defer bi.piMux.Unlock()
 	return bi.pi.Do(func(p *skyobject.Pack, h *pack.Headers) error {
 		return action(p, h)
 	})
+}
+
+func (bi *BoardInstance) PackEdit(action PackAction) error {
+	bi.piMux.Lock()
+	defer bi.piMux.Unlock()
+	e := bi.pi.Do(func(p *skyobject.Pack, h *pack.Headers) error {
+		return action(p, h)
+	})
+	if e != nil {
+		return e
+	}
+	bi.SetUpdateNeeded()
+	return nil
 }
 
 /*
@@ -203,7 +229,7 @@ func (bi *BoardInstance) PackDo(action PackAction) error {
 
 func (bi *BoardInstance) GetSeq() uint64 {
 	var seq uint64
-	bi.PackDo(func(p *skyobject.Pack, h *pack.Headers) error {
+	bi.PackRead(func(p *skyobject.Pack, h *pack.Headers) error {
 		seq = p.Root().Seq
 		return nil
 	})

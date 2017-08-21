@@ -22,7 +22,7 @@ const (
 	defaultStaticSubDir    = "static/dist"
 	defaultDevStaticSubDir = "src/github.com/skycoin/bbs/static/dist"
 	defaultCXOPort         = 8998
-	defaultCXOROCPort      = 8997
+	defaultCXORPCPort      = 8997
 	defaultSubPort         = 6421
 	defaultHTTPPort        = 7410
 )
@@ -61,7 +61,7 @@ func NewDefaultConfig() *Config {
 		ConfigDir:  "",    // --> Action: set as '$HOME/.skybbs'
 		CXOPort:    defaultCXOPort,
 		CXORPC:     true,
-		CXORPCPort: defaultCXOROCPort,
+		CXORPCPort: defaultCXORPCPort,
 		SubPort:    defaultSubPort,
 		SubAddr:    "", // -> Action: set as 'localhost:{Config.SubPort}'
 		HTTPPort:   defaultHTTPPort,
@@ -136,7 +136,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 					CXO: cxo.NewManager(&cxo.ManagerConfig{
 						Memory:       &c.Memory,
 						Config:       &c.ConfigDir,
-						CXOPort:      &c.CXORPCPort,
+						CXOPort:      &c.CXOPort,
 						CXORPCEnable: &c.CXORPC,
 						CXORPCPort:   &c.CXORPCPort,
 					}),

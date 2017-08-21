@@ -7,7 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store"
-	"github.com/skycoin/bbs/src/store/io"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"net/http"
@@ -93,7 +93,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Creates a new user.
 	mux.HandleFunc("/api/session/users/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewUser(r.Context(), &io.NewUser{
+			out, e := g.Access.NewUser(r.Context(), &object.NewUserIO{
 				Seed:  r.FormValue("seed"),
 				Alias: r.FormValue("alias"),
 			})
@@ -110,7 +110,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// User login.
 	mux.HandleFunc("/api/session/login",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.Login(r.Context(), &io.Login{
+			out, e := g.Access.Login(r.Context(), &object.LoginIO{
 				Alias: r.FormValue("alias"),
 			})
 			send(w, out, e)
@@ -143,7 +143,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Creates a new connection.
 	mux.HandleFunc("/api/connections/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewConnection(r.Context(), &io.Connection{
+			out, e := g.Access.NewConnection(r.Context(), &object.ConnectionIO{
 				Address: r.FormValue("address"),
 			})
 			send(w, out, e)
@@ -152,7 +152,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Deletes a connection.
 	mux.HandleFunc("/api/connections/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.DeleteConnection(r.Context(), &io.Connection{
+			out, e := g.Access.DeleteConnection(r.Context(), &object.ConnectionIO{
 				Address: r.FormValue("address"),
 			})
 			send(w, out, e)
@@ -172,7 +172,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Creates a new subscription.
 	mux.HandleFunc("/api/subscriptions/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.NewSubscription(r.Context(), &io.Subscription{
+			out, e := g.Access.NewSubscription(r.Context(), &object.SubscriptionIO{
 				PubKeyStr: r.FormValue("public_key"),
 			})
 			send(w, out, e)
@@ -181,7 +181,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Deletes a subscription.
 	mux.HandleFunc("/api/subscriptions/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			out, e := g.Access.DeleteSubscription(r.Context(), &io.Subscription{
+			out, e := g.Access.DeleteSubscription(r.Context(), &object.SubscriptionIO{
 				PubKeyStr: r.FormValue("public_key"),
 			})
 			send(w, out, e)

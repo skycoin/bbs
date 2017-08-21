@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 	"github.com/skycoin/bbs/src/store/cxo"
-	"github.com/skycoin/bbs/src/store/io"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/session"
 	"time"
 )
@@ -25,7 +25,7 @@ func (a *Access) GetUsers(ctx context.Context) (*UsersOutput, error) {
 	return getUsers(ctx, aliases), nil
 }
 
-func (a *Access) NewUser(ctx context.Context, in *io.NewUser) (*UsersOutput, error) {
+func (a *Access) NewUser(ctx context.Context, in *object.NewUserIO) (*UsersOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -47,7 +47,7 @@ func (a *Access) GetSession(ctx context.Context) (*SessionOutput, error) {
 	return getSession(ctx, f), nil
 }
 
-func (a *Access) Login(ctx context.Context, in *io.Login) (*SessionOutput, error) {
+func (a *Access) Login(ctx context.Context, in *object.LoginIO) (*SessionOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -73,7 +73,7 @@ func (a *Access) GetConnections(ctx context.Context) (*ConnectionsOutput, error)
 	return getConnections(ctx, a.CXO.GetConnections()), nil
 }
 
-func (a *Access) NewConnection(ctx context.Context, in *io.Connection) (*ConnectionsOutput, error) {
+func (a *Access) NewConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -84,7 +84,7 @@ func (a *Access) NewConnection(ctx context.Context, in *io.Connection) (*Connect
 	return a.GetConnections(ctx)
 }
 
-func (a *Access) DeleteConnection(ctx context.Context, in *io.Connection) (*ConnectionsOutput, error) {
+func (a *Access) DeleteConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -102,7 +102,7 @@ func (a *Access) GetSubscriptions(ctx context.Context) (*SubscriptionsOutput, er
 	return getSubscriptions(ctx, a.CXO.GetSubscriptions()), nil
 }
 
-func (a *Access) NewSubscription(ctx context.Context, in *io.Subscription) (*SubscriptionsOutput, error) {
+func (a *Access) NewSubscription(ctx context.Context, in *object.SubscriptionIO) (*SubscriptionsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -112,7 +112,7 @@ func (a *Access) NewSubscription(ctx context.Context, in *io.Subscription) (*Sub
 	return a.GetSubscriptions(ctx)
 }
 
-func (a *Access) DeleteSubscription(ctx context.Context, in *io.Subscription) (*SubscriptionsOutput, error) {
+func (a *Access) DeleteSubscription(ctx context.Context, in *object.SubscriptionIO) (*SubscriptionsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -121,3 +121,7 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *io.Subscription) (*
 	}
 	return a.GetSubscriptions(ctx)
 }
+
+/*
+	<<< CONTENT >>>
+*/
