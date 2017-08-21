@@ -2,7 +2,6 @@ package state
 
 import (
 	"github.com/skycoin/bbs/src/store/state/pack"
-	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/skyobject"
 )
 
@@ -11,7 +10,6 @@ type PackAction func(p *skyobject.Pack, h *pack.Headers) error
 type PackInstance struct {
 	pack    *skyobject.Pack
 	headers *pack.Headers
-	views   map[string]views.View
 }
 
 func NewPackInstance(oldPI *PackInstance, p *skyobject.Pack) (*PackInstance, error) {

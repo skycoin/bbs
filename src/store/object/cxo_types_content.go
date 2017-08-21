@@ -3,8 +3,10 @@ package object
 import (
 	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/tag"
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
+	"sync"
 )
 
 type Content interface {
@@ -66,6 +68,20 @@ type Post struct {
 	Created  int64         `verify:"time"`
 	Creator  cipher.PubKey `verify:"upk"`
 	Sig      cipher.Sig    `verify:"sig"`
+}
+
+func GetPost(pRef *skyobject.Ref, mux *sync.Mutex) (*Post, error) {
+	defer dynamicLock(mux)()
+	pVal, e := pRef.Value()
+	if e != nil {
+		return nil, valueErr(e, pRef)
+	}
+	p, ok := pVal.(*Post)
+	if !ok {
+		return nil, extErr(pRef)
+	}
+	p.R = pRef.Hash
+	return p, nil
 }
 
 func (p Post) Verify() error    { return tag.Verify(&p) }

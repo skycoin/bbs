@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
+	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -12,10 +13,8 @@ import (
 	"os"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/misc/boo"
 )
-
-type InitBoardInstance func(ct *skyobject.Container, root *skyobject.Root) (
-	*BoardInstance, error)
 
 type BoardInstanceConfig struct {
 	Master bool
@@ -31,6 +30,7 @@ type BoardInstance struct {
 
 	piMux sync.Mutex
 	pi    *PackInstance
+	views map[string]views.View
 
 	changesChan chan *object.Changes // Changes to tree (for output - web socket).
 
@@ -38,13 +38,19 @@ type BoardInstance struct {
 	needUpdate    bool
 }
 
-func NewBoardInstance(config *BoardInstanceConfig, ct *skyobject.Container, root *skyobject.Root) (
+func NewBoardInstance(
+	config *BoardInstanceConfig,
+	ct *skyobject.Container,
+	root *skyobject.Root,
+	viewAdders ...views.Adder,
+) (
 	*BoardInstance, error,
 ) {
 	// Prepare output.
 	bi := &BoardInstance{
 		c:           config,
 		l:           inform.NewLogger(true, os.Stdout, "INSTANCE:"+config.PK.Hex()),
+		views:       make(map[string]views.View),
 		changesChan: make(chan *object.Changes, 10),
 	}
 
@@ -62,6 +68,17 @@ func NewBoardInstance(config *BoardInstanceConfig, ct *skyobject.Container, root
 	bi.pi, e = NewPackInstance(nil, p)
 	if e != nil {
 		return nil, e
+	}
+
+	// Initiate views.
+	for _, adder := range viewAdders {
+		views.Add(bi.views, adder)
+	}
+	for _, view := range bi.views {
+		if e := view.Init(p, bi.pi.headers, nil); e != nil {
+			return nil, boo.WrapType(e, boo.Internal,
+				"failed to generate view")
+		}
 	}
 
 	// Output.
@@ -91,6 +108,14 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 			return nil, e
 		}
 
+		// Update views.
+		for _, view := range bi.views {
+			if e := view.Update(newPI.pack, newPI.headers, nil); e != nil {
+				return nil, boo.WrapType(e, boo.Internal,
+					"failed to update view")
+			}
+		}
+
 		// Broadcast changes.
 		newPI.Do(func(p *skyobject.Pack, h *pack.Headers) error {
 			changes := h.GetChanges()
@@ -112,6 +137,18 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 // ChangesChan for WebSocket goodness.
 func (bi *BoardInstance) ChangesChan() chan *object.Changes {
 	return bi.changesChan
+}
+
+func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (interface{}, error) {
+	bi.piMux.Lock()
+	defer bi.piMux.Unlock()
+
+	v, ok := bi.views[viewID]
+	if !ok {
+		return nil, boo.Newf(boo.NotFound,
+			"view of id '%s' not found", viewID)
+	}
+	return v.Get(cmdID, a)
 }
 
 /*
@@ -159,6 +196,10 @@ func (bi *BoardInstance) PackDo(action PackAction) error {
 		return action(p, h)
 	})
 }
+
+/*
+	<<< SEQUENCE >>>
+*/
 
 func (bi *BoardInstance) GetSeq() uint64 {
 	var seq uint64

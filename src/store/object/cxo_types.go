@@ -26,6 +26,7 @@ var indexString = [...]string{
 */
 
 type Pages struct {
+	PK        cipher.PubKey
 	BoardPage *BoardPage
 	DiffPage  *DiffPage
 	UsersPage *UsersPage
@@ -33,7 +34,7 @@ type Pages struct {
 
 func GetPages(p *skyobject.Pack, mux *sync.Mutex, get ...bool) (out *Pages, e error) {
 	defer dynamicLock(mux)()
-	out = new(Pages)
+	out = &Pages{PK: p.Root().Pub}
 
 	if len(get) > IndexBoardPage && get[IndexBoardPage] {
 		if out.BoardPage, e = GetBoardPage(p, nil); e != nil {
@@ -115,6 +116,22 @@ func (bp *BoardPage) GetBoard(mux *sync.Mutex) (*Board, error) {
 	return b, nil
 }
 
+func (bp *BoardPage) GetThreadCount() int {
+	l, _ := bp.Threads.Len()
+	return l
+}
+
+func (bp *BoardPage) RangeThreadPages(action func(i int, tp *ThreadPage) error, mux *sync.Mutex) error {
+	defer dynamicLock(mux)()
+	return bp.Threads.Ascend(func(i int, tpRef *skyobject.Ref) error {
+		tp, e := GetThreadPage(tpRef, nil)
+		if e != nil {
+			return e
+		}
+		return action(i, tp)
+	})
+}
+
 func (bp *BoardPage) GetThreadPage(tpHash cipher.SHA256, mux *sync.Mutex) (*skyobject.Ref, *ThreadPage, error) {
 	defer dynamicLock(mux)()
 	tpRef, e := bp.Threads.RefByHash(tpHash)
@@ -173,7 +190,24 @@ func (tp *ThreadPage) GetThread(mux *sync.Mutex) (*Thread, error) {
 	if !ok {
 		return nil, extErr(&tp.Thread)
 	}
+	t.R = tp.Thread.Hash
 	return t, nil
+}
+
+func (tp *ThreadPage) GetPostCount() int {
+	l, _ := tp.Posts.Len()
+	return l
+}
+
+func (tp *ThreadPage) RangePosts(action func(i int, post *Post) error, mux *sync.Mutex) error {
+	defer dynamicLock(mux)()
+	return tp.Posts.Ascend(func(i int, pRef *skyobject.Ref) error {
+		post, e := GetPost(pRef, nil)
+		if e != nil {
+			return e
+		}
+		return action(i, post)
+	})
 }
 
 func (tp *ThreadPage) AddPost(postHash cipher.SHA256, post *Post, mux *sync.Mutex) error {
