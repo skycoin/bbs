@@ -222,8 +222,8 @@ func (tp *ThreadPage) AddPost(postHash cipher.SHA256, post *Post, mux *sync.Mute
 	return nil
 }
 
-func (tp *ThreadPage) Save(tpRef *skyobject.Ref) error {
-	if e := tpRef.SetValue(tp); e != nil {
+func (tp *ThreadPage) Save(tpElem *skyobject.RefsElem) error {
+	if e := tpElem.SetValue(tp); e != nil {
 		return boo.WrapType(e, boo.Internal, "failed to save 'ThreadPage'")
 	}
 	return nil

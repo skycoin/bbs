@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/skyobject"
@@ -36,13 +37,14 @@ type ManagerConfig struct {
 }
 
 type Manager struct {
-	mux  sync.Mutex
-	c    *ManagerConfig
-	l    *log.Logger
-	file *object.CXOFile
-	node *node.Node
-	wg   sync.WaitGroup
-	quit chan struct{}
+	mux      sync.Mutex
+	c        *ManagerConfig
+	l        *log.Logger
+	file     *object.CXOFile
+	node     *node.Node
+	compiler *state.Compiler
+	wg       sync.WaitGroup
+	quit     chan struct{}
 }
 
 func NewManager(config *ManagerConfig) *Manager {

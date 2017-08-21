@@ -36,15 +36,10 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		})
 
 	// Obtains node states. TODO
-	//mux.HandleFunc("/api/node/stats",
-	//	func(w http.ResponseWriter, r *http.Request) {
-	//		view := struct {
-	//			NodeIsMaster bool `json:"node_is_master"`
-	//		}{
-	//			NodeIsMaster: g.Access.Session.GetCXO().IsMaster(),
-	//		}
-	//		send(w, view, nil)
-	//	})
+	mux.HandleFunc("/api/node/stats",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w, true, nil)
+		})
 
 	/*
 		<<< TOOLS >>>

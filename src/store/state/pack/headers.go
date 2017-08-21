@@ -40,12 +40,12 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 	}
 
 	// Fill threads header data.
-	e = pages.BoardPage.Threads.Ascend(func(i int, tpRef *skyobject.Ref) error {
-		tp, e := object.GetThreadPage(tpRef, nil)
+	e = pages.BoardPage.Threads.Ascend(func(i int, tpElem *skyobject.RefsElem) error {
+		tp, e := object.GetThreadPage(tpElem, nil)
 		if e != nil {
 			return e
 		}
-		headers.threads[tp.Thread.Hash] = tpRef.Hash
+		headers.threads[tp.Thread.Hash] = tpElem.Hash
 		return nil
 	})
 	if e != nil {
@@ -53,12 +53,12 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 	}
 
 	// Fill users header data.
-	e = pages.UsersPage.Users.Ascend(func(i int, uapRef *skyobject.Ref) error {
-		uap, e := object.GetUserActivityPage(uapRef, nil)
+	e = pages.UsersPage.Users.Ascend(func(i int, uapElem *skyobject.RefsElem) error {
+		uap, e := object.GetUserActivityPage(uapElem, nil)
 		if e != nil {
 			return e
 		}
-		headers.users[uap.PubKey] = uapRef.Hash
+		headers.users[uap.PubKey] = uapElem.Hash
 		return nil
 	})
 	if e != nil {
