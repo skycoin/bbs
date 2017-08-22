@@ -462,6 +462,78 @@
 						"description": "Creates a new thread on board of public key. If node does not own the board, a request to the board's submission addresses is initiated via RPC."
 					},
 					"response": []
+				},
+				{
+					"name": "Get Thread Page",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_thread_page",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
+									"description": "Public key of board where thread belongs.",
+									"type": "text"
+								},
+								{
+									"key": "thread_ref",
+									"value": "cd4107446fd6766bee5411d95c90c46ce8087b5cf945477c50b3e3c9172e8859",
+									"description": "Reference of thread.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Gets a view of a thread of specified board."
+					},
+					"response": []
+				},
+				{
+					"name": "New Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/new_post",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
+									"description": "Public key of board where post should belong.",
+									"type": "text"
+								},
+								{
+									"key": "thread_ref",
+									"value": "cd4107446fd6766bee5411d95c90c46ce8087b5cf945477c50b3e3c9172e8859",
+									"description": "Reference of thread where post should belong.",
+									"type": "text"
+								},
+								{
+									"key": "post_ref",
+									"value": "",
+									"description": "(Optional, not yet implemented) Include if this post is reply of another post.",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Hello",
+									"description": "Name of post.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is a greeting.",
+									"description": "Body of post.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Add a new post to specified board and thread. (Can also be a reply to another post)"
+					},
+					"response": []
 				}
 			]
 		}

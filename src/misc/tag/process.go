@@ -82,7 +82,7 @@ func process(tm tMap) error {
 	}
 	// Thread reference.
 	if tRefStr, has := tm[valThreadRefStr]; has {
-		tRef, e := keys.GetReference(tRefStr.String())
+		tRef, e := keys.GetHash(tRefStr.String())
 		if e != nil {
 			return wrapErr(e, "thread reference")
 		}
@@ -90,11 +90,13 @@ func process(tm tMap) error {
 	}
 	// Post reference.
 	if pRefStr, has := tm[valPostRefStr]; has {
-		pRef, e := keys.GetReference(pRefStr.String())
-		if e != nil {
-			return wrapErr(e, "post reference")
+		if pRefStr.String() != "" {
+			pRef, e := keys.GetHash(pRefStr.String())
+			if e != nil {
+				return wrapErr(e, "post reference")
+			}
+			tm.set(valPostRef, pRef)
 		}
-		tm.set(valPostRef, pRef)
 	}
 	// Submission addresses.
 	if subAddrsStr, has := tm[valSubAddrsStr]; has {

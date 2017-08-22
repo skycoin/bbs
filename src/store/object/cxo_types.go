@@ -1,12 +1,12 @@
 package object
 
 import (
+	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"sync"
-	"fmt"
 )
 
 const (
@@ -212,10 +212,13 @@ func (tp *ThreadPage) RangePosts(action func(i int, post *Post) error, mux *sync
 }
 
 func (tp *ThreadPage) AddPost(postHash cipher.SHA256, post *Post, mux *sync.Mutex) error {
-	if _, e := tp.Posts.RefByHash(postHash); e == nil {
-		return boo.Newf(boo.AlreadyExists,
-			"post of hash '%s' already exists in 'ThreadPage.Posts'", postHash)
-	}
+	//if elem, e := tp.Posts.RefByHash(postHash); e == nil {
+	//	return boo.Newf(boo.AlreadyExists,
+	//		"post of hash '%s' already exists in 'ThreadPage.Posts'", postHash.Hex())
+	//
+	//	fmt.Println(elem.String())
+	//}
+	// TODO: Redo
 	if e := tp.Posts.Append(post); e != nil {
 		return boo.WrapTypef(e, boo.Internal,
 			"failed to append %v to 'ThreadPage.Posts'", post)

@@ -12,7 +12,7 @@ const (
 	verifyIgn = "-"
 	verifySig = "sig"
 	verifyPK  = "upk"
-	verifyTS = "time"
+	verifyTS  = "time"
 )
 
 var (

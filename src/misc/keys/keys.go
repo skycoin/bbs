@@ -3,7 +3,6 @@ package keys
 import (
 	"encoding/hex"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
@@ -33,12 +32,12 @@ func GetSecKey(s string) (cipher.SecKey, error) {
 	return cipher.NewSecKey(b), nil
 }
 
-// GetReference obtains a skyobject reference from hex string.
-func GetReference(s string) (skyobject.Ref, error) {
+// GetHash obtains a skyobject reference from hex string.
+func GetHash(s string) (cipher.SHA256, error) {
 	h, e := cipher.SHA256FromHex(s)
 	if e != nil {
-		return skyobject.Ref{}, boo.WrapType(e, boo.InvalidInput,
+		return cipher.SHA256{}, boo.WrapType(e, boo.InvalidInput,
 			"invalid reference")
 	}
-	return skyobject.Ref{Hash: h}, e
+	return h, e
 }

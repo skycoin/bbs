@@ -59,6 +59,37 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	return nil
 }
 
+type NewPostIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	ThreadRefStr   string        `bbs:"tRefStr"`
+	ThreadRef      cipher.SHA256 `bbs:"tRef"`
+	PostRefStr     string        `bbs:"pRefStr"`
+	PostRef        cipher.SHA256 `bbs:"pRef"`
+	Name           string        `bbs:"name"`
+	Body           string        `bbs:"body"`
+	Post           *Post
+}
+
+func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
+	if e := tag.Process(a); e != nil {
+		return e
+	}
+	a.Post = &Post{
+		OfBoard:  a.BoardPubKey,
+		OfThread: a.ThreadRef,
+		OfPost:   a.PostRef,
+		Created:  time.Now().UnixNano(),
+		Creator:  upk,
+	}
+	SetData(a.Post, &ContentData{
+		Name: a.Name,
+		Body: a.Body,
+	})
+	tag.Sign(a.Post, upk, usk)
+	return nil
+}
+
 // NewUser represents io required when creating a new user.
 type NewUserIO struct {
 	Alias      string        `bbs:"alias" trans:"alias"`
@@ -108,14 +139,27 @@ func (a *ConnectionIO) Process() error {
 	return nil
 }
 
-// Subscription represents a subscription input.
+// BoardIO represents a subscription input.
 type BoardIO struct {
 	PubKeyStr string        `bbs:"bpkStr"`
 	PubKey    cipher.PubKey `bbs:"bpk"`
-	SecKey    cipher.SecKey `bbs:"bsk"`
 }
 
 func (a *BoardIO) Process() error {
+	if e := tag.Process(a); e != nil {
+		return e
+	}
+	return nil
+}
+
+type ThreadIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	ThreadRefStr   string        `bbs:"tRefStr"`
+	ThreadRef      cipher.SHA256 `bbs:"tRef"`
+}
+
+func (a *ThreadIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}

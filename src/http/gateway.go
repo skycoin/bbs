@@ -208,8 +208,28 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewThread(r.Context(), &object.NewThreadIO{
 				BoardPubKeyStr: r.FormValue("board_public_key"),
-				Name: r.FormValue("name"),
-				Body: r.FormValue("body"),
+				Name:           r.FormValue("name"),
+				Body:           r.FormValue("body"),
+			}))
+		})
+
+	// TODO: Thread page.
+	mux.HandleFunc("/api/content/get_thread_page",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetThreadPage(r.Context(), &object.ThreadIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				ThreadRefStr:   r.FormValue("thread_ref"),
+			}))
+		})
+
+	mux.HandleFunc("/api/content/new_post",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.NewPost(r.Context(), &object.NewPostIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				ThreadRefStr:   r.FormValue("thread_ref"),
+				PostRefStr:     r.FormValue("post_ref"), // Optional.
+				Name:           r.FormValue("name"),
+				Body:           r.FormValue("body"),
 			}))
 		})
 

@@ -1,13 +1,13 @@
 package content_view
 
 import (
+	"fmt"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"sync"
-	"fmt"
 )
 
 type ContentView struct {

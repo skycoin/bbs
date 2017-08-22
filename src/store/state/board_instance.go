@@ -164,7 +164,7 @@ func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (interface{
 		return nil, boo.Newf(boo.NotFound,
 			"view of id '%s' not found", viewID)
 	}
-	return v.Get(cmdID, a)
+	return v.Get(cmdID, a...)
 }
 
 /*

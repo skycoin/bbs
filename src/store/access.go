@@ -5,9 +5,9 @@ import (
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/session"
-	"time"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
+	"time"
 )
 
 type Access struct {
@@ -190,4 +190,37 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.BoardPage)
+}
+
+func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interface{}, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	return bi.Get(views.Content, content_view.ThreadPage, in.ThreadRef)
+}
+
+func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}, error) {
+	uf, e := a.Session.GetCurrentFile()
+	if e != nil {
+		return nil, e
+	}
+	if e := in.Process(uf.User.PubKey, uf.User.SecKey); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	goal, e := bi.NewPost(in.Post)
+	if e != nil {
+		return nil, e
+	}
+	if e := bi.WaitSeq(ctx, goal); e != nil {
+		return nil, e
+	}
+	return bi.Get(views.Content, content_view.ThreadPage, in.ThreadRef)
 }
