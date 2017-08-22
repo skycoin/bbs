@@ -1,0 +1,394 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Skycoin BBS v0.2",
+		"_postman_id": "a78885d6-0d37-6050-cf6e-bc10e5522baf",
+		"description": "API for rewrite of Skycoin BBS.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Connections",
+			"description": "Endpoints regarding connections to external BBS nodes.",
+			"item": [
+				{
+					"name": "Get All Connections",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Obtains all addresses this node is configured to connect to, and whether the connection is active."
+					},
+					"response": []
+				},
+				{
+					"name": "New Connection",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "address",
+									"value": "[::]:9998",
+									"description": "Address of external node to connet to.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Connects to external node of address."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Connection",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/delete",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "address",
+									"value": "[::]:9998",
+									"description": "Address of remote node to disconnect from.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Disconnects from external node of address."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Node",
+			"description": "Endpoints regarding the current BBS Node.",
+			"item": [
+				{
+					"name": "Node Stats",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/node/stats",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Test Board",
+									"description": "Name of the board.",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "This is a test board.",
+									"description": "Description of the board.",
+									"type": "text"
+								},
+								{
+									"key": "seed",
+									"value": " these are words to generate a seed",
+									"description": "Seed to generate public/secret key pair.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Obtains information regarding the current BBS node."
+					},
+					"response": []
+				},
+				{
+					"name": "Quit Node",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/node/quit",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Exits the node."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Session",
+			"description": "",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/users/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Obtains a list of avaliable users."
+					},
+					"response": []
+				},
+				{
+					"name": "New User",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/users/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "seed",
+									"value": "this is a secret seed",
+									"description": "Used for generating public/private key pair for user.",
+									"type": "text"
+								},
+								{
+									"key": "alias",
+									"value": "superman222",
+									"description": "A unique identifier for the user.",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "securepass",
+									"description": "Password to encrypt/decrypt user file.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Creates a new user."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/users/delete",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "alias",
+									"value": "superman111",
+									"description": "Alias of user to delete.",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/login",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "alias",
+									"value": "superman222",
+									"description": "User's alias to login.",
+									"type": "text"
+								},
+								{
+									"key": "",
+									"value": "",
+									"description": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Decrypts the specified user file and logs the user in."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/logout",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Logs a user out."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Session Info",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/get_info",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Obtains session information and whether we are logged in."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscriptions",
+			"description": "Regarding subscriptions to boards (master and non-master). Although you cannot \"unsubscribe\" from a master board.",
+			"item": [
+				{
+					"name": "Get All Subscriptions",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/subscriptions/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Obtains all subscriptions of boards (master and non-master)."
+					},
+					"response": []
+				},
+				{
+					"name": "New Subscription",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/subscriptions/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "public_key",
+									"value": "invalid_public_key",
+									"description": "Public key of board to subscribe to.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Subscribes to non-master board."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Subscription",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/subscriptions/delete",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "public_key",
+									"value": "0307487579530169373549decbed46899cce3388dd1ef7c7289442d598e224d661",
+									"description": "Public key of board to unsubscribe to.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Unsubscribes from non-master board."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tools",
+			"description": "",
+			"item": [
+				{
+					"name": "New Seed",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/tools/new_seed",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Generates a new random seed."
+					},
+					"response": []
+				},
+				{
+					"name": "New Key Pair",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/tools/new_key_pair",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "seed",
+									"value": "",
+									"description": "Seed to generate key pair with. If left empty, a random key pair will be generated.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Generates a public/private key pair from seed (if provided). Otherwise a random key pair will be generated."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Content",
+			"description": "Regarding submission of boards, threads, posts and votes.",
+			"item": [
+				{
+					"name": "New Board",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/new_board",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "seed",
+									"value": "f",
+									"description": "Seed to generate public/private key pair of the board.",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Test Board",
+									"description": "Name given to the board.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is a test board.",
+									"description": "Description given to the board.",
+									"type": "text"
+								},
+								{
+									"key": "submission_addresses",
+									"value": "",
+									"description": "Submission addresses separated by commas (optional).",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Creates a new board."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Boards",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_boards",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Gets a list of all boards."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
