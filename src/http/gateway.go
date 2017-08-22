@@ -213,7 +213,6 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
-	// TODO: Thread page.
 	mux.HandleFunc("/api/content/get_thread_page",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetThreadPage(r.Context(), &object.ThreadIO{
@@ -230,6 +229,40 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 				PostRefStr:     r.FormValue("post_ref"), // Optional.
 				Name:           r.FormValue("name"),
 				Body:           r.FormValue("body"),
+			}))
+		})
+
+	/*
+		<<< VOTES >>>
+	*/
+
+	mux.HandleFunc("/api/votes/vote_user",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.VoteUser(r.Context(), &object.UserVoteIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				UserPubKeyStr:  r.FormValue("user_public_key"),
+				ModeStr:        r.FormValue("mode"),
+				TagStr:         r.FormValue("tag"),
+			}))
+		})
+
+	mux.HandleFunc("/api/votes/vote_thread",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.VoteThread(r.Context(), &object.ThreadVoteIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				ThreadRefStr:   r.FormValue("thread_ref"),
+				ModeStr:        r.FormValue("mode"),
+				TagStr:         r.FormValue("tag"),
+			}))
+		})
+
+	mux.HandleFunc("/api/votes/vote_post",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.VotePost(r.Context(), &object.PostVoteIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				PostRefStr:     r.FormValue("post_ref"),
+				ModeStr:        r.FormValue("mode"),
+				TagStr:         r.FormValue("tag"),
 			}))
 		})
 

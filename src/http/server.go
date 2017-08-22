@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"github.com/skycoin/bbs/src/store/cxo"
 )
 
 const (
@@ -106,6 +107,10 @@ func (s *Server) prepareStatic() error {
 		})
 		return nil
 	})
+}
+
+func (s *Server) CXO() *cxo.Manager {
+	return s.api.Access.CXO
 }
 
 func (s *Server) Close() {

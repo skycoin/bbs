@@ -182,9 +182,13 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 	if e != nil {
 		return nil, e
 	}
-	goal, e := bi.NewThread(in.Thread)
-	if e != nil {
-		return nil, e
+	var goal uint64
+	if bi.IsMaster() {
+		if goal, e = bi.NewThread(in.Thread); e != nil {
+			return nil, e
+		}
+	} else {
+		// TODO: Via RPC.
 	}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
@@ -215,12 +219,101 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	if e != nil {
 		return nil, e
 	}
-	goal, e := bi.NewPost(in.Post)
-	if e != nil {
-		return nil, e
+	var goal uint64
+	if bi.IsMaster() {
+		if goal, e = bi.NewPost(in.Post); e != nil {
+			return nil, e
+		}
+	} else {
+		// TODO: Via RPC.
 	}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.ThreadPage, in.ThreadRef)
+}
+
+/*
+	<<< VOTES >>>
+*/
+
+func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface{}, error) {
+	uf, e := a.Session.GetCurrentFile()
+	if e != nil {
+		return nil, e
+	}
+	if e := in.Process(uf.User.PubKey, uf.User.SecKey); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	var goal uint64
+	if bi.IsMaster() {
+		if goal, e = bi.NewVote(in.Vote); e != nil {
+			return nil, e
+		}
+	} else {
+		// TODO: Via RPC.
+	}
+	if e := bi.WaitSeq(ctx, goal); e != nil {
+		return nil, e
+	}
+	// TODO: Complete.
+	return nil, nil
+}
+
+func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (interface{}, error) {
+	uf, e := a.Session.GetCurrentFile()
+	if e != nil {
+		return nil, e
+	}
+	if e := in.Process(uf.User.PubKey, uf.User.SecKey); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	var goal uint64
+	if bi.IsMaster() {
+		if goal, e = bi.NewVote(in.Vote); e != nil {
+			return nil, e
+		}
+	} else {
+		// TODO: Via RPC.
+	}
+	if e := bi.WaitSeq(ctx, goal); e != nil {
+		return nil, e
+	}
+	// TODO: Complete.
+	return nil, nil
+}
+
+func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface{}, error) {
+	uf, e := a.Session.GetCurrentFile()
+	if e != nil {
+		return nil, e
+	}
+	if e := in.Process(uf.User.PubKey, uf.User.SecKey); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	var goal uint64
+	if bi.IsMaster() {
+		if goal, e = bi.NewVote(in.Vote); e != nil {
+			return nil, e
+		}
+	} else {
+		// TODO: Via RPC.
+	}
+	if e := bi.WaitSeq(ctx, goal); e != nil {
+		return nil, e
+	}
+	// TODO: Complete.
+	return nil, nil
 }

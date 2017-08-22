@@ -88,7 +88,22 @@ func (p Post) Verify() error    { return tag.Verify(&p) }
 func (p *Post) GetRaw() []byte  { return p.Data }
 func (p *Post) SetRaw(v []byte) { p.Data = v }
 
+const (
+	UserVote = iota
+	ThreadVote
+	PostVote
+	UnknownVoteType
+)
+
+var VoteString = [...]string{
+	UserVote:        "User Vote",
+	ThreadVote:      "Thread Vote",
+	PostVote:        "Post Vote",
+	UnknownVoteType: "Unknown Vote Type",
+}
+
 type Vote struct {
+	OfBoard  cipher.PubKey
 	OfUser   cipher.PubKey
 	OfThread cipher.SHA256
 	OfPost   cipher.SHA256
@@ -101,11 +116,17 @@ type Vote struct {
 	Sig     cipher.Sig    `verify:"sig"`
 }
 
-func ToVote(v interface{}) *Vote {
-	if vote, ok := v.(*Vote); ok {
-		return vote
-	}
-	return nil
-}
-
 func (v Vote) Verify() error { return tag.Verify(&v) }
+
+func (v *Vote) GetType() int {
+	if v.OfUser != (cipher.PubKey{}) {
+		return UserVote
+	}
+	if v.OfThread != (cipher.SHA256{}) {
+		return ThreadVote
+	}
+	if v.OfPost != (cipher.SHA256{}) {
+		return PostVote
+	}
+	return UnknownVoteType
+}

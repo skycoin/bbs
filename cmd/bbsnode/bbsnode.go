@@ -152,6 +152,9 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		CatchError(e, "failed to create HTTP Server")
 		defer httpServer.Close()
 
+		// TODO: RPC Server.
+		httpServer.CXO()
+
 		<-quit
 		return nil
 	}

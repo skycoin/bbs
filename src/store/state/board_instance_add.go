@@ -12,8 +12,6 @@ func (bi *BoardInstance) NewThread(thread *object.Thread) (uint64, error) {
 		return 0, e
 	}
 
-	// TODO: Check user permissions.
-
 	var goalSeq uint64
 	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
 
@@ -56,8 +54,6 @@ func (bi *BoardInstance) NewPost(post *object.Post) (uint64, error) {
 	if e := post.Verify(); e != nil {
 		return 0, e
 	}
-
-	// TODO: Check user permissions.
 
 	var goalSeq uint64
 	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
@@ -103,4 +99,78 @@ func (bi *BoardInstance) NewPost(post *object.Post) (uint64, error) {
 	})
 
 	return goalSeq, e
+}
+
+func (bi *BoardInstance) NewVote(vote *object.Vote) (uint64, error) {
+	if e := vote.Verify(); e != nil {
+		return 0, e
+	}
+
+	var goalSeq uint64
+	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
+
+		// Check vote.
+		if e := checkVote(vote, h); e != nil {
+			return e
+		}
+
+		// Set goal seq.
+		goalSeq = p.Root().Seq + 1
+
+		// Get root children pages.
+		pages, e := object.GetPages(p, nil, false, true, true)
+		if e != nil {
+			return e
+		}
+
+		// Get users page. Create user activity page if not exist.
+		uapHash, has := h.GetUserActivityPageHash(vote.Creator)
+		if !has {
+			uapHash, e = pages.UsersPage.NewUserActivityPage(vote.Creator)
+			if e != nil {
+				return e
+			}
+			h.SetUser(vote.Creator, uapHash)
+		}
+
+		// Add vote to appropriate user activity page.
+		if e := pages.UsersPage.AddUserActivity(uapHash, vote); e != nil {
+			return e
+		}
+
+		// Add vote to diff page.
+		if e := pages.DiffPage.Add(vote); e != nil {
+			return e
+		}
+
+		// Save changes.
+		return pages.Save(p, nil)
+	})
+
+	return goalSeq, e
+}
+
+func checkVote(vote *object.Vote, h *pack.Headers) error {
+	switch vote.GetType() {
+	case object.UserVote:
+		// TODO.
+
+	case object.ThreadVote:
+		_, ok := h.GetThreadPageHash(vote.OfThread)
+		if !ok {
+			return boo.Newf(boo.NotFound,
+				"thread of hash '%s' is not found",
+				vote.OfThread.Hex())
+		}
+
+	case object.PostVote:
+		// TODO.
+
+	default:
+		return boo.Newf(boo.NotAllowed,
+			"invalid vote type of '%s'",
+			object.VoteString[object.UnknownVoteType])
+	}
+
+	return nil
 }

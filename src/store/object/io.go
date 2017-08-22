@@ -165,3 +165,87 @@ func (a *ThreadIO) Process() error {
 	}
 	return nil
 }
+
+type UserVoteIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	UserPubKeyStr  string        `bbs:"upkStr"`
+	UserPubKey     cipher.PubKey `bbs:"upk"`
+	ModeStr        string        `bbs:"modeStr"`
+	Mode           int8          `bbs:"mode"`
+	TagStr         string        `bbs:"tagStr"`
+	Tag            []byte        `bbs:"tag"`
+	Vote           *Vote
+}
+
+func (a *UserVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
+	if e := tag.Process(a); e != nil {
+		return e
+	}
+	a.Vote = &Vote{
+		OfBoard: a.BoardPubKey,
+		OfUser:  a.UserPubKey,
+		Mode:    a.Mode,
+		Tag:     a.Tag,
+		Created: time.Now().UnixNano(),
+		Creator: upk,
+	}
+	tag.Sign(a.Vote, upk, usk)
+	return nil
+}
+
+type ThreadVoteIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	ThreadRefStr   string        `bbs:"tRefStr"`
+	ThreadRef      cipher.SHA256 `bbs:"tRef"`
+	ModeStr        string        `bbs:"modeStr"`
+	Mode           int8          `bbs:"mode"`
+	TagStr         string        `bbs:"tagStr"`
+	Tag            []byte        `bbs:"tag"`
+	Vote           *Vote
+}
+
+func (a *ThreadVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
+	if e := tag.Process(a); e != nil {
+		return e
+	}
+	a.Vote = &Vote{
+		OfBoard:  a.BoardPubKey,
+		OfThread: a.ThreadRef,
+		Mode:     a.Mode,
+		Tag:      a.Tag,
+		Created:  time.Now().UnixNano(),
+		Creator:  upk,
+	}
+	tag.Sign(a.Vote, upk, usk)
+	return nil
+}
+
+type PostVoteIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	PostRefStr     string        `bbs:"pRefStr"`
+	PostRef        cipher.SHA256 `bbs:"pRef"`
+	ModeStr        string        `bbs:"modeStr"`
+	Mode           int8          `bbs:"mode"`
+	TagStr         string        `bbs:"tagStr"`
+	Tag            []byte        `bbs:"tag"`
+	Vote           *Vote
+}
+
+func (a *PostVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
+	if e := tag.Process(a); e != nil {
+		return e
+	}
+	a.Vote = &Vote{
+		OfBoard: a.BoardPubKey,
+		OfPost:  a.PostRef,
+		Mode:    a.Mode,
+		Tag:     a.Tag,
+		Created: time.Now().UnixNano(),
+		Creator: upk,
+	}
+	tag.Sign(a.Vote, upk, usk)
+	return nil
+}

@@ -99,3 +99,9 @@ func (h *Headers) GetUserActivityPageHash(UserPubKey cipher.PubKey) (cipher.SHA2
 	uapHash, has := h.users[UserPubKey]
 	return uapHash, has
 }
+
+func (h *Headers) SetUser(upk cipher.PubKey, uapHash cipher.SHA256) {
+	h.uMux.Lock()
+	defer h.uMux.Unlock()
+	h.users[upk] = uapHash
+}

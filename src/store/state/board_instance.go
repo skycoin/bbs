@@ -155,6 +155,10 @@ func (bi *BoardInstance) ChangesChan() chan *object.Changes {
 	return bi.changesChan
 }
 
+func (bi *BoardInstance) IsMaster() bool {
+	return bi.c.Master
+}
+
 func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (interface{}, error) {
 	bi.piMux.Lock()
 	defer bi.piMux.Unlock()
