@@ -502,3 +502,4 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 	node.Publish(pack.Root())
 	return nil
 }
+

@@ -146,3 +146,13 @@ func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOu
 	}
 	return a.GetBoards(ctx)
 }
+
+func (a *Access) DeleteBoard(ctx context.Context, in *object.SubscriptionIO) (*BoardsOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	if e := a.CXO.UnsubscribeMaster(in.PubKey); e != nil {
+		return nil, e
+	}
+	return a.GetBoards(ctx)
+}

@@ -190,6 +190,13 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	mux.HandleFunc("/api/content/delete_board",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.DeleteBoard(r.Context(), &object.SubscriptionIO{
+				PubKeyStr: r.FormValue("public_key"),
+			}))
+		})
+
 	return nil
 }
 
