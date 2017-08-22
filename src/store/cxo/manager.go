@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/store/state/views/content_view"
 )
 
 const (
@@ -427,31 +428,55 @@ func (m *Manager) unsubscribeNode(bpk cipher.PubKey) {
 	<<< CONTENT >>>
 */
 
-func (m *Manager) GetBoards() {
+func (m *Manager) GetBoards() ([]object.Lockable, []object.Lockable, error) {
+	m.file.Lock()
+	defer m.file.Unlock()
 
+	masterOut := make([]object.Lockable, len(m.file.MasterSubs))
+	for i, sub := range m.file.MasterSubs {
+		bi, e := m.compiler.GetBoard(sub.PK)
+		if e != nil {
+			return nil, nil, e
+		}
+		bView, e := bi.Get(views.Content, content_view.Board)
+		if e != nil {
+			return nil, nil, e
+		}
+		masterOut[i] = bView
+	}
+
+	remoteOut := make([]object.Lockable, len(m.file.RemoteSubs))
+	for i, sub := range m.file.RemoteSubs {
+		bi, e := m.compiler.GetBoard(sub.PK)
+		if e != nil {
+			return nil, nil, e
+		}
+		bView, e := bi.Get(views.Content, content_view.Board)
+		if e != nil {
+			return nil, nil, e
+		}
+		remoteOut[i] = bView
+	}
+
+	return masterOut, remoteOut, nil
 }
 
-func (m *Manager) NewBoard(in *object.NewBoardIO) (*state.BoardInstance, error) {
+func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
 	if e := m.subscribeFileMaster(in.BoardPubKey, in.BoardSecKey); e != nil {
-		return nil, e
+		return e
 	}
 	m.subscribeNode(in.BoardPubKey)
 
 	if e := newBoard(m.node, in); e != nil {
-		m.l.Println("Failed here")
-		return nil, e
+		return e
 	}
 	if e := m.compiler.InitBoard(in.BoardPubKey, in.BoardSecKey); e != nil {
-		return nil, e
+		return e
 	}
-	bi, e := m.compiler.GetBoard(in.BoardPubKey)
-	if e != nil {
-		return nil, e
-	}
-	return bi, e
+	return nil
 }
 
 func newBoard(node *node.Node, in *object.NewBoardIO) error {

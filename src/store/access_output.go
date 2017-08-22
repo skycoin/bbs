@@ -64,3 +64,41 @@ func getSubscriptions(_ context.Context, ss []cipher.PubKey) *SubscriptionsOutpu
 	}
 	return out
 }
+
+type BoardsOutput struct {
+	MasterBoards []object.Lockable `json:"master_boards"`
+	RemoteBoards []object.Lockable `json:"remote_boards"`
+}
+
+func (o *BoardsOutput) Lock() {
+	for _, b := range o.MasterBoards {
+		if b != nil {
+			b.Lock()
+		}
+	}
+	for _, b := range o.RemoteBoards {
+		if b != nil {
+			b.Lock()
+		}
+	}
+}
+
+func (o *BoardsOutput) Unlock() {
+	for _, b := range o.MasterBoards {
+		if b != nil {
+			b.Unlock()
+		}
+	}
+	for _, b := range o.RemoteBoards {
+		if b != nil {
+			b.Unlock()
+		}
+	}
+}
+
+func getBoardsOutput(_ context.Context, m, r []object.Lockable) *BoardsOutput {
+	return &BoardsOutput{
+		MasterBoards: m,
+		RemoteBoards: r,
+	}
+}

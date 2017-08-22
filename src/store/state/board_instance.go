@@ -154,7 +154,7 @@ func (bi *BoardInstance) ChangesChan() chan *object.Changes {
 	return bi.changesChan
 }
 
-func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (interface{}, error) {
+func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (object.Lockable, error) {
 	bi.piMux.Lock()
 	defer bi.piMux.Unlock()
 

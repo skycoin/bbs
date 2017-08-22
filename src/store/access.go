@@ -5,8 +5,6 @@ import (
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/session"
-	"github.com/skycoin/bbs/src/store/state/views"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"time"
 )
 
@@ -131,17 +129,20 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *object.Subscription
 	<<< CONTENT >>>
 */
 
-func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (interface{}, error) {
+func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
+	m, r, e := a.CXO.GetBoards()
+	if e != nil {
+		return nil, e
+	}
+	return getBoardsOutput(ctx, m, r), nil
+}
+
+func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOutput, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
-	bi, e := a.CXO.NewBoard(in)
-	if e != nil {
+	if e := a.CXO.NewBoard(in); e != nil {
 		return nil, e
 	}
-	view, e := bi.Get(views.Content, content_view.Board)
-	if e != nil {
-		return nil, e
-	}
-	return view, nil
+	return a.GetBoards(ctx)
 }

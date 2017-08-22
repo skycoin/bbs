@@ -175,6 +175,11 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		<<< CONTENT >>>
 	*/
 
+	mux.HandleFunc("/api/content/get_boards",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetBoards(r.Context()))
+		})
+
 	mux.HandleFunc("/api/content/new_board",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewBoard(r.Context(), &object.NewBoardIO{
@@ -267,10 +272,6 @@ func sendStatus(w http.ResponseWriter, v interface{}, status int) error {
 	sendRaw(w, data, status)
 	return nil
 }
-
-//func sendRawOK(w http.ResponseWriter, data []byte) {
-//	sendRaw(w, data, http.StatusOK)
-//}
 
 func sendRaw(w http.ResponseWriter, data []byte, status int) {
 	w.Header().Set("Content-Type", "application/json")
