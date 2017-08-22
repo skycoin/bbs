@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"sync"
+	"fmt"
 )
 
 const (
@@ -298,39 +299,41 @@ func (dp *DiffPage) GetThreadOfIndex(i int, mux *sync.Mutex) (*Thread, error) {
 	if !ok {
 		return nil, elemExtErr(tElem)
 	}
+	t.R = tElem.Hash
 	return t, nil
 }
 
 func (dp *DiffPage) GetPostOfIndex(i int, mux *sync.Mutex) (*Post, error) {
 	defer dynamicLock(mux)()
-	pRef, e := dp.Posts.RefByIndex(i)
+	pElem, e := dp.Posts.RefByIndex(i)
 	if e != nil {
 		return nil, refByIndexErr(e, i, "DiffPage.Posts")
 	}
-	pVal, e := pRef.Value()
+	pVal, e := pElem.Value()
 	if e != nil {
-		return nil, elemValueErr(e, pRef)
+		return nil, elemValueErr(e, pElem)
 	}
 	p, ok := pVal.(*Post)
 	if !ok {
-		return nil, elemExtErr(pRef)
+		return nil, elemExtErr(pElem)
 	}
+	p.R = pElem.Hash
 	return p, nil
 }
 
 func (dp *DiffPage) GetVoteOfIndex(i int, mux *sync.Mutex) (*Vote, error) {
 	defer dynamicLock(mux)()
-	vRef, e := dp.Votes.RefByIndex(i)
+	vElem, e := dp.Votes.RefByIndex(i)
 	if e != nil {
 		return nil, refByIndexErr(e, i, "DiffPage.Votes")
 	}
-	vVal, e := vRef.Value()
+	vVal, e := vElem.Value()
 	if e != nil {
-		return nil, elemValueErr(e, vRef)
+		return nil, elemValueErr(e, vElem)
 	}
 	v, ok := vVal.(*Vote)
 	if !ok {
-		return nil, elemExtErr(vRef)
+		return nil, elemExtErr(vElem)
 	}
 	return v, nil
 }
@@ -364,7 +367,7 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 		newC.NewThreads = make([]*Thread, newC.ThreadCount-oldC.ThreadCount)
 		for i := oldC.ThreadCount; i < newC.ThreadCount; i++ {
 			var e error
-			newC.NewThreads[i], e = dp.GetThreadOfIndex(i, nil)
+			newC.NewThreads[i-oldC.ThreadCount], e = dp.GetThreadOfIndex(i, nil)
 			if e != nil {
 				return nil, e
 			}
@@ -374,7 +377,7 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 		newC.NewPosts = make([]*Post, newC.PostCount-oldC.PostCount)
 		for i := oldC.PostCount; i < newC.PostCount; i++ {
 			var e error
-			newC.NewPosts[i], e = dp.GetPostOfIndex(i, nil)
+			newC.NewPosts[i-oldC.PostCount], e = dp.GetPostOfIndex(i, nil)
 			if e != nil {
 				return nil, e
 			}
@@ -384,13 +387,16 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 		newC.NewVotes = make([]*Vote, newC.VoteCount-oldC.VoteCount)
 		for i := oldC.VoteCount; i < newC.VoteCount; i++ {
 			var e error
-			newC.NewVotes[i], e = dp.GetVoteOfIndex(i, nil)
+			newC.NewVotes[i-oldC.VoteCount], e = dp.GetVoteOfIndex(i, nil)
 			if e != nil {
 				return nil, e
 			}
 		}
 	}
-
+	fmt.Printf("CHANGES(total count): t(%d) p(%d) v(%d)\n",
+		newC.ThreadCount, newC.PostCount, newC.VoteCount)
+	fmt.Printf("CHANGES(added count): t(%d) p(%d) v(%d)\n\n",
+		len(newC.NewThreads), len(newC.NewPosts), len(newC.NewVotes))
 	return newC, nil
 }
 

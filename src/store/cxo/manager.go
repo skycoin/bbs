@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/bbs/src/store/state/views"
+	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/skyobject"
@@ -19,7 +20,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
 )
 
 const (
@@ -428,11 +428,15 @@ func (m *Manager) unsubscribeNode(bpk cipher.PubKey) {
 	<<< CONTENT >>>
 */
 
-func (m *Manager) GetBoards() ([]object.Lockable, []object.Lockable, error) {
+func (m *Manager) GetBoardInstance(bpk cipher.PubKey) (*state.BoardInstance, error) {
+	return m.compiler.GetBoard(bpk)
+}
+
+func (m *Manager) GetBoards() ([]interface{}, []interface{}, error) {
 	m.file.Lock()
 	defer m.file.Unlock()
 
-	masterOut := make([]object.Lockable, len(m.file.MasterSubs))
+	masterOut := make([]interface{}, len(m.file.MasterSubs))
 	for i, sub := range m.file.MasterSubs {
 		bi, e := m.compiler.GetBoard(sub.PK)
 		if e != nil {
@@ -445,7 +449,7 @@ func (m *Manager) GetBoards() ([]object.Lockable, []object.Lockable, error) {
 		masterOut[i] = bView
 	}
 
-	remoteOut := make([]object.Lockable, len(m.file.RemoteSubs))
+	remoteOut := make([]interface{}, len(m.file.RemoteSubs))
 	for i, sub := range m.file.RemoteSubs {
 		bi, e := m.compiler.GetBoard(sub.PK)
 		if e != nil {
@@ -479,6 +483,14 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	return nil
 }
 
+func (m *Manager) NewThread(thread *object.Thread) (uint64, error) {
+	bi, e := m.compiler.GetBoard(thread.OfBoard)
+	if e != nil {
+		return 0, e
+	}
+	return bi.NewThread(thread)
+}
+
 func newBoard(node *node.Node, in *object.NewBoardIO) error {
 	pack, e := node.Container().NewRoot(
 		in.BoardPubKey,
@@ -502,4 +514,3 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 	node.Publish(pack.Root())
 	return nil
 }
-

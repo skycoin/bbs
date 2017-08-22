@@ -8,7 +8,6 @@ import (
 )
 
 type BoardRep struct {
-	sync.Mutex
 	PubKey       string          `json:"public_key"`
 	Name         string          `json:"name"`
 	Body         string          `json:"body"`
@@ -18,9 +17,6 @@ type BoardRep struct {
 }
 
 func (r *BoardRep) Fill(pk cipher.PubKey, board *object.Board) *BoardRep {
-	r.Lock()
-	defer r.Unlock()
-
 	data := object.GetData(board)
 	r.PubKey = pk.Hex()
 	r.Name = data.Name
@@ -31,7 +27,6 @@ func (r *BoardRep) Fill(pk cipher.PubKey, board *object.Board) *BoardRep {
 }
 
 type ThreadRep struct {
-	sync.Mutex
 	Ref     string          `json:"ref"`
 	Name    string          `json:"name"`
 	Body    string          `json:"body"`
@@ -41,25 +36,19 @@ type ThreadRep struct {
 }
 
 func (r *ThreadRep) FillThread(thread *object.Thread, mux *sync.Mutex) *ThreadRep {
-	r.Lock()
-	defer r.Unlock()
-
 	data := object.GetData(thread)
 	r.Ref = thread.R.Hex()
 	r.Name = data.Name
 	r.Body = data.Body
 	r.Created = thread.Created
 	r.Creator = thread.Creator.Hex()
-	return nil
+	return r
 }
 
-func (r *ThreadRep) Fill(tPage *object.ThreadPage, mux *sync.Mutex) *ThreadRep {
-	r.Lock()
-	defer r.Unlock()
-
+func (r *ThreadRep) FillThreadPage(tPage *object.ThreadPage, mux *sync.Mutex) *ThreadRep {
 	t, e := tPage.GetThread(mux)
 	if e != nil {
-		log.Println("ThreadRep.Fill() Error:", e)
+		log.Println("ThreadRep.FillThreadPage() Error:", e)
 		return nil
 	}
 	data := object.GetData(t)
@@ -68,11 +57,10 @@ func (r *ThreadRep) Fill(tPage *object.ThreadPage, mux *sync.Mutex) *ThreadRep {
 	r.Body = data.Body
 	r.Created = t.Created
 	r.Creator = t.Creator.Hex()
-	return nil
+	return r
 }
 
 type PostRep struct {
-	sync.Mutex
 	Ref     string `json:"ref"`
 	Name    string `json:"name"`
 	Body    string `json:"body"`
@@ -81,14 +69,11 @@ type PostRep struct {
 }
 
 func (r *PostRep) Fill(post *object.Post, mux *sync.Mutex) *PostRep {
-	r.Lock()
-	defer r.Unlock()
-
 	data := object.GetData(post)
 	r.Ref = post.R.Hex()
 	r.Name = data.Name
 	r.Body = data.Body
 	r.Created = post.Created
 	r.Creator = post.Creator.Hex()
-	return nil
+	return r
 }

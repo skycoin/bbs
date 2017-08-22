@@ -339,6 +339,17 @@
 			"description": "Regarding submission of boards, threads, posts and votes.",
 			"item": [
 				{
+					"name": "Get Boards",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_boards",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Gets a list of all boards."
+					},
+					"response": []
+				},
+				{
 					"name": "New Board",
 					"request": {
 						"url": "http://127.0.0.1:7410/api/content/new_board",
@@ -349,19 +360,19 @@
 							"formdata": [
 								{
 									"key": "seed",
-									"value": "f",
+									"value": "b",
 									"description": "Seed to generate public/private key pair of the board.",
 									"type": "text"
 								},
 								{
 									"key": "name",
-									"value": "Test Board",
+									"value": "Test Board 2",
 									"description": "Name given to the board.",
 									"type": "text"
 								},
 								{
 									"key": "body",
-									"value": "This is a test board.",
+									"value": "This is a test board again.",
 									"description": "Description given to the board.",
 									"type": "text"
 								},
@@ -378,13 +389,77 @@
 					"response": []
 				},
 				{
-					"name": "Get Boards",
+					"name": "Delete Board",
 					"request": {
-						"url": "http://127.0.0.1:7410/api/content/get_boards",
-						"method": "GET",
+						"url": "http://127.0.0.1:7410/api/content/delete_board",
+						"method": "POST",
 						"header": [],
-						"body": {},
-						"description": "Gets a list of all boards."
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to delete.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Deletes a master board that's hosted on this node."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Board Page",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_board_page",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
+									"description": "Public key of board.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Gets a view of a board with threads."
+					},
+					"response": []
+				},
+				{
+					"name": "New Thread",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/new_thread",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
+									"description": "Public key of board to submit thread.",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Test Thread",
+									"description": "Name of thread to submit.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is a test thread.",
+									"description": "Text body of thread to submit.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Creates a new thread on board of public key. If node does not own the board, a request to the board's submission addresses is initiated via RPC."
 					},
 					"response": []
 				}

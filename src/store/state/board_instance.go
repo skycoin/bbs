@@ -89,6 +89,7 @@ func NewBoardInstance(
 
 // Update updates the board instance. (External trigger).
 func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
+	defer bi.ClearUpdateNeeded()
 	return bi.ChangePack(func(oldPI *PackInstance) (*PackInstance, error) {
 
 		if root == nil {
@@ -154,7 +155,7 @@ func (bi *BoardInstance) ChangesChan() chan *object.Changes {
 	return bi.changesChan
 }
 
-func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (object.Lockable, error) {
+func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (interface{}, error) {
 	bi.piMux.Lock()
 	defer bi.piMux.Unlock()
 
@@ -251,6 +252,7 @@ func (bi *BoardInstance) WaitSeq(ctx context.Context, goal uint64) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
+			bi.l.Printf("BoardInstance.WaitSeq() seq(%d) goal(%d)", bi.GetSeq(), goal)
 			if bi.GetSeq() >= goal {
 				return nil
 			}

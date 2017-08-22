@@ -12,6 +12,7 @@ const (
 	verifyIgn = "-"
 	verifySig = "sig"
 	verifyPK  = "upk"
+	verifyTS = "time"
 )
 
 var (
@@ -48,6 +49,8 @@ func Sign(obj interface{}, pk cipher.PubKey, sk cipher.SecKey) {
 				panic(ErrInvalidPublicKeyField)
 			}
 			field.Set(reflect.ValueOf(pk))
+		case verifyTS:
+			// TODO
 		default:
 			panic(errors.New("invalid tag"))
 		}
@@ -91,6 +94,8 @@ func Verify(obj interface{}, pks ...cipher.PubKey) error {
 					return ErrInvalidPublicKeyField
 				}
 				pk = field.Interface().(cipher.PubKey)
+			case verifyTS:
+				// TODO
 			}
 		}
 		// Verify signature.

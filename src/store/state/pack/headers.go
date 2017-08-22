@@ -1,7 +1,6 @@
 package pack
 
 import (
-	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/skyobject"
@@ -25,9 +24,6 @@ type Headers struct {
 }
 
 func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
-	if p == nil {
-		fmt.Println("PACK IS NIL!!!!!")
-	}
 	if len(p.Root().Refs) != object.RootChildrenCount {
 		return nil, boo.New(boo.InvalidRead,
 			"invalid root")

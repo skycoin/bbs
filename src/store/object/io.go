@@ -35,8 +35,28 @@ func (a *NewBoardIO) Process() error {
 
 // NewThread represents io required to create a new thread.
 type NewThreadIO struct {
-	Title string `bbs:"heading"`
-	Body  string `bbs:"body"`
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	Name           string        `bbs:"name"`
+	Body           string        `bbs:"body"`
+	Thread         *Thread
+}
+
+func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
+	if e := tag.Process(a); e != nil {
+		return e
+	}
+	a.Thread = &Thread{
+		OfBoard: a.BoardPubKey,
+		Created: time.Now().UnixNano(),
+		Creator: upk,
+	}
+	SetData(a.Thread, &ContentData{
+		Name: a.Name,
+		Body: a.Body,
+	})
+	tag.Sign(a.Thread, upk, usk)
+	return nil
 }
 
 // NewUser represents io required when creating a new user.
@@ -89,13 +109,13 @@ func (a *ConnectionIO) Process() error {
 }
 
 // Subscription represents a subscription input.
-type SubscriptionIO struct {
+type BoardIO struct {
 	PubKeyStr string        `bbs:"bpkStr"`
 	PubKey    cipher.PubKey `bbs:"bpk"`
 	SecKey    cipher.SecKey `bbs:"bsk"`
 }
 
-func (a *SubscriptionIO) Process() error {
+func (a *BoardIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}

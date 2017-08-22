@@ -1,7 +1,6 @@
 package views
 
 import (
-	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/skyobject"
@@ -17,7 +16,7 @@ type View interface {
 	Update(pack *skyobject.Pack, headers *pack.Headers, mux *sync.Mutex) error
 
 	// Get obtains information from the view.
-	Get(id string, a ...interface{}) (object.Lockable, error)
+	Get(id string, a ...interface{}) (interface{}, error)
 }
 
 type Adder func() (string, View)

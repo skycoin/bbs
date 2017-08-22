@@ -158,7 +158,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Creates a new subscription.
 	mux.HandleFunc("/api/subscriptions/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.NewSubscription(r.Context(), &object.SubscriptionIO{
+			send(w)(g.Access.NewSubscription(r.Context(), &object.BoardIO{
 				PubKeyStr: r.FormValue("public_key"),
 			}))
 		})
@@ -166,7 +166,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 	// Deletes a subscription.
 	mux.HandleFunc("/api/subscriptions/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.DeleteSubscription(r.Context(), &object.SubscriptionIO{
+			send(w)(g.Access.DeleteSubscription(r.Context(), &object.BoardIO{
 				PubKeyStr: r.FormValue("public_key"),
 			}))
 		})
@@ -192,8 +192,24 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 
 	mux.HandleFunc("/api/content/delete_board",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.DeleteBoard(r.Context(), &object.SubscriptionIO{
-				PubKeyStr: r.FormValue("public_key"),
+			send(w)(g.Access.DeleteBoard(r.Context(), &object.BoardIO{
+				PubKeyStr: r.FormValue("board_public_key"),
+			}))
+		})
+
+	mux.HandleFunc("/api/content/get_board_page",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetBoardPage(r.Context(), &object.BoardIO{
+				PubKeyStr: r.FormValue("board_public_key"),
+			}))
+		})
+
+	mux.HandleFunc("/api/content/new_thread",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.NewThread(r.Context(), &object.NewThreadIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				Name: r.FormValue("name"),
+				Body: r.FormValue("body"),
 			}))
 		})
 
@@ -218,10 +234,6 @@ type Response struct {
 
 func send(w http.ResponseWriter) func(v interface{}, e error) error {
 	return func(v interface{}, e error) error {
-		if lockable, ok := v.(object.Lockable); ok {
-			lockable.Lock()
-			defer lockable.Unlock()
-		}
 		if e != nil {
 			return sendErr(w, e)
 		}
