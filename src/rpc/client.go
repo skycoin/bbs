@@ -2,9 +2,9 @@ package rpc
 
 import (
 	"context"
-	"net/rpc"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object"
+	"net/rpc"
 )
 
 type Call func() (method string, in interface{})
@@ -23,13 +23,13 @@ func Send(ctx context.Context, addresses interface{}, req Call) (goal uint64, e 
 		select {
 		case <-call.Done:
 			return 0, call.Error
-		case <- ctx.Done():
+		case <-ctx.Done():
 			return 0, ctx.Err()
 		}
 	}
 
 	return 0, boo.New(boo.NotFound,
-		"not found bla bla bla")
+		"successful submission address not found")
 }
 
 func NewThread(thread *object.Thread) Call {

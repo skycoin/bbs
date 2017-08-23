@@ -101,7 +101,7 @@ func (c *Config) PostProcess() error {
 			if devMode {
 				c.HTTPGUIDir = filepath.Join(os.Getenv("GOPATH"), defaultDevStaticSubDir)
 			} else {
-				c.HTTPGUIDir = filepath.Join(os.Getenv("GOPATH"), defaultStaticSubDir)
+				c.HTTPGUIDir = defaultStaticSubDir
 			}
 		}
 	} else {
@@ -165,6 +165,10 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		CatchError(e, "failed to start RPC Server")
 		defer rpcServer.Close()
 
+		if c.Browser {
+			// TODO: Open browser.
+		}
+
 		<-quit
 		return nil
 	}
@@ -193,6 +197,10 @@ func CatchError(e error, msg string, args ...interface{}) {
 func main() {
 	config := NewDefaultConfig()
 	flags := []cli.Flag{
+		cli.BoolFlag{
+			Name:        "dev",
+			Destination: &devMode,
+		},
 		cli.BoolFlag{
 			Name:        "master",
 			Destination: &config.Master,
@@ -245,18 +253,6 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Skycoin BBS Node"
 	app.Usage = "Runs a Skycoin BBS Node"
-	app.Commands = cli.Commands{
-		{
-			Name:  "dev, d",
-			Usage: "Run node in development mode",
-			Flags: flags,
-			Before: cli.BeforeFunc(func(_ *cli.Context) error {
-				devMode = true
-				return nil
-			}),
-			Action: config.GenerateAction(),
-		},
-	}
 	app.Flags = flags
 	app.Action = config.GenerateAction()
 	if e := app.Run(os.Args); e != nil {

@@ -1,9 +1,9 @@
 package rpc
 
 import (
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 

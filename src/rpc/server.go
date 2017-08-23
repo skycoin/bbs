@@ -1,13 +1,13 @@
 package rpc
 
 import (
+	"github.com/skycoin/bbs/src/misc/inform"
 	"log"
 	"net"
 	"net/rpc"
-	"sync"
-	"github.com/skycoin/bbs/src/misc/inform"
 	"os"
 	"strconv"
+	"sync"
 )
 
 const (
@@ -31,7 +31,7 @@ type Server struct {
 func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 	server := &Server{
 		c:   config,
-		l: inform.NewLogger(true, os.Stdout, logPrefix),
+		l:   inform.NewLogger(true, os.Stdout, logPrefix),
 		rpc: rpc.NewServer(),
 		api: api,
 	}

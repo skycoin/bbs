@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	Board      = "Board"
-	BoardPage  = "BoardPage"
-	ThreadPage = "ThreadPage"
+	Board        = "Board"
+	BoardPage    = "BoardPage"
+	ThreadPage   = "ThreadPage"
 	SubAddresses = "SubAddresses"
 )
 
