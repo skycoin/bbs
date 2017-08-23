@@ -172,12 +172,39 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		})
 
 	/*
+		<<< ADMIN >>>
+	*/
+
+	mux.HandleFunc("/api/admin/board/new_submission_address",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.AddSubmissionAddress(r.Context(), &object.SubmissionIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				SubAddress:     r.FormValue("address"),
+			}))
+		})
+
+	mux.HandleFunc("/api/admin/board/delete_submission_address",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.RemoveSubmissionAddress(r.Context(), &object.SubmissionIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				SubAddress:     r.FormValue("address"),
+			}))
+		})
+
+	/*
 		<<< CONTENT >>>
 	*/
 
 	mux.HandleFunc("/api/content/get_boards",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetBoards(r.Context()))
+		})
+
+	mux.HandleFunc("/api/content/get_board",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetBoard(r.Context(), &object.BoardIO{
+				PubKeyStr: r.FormValue("board_public_key"),
+			}))
 		})
 
 	mux.HandleFunc("/api/content/new_board",

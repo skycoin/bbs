@@ -65,6 +65,16 @@ func getSubscriptions(_ context.Context, ss []cipher.PubKey) *SubscriptionsOutpu
 	return out
 }
 
+type SubmissionOutput struct {
+	SubAddresses []string `json:"submission_addresses"`
+}
+
+func getSubmissionOutput(addresses []string) *SubmissionOutput {
+	return &SubmissionOutput{
+		SubAddresses: addresses,
+	}
+}
+
 type BoardsOutput struct {
 	MasterBoards []interface{} `json:"master_boards"`
 	RemoteBoards []interface{} `json:"remote_boards"`
@@ -74,5 +84,15 @@ func getBoardsOutput(_ context.Context, m, r []interface{}) *BoardsOutput {
 	return &BoardsOutput{
 		MasterBoards: m,
 		RemoteBoards: r,
+	}
+}
+
+type BoardOutput struct {
+	Board interface{}
+}
+
+func getBoardOutput(v interface{}) *BoardOutput {
+	return &BoardOutput{
+		Board: v,
 	}
 }

@@ -350,6 +350,27 @@
 					"response": []
 				},
 				{
+					"name": "Get Board",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_board",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Board's public key.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Get's a single board's info view. Does not list threads."
+					},
+					"response": []
+				},
+				{
 					"name": "New Board",
 					"request": {
 						"url": "http://127.0.0.1:7410/api/content/new_board",
@@ -360,19 +381,19 @@
 							"formdata": [
 								{
 									"key": "seed",
-									"value": "b",
+									"value": "a",
 									"description": "Seed to generate public/private key pair of the board.",
 									"type": "text"
 								},
 								{
 									"key": "name",
-									"value": "Test Board 2",
+									"value": "Test Board",
 									"description": "Name given to the board.",
 									"type": "text"
 								},
 								{
 									"key": "body",
-									"value": "This is a test board again.",
+									"value": "This is a test board.",
 									"description": "Description given to the board.",
 									"type": "text"
 								},
@@ -532,6 +553,66 @@
 							]
 						},
 						"description": "Add a new post to specified board and thread. (Can also be a reply to another post)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"description": "Folder for admin actions.",
+			"item": [
+				{
+					"name": "Add Submission Address",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/admin/board/new_submission_address",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to add submission address to.",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "[::]:6421",
+									"description": "Submission address to add.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Adds a submission address to specified board."
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Submission Address",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/admin/board/delete_submission_address",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to remove submission address to.",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "[::]:6421",
+									"description": "Submission address to remove.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Removes a submission address from specified board."
 					},
 					"response": []
 				}

@@ -127,7 +127,7 @@ func (a *LoginIO) Process() error {
 	return nil
 }
 
-// Connection represents input/output required when connection/disconnecting from address.
+// ConnectionIO represents input/output required when connection/disconnecting from address.
 type ConnectionIO struct {
 	Address string `bbs:"address"`
 }
@@ -137,6 +137,17 @@ func (a *ConnectionIO) Process() error {
 		return e
 	}
 	return nil
+}
+
+// SubmissionIO represents submission address input/output.
+type SubmissionIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	SubAddress     string        `bbs:"address"`
+}
+
+func (a *SubmissionIO) Process() error {
+	return tag.Process(a)
 }
 
 // BoardIO represents a subscription input.

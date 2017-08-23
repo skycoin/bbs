@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
@@ -129,7 +130,7 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *object.BoardIO) (*S
 }
 
 /*
-	<<< CONTENT >>>
+	<<< CONTENT : ADMIN >>>
 */
 
 func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
@@ -159,6 +160,110 @@ func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOu
 	}
 	return a.GetBoards(ctx)
 }
+
+func (a *Access) GetBoard(ctx context.Context, in *object.BoardIO) (*BoardOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.PubKey)
+	if e != nil {
+		return nil, e
+	}
+	board, e := bi.Get(views.Content, content_view.Board)
+	if e != nil {
+		return nil, e
+	}
+	return getBoardOutput(board), nil
+}
+
+func (a *Access) AddSubmissionAddress(ctx context.Context, in *object.SubmissionIO) (*BoardOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	if !bi.IsMaster() {
+		return nil, boo.Newf(boo.NotMaster,
+			"this node does not own board of public key '%s'",
+			in.BoardPubKeyStr)
+	}
+	goal, e := bi.BoardAction(func(board *object.Board) (bool, error) {
+		data := object.GetData(board)
+		for _, address := range data.SubAddresses {
+			if address == in.SubAddress {
+				return false, boo.Newf(boo.AlreadyExists,
+					"submission address '%s' already exists in board of public key '%s'",
+					in.SubAddress, board.R.Hex())
+			}
+		}
+		data.SubAddresses = append(
+			data.SubAddresses,
+			in.SubAddress,
+		)
+		object.SetData(board, data)
+		return true, nil
+	})
+	if e != nil {
+		return nil, e
+	}
+	if e := bi.WaitSeq(ctx, goal); e != nil {
+		return nil, e
+	}
+	board, e := bi.Get(views.Content, content_view.Board)
+	if e != nil {
+		return nil, e
+	}
+	return getBoardOutput(board), nil
+}
+
+func (a *Access) RemoveSubmissionAddress(ctx context.Context, in *object.SubmissionIO) (*BoardOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	if !bi.IsMaster() {
+		return nil, boo.Newf(boo.NotMaster,
+			"this node does not own board of public key '%s'",
+			in.BoardPubKeyStr)
+	}
+	goal, e := bi.BoardAction(func(board *object.Board) (bool, error) {
+		data := object.GetData(board)
+		for i, address := range data.SubAddresses {
+			if address == in.SubAddress {
+				// Deletion.
+				data.SubAddresses = append(
+					data.SubAddresses[:i],
+					data.SubAddresses[i+1:]...,
+				)
+				object.SetData(board, data)
+				return true, nil
+			}
+		}
+		return false, boo.Newf(boo.NotFound,
+			"submission address '%s' not found in board with public key '%s'",
+			in.SubAddress, in.BoardPubKeyStr)
+	})
+	if e != nil {
+		return nil, e
+	}
+	if e := bi.WaitSeq(ctx, goal); e != nil {
+		return nil, e
+	}
+	board, e := bi.Get(views.Content, content_view.Board)
+	if e != nil {
+		return nil, e
+	}
+	return getBoardOutput(board), nil
+}
+
+/*
+	<<< CONTENT >>>
+*/
 
 func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interface{}, error) {
 	if e := in.Process(); e != nil {
