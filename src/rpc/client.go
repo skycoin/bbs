@@ -12,7 +12,8 @@ type Call func() (method string, in interface{})
 func Send(ctx context.Context, addresses interface{}, req Call) (goal uint64, e error) {
 	for _, address := range addresses.([]string) {
 
-		client, e := rpc.Dial("tcp", address)
+		var client *rpc.Client
+		client, e = rpc.Dial("tcp", address)
 		if e != nil {
 			continue
 		}
@@ -22,10 +23,13 @@ func Send(ctx context.Context, addresses interface{}, req Call) (goal uint64, e 
 
 		select {
 		case <-call.Done:
-			return 0, call.Error
+			e = call.Error
+
 		case <-ctx.Done():
-			return 0, ctx.Err()
+			e = ctx.Err()
 		}
+
+		return
 	}
 
 	return 0, boo.New(boo.NotFound,

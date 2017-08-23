@@ -352,9 +352,9 @@ func (m *Manager) SubscribeRemote(bpk cipher.PubKey) error {
 		return e
 	}
 	m.subscribeNode(bpk)
-	if e := m.compiler.InitBoard(bpk); e != nil {
-		return e
-	}
+	//if e := m.compiler.InitBoard(bpk); e != nil {
+	//	return e
+	//}
 	return nil
 }
 

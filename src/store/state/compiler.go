@@ -99,15 +99,20 @@ func (c *Compiler) doMasterUpdate() {
 }
 
 func (c *Compiler) doRemoteUpdate(trigger RemoteUpdate) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
 	n, root := trigger()
-	bi, ok := c.boards[root.Pub]
-	if !ok {
-		c.l.Println("Received root that doesn't exist in compiler:",
-			root.Pub.Hex())
-		return
+
+	bi, e := c.GetBoard(root.Pub)
+	if e != nil {
+		c.l.Println("Received root error:", e)
+		if e := c.InitBoard(root.Pub); e != nil {
+			c.l.Println("Init board error:", e)
+			return
+		}
+		bi, e = c.GetBoard(root.Pub)
+		if e != nil {
+			c.l.Println("Failed to obtain board after init:", e)
+			return
+		}
 	}
 
 	if e := bi.Update(n, root); e != nil {

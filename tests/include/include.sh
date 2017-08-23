@@ -92,10 +92,22 @@ Logout() {
 }
 
 NewBoard() {
-    if [[ $# -ne 5 ]] ; then
-        echo "5 arguments required"
+    if [[ $# -ne 3 ]] ; then
+        echo "3 arguments required"
         exit 1
     fi
+
+    PORT=$1 ; NAME=$2 ; PORT_SUB=$3
+
+    pv "NODE '${PORT}': NEW BOARD '${NAME}'"
+
+    curl \
+        -X POST \
+        -F "seed=${NAME}" \
+        -F "name=Board ${NAME}" \
+        -F "body=A board generated with seed '${NAME}'." \
+        -F "submission_addresses=[::]:${PORT_SUB}" \
+        -sS "http://127.0.0.1:${PORT}/api/content/new_board" | jq
 
     # TODO: FINISH
 }
