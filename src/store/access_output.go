@@ -88,11 +88,21 @@ func getBoardsOutput(_ context.Context, m, r []interface{}) *BoardsOutput {
 }
 
 type BoardOutput struct {
-	Board interface{}
+	Board interface{} `json:"board"`
 }
 
 func getBoardOutput(v interface{}) *BoardOutput {
 	return &BoardOutput{
 		Board: v,
+	}
+}
+
+type FollowPageOutput struct {
+	FollowPage interface{} `json:"follow_page"`
+}
+
+func getFollowPageOutput(v interface{}) *FollowPageOutput {
+	return &FollowPageOutput{
+		FollowPage: v,
 	}
 }

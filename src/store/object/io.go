@@ -260,3 +260,14 @@ func (a *PostVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	tag.Sign(a.Vote, upk, usk)
 	return nil
 }
+
+type UserIO struct {
+	BoardPubKeyStr string        `bbs:"bpkStr"`
+	BoardPubKey    cipher.PubKey `bbs:"bpk"`
+	UserPubKeyStr  string        `bbs:"upkStr"`
+	UserPubKey     cipher.PubKey `bbs:"upk"`
+}
+
+func (a *UserIO) Process() error {
+	return tag.Process(a)
+}

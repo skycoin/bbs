@@ -136,12 +136,12 @@ func process(tm tMap) error {
 	// Vote tag.
 	if tagStr, has := tm[valTagStr]; has {
 		tag := tagStr.String()
-		switch tag {
-		case "", "spam":
-		default:
-			return boo.New(boo.InvalidInput,
-				"invalid vote tag input")
-		}
+		//switch tag {
+		//case "", "spam":
+		//default:
+		//	return boo.New(boo.InvalidInput,
+		//		"invalid vote tag input")
+		//}
 		tm.set(valTag, []byte(tag))
 	}
 	// User seed.

@@ -62,6 +62,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	manager.compiler = state.NewCompiler(
 		compilerConfig, manager.node,
 		views.AddContent(),
+		views.AddFollow(),
 	)
 
 	manager.file.Lock()

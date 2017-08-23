@@ -9,6 +9,7 @@ import (
 	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
+	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"time"
 )
 
@@ -357,6 +358,21 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	<<< VOTES >>>
 */
 
+func (a *Access) GetFollowPage(ctx context.Context, in *object.UserIO) (interface{}, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	if e != nil {
+		return nil, e
+	}
+	out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKey)
+	if e != nil {
+		return nil, e
+	}
+	return getFollowPageOutput(out), nil
+}
+
 func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface{}, error) {
 	uf, e := a.Session.GetCurrentFile()
 	if e != nil {
@@ -387,8 +403,11 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	// TODO: Complete.
-	return nil, nil
+	out, e := bi.Get(views.Follow, follow_view.FollowPage, uf.User.PubKey)
+	if e != nil {
+		return nil, e
+	}
+	return getFollowPageOutput(out), nil
 }
 
 func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (interface{}, error) {

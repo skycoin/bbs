@@ -50,8 +50,8 @@ type FollowRepView struct {
 func (r *FollowRep) View() *FollowRepView {
 	view := &FollowRepView{
 		UserPubKey: r.UserPubKey,
-		Following: make([]*UserRep, len(r.Following)),
-		Avoiding: make([]*UserRep, len(r.Avoiding)),
+		Following:  make([]*UserRep, len(r.Following)),
+		Avoiding:   make([]*UserRep, len(r.Avoiding)),
 	}
 	i := 0
 	for _, u := range r.Following {

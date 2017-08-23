@@ -1,12 +1,12 @@
 package follow_view
 
 import (
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
-	"github.com/skycoin/bbs/src/misc/boo"
 )
 
 type FollowView struct {
@@ -89,4 +89,3 @@ func (v *FollowView) Get(id string, a ...interface{}) (interface{}, error) {
 			"invalid get request 's' (%v)", id, a)
 	}
 }
-

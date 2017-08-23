@@ -3,6 +3,7 @@ package views
 import (
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
+	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"github.com/skycoin/cxo/skyobject"
 	"sync"
 )
@@ -28,10 +29,17 @@ func Add(viewsMap map[string]View, add Adder) {
 
 const (
 	Content = "content"
+	Follow  = "follow"
 )
 
 func AddContent() Adder {
 	return func() (string, View) {
 		return Content, new(content_view.ContentView)
+	}
+}
+
+func AddFollow() Adder {
+	return func() (string, View) {
+		return Follow, new(follow_view.FollowView)
 	}
 }

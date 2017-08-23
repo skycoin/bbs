@@ -263,6 +263,14 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		<<< VOTES >>>
 	*/
 
+	mux.HandleFunc("/api/votes/get_follow_page",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetFollowPage(r.Context(), &object.UserIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				UserPubKeyStr:  r.FormValue("user_public_key"),
+			}))
+		})
+
 	mux.HandleFunc("/api/votes/vote_user",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.VoteUser(r.Context(), &object.UserVoteIO{
