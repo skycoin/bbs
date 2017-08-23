@@ -127,20 +127,34 @@ func (m *Manager) Login(in *object.LoginIO) (*object.UserFile, error) {
 	if m.file != nil {
 		return nil, ErrAlreadyLoggedIn
 	}
-	m.file = new(object.UserFile)
 
-	data, e := ioutil.ReadFile(m.filePath(in.Alias))
-	if e != nil {
-		if os.IsNotExist(e) {
-			return nil, boo.WrapType(e, boo.NotFound,
-				"user not found")
+	if *m.c.MemoryMode {
+		upk, usk := cipher.GenerateDeterministicKeyPair([]byte(in.Alias))
+		m.file = &object.UserFile{
+			User: object.User{
+				Alias: in.Alias,
+				PubKey: upk,
+				SecKey: usk,
+			},
+			Seed: in.Alias,
 		}
-		return nil, boo.WrapType(e, boo.InvalidRead,
-			"failed to read user file")
-	}
-	if e := encoder.DeserializeRaw(data, m.file); e != nil {
-		return nil, boo.WrapType(e, boo.InvalidRead,
-			"corrupt user file")
+
+	} else {
+		m.file = new(object.UserFile)
+
+		data, e := ioutil.ReadFile(m.filePath(in.Alias))
+		if e != nil {
+			if os.IsNotExist(e) {
+				return nil, boo.WrapType(e, boo.NotFound,
+					"user not found")
+			}
+			return nil, boo.WrapType(e, boo.InvalidRead,
+				"failed to read user file")
+		}
+		if e := encoder.DeserializeRaw(data, m.file); e != nil {
+			return nil, boo.WrapType(e, boo.InvalidRead,
+				"corrupt user file")
+		}
 	}
 	return &(*m.file), nil
 }

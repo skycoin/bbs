@@ -46,21 +46,23 @@ type Manager struct {
 	node     *node.Node
 	compiler *state.Compiler
 	wg       sync.WaitGroup
+	trigger  chan state.RemoteUpdate
 	quit     chan struct{}
 }
 
 func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Manager {
 	manager := &Manager{
-		c:    config,
-		l:    inform.NewLogger(true, os.Stdout, LogPrefix),
-		file: new(object.CXOFile),
-		quit: make(chan struct{}),
+		c:       config,
+		l:       inform.NewLogger(true, os.Stdout, LogPrefix),
+		file:    new(object.CXOFile),
+		trigger: make(chan state.RemoteUpdate, 10),
+		quit:    make(chan struct{}),
 	}
 	if e := manager.setup(); e != nil {
 		manager.l.Panicln("failed to start CXO manager:", e)
 	}
 	manager.compiler = state.NewCompiler(
-		compilerConfig, manager.node,
+		compilerConfig, manager.trigger, manager.node,
 		views.AddContent(),
 		views.AddFollow(),
 	)
@@ -128,7 +130,12 @@ func (m *Manager) setup() error {
 	fmt.Println("[::]:" + strconv.Itoa(*m.c.CXORPCPort))
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
 	c.OnRootFilled = func(n *node.Node, c *gnet.Conn, root *skyobject.Root) {
-		// TODO -> Call back.
+		select {
+		case m.trigger <- state.RemoteUpdate(func() (*node.Node, *skyobject.Root) {
+			return n, root
+		}):
+		default:
+		}
 	}
 	c.OnCreateConnection = func(n *node.Node, c *gnet.Conn) {
 		go func() {

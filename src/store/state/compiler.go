@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"os"
@@ -15,6 +16,8 @@ import (
 const (
 	LogPrefix = "COMPILER"
 )
+
+type RemoteUpdate func() (*node.Node, *skyobject.Root)
 
 type CompilerConfig struct {
 	UpdateInterval *int // In seconds.
@@ -30,18 +33,20 @@ type Compiler struct {
 	boards map[cipher.PubKey]*BoardInstance
 	adders []views.Adder
 
-	quit chan struct{}
-	wg   sync.WaitGroup
+	trigger chan RemoteUpdate
+	quit    chan struct{}
+	wg      sync.WaitGroup
 }
 
-func NewCompiler(config *CompilerConfig, node *node.Node, adders ...views.Adder) *Compiler {
+func NewCompiler(config *CompilerConfig, trigger chan RemoteUpdate, node *node.Node, adders ...views.Adder) *Compiler {
 	compiler := &Compiler{
-		c:      config,
-		l:      inform.NewLogger(true, os.Stdout, LogPrefix),
-		node:   node,
-		boards: make(map[cipher.PubKey]*BoardInstance),
-		adders: adders,
-		quit:   make(chan struct{}),
+		c:       config,
+		l:       inform.NewLogger(true, os.Stdout, LogPrefix),
+		node:    node,
+		boards:  make(map[cipher.PubKey]*BoardInstance),
+		adders:  adders,
+		trigger: trigger,
+		quit:    make(chan struct{}),
 	}
 	go compiler.updateLoop()
 	return compiler
@@ -68,25 +73,46 @@ func (c *Compiler) updateLoop() {
 
 	for {
 		select {
+		case <-ticker.C:
+			c.doMasterUpdate()
+
+		case trigger := <-c.trigger:
+			c.doRemoteUpdate(trigger)
+
 		case <-c.quit:
 			return
-
-		case <-ticker.C:
-			c.doUpdate()
 		}
 	}
 }
 
-func (c *Compiler) doUpdate() {
+func (c *Compiler) doMasterUpdate() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	for _, bi := range c.boards {
-		if bi.c.Master && bi.UpdateNeeded() {
+		if bi.IsMaster() && bi.UpdateNeeded() {
 			if e := bi.Update(c.node, nil); e != nil {
 				c.l.Println("Error on update instance:", e)
 			}
 		}
+	}
+}
+
+func (c *Compiler) doRemoteUpdate(trigger RemoteUpdate) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	n, root := trigger()
+	bi, ok := c.boards[root.Pub]
+	if !ok {
+		c.l.Println("Received root that doesn't exist in compiler:",
+			root.Pub.Hex())
+		return
+	}
+
+	if e := bi.Update(n, root); e != nil {
+		c.l.Println("Update board instance error:",
+			e.Error())
 	}
 }
 
