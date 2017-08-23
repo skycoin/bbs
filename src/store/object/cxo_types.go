@@ -467,6 +467,17 @@ func (up *UsersPage) AddUserActivity(uapHash cipher.SHA256, v interface{}) error
 	return nil
 }
 
+func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivityPage) error, mux *sync.Mutex) error {
+	defer dynamicLock(mux)()
+	return up.Users.Ascend(func(i int, uapElem *skyobject.RefsElem) error {
+		uap, e := GetUserActivityPage(uapElem, nil)
+		if e != nil {
+			return e
+		}
+		return action(i, uap)
+	})
+}
+
 /*
 	<<< USER ACTIVITY PAGE >>>
 */
@@ -487,6 +498,17 @@ func GetUserActivityPage(uapElem *skyobject.RefsElem, mux *sync.Mutex) (*UserAct
 		return nil, elemExtErr(uapElem)
 	}
 	return uap, nil
+}
+
+func (uap *UserActivityPage) RangeVoteActions(action func(i int, vote *Vote) error, mux *sync.Mutex) error {
+	defer dynamicLock(mux)()
+	return uap.VoteActions.Ascend(func(i int, vElem *skyobject.RefsElem) error {
+		vote, e := GetVote(vElem, nil)
+		if e != nil {
+			return e
+		}
+		return action(i, vote)
+	})
 }
 
 /*

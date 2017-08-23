@@ -175,42 +175,6 @@ func checkVote(vote *object.Vote, h *pack.Headers) error {
 	return nil
 }
 
-func (bi *BoardInstance) NewSubmissionAddress(address string) (uint64, error) {
-	var goalSeq uint64
-	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
-
-		// Set goal seq.
-		goalSeq = p.Root().Seq + 1
-
-		// Get root children.
-		pages, e := object.GetPages(p, nil, true, false, false)
-		if e != nil {
-			return e
-		}
-
-		// Get board.
-		board, e := pages.BoardPage.GetBoard(nil)
-		if e != nil {
-			return e
-		}
-		data := object.GetData(board)
-
-		// Check that submission address doesn't exist.
-		for _, sa := range data.SubAddresses {
-			if sa == address {
-				return boo.Newf(boo.AlreadyExists,
-					"submission address '%s' already exists",
-					address)
-			}
-		}
-
-		// Append submission address.
-
-		return nil
-	})
-	return goalSeq, e
-}
-
 type BoardAction func(board *object.Board) (bool, error)
 
 func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {

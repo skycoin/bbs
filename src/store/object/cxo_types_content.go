@@ -116,6 +116,19 @@ type Vote struct {
 	Sig     cipher.Sig    `verify:"sig"`
 }
 
+func GetVote(vElem *skyobject.RefsElem, mux *sync.Mutex) (*Vote, error) {
+	defer dynamicLock(mux)()
+	vVal, e := vElem.Value()
+	if e != nil {
+		return nil, elemValueErr(e, vElem)
+	}
+	v, ok := vVal.(*Vote)
+	if !ok {
+		return nil, elemExtErr(vElem)
+	}
+	return v, nil
+}
+
 func (v Vote) Verify() error { return tag.Verify(&v) }
 
 func (v *Vote) GetType() int {
