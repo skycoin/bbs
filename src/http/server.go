@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/cxo"
 	"io/ioutil"
 	"log"
 	"net"
@@ -12,7 +13,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"github.com/skycoin/bbs/src/store/cxo"
 )
 
 const (

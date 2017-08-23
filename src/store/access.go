@@ -8,6 +8,7 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"time"
+	"github.com/skycoin/bbs/src/rpc"
 )
 
 type Access struct {
@@ -188,7 +189,14 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 			return nil, e
 		}
 	} else {
-		// TODO: Via RPC.
+		sa, e := bi.Get(views.Content, content_view.SubAddresses)
+		if e != nil {
+			return nil, e
+		}
+		goal, e = rpc.Send(ctx, sa, rpc.NewThread(in.Thread))
+		if e != nil {
+			return nil, e
+		}
 	}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
@@ -225,7 +233,14 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 			return nil, e
 		}
 	} else {
-		// TODO: Via RPC.
+		sa, e := bi.Get(views.Content, content_view.SubAddresses)
+		if e != nil {
+			return nil, e
+		}
+		goal, e = rpc.Send(ctx, sa, rpc.NewPost(in.Post))
+		if e != nil {
+			return nil, e
+		}
 	}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
@@ -255,7 +270,14 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 			return nil, e
 		}
 	} else {
-		// TODO: Via RPC.
+		sa, e := bi.Get(views.Content, content_view.SubAddresses)
+		if e != nil {
+			return nil, e
+		}
+		goal, e = rpc.Send(ctx, sa, rpc.NewVote(in.Vote))
+		if e != nil {
+			return nil, e
+		}
 	}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
@@ -282,7 +304,14 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 			return nil, e
 		}
 	} else {
-		// TODO: Via RPC.
+		sa, e := bi.Get(views.Content, content_view.SubAddresses)
+		if e != nil {
+			return nil, e
+		}
+		goal, e = rpc.Send(ctx, sa, rpc.NewVote(in.Vote))
+		if e != nil {
+			return nil, e
+		}
 	}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
@@ -309,7 +338,14 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 			return nil, e
 		}
 	} else {
-		// TODO: Via RPC.
+		sa, e := bi.Get(views.Content, content_view.SubAddresses)
+		if e != nil {
+			return nil, e
+		}
+		goal, e = rpc.Send(ctx, sa, rpc.NewVote(in.Vote))
+		if e != nil {
+			return nil, e
+		}
 	}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e

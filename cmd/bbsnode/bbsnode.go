@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/http"
+	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/session"
@@ -149,11 +150,20 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 				Quit: quit,
 			},
 		)
-		CatchError(e, "failed to create HTTP Server")
+		CatchError(e, "failed to start HTTP Server")
 		defer httpServer.Close()
 
-		// TODO: RPC Server.
-		httpServer.CXO()
+		rpcServer, e := rpc.NewServer(
+			&rpc.ServerConfig{
+				Port:   &c.SubPort,
+				Enable: &c.Master,
+			},
+			&rpc.Gateway{
+				CXO: httpServer.CXO(),
+			},
+		)
+		CatchError(e, "failed to start RPC Server")
+		defer rpcServer.Close()
 
 		<-quit
 		return nil
