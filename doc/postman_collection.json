@@ -142,21 +142,22 @@
 							"formdata": [
 								{
 									"key": "seed",
-									"value": "this is a secret seed",
+									"value": "c",
 									"description": "Used for generating public/private key pair for user.",
 									"type": "text"
 								},
 								{
 									"key": "alias",
-									"value": "superman222",
+									"value": "superman333",
 									"description": "A unique identifier for the user.",
 									"type": "text"
 								},
 								{
-									"key": "password",
-									"value": "securepass",
-									"description": "Password to encrypt/decrypt user file.",
-									"type": "text"
+									"key": "",
+									"value": "",
+									"description": "",
+									"type": "text",
+									"disabled": true
 								}
 							]
 						},
@@ -196,7 +197,7 @@
 							"formdata": [
 								{
 									"key": "alias",
-									"value": "superman222",
+									"value": "superman111",
 									"description": "User's alias to login.",
 									"type": "text"
 								},
@@ -322,7 +323,7 @@
 							"formdata": [
 								{
 									"key": "seed",
-									"value": "",
+									"value": "c",
 									"description": "Seed to generate key pair with. If left empty, a random key pair will be generated.",
 									"type": "text"
 								}
@@ -441,7 +442,7 @@
 							"formdata": [
 								{
 									"key": "board_public_key",
-									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
 									"description": "Public key of board.",
 									"type": "text"
 								}
@@ -462,7 +463,7 @@
 							"formdata": [
 								{
 									"key": "board_public_key",
-									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
 									"description": "Public key of board to submit thread.",
 									"type": "text"
 								},
@@ -613,6 +614,78 @@
 							]
 						},
 						"description": "Removes a submission address from specified board."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Votes",
+			"description": "Regards adding and viewing votes.",
+			"item": [
+				{
+					"name": "Vote User",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/votes/vote_user",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to submit vote for user.",
+									"type": "text"
+								},
+								{
+									"key": "user_public_key",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+									"description": "Public key of user to vote in.",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "-1",
+									"description": "Mode of vote (+1 : follow) (0 : neutral) (-1 : avoid).",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "awesome",
+									"description": "(Optional) tag field for some optional text.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Records a vote for a user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Follow Page",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/votes/get_follow_page",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to extract user's follow page from.",
+									"type": "text"
+								},
+								{
+									"key": "user_public_key",
+									"value": "038614395bdbd7e443fe6baabc95f68d548b0038a9ddce06191249bef75000617f",
+									"description": "User's public key to extract follow page from.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Gets a view that represents a user's follow/avoid page of other users."
 					},
 					"response": []
 				}
