@@ -10,6 +10,7 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
+	"github.com/skycoin/skycoin/src/cipher"
 	"time"
 )
 
@@ -267,6 +268,10 @@ func (a *Access) RemoveSubmissionAddress(ctx context.Context, in *object.Submiss
 */
 
 func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interface{}, error) {
+	var perspective cipher.PubKey
+	if uf, _ := a.Session.GetCurrentFile(); uf != nil {
+		perspective = uf.User.PubKey
+	}
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -274,7 +279,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interfac
 	if e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.BoardPage)
+	return bi.Get(views.Content, content_view.BoardPage, perspective)
 }
 
 func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interface{}, error) {
@@ -307,10 +312,14 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.BoardPage)
+	return bi.Get(views.Content, content_view.BoardPage, uf.User.PubKey)
 }
 
 func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interface{}, error) {
+	var perspective cipher.PubKey
+	if uf, _ := a.Session.GetCurrentFile(); uf != nil {
+		perspective = uf.User.PubKey
+	}
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -318,7 +327,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interf
 	if e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ThreadPage, in.ThreadRef)
+	return bi.Get(views.Content, content_view.ThreadPage, perspective, in.ThreadRef)
 }
 
 func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}, error) {
@@ -351,7 +360,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ThreadPage, in.ThreadRef)
+	return bi.Get(views.Content, content_view.ThreadPage, uf.User.PubKey, in.ThreadRef)
 }
 
 /*
@@ -440,8 +449,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	// TODO: Complete.
-	return nil, nil
+	return bi.Get(views.Content, content_view.ContentVotes, uf.User.PubKey, in.ThreadRef)
 }
 
 func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface{}, error) {
@@ -474,6 +482,5 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	// TODO: Complete.
-	return nil, nil
+	return bi.Get(views.Content, content_view.ContentVotes, uf.User.PubKey, in.PostRef)
 }

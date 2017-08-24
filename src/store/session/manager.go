@@ -132,7 +132,7 @@ func (m *Manager) Login(in *object.LoginIO) (*object.UserFile, error) {
 		upk, usk := cipher.GenerateDeterministicKeyPair([]byte(in.Alias))
 		m.file = &object.UserFile{
 			User: object.User{
-				Alias: in.Alias,
+				Alias:  in.Alias,
 				PubKey: upk,
 				SecKey: usk,
 			},

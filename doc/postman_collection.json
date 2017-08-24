@@ -33,7 +33,7 @@
 							"formdata": [
 								{
 									"key": "address",
-									"value": "[::]:9998",
+									"value": "[::]:6300",
 									"description": "Address of external node to connet to.",
 									"type": "text"
 								}
@@ -54,7 +54,7 @@
 							"formdata": [
 								{
 									"key": "address",
-									"value": "[::]:9998",
+									"value": "[::]:5100",
 									"description": "Address of remote node to disconnect from.",
 									"type": "text"
 								}
@@ -142,13 +142,13 @@
 							"formdata": [
 								{
 									"key": "seed",
-									"value": "c",
+									"value": "d",
 									"description": "Used for generating public/private key pair for user.",
 									"type": "text"
 								},
 								{
 									"key": "alias",
-									"value": "superman333",
+									"value": "superman444",
 									"description": "A unique identifier for the user.",
 									"type": "text"
 								},
@@ -197,7 +197,7 @@
 							"formdata": [
 								{
 									"key": "alias",
-									"value": "superman111",
+									"value": "superman444",
 									"description": "User's alias to login.",
 									"type": "text"
 								},
@@ -264,7 +264,7 @@
 							"formdata": [
 								{
 									"key": "public_key",
-									"value": "invalid_public_key",
+									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
 									"description": "Public key of board to subscribe to.",
 									"type": "text"
 								}
@@ -323,7 +323,7 @@
 							"formdata": [
 								{
 									"key": "seed",
-									"value": "c",
+									"value": "a",
 									"description": "Seed to generate key pair with. If left empty, a random key pair will be generated.",
 									"type": "text"
 								}
@@ -496,13 +496,13 @@
 							"formdata": [
 								{
 									"key": "board_public_key",
-									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
 									"description": "Public key of board where thread belongs.",
 									"type": "text"
 								},
 								{
 									"key": "thread_ref",
-									"value": "cd4107446fd6766bee5411d95c90c46ce8087b5cf945477c50b3e3c9172e8859",
+									"value": "8cb797fe18423dc8af6b13403e32ba91b23508d937c982f7bfa704138a3b1aeb",
 									"description": "Reference of thread.",
 									"type": "text"
 								}
@@ -523,13 +523,13 @@
 							"formdata": [
 								{
 									"key": "board_public_key",
-									"value": "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
 									"description": "Public key of board where post should belong.",
 									"type": "text"
 								},
 								{
 									"key": "thread_ref",
-									"value": "cd4107446fd6766bee5411d95c90c46ce8087b5cf945477c50b3e3c9172e8859",
+									"value": "8cb797fe18423dc8af6b13403e32ba91b23508d937c982f7bfa704138a3b1aeb",
 									"description": "Reference of thread where post should belong.",
 									"type": "text"
 								},
@@ -686,6 +686,84 @@
 							]
 						},
 						"description": "Gets a view that represents a user's follow/avoid page of other users."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote Thread",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/votes/vote_thread",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board in which thread originates.",
+									"type": "text"
+								},
+								{
+									"key": "thread_ref",
+									"value": "8cb797fe18423dc8af6b13403e32ba91b23508d937c982f7bfa704138a3b1aeb",
+									"description": "Reference of thread to vote on.",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "+1",
+									"description": "Mode of vote (+1 : affirm) (0 : neutral) (-1 : disaffirm).",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "great",
+									"description": "(Optional) tag field for some optional text.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Votes on specified thread."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/votes/vote_post",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board in which post originates.",
+									"type": "text"
+								},
+								{
+									"key": "post_ref",
+									"value": "d32af6e01b0fd3958f023269e37edd0c94c58f0c64e1f56648e0f41f88722db4",
+									"description": "Reference of post to vote on.",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "-1",
+									"description": "Mode of vote (+1 : affirm) (0 : neutral) (-1 : disaffirm).",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "spam",
+									"description": "(Optional) tag field for some optional text.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Submits a vote for specified post."
 					},
 					"response": []
 				}
