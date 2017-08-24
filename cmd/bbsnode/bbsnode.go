@@ -16,6 +16,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"github.com/skycoin/skycoin/src/util/browser"
 )
 
 const (
@@ -31,7 +32,6 @@ const (
 
 var (
 	devMode          = false
-	testMode         = false
 	compilerInternal = 5
 )
 
@@ -58,11 +58,11 @@ type Config struct {
 // NewDefaultConfig returns a default configuration for BBS node.
 func NewDefaultConfig() *Config {
 	return &Config{
-		Master:     false, // Not master.
+		Master:     false, // Hosts submission address.
 		Memory:     false, // Save to disk.
 		ConfigDir:  "",    // --> Action: set as '$HOME/.skybbs'
 		CXOPort:    defaultCXOPort,
-		CXORPC:     true,
+		CXORPC:     false,
 		CXORPCPort: defaultCXORPCPort,
 		SubPort:    defaultSubPort,
 		SubAddr:    "", // -> Action: set as 'localhost:{Config.SubPort}'
@@ -166,7 +166,11 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		defer rpcServer.Close()
 
 		if c.Browser {
-			// TODO: Open browser.
+			address := fmt.Sprintf("http://127.0.0.1:%d", c.HTTPPort)
+			log.Println("Opening browser at address:", address)
+			if e := browser.Open(address); e != nil {
+				return e
+			}
 		}
 
 		<-quit
