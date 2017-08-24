@@ -1,0 +1,20 @@
+.user-list {
+  .btn {
+    margin: 0 1rem;
+  }
+  table {
+    .edit,
+    .del {
+      cursor: pointer;
+      &:hover {
+        color: red;
+      }
+    }
+    .edit {
+      color: blue;
+    }
+    .del {
+      color: #8e1e1e;
+    }
+  }
+}

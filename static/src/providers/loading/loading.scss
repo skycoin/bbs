@@ -1,0 +1,39 @@
+.loading-content {
+  width: 5rem;
+  height: 5rem;
+  margin: 22.5% auto;
+  text-align: center;
+  .dot {
+    width: 25%;
+    height: 24px;
+    background: #3ac;
+    border-radius: 100%;
+    display: inline-block;
+    animation: slide 1s infinite;
+  }
+  @for $i from 1 through 3 {
+    .dot {
+      &:nth-child(#{$i}) {
+        animation-delay: (.2s * $i);
+        background-color: rgb(red(#3ac), blue(#3ac), green(#3ac));
+      }
+    }
+  }
+  @keyframes slide {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      opacity: .3;
+      transform: scale(2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  .loading-text {
+    color: rgb(red(#3ac), blue(#3ac), green(#3ac));
+    text-align: center;
+    font-weight: bold;
+  }
+}

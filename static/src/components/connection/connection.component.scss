@@ -1,0 +1,11 @@
+.connection {
+  .index {
+    text-align: center;
+  }
+  .del {
+    cursor: pointer;
+    &:hover {
+      color: red;
+    }
+  }
+}
