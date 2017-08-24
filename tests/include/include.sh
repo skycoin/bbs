@@ -1,15 +1,38 @@
 #!/usr/bin/env bash
 
-# Check if curl is installed.
-if ! dpkg -s curl > /dev/null ; then
-echo "curl is not installed."
-exit 1
-fi
+inMac() {
+    if ! type "curl" > /dev/null; then
+        echo "curl is not installed."
+        exit 1
+    fi
+    if ! type "jq" > /dev/null; then
+        echo "jq is not installed."
+        exit 1
+    fi
+}
 
-# Check if jq is installed.
-if ! dpkg -s jq > /dev/null ; then
-echo "jq is not installed."
-exit 1
+inLinux() {
+    # Check if curl is installed.
+    if ! dpkg -s curl > /dev/null ; then
+        echo "curl is not installed."
+        exit 1
+    fi
+
+    # Check if jq is installed.
+    if ! dpkg -s jq > /dev/null ; then
+        echo "jq is not installed."
+        exit 1
+    fi
+}
+
+sysOS=`uname -s`
+if [ $sysOS == "Darwin" ];then
+	inMac
+elif [ $sysOS == "Linux" ];then
+	inLinux
+else
+	echo "Other OS: $sysOS"
+    exit 1
 fi
 
 # Prints awesome stuff.
@@ -98,10 +121,11 @@ NewBoard() {
     fi
 
     PORT=$1 ; NAME=$2 ; PORT_SUB=$3
-
+    
     pv "NODE '${PORT}': NEW BOARD '${NAME}'"
 
     curl \
+        --noproxy "*" \
         -X POST \
         -F "seed=${NAME}" \
         -F "name=Board ${NAME}" \
