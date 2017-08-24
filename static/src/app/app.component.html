@@ -1,0 +1,31 @@
+<nav class="navbar navbar-expand-lg fixed-top" [ngClass]="navBarBg">
+  <a class="navbar-brand" href="#" title="BBS">
+    <img src="../assets/logo.svg" width="170.74" height="30" alt="bbs">
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+    aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto mt-2 mt-md-0">
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Boards<span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/userlist" routerLinkActive="active">Users</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/conn" routerLinkActive="active">Connections</a>
+      </li>
+    </ul>
+    <span class="navbar-text" [attr.aria-label]="isMasterNode?'Master Node':'Client Node'">
+     <a class="nav-node nav-link" href="javascript:void(0);" *ngIf="isMasterNode">Master Node</a>
+     <a class="nav-node nav-link" href="javascript:void(0);" *ngIf="!isMasterNode">Client Node</a>
+    </span>
+  </div>
+  <div class="nav-overlay">
+  </div>
+</nav>
+<router-outlet></router-outlet>
+<!-- <app-loading></app-loading> -->
+<app-fixed-button></app-fixed-button>

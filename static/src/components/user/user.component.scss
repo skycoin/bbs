@@ -1,0 +1,15 @@
+.user-box {
+  display: block;
+  width: 100%;
+  .item {
+    span {
+      margin: 0 10px;
+    }
+  }
+  .clip {
+    cursor: pointer;
+    &:hover {
+      color: blue;
+    }
+  }
+}

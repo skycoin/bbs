@@ -1,0 +1,42 @@
+<div class="connection">
+  <div class="container">
+    <div class="page-header">
+      <p class="d-flex justify-content-end">
+        <button type="button" class="btn btn-outline-primary" (click)="openAdd(form)">New Connection</button>
+      </p>
+    </div>
+    <table class="table table_fixed table-hover" *ngIf="list.length > 0">
+      <thead>
+        <tr>
+          <th scope="col" width="10%"></th>
+          <th scope="col" width="80%">Url</th>
+          <th scope="col" width="10%" class="more"><i class="fa fa-ellipsis-h"></i></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of list;let i =index;">
+          <td>{{i+1}}</td>
+          <td class="url">{{item}}</td>
+          <td class="del more" (click)="remove(item)"><i class="fa fa-trash" aria-hidden="true"></i></td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 class="not-found" *ngIf="list?.length == 0">No Connections Found</h3>
+  </div>
+</div>
+
+<ng-template #form let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">New Connection</h4>
+    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <input [(ngModel)]="addUrl" type="text" class="form-control" placeholder="E.g: [::1]:7452" aria-describedby="basic-addon1">
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+    <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+  </div>
+</ng-template>

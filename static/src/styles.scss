@@ -1,0 +1,193 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'variables';
+@import '../node_modules/bootstrap/scss/bootstrap';
+@import '../node_modules/font-awesome/scss/font-awesome';
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  padding-top: 70px;
+  background: url('./assets/nodes.svg') center center / cover, linear-gradient(-35deg, #00d2ff, #5895e8);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+hr {
+  margin: .5rem 0;
+}
+
+i {
+  margin-left: 5px;
+}
+
+.not-found {
+  font-size: 2rem;
+  color: hsla(0, 0%, 100%, 0.4);
+  text-align: center;
+  margin: 5rem 0;
+  .hint-text {
+    text-decoration: underline;
+    font-style: italic;
+  }
+}
+
+.btn {
+  cursor: pointer;
+  i {
+    margin-right: .5rem;
+  }
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+app-loading {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%; // display: block;
+}
+
+.table_fixed {
+  table-layout: fixed;
+}
+
+.single-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.break-line {
+  word-break: break-all;
+}
+
+.margin-0 {
+  margin: 0;
+}
+
+table {
+  thead {
+    th {
+      color: #b3b3b3;
+      border-bottom: 2px solid #d8d8d8 !important;
+    }
+    .more {
+      text-align: center;
+    }
+  }
+  tbody {
+    .more {
+      text-align: center;
+    }
+  }
+  td,
+  th {
+    border-top: none !important;
+    border-bottom: 1px solid #eceeef;
+  }
+}
+
+$tableHover-color: hsla(235,
+100%,
+74%,
+0.075);
+// Table Hover
+.table-hover {
+  tbody {
+    tr {
+      cursor: pointer;
+      &:hover {
+        background-color: $tableHover-color;
+      }
+    }
+  }
+}
+
+// Font Icon
+.fa {
+  margin-right: 5px;
+}
+
+.fa-star {
+  color: #ffb700;
+}
+
+.fa-exchange {
+  color: #486b4b;
+}
+
+.multi-modal {
+  .modal-content {
+    box-shadow: 0.1rem 0.2rem 0.8rem hsla(0, 0%, 0%, 0.5);
+  }
+}
+
+// Modal
+.modal-content {
+  border: none;
+  box-shadow: 0.1rem 0.2rem 0.8rem hsla(0, 0%, 100%, 0.4);
+  .form-group {
+    .form-control {
+      border: 1px solid hsla(0, 0%, 80%, 0.45);
+    }
+    input[type="text"] {
+      padding: .75rem 1rem;
+      border-radius: 2rem;
+      &:focus {
+        border: 1px solid hsla(208, 98%, 68%, 0.5);
+        box-shadow: 0.1rem 0.1rem 1rem hsla(208, 98%, 68%, 0.5);
+      }
+    }
+  }
+  .btn {
+    border-radius: 2rem;
+    padding: .5rem 2rem;
+    font-weight: bold;
+    color: #fff;
+  }
+}
+
+// text-color
+.text-blue-gray {
+  color: #afbac1 !important;
+}
+
+@mixin multiLineEllipsis($lineHeight: 1.2em,
+$lineCount: 1,
+$bgColor: white) {
+  overflow: hidden;
+  position: relative;
+  line-height: $lineHeight;
+  max-height: $lineHeight * $lineCount;
+  text-align: justify;
+  margin-right: -1em;
+  padding-right: 1em;
+  &:before {
+    content: '...';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
+  &:after {
+    content: '';
+    position: absolute;
+    right: 0;
+    width: 1em;
+    height: 1em;
+    margin-top: 0.2em;
+    background: $bgColor;
+  }
+}
+
+.block-with-text {
+  @include multiLineEllipsis($lineHeight: 1.2em, $lineCount: 2, $bgColor: white);
+}
