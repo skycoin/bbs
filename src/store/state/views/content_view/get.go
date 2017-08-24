@@ -44,7 +44,7 @@ func (v *ContentView) getBoard() (*BoardRepView, error) {
 }
 
 type BoardPageIn struct {
-	Perspective cipher.PubKey
+	Perspective  cipher.PubKey
 }
 
 type BoardPageOut struct {
@@ -57,7 +57,7 @@ func (v *ContentView) getBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
 	out.Board = v.board.View()
 	out.Threads = make([]*ThreadRepView, len(v.board.Threads))
 	for i, tHash := range v.board.Threads {
-		out.Threads[i] = v.tMap[tHash].View(v.vMap[tHash].View(in.Perspective))
+		out.Threads[i] = v.tMap[tHash.h].View(tHash.i, v.vMap[tHash.h].View(in.Perspective))
 	}
 	return out, nil
 }
@@ -80,11 +80,11 @@ func (v *ContentView) getThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
 	threadRep := v.tMap[in.ThreadHash]
 
 	if threadRep != nil {
-		out.Thread = threadRep.View(v.vMap[in.ThreadHash].View(in.Perspective))
+		out.Thread = threadRep.View(0, v.vMap[in.ThreadHash].View(in.Perspective))
 
 		out.Posts = make([]*PostRepView, len(threadRep.Posts))
 		for i, pHash := range threadRep.Posts {
-			out.Posts[i] = v.pMap[pHash].View(v.vMap[pHash].View(in.Perspective))
+			out.Posts[i] = v.pMap[pHash.h].View(pHash.i, v.vMap[pHash.h].View(in.Perspective))
 		}
 	}
 

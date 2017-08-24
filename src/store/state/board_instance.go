@@ -248,6 +248,8 @@ func (bi *BoardInstance) WaitSeq(ctx context.Context, goal uint64) error {
 		return nil
 	}
 
+	ctx, _ = context.WithTimeout(ctx, time.Second*10)
+
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 

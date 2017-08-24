@@ -8,6 +8,15 @@ import (
 )
 
 /*
+	<<< INDEXED HASH >>>
+*/
+
+type IndexHash struct {
+	h cipher.SHA256
+	i int
+}
+
+/*
 	<<< BOARD >>>
 */
 
@@ -17,7 +26,7 @@ type BoardRep struct {
 	Body         string
 	Created      int64
 	SubAddresses []string
-	Threads      []cipher.SHA256
+	Threads      []IndexHash
 }
 
 func (r *BoardRep) Fill(pk cipher.PubKey, board *object.Board) *BoardRep {
@@ -63,7 +72,7 @@ type ThreadRep struct {
 	Body    string
 	Created int64
 	Creator cipher.PubKey
-	Posts   []cipher.SHA256
+	Posts   []IndexHash
 }
 
 func (r *ThreadRep) FillThread(thread *object.Thread, mux *sync.Mutex) *ThreadRep {
@@ -92,6 +101,7 @@ func (r *ThreadRep) FillThreadPage(tPage *object.ThreadPage, mux *sync.Mutex) *T
 }
 
 type ThreadRepView struct {
+	Seq       int          `json:"seq"`
 	Ref       string       `json:"ref"`
 	Name      string       `json:"name"`
 	Body      string       `json:"body"`
@@ -101,11 +111,12 @@ type ThreadRepView struct {
 	PostCount int          `json:"post_count"`
 }
 
-func (r *ThreadRep) View(votes *VoteRepView) *ThreadRepView {
+func (r *ThreadRep) View(i int, votes *VoteRepView) *ThreadRepView {
 	if r == nil {
 		return nil
 	}
 	return &ThreadRepView{
+		Seq:       i,
 		Ref:       r.Ref.Hex(),
 		Name:      r.Name,
 		Body:      r.Body,
@@ -139,6 +150,7 @@ func (r *PostRep) Fill(post *object.Post, mux *sync.Mutex) *PostRep {
 }
 
 type PostRepView struct {
+	Seq     int          `json:"seq"`
 	Ref     string       `json:"ref"`
 	Name    string       `json:"name"`
 	Body    string       `json:"body"`
@@ -147,11 +159,12 @@ type PostRepView struct {
 	Votes   *VoteRepView `json:"votes,omitempty"`
 }
 
-func (r *PostRep) View(votes *VoteRepView) *PostRepView {
+func (r *PostRep) View(i int, votes *VoteRepView) *PostRepView {
 	if r == nil {
 		return nil
 	}
 	return &PostRepView{
+		Seq:     i,
 		Ref:     r.Ref.Hex(),
 		Name:    r.Name,
 		Body:    r.Body,

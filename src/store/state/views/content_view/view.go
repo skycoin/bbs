@@ -33,7 +33,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 		return e
 	}
 	v.board = new(BoardRep).Fill(pages.PK, board)
-	v.board.Threads = make([]cipher.SHA256, pages.BoardPage.GetThreadCount())
+	v.board.Threads = make([]IndexHash, pages.BoardPage.GetThreadCount())
 
 	v.tMap = make(map[cipher.SHA256]*ThreadRep)
 	v.pMap = make(map[cipher.SHA256]*PostRep)
@@ -41,15 +41,15 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 
 	// Fill threads and posts.
 	e = pages.BoardPage.RangeThreadPages(func(i int, tp *object.ThreadPage) error {
-		v.board.Threads[i] = tp.Thread.Hash
+		v.board.Threads[i] = IndexHash{h: tp.Thread.Hash, i: i}
 
 		threadRep := new(ThreadRep).FillThreadPage(tp, nil)
 
 		// Fill posts.
-		threadRep.Posts = make([]cipher.SHA256, tp.GetPostCount())
+		threadRep.Posts = make([]IndexHash, tp.GetPostCount())
 
 		e = tp.RangePosts(func(i int, post *object.Post) error {
-			threadRep.Posts[i] = post.R
+			threadRep.Posts[i] = IndexHash{h: post.R, i: i}
 			v.pMap[post.R] = new(PostRep).Fill(post, nil)
 			return nil
 		}, nil)
@@ -92,7 +92,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 
 	for _, thread := range changes.NewThreads {
 		fmt.Printf("NEW THREAD: %s\n", thread.R.Hex())
-		v.board.Threads = append(v.board.Threads, thread.R)
+		v.board.Threads = append(v.board.Threads, IndexHash{h: thread.R, i: len(v.board.Threads)})
 		v.tMap[thread.R] = new(ThreadRep).FillThread(thread, mux)
 	}
 
@@ -101,7 +101,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 			log.Println("thread not found")
 			continue
 		} else {
-			ofThread.Posts = append(ofThread.Posts, post.R)
+			ofThread.Posts = append(ofThread.Posts, IndexHash{h: post.R, i: len(ofThread.Posts)})
 		}
 		v.pMap[post.R] = new(PostRep).Fill(post, mux)
 	}
