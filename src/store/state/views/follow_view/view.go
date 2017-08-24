@@ -74,13 +74,12 @@ const (
 )
 
 func (v *FollowView) Get(id string, a ...interface{}) (interface{}, error) {
+	upk := a[0].(cipher.PubKey)
 	switch {
 	case id == FollowPage && len(a) == 1:
-		fr, has := v.uMap[a[0].(cipher.PubKey)]
+		fr, has := v.uMap[upk]
 		if !has {
-			return nil, boo.Newf(boo.NotAllowed,
-				"request '%s' does not allow input of type '%T'",
-				FollowPage, a[0])
+			return &FollowRepView{UserPubKey: upk.Hex()}, nil
 		}
 		return fr.View(), nil
 

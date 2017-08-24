@@ -279,7 +279,9 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interfac
 	if e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.BoardPage, perspective)
+	return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
+		Perspective: perspective,
+	})
 }
 
 func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interface{}, error) {
@@ -312,7 +314,9 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.BoardPage, uf.User.PubKey)
+	return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
+		Perspective: uf.User.PubKey,
+	})
 }
 
 func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interface{}, error) {
@@ -327,7 +331,10 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interf
 	if e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ThreadPage, perspective, in.ThreadRef)
+	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
+		Perspective: perspective,
+		ThreadHash:  in.ThreadRef,
+	})
 }
 
 func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}, error) {
@@ -360,7 +367,10 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ThreadPage, uf.User.PubKey, in.ThreadRef)
+	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
+		Perspective: uf.User.PubKey,
+		ThreadHash:  in.ThreadRef,
+	})
 }
 
 /*
@@ -449,7 +459,10 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ContentVotes, uf.User.PubKey, in.ThreadRef)
+	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+		Perspective: uf.User.PubKey,
+		ContentHash: in.ThreadRef,
+	})
 }
 
 func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface{}, error) {
@@ -482,5 +495,8 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ContentVotes, uf.User.PubKey, in.PostRef)
+	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+		Perspective: uf.User.PubKey,
+		ContentHash: in.PostRef,
+	})
 }

@@ -22,16 +22,16 @@ func (v *ContentView) Get(id string, a ...interface{}) (interface{}, error) {
 		return v.getBoard()
 
 	case id == BoardPage && len(a) == 1:
-		return v.getBoardPage(a[0].(cipher.PubKey))
+		return v.getBoardPage(a[0].(*BoardPageIn))
 
-	case id == ThreadPage && len(a) == 2:
-		return v.getThreadPage(a[0].(cipher.PubKey), a[1].(cipher.SHA256))
+	case id == ThreadPage && len(a) == 1:
+		return v.getThreadPage(a[0].(*ThreadPageIn))
 
 	case id == SubAddresses:
 		return v.getSubAddresses()
 
-	case id == ContentVotes && len(a) == 2:
-		return v.getVotes(a[0].(cipher.PubKey), a[1].(cipher.SHA256))
+	case id == ContentVotes && len(a) == 1:
+		return v.getVotes(a[0].(*ContentVotesIn))
 
 	default:
 		return nil, boo.Newf(boo.NotAllowed,
@@ -43,19 +43,28 @@ func (v *ContentView) getBoard() (*BoardRepView, error) {
 	return v.board.View(), nil
 }
 
+type BoardPageIn struct {
+	Perspective cipher.PubKey
+}
+
 type BoardPageOut struct {
 	Board   *BoardRepView    `json:"board"`
 	Threads []*ThreadRepView `json:"threads"`
 }
 
-func (v *ContentView) getBoardPage(perspective cipher.PubKey) (*BoardPageOut, error) {
+func (v *ContentView) getBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
 	out := new(BoardPageOut)
 	out.Board = v.board.View()
 	out.Threads = make([]*ThreadRepView, len(v.board.Threads))
 	for i, tHash := range v.board.Threads {
-		out.Threads[i] = v.tMap[tHash].View(v.vMap[tHash].View(perspective))
+		out.Threads[i] = v.tMap[tHash].View(v.vMap[tHash].View(in.Perspective))
 	}
 	return out, nil
+}
+
+type ThreadPageIn struct {
+	Perspective cipher.PubKey
+	ThreadHash  cipher.SHA256
 }
 
 type ThreadPageOut struct {
@@ -64,18 +73,18 @@ type ThreadPageOut struct {
 	Posts  []*PostRepView `json:"posts"`
 }
 
-func (v *ContentView) getThreadPage(perspective cipher.PubKey, threadHash cipher.SHA256) (*ThreadPageOut, error) {
+func (v *ContentView) getThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
 	out := new(ThreadPageOut)
 	out.Board = v.board.View()
 
-	threadRep := v.tMap[threadHash]
+	threadRep := v.tMap[in.ThreadHash]
 
 	if threadRep != nil {
-		out.Thread = threadRep.View(v.vMap[threadHash].View(perspective))
+		out.Thread = threadRep.View(v.vMap[in.ThreadHash].View(in.Perspective))
 
 		out.Posts = make([]*PostRepView, len(threadRep.Posts))
 		for i, pHash := range threadRep.Posts {
-			out.Posts[i] = v.pMap[pHash].View(v.vMap[pHash].View(perspective))
+			out.Posts[i] = v.pMap[pHash].View(v.vMap[pHash].View(in.Perspective))
 		}
 	}
 
@@ -92,12 +101,17 @@ func (v *ContentView) getSubAddresses() ([]string, error) {
 	return sa, nil
 }
 
+type ContentVotesIn struct {
+	Perspective cipher.PubKey
+	ContentHash cipher.SHA256
+}
+
 type ContentVotesOut struct {
 	Votes *VoteRepView `json:"votes"`
 }
 
-func (v *ContentView) getVotes(perspective cipher.PubKey, cHash cipher.SHA256) (*ContentVotesOut, error) {
+func (v *ContentView) getVotes(in *ContentVotesIn) (*ContentVotesOut, error) {
 	out := new(ContentVotesOut)
-	out.Votes = v.vMap[cHash].View(perspective)
+	out.Votes = v.vMap[in.ContentHash].View(in.Perspective)
 	return out, nil
 }
