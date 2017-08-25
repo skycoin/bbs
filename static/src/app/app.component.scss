@@ -1,4 +1,53 @@
 .navbar {
+  .small-status-box {
+    display: none;
+    @media (max-width: 992px) {
+      display: block;
+    }
+  }
+  .big-status-box {
+    @media (max-width: 992px) {
+      display: none;
+    }
+  }
+  .use-status-box {
+    position: relative;
+    color: #fff;
+    text-decoration: none;
+    .fa {
+      display: inline;
+      vertical-align: middle;
+    }
+    .pop-box {
+      position: absolute;
+      top: 130%;
+      background-color: #fff;
+      box-shadow: 0.1rem 0.1rem 0.5rem rgba(0, 0, 0, 0.4);
+      ul {
+        position: relative;
+        list-style: none;
+        padding: .5rem 1rem;
+        margin: 0;
+        li {
+          a {
+            color: #000;
+          }
+        }
+        &::before {
+          position: absolute;
+          content: '';
+          top: -35%;
+          width: 1rem;
+          height: 1rem;
+          border: 8px solid transparent;
+          border-bottom-color: #fff;
+        }
+      }
+    }
+  }
+  .use-login-status {
+    color: #ffda00;
+  }
   .nav-overlay {
     position: fixed;
     left: 0;
@@ -8,7 +57,6 @@
     background: url('../assets/nodes.svg') center center / cover, linear-gradient(-35deg, #00d2ff, #5895e8);
     background-attachment: fixed;
     background-repeat: no-repeat;
-    // box-shadow: 0.1rem 0.1rem 0.1rem hsla(0, 0%, 0%, 0.3);
     z-index: -1;
   }
   .test-toggler-icon {
@@ -52,6 +100,11 @@
 
 .default-navbar {
   background-color: transparent;
+  @media (max-width: 992px) {
+    background: url('../assets/nodes.svg') center center / cover, linear-gradient(-35deg, #00d2ff, #5895e8);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
 }
 
 .after-navbar {

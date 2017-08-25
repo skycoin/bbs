@@ -1,9 +1,10 @@
 <div class='boards'>
   <div class="container">
-    <div class="card" *ngFor="let board of (boards | orderBy: sort);let i = index;trackBy: trackBoards"[@flyInOut]>
+    <div class="card" (click)="openThreads($event,board.public_key)" *ngFor="let board of (boards | orderBy: sort);let i = index;trackBy: trackBoards"
+      [@flyInOut]>
       <div class="card-block">
         <div>
-          <h5 class="single-line name"  (click)="openThreads($event,board.public_key)">{{board?.name}}</h5>
+          <h5 class="single-line name">{{board?.name}}</h5>
           <p class="text-right action">
             <a href="javascript:void(0);" (click)="delBoard($event,board?.public_key)"><i class="fa fa-trash" aria-hidden="true" aria-label="subscribe"></i></a>
             <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>

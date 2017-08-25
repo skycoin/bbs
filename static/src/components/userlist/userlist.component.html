@@ -4,18 +4,17 @@
     <thead>
       <tr>
         <th scope="col" width="40%">Name</th>
-        <th scope="col" width="40%">Public Key</th>
         <th scope="col" width="20%" class="more"><i class="fa fa-ellipsis-h"></i></th>
       </tr>
     </thead>
     <tbody>
       <!--trackBy:user.public_key-->
       <tr *ngFor="let user of userlist;">
-        <td class="single-line" title="{{user.alias}}"><span *ngIf="user?.master" class="badge badge-pill badge-info">Master</span>{{user?.alias}}</td>
-        <td class="single-line" title="{{user.public_key}}">{{user?.public_key}}</td>
+        <td class="single-line" title="{{user?.alias}}"><span *ngIf="user?.master" class="badge badge-pill badge-info">Master</span>{{user?.alias}}</td>
+        <!-- <td class="single-line" title="{{user.public_key}}">{{user?.public_key}}</td> -->
         <td class="more">
-          <a href="javascript:void(0);" class="edit" (click)="openEdit(editBox,user.public_key)"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-          <a href="javascript:void(0);" class="del" (click)="remove($event,user.public_key)"><i class="fa fa-trash" aria-hidden="true"></i></a>
+          <!-- <a href="javascript:void(0);" class="edit" (click)="openEdit(editBox,user.public_key)"><i class="fa fa-pencil" aria-hidden="true"></i></a> -->
+          <a href="javascript:void(0);" class="del" (click)="delUser($event,user?.alias)"><i class="fa fa-trash" aria-hidden="true"></i></a>
         </td>
       </tr>
     </tbody>

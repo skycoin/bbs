@@ -8,9 +8,14 @@ app-threads {
     border-radius: 0;
     background: hsla(0, 0%, 100%, .3);
     overflow: hidden;
+    .lead {
+      font-size: 1rem;
+      font-weight: normal;
+    }
   }
   .threads {
     .card {
+      cursor: pointer;
       margin: .5rem 0;
       .card-block {
         .description {

@@ -14,7 +14,10 @@ export class AppComponent implements OnInit {
   public title = 'app';
   public name = '';
   public isMasterNode = false;
+  userName = '';
+  isLogIn = false;
   navBarBg = 'default-navbar';
+  userMenu = false;
   constructor(
     private api: ApiService,
     private user: UserService,
@@ -30,8 +33,53 @@ export class AppComponent implements OnInit {
     this.api.getStats().subscribe(stats => {
       this.isMasterNode = stats.node_is_master;
     });
-    this.pop.open(ToTopComponent);
+    this.pop.open(ToTopComponent, false);
+    this.api.getSessionInfo().subscribe(info => {
+      if (info.okay) {
+        if (info.data.session) {
+          this.isLogIn = info.data.logged_in;
+          this.userName = info.data.session.user.alias;
+        }
+      }
+    })
   }
+  userAction(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (!this.isLogIn) {
+      this.login();
+    } else {
+      this.showUserMenu();
+    }
+  }
+  showUserMenu() {
+    this.userMenu = !this.userMenu;
+  }
+  logout(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.api.logout().subscribe(res => {
+      if (res.okay) {
+        this.userName = '';
+        this.isLogIn = res.data.logged_in;
+        this.userMenu = false;
+      }
+    })
+  }
+  login() {
+    const data = new FormData();
+    data.append('alias', 'angular4');
+    this.api.login(data).subscribe(res => {
+      if (res.okay) {
+        console.log('res:', res);
+        this.isLogIn = res.data.logged_in;
+        this.userName = res.data.session.user.alias;
+      }
+    })
+  }
+
   @HostListener('window:scroll', ['$event'])
   windowScroll(event) {
     const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;

@@ -7,9 +7,9 @@ import 'rxjs/add/observable/timer'
 export class Popup {
   constructor(private stack: PopupStack) {
   }
-  open(content: any) {
+  open(content: any, isAutoLeave: boolean = true) {
     Observable.timer(10).subscribe(() => {
-      return this.stack.open(content);
+      return this.stack.open(content, isAutoLeave);
     });
   }
 }
