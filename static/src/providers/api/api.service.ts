@@ -6,6 +6,7 @@ import 'rxjs/add/operator/catch';
 @Injectable()
 export class ApiService {
   private baseUrl = 'http://127.0.0.1:7410/api/';
+  private voteUrl = this.baseUrl + 'votes/';
   private connUrl = this.baseUrl + 'connections/'
   private sessionUrl = this.baseUrl + 'session/'
   private userUrl = this.sessionUrl + 'users/';
@@ -49,7 +50,7 @@ export class ApiService {
   }
 
   addThreadVote(data: FormData) {
-    return this.common.handlePost(this.baseUrl + 'threads/votes/add', data);
+    return this.common.handlePost(this.voteUrl + 'vote_thread', data);
   }
 
   addPostVote(data: FormData) {

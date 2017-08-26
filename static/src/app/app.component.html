@@ -2,18 +2,20 @@
   <a class="navbar-brand" href="#" title="BBS">
     <img src="../assets/logo.svg" width="170.74" height="30" alt="bbs">
   </a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-    aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <a class="use-status-box small-status-box" href="javascript:void(0);" (click)="userAction($event)">
-    <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>{{userName}}
-    <div class="pop-box" *ngIf="userMenu">
-      <ul>
-        <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
-  </ul>
+  <div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+      aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    <a class="use-status-box small-status-box" href="javascript:void(0);" (click)="userAction($event)">
+        <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
+        <div class="pop-box" *ngIf="userMenu">
+          <ul>
+            <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
+    </ul>
   </div>
   </a>
+  </div>
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
       <li class="nav-item">

@@ -69,13 +69,13 @@ export interface Thread {
   ref?: string;
   creator?: string;
   // author_alias?: string;
-  // votes?: Votes;
+  votes?: Votes;
   uiOptions?: VoteOptions;
 }
 export interface Votes {
-  up?: VoteData;
-  down?: VoteData;
-  spam?: VoteData;
+  ref?: string;
+  up_votes?: VoteData;
+  down_votes?: VoteData;
 }
 export interface VoteData {
   voted?: boolean;

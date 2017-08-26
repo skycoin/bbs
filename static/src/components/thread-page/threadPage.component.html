@@ -34,13 +34,18 @@
           <p class="card-text break-line text-muted body">{{data?.data?.thread?.body}}</p>
         </div>
       </div>
+      <hr>
+      <div class="card-block">
+        <vote-box [up]="data?.data?.thread?.votes?.up_votes?.count" [down]="data?.data?.thread?.votes?.down_votes?.count" (onUp)="upThread($event)" (onDown)="downThread($event)"></vote-box>
+      </div>
     </div>
   </div>
   <a class="noPosts text-center" href="javascropt:void(0);" *ngIf="data?.data?.posts?.length <= 0" (click)="openReply(addPost)">New Post<i class="fa fa-hand-o-left" aria-hidden="true"></i></a>
   <!--trackBy: item?.ref-->
   <!--(data.posts | orderBy:sort)-->
   <div class="post-box">
-    <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.data?.posts | orderBy:sort);let i = index;trackBy:trackPosts" [@flyInOut]>
+    <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.data?.posts | orderBy:sort);let i = index;trackBy:trackPosts"
+      [@flyInOut]>
       <!-- <div class="vote-box">
         <div (click)="addPostVote(1,item,$event)" class="vote-btn">
           <span>{{item?.votes?.up_votes}}</span>

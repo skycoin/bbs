@@ -1,8 +1,11 @@
 .navbar {
+  .nav-box {
+    display: inline-block;
+  }
   .small-status-box {
     display: none;
     @media (max-width: 992px) {
-      display: block;
+      display: inline-block;
     }
   }
   .big-status-box {

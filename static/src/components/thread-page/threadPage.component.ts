@@ -101,39 +101,33 @@ export class ThreadPageComponent implements OnInit {
     // }
     this.pop.open(this.fab);
   }
-
+  upThread() {
+    const data = new FormData();
+    data.append('mode', '+1');
+    this.addThreadVote(data);
+  }
+  downThread() {
+    const data = new FormData();
+    data.append('mode', '-1');
+    this.addThreadVote(data);
+  }
   public setSort() {
     this.sort = this.sort === 'desc' ? 'asc' : 'desc';
   }
   trackPosts(index, post) {
     return post ? post.ref : undefined;
   }
-  addThreadVote(mode: string, thread: Thread, ev: Event) {
-    // ev.stopImmediatePropagation();
-    // ev.stopPropagation();
-    // if (thread.uiOptions !== undefined && thread.uiOptions.voted !== undefined && thread.uiOptions.voted) {
-    //   return;
-    // }
-    // thread.uiOptions = { voted: true };
-    // const data = new FormData();
-    // data.append('board', this.boardKey);
-    // data.append('thread', thread.ref);
-    // data.append('mode', mode);
-    // this.api.addThreadVote(data).subscribe(result => {
-    //   if (result) {
-    //     data.delete('mode');
-    //     this.api.getThreadVotes(data).subscribe((votes: VotesSummary) => {
-    //       thread.votes.up_votes = votes.up_votes;
-    //       thread.votes.down_votes = votes.down_votes;
-    //     }, err => {
-    //       console.log('update vote fail');
-    //     })
-    //   } else {
-    //     // this.common.showErrorAlert('Vote Fail');
-    //   }
-    // }, err => {
-    //   thread.uiOptions.voted = false;
-    // })
+  addThreadVote(data: FormData) {
+    data.append('board_public_key', this.boardKey);
+    data.append('thread_ref', this.threadKey);
+    this.loading.start();
+    this.api.addThreadVote(data).subscribe(voteRes => {
+      if (voteRes.okay) {
+        this.data.data.thread.votes = voteRes.data.votes;
+        this.loading.close();
+      }
+    }, err => {
+    })
   }
   addUserVote(mode: string, post: Post, ev: Event) {
     ev.stopImmediatePropagation();

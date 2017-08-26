@@ -14,7 +14,7 @@ export class AppComponent implements OnInit {
   public title = 'app';
   public name = '';
   public isMasterNode = false;
-  userName = '';
+  userName = 'LogIn';
   isLogIn = false;
   navBarBg = 'default-navbar';
   userMenu = false;
@@ -62,7 +62,7 @@ export class AppComponent implements OnInit {
     ev.preventDefault();
     this.api.logout().subscribe(res => {
       if (res.okay) {
-        this.userName = '';
+        this.userName = 'LogIn';
         this.isLogIn = res.data.logged_in;
         this.userMenu = false;
       }

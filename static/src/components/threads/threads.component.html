@@ -2,7 +2,7 @@
   <div class="jumbotron">
     <div class="container">
       <h1 class="display-5">{{board?.name}}</h1>
-      <p class="lead break-line">{{board?.body}}</p>
+      <p class="lead break-line" [innerHTML]="board?.body"></p>
       <!-- <hr class="my-4"> -->
       <!-- <p class="lead text-right">
         <a class="btn btn-primary btn-lg" href="javascript:void(0);" role="button" (click)="openAdd(content)">New Thread</a>
