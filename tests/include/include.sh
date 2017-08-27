@@ -66,6 +66,8 @@ RunNode() {
         &
 }
 
+# <<< SESSION >>>
+
 NewUser() {
     if [[ $# -ne 2 ]] ; then
         echo "2 arguments required"
@@ -77,6 +79,7 @@ NewUser() {
     pv "NODE '${PORT}': NEW USER WITH SEED '${SEED}'"
 
     curl \
+        --noproxy "*" \
         -X POST \
         -F "seed=${SEED}" \
         -F "alias=${SEED}" \
@@ -94,6 +97,7 @@ Login() {
     pv "NODE '${PORT}': LOGIN '${SEED}'"
 
     curl \
+        --noproxy "*" \
         -X POST \
         -F "alias=${SEED}" \
         -sS "http://127.0.0.1:${PORT}/api/session/login" | jq
@@ -110,9 +114,84 @@ Logout() {
     pv "NODE '${PORT}': LOGOUT"
 
     curl \
+        --noproxy "*" \
         -X POST \
         -sS "http://127.0.0.1:${PORT}/api/session/logout" | jq
 }
+
+# <<< CONNECTION >>>
+
+NewConnection() {
+    if [[ $# -ne 2 ]] ; then
+        echo "2 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; ADDRESS=$2
+
+    pv "NODE '${PORT}': NEW CONNECTION '${ADDRESS}'"
+
+    curl \
+        --noproxy "*" \
+        -X POST \
+        -F "address=${ADDRESS}" \
+        -sS "http://127.0.0.1:${PORT}/api/connections/new" | jq
+}
+
+DeleteConnection() {
+    if [[ $# -ne 2 ]] ; then
+        echo "2 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; ADDRESS=$2
+
+    pv "NODE '${PORT}': DELETE CONNECTION '${ADDRESS}'"
+
+    curl \
+        --noproxy "*" \
+        -X POST \
+        -F "address=${ADDRESS}" \
+        -sS "http://127.0.0.1:${PORT}/api/connections/delete" | jq
+}
+
+# <<< SUBSCRIPTION >>>
+
+NewSubscription() {
+    if [[ $# -ne 2 ]] ; then
+        echo "2 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2
+
+    pv "NODE '${PORT}': NEW SUBSCRIPTION '${BPK}'"
+
+    curl \
+        --noproxy "*" \
+        -X POST \
+        -F "public_key=${BPK}" \
+        -sS "http://127.0.0.1:${PORT}/api/subscriptions/new" | jq
+}
+
+DeleteSubscription() {
+    if [[ $# -ne 2 ]] ; then
+        echo "2 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2
+
+    pv "NODE '${PORT}': NEW SUBSCRIPTION '${BPK}'"
+
+    curl \
+        --noproxy "*" \
+        -X POST \
+        -F "public_key=${BPK}" \
+        -sS "http://127.0.0.1:${PORT}/api/subscriptions/new" | jq
+}
+
+# <<< CONTENT >>>
 
 NewBoard() {
     if [[ $# -ne 3 ]] ; then
@@ -132,6 +211,43 @@ NewBoard() {
         -F "body=A board generated with seed '${NAME}'." \
         -F "submission_addresses=[::]:${PORT_SUB}" \
         -sS "http://127.0.0.1:${PORT}/api/content/new_board" | jq
+}
 
-    # TODO: FINISH
+NewThread() {
+    if [[ $# -ne 4 ]] ; then
+        echo "4 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; NAME=$3 ; BODY=$4
+
+    pv "NODE '${PORT}': NEW THREAD '${NAME}'"
+
+    curl \
+        --noproxy "*" \
+        -X POST \
+        -F "board_public_key=${BPK}" \
+        -F "name=${NAME}" \
+        -F "body=${BODY}" \
+        -sS "http://127.0.0.1:${PORT}/api/content/new_thread" | jq
+}
+
+NewPost() {
+    if [[ $# -ne 5 ]] ; then
+        echo "5 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; TREF=$3 ; NAME=$4 ; BODY=$5
+
+    pv "NODE '${PORT}': NEW POST '${NAME}'"
+
+    curl \
+        --noproxy "*" \
+        -X POST \
+        -F "board_public_key=${BPK}" \
+        -F "thread_ref=${TREF}" \
+        -F "name=${NAME}" \
+        -F "body=${BODY}" \
+        -sS "http://127.0.0.1:${PORT}/api/content/new_post" | jq
 }

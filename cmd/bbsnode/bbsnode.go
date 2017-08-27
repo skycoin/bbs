@@ -9,6 +9,7 @@ import (
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/skycoin/src/util/browser"
 	"github.com/skycoin/skycoin/src/util/file"
 	"gopkg.in/urfave/cli.v1"
 	"log"
@@ -16,7 +17,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"github.com/skycoin/skycoin/src/util/browser"
 )
 
 const (
@@ -169,7 +169,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 			address := fmt.Sprintf("http://127.0.0.1:%d", c.HTTPPort)
 			log.Println("Opening browser at address:", address)
 			if e := browser.Open(address); e != nil {
-				return e
+				log.Println("Error on browser open:", e)
 			}
 		}
 

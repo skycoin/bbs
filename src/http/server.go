@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	httpLogPrefix     = "HTTPSERVER"
-	httpLocalhost     = "127.0.0.1"
-	httpIndexFileName = "index.html"
+	logPrefix     = "HTTPSERVER"
+	localhost     = "127.0.0.1"
+	indexFileName = "index.html"
 )
 
 // ServerConfig represents a HTTP server configuration file.
@@ -42,7 +42,7 @@ type Server struct {
 func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 	server := &Server{
 		c:    config,
-		l:    inform.NewLogger(true, os.Stdout, httpLogPrefix),
+		l:    inform.NewLogger(true, os.Stdout, logPrefix),
 		mux:  http.NewServeMux(),
 		api:  api,
 		quit: make(chan struct{}),
@@ -51,7 +51,7 @@ func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 	if *config.StaticDir, e = filepath.Abs(*config.StaticDir); e != nil {
 		return nil, e
 	}
-	host := fmt.Sprintf("%s:%d", httpLocalhost, *config.Port)
+	host := fmt.Sprintf("%s:%d", localhost, *config.Port)
 	if server.net, e = net.Listen("tcp", host); e != nil {
 		return nil, e
 	}
@@ -82,12 +82,12 @@ func (s *Server) prepareMux() error {
 			return e
 		}
 	}
-	return s.api.prepare(s.mux)
+	return s.api.host(s.mux)
 }
 
 func (s *Server) prepareStatic() error {
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data, e := ioutil.ReadFile(path.Join(*s.c.StaticDir, httpIndexFileName))
+		data, e := ioutil.ReadFile(path.Join(*s.c.StaticDir, indexFileName))
 		if e != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(e.Error()))
@@ -109,10 +109,12 @@ func (s *Server) prepareStatic() error {
 	})
 }
 
+// CXO obtains the CXO.
 func (s *Server) CXO() *cxo.Manager {
 	return s.api.Access.CXO
 }
 
+// Close quits the http server.
 func (s *Server) Close() {
 	if s.quit != nil {
 		close(s.quit)
