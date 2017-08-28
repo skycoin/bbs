@@ -47,6 +47,7 @@ func MultiProcess(objects ...interface{}) error {
 	return nil
 }
 
+// Process processes the fields tagged.
 func Process(obj interface{}) error {
 	rVal, rTyp := getReflectPair(obj)
 	if e := process(makeTagMap(processKey, rVal, rTyp)); e != nil {

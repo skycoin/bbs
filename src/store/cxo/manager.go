@@ -30,6 +30,7 @@ const (
 	RetryDuration = time.Second * 5
 )
 
+// ManagerConfig represents the configuration for CXO Manager.
 type ManagerConfig struct {
 	Memory       *bool   // Whether to enable memory mode.
 	Config       *string // Configuration directory.
@@ -38,6 +39,7 @@ type ManagerConfig struct {
 	CXORPCPort   *int    // CXO RPC port.
 }
 
+// Manager manages interaction with CXO and storing/retrieving node configuration files.
 type Manager struct {
 	mux      sync.Mutex
 	c        *ManagerConfig
@@ -50,6 +52,7 @@ type Manager struct {
 	quit     chan struct{}
 }
 
+// NewManager creates a new CXO manager.
 func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Manager {
 	manager := &Manager{
 		c:       config,
@@ -82,6 +85,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	return manager
 }
 
+// Close quits the CXO manager.
 func (m *Manager) Close() {
 	for {
 		select {
@@ -102,6 +106,7 @@ func (m *Manager) Close() {
 	<<< HELPER FUNCTIONS >>>
 */
 
+// Sets up the CXO manager.
 func (m *Manager) setup() error {
 	c := node.NewConfig()
 	c.Log.Prefix = "[CXO] "

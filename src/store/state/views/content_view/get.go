@@ -44,7 +44,7 @@ func (v *ContentView) getBoard() (*BoardRepView, error) {
 }
 
 type BoardPageIn struct {
-	Perspective  cipher.PubKey
+	Perspective cipher.PubKey
 }
 
 type BoardPageOut struct {

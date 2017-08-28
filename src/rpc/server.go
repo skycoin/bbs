@@ -14,11 +14,13 @@ const (
 	logPrefix = "RPC"
 )
 
+// ServerConfig configures a RPC server.
 type ServerConfig struct {
 	Port   *int
 	Enable *bool
 }
 
+// Server represents a RPC server.
 type Server struct {
 	c   *ServerConfig
 	l   *log.Logger
@@ -28,6 +30,7 @@ type Server struct {
 	wg  sync.WaitGroup
 }
 
+// NewServer creates a new RPC server.
 func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 	server := &Server{
 		c:   config,
@@ -58,6 +61,7 @@ func (s *Server) open(address string) error {
 	return nil
 }
 
+// Close closes the RPC server.
 func (s *Server) Close() {
 	if s != nil {
 		if s.l != nil {

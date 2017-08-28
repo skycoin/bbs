@@ -21,7 +21,7 @@ type Gateway struct {
 	Quit   chan int
 }
 
-func (g *Gateway) prepare(mux *http.ServeMux) error {
+func (g *Gateway) host(mux *http.ServeMux) error {
 	g.l = inform.NewLogger(true, os.Stdout, "")
 
 	/*
@@ -35,7 +35,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			send(w)(true, nil)
 		})
 
-	// Obtains node states. TODO
+	// Obtains node status. TODO
 	mux.HandleFunc("/api/node/stats",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(true, nil)
@@ -175,6 +175,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		<<< ADMIN >>>
 	*/
 
+	// Adds a submission address to specified hosted board.
 	mux.HandleFunc("/api/admin/board/new_submission_address",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.AddSubmissionAddress(r.Context(), &object.SubmissionIO{
@@ -183,6 +184,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Removes a submission address from specified hosted board.
 	mux.HandleFunc("/api/admin/board/delete_submission_address",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.RemoveSubmissionAddress(r.Context(), &object.SubmissionIO{
@@ -195,11 +197,13 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		<<< CONTENT >>>
 	*/
 
+	// Gets a list of boards; remote and master (boards that this node owns).
 	mux.HandleFunc("/api/content/get_boards",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetBoards(r.Context()))
 		})
 
+	// Gets a single board.
 	mux.HandleFunc("/api/content/get_board",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetBoard(r.Context(), &object.BoardIO{
@@ -207,6 +211,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Creates and hosts a new board on this node.
 	mux.HandleFunc("/api/content/new_board",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewBoard(r.Context(), &object.NewBoardIO{
@@ -217,6 +222,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Deletes a hosted board from this node.
 	mux.HandleFunc("/api/content/delete_board",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.DeleteBoard(r.Context(), &object.BoardIO{
@@ -224,6 +230,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Obtains a view of a board including it's children threads.
 	mux.HandleFunc("/api/content/get_board_page",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetBoardPage(r.Context(), &object.BoardIO{
@@ -231,6 +238,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Submits a new thread on specified board.
 	mux.HandleFunc("/api/content/new_thread",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewThread(r.Context(), &object.NewThreadIO{
@@ -240,6 +248,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Gets a view of a thread including it's children posts.
 	mux.HandleFunc("/api/content/get_thread_page",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetThreadPage(r.Context(), &object.ThreadIO{
@@ -248,6 +257,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Adds a new post on specified thread.
 	mux.HandleFunc("/api/content/new_post",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewPost(r.Context(), &object.NewPostIO{
@@ -263,6 +273,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 		<<< VOTES >>>
 	*/
 
+	// Gets a view of following/avoiding of specified user.
 	mux.HandleFunc("/api/votes/get_follow_page",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetFollowPage(r.Context(), &object.UserIO{
@@ -271,6 +282,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Votes on a specified user.
 	mux.HandleFunc("/api/votes/vote_user",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.VoteUser(r.Context(), &object.UserVoteIO{
@@ -281,6 +293,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Votes on a specified thread.
 	mux.HandleFunc("/api/votes/vote_thread",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.VoteThread(r.Context(), &object.ThreadVoteIO{
@@ -291,6 +304,7 @@ func (g *Gateway) prepare(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Votes on a specified post.
 	mux.HandleFunc("/api/votes/vote_post",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.VotePost(r.Context(), &object.PostVoteIO{

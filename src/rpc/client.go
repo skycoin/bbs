@@ -7,8 +7,10 @@ import (
 	"net/rpc"
 )
 
+// Call represents a function that outputs method and input object of call.
 type Call func() (method string, in interface{})
 
+// Send sends the "call" to specified addresses.
 func Send(ctx context.Context, addresses interface{}, req Call) (goal uint64, e error) {
 	for _, address := range addresses.([]string) {
 
@@ -36,18 +38,21 @@ func Send(ctx context.Context, addresses interface{}, req Call) (goal uint64, e 
 		"successful submission address not found")
 }
 
+// NewThread is a call to create a new thread.
 func NewThread(thread *object.Thread) Call {
 	return func() (string, interface{}) {
 		return "Gateway.NewThread", thread
 	}
 }
 
+// NewPost is a call to create a new post.
 func NewPost(post *object.Post) Call {
 	return func() (string, interface{}) {
 		return "Gateway.NewPost", post
 	}
 }
 
+// NewVote is a call to create a new vote.
 func NewVote(vote *object.Vote) Call {
 	return func() (string, interface{}) {
 		return "Gateway.NewVote", vote
