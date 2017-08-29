@@ -401,7 +401,7 @@ func (m *Manager) subscribeNode(bpk cipher.PubKey) error {
 	}
 	m.l.Printf("Subscribing to feed '%s'...", bpk.Hex())
 	connections, count := m.node.Connections(), 0
-	for _, conn := range connections  {
+	for _, conn := range connections {
 		if e := conn.Subscribe(bpk); e != nil {
 			switch e {
 			case node.ErrSubscriptionRejected:

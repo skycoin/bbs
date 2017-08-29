@@ -4,15 +4,12 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/skycoin/src/cipher/encoder"
-	"github.com/skycoin/skycoin/src/util/file"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
-	"strings"
 	"sync"
+	"github.com/skycoin/bbs/src/store/session/stores/memory_store"
+	"github.com/skycoin/bbs/src/store/session/stores/drive_store"
 )
 
 const (
@@ -36,7 +33,8 @@ type Manager struct {
 	l *log.Logger
 
 	mux  sync.Mutex
-	file *object.UserFile
+	current *string
+	db Store
 }
 
 func NewManager(config *ManagerConfig) *Manager {
@@ -44,111 +42,78 @@ func NewManager(config *ManagerConfig) *Manager {
 		c: config,
 		l: inform.NewLogger(true, os.Stdout, usersLogPrefix),
 	}
-	if !*config.MemoryMode {
-		if e := os.MkdirAll(m.folderPath(), os.FileMode(0700)); e != nil {
-			m.l.Panicln(e)
-		}
+	if *m.c.MemoryMode {
+		m.db = memory_store.NewStore()
+	} else {
+		m.db = drive_store.NewStore(*m.c.ConfigDir, usersSubDir, usersFileExt)
 	}
 	return m
 }
 
 func (m *Manager) GetUsers() ([]string, error) {
 	defer m.lock()()
-	files, e := ioutil.ReadDir(m.folderPath())
+	aliases, e := m.db.GetUsers()
 	if e != nil {
 		return nil, boo.WrapType(e, boo.Internal,
-			"failed to read directory")
-	}
-	var aliases []string
-	for _, info := range files {
-		if !info.IsDir() && strings.HasSuffix(info.Name(), usersFileExt) {
-			name := strings.TrimSuffix(info.Name(), usersFileExt)
-			m.l.Printf("Found user: '%s'.", name)
-			aliases = append(aliases, name)
-		}
+			"failed to get all users")
 	}
 	return aliases, nil
 }
 
 func (m *Manager) NewUser(in *object.NewUserIO) error {
 	defer m.lock()()
-	if *m.c.MemoryMode {
-		return nil
-	}
-	f := in.File
-	m.l.Println(m.filePath(f.User.Alias))
-	return file.SaveBinary(
-		m.filePath(f.User.Alias), encoder.Serialize(f), os.FileMode(0600))
+	return m.db.NewUser(in.Alias, in.File)
 }
 
 func (m *Manager) DeleteUser(alias string) error {
 	defer m.lock()()
-	if e := os.Remove(m.filePath(alias)); e != nil {
-		return e
-	}
-	if m.file != nil && m.file.User.Alias == alias {
+	if m.current != nil && *m.current == alias {
 		return ErrAlreadyLoggedIn
 	}
-	return nil
+	return m.db.DeleteUser(alias)
 }
 
 func (m *Manager) GetCurrentFile() (*object.UserFile, error) {
 	defer m.lock()()
-	if m.file == nil {
+	if m.current == nil {
 		return nil, ErrNotLoggedIn
 	}
-	return &(*m.file), nil
+	f, ok := m.db.GetUser(*m.current)
+	if !ok {
+		return nil, boo.Newf(boo.Internal,
+			"failed to get current user file")
+	}
+	return f, nil
 }
 
 func (m *Manager) Login(in *object.LoginIO) (*object.UserFile, error) {
 	defer m.lock()()
-	if m.file != nil {
+	if m.current != nil {
 		return nil, ErrAlreadyLoggedIn
 	}
-
-	if *m.c.MemoryMode {
-		upk, usk := cipher.GenerateDeterministicKeyPair([]byte(in.Alias))
-		m.file = &object.UserFile{
-			User: object.User{
-				Alias:  in.Alias,
-				PubKey: upk,
-				SecKey: usk,
-			},
-			Seed: in.Alias,
-		}
-
+	if f, ok := m.db.GetUser(in.Alias); !ok {
+		return nil, boo.Newf(boo.NotFound,
+			"user of alias '%s' not found", in.Alias)
 	} else {
-		m.file = new(object.UserFile)
-
-		data, e := ioutil.ReadFile(m.filePath(in.Alias))
-		if e != nil {
-			if os.IsNotExist(e) {
-				return nil, boo.WrapType(e, boo.NotFound,
-					"user not found")
-			}
-			return nil, boo.WrapType(e, boo.InvalidRead,
-				"failed to read user file")
-		}
-		if e := encoder.DeserializeRaw(data, m.file); e != nil {
-			return nil, boo.WrapType(e, boo.InvalidRead,
-				"corrupt user file")
-		}
+		alias := in.Alias
+		m.current = &alias
+		return f, nil
 	}
-	return &(*m.file), nil
 }
 
 func (m *Manager) Logout() error {
 	defer m.lock()()
-	if m.file == nil {
+	if m.current == nil {
 		return ErrNotLoggedIn
+	} else {
+		m.current = nil
+		return nil
 	}
-	m.file = nil
-	return nil
 }
 
 func (m *Manager) IsLoggedIn() bool {
 	defer m.lock()()
-	return m.file != nil
+	return m.current != nil
 }
 
 /*

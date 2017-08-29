@@ -7,7 +7,6 @@ import (
 
 type empty struct{}
 
-
 // Write is for empty.
 func (e *empty) Write(_ []byte) (int, error) { return 0, nil }
 

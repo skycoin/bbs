@@ -17,7 +17,6 @@ const (
 	LogPrefix = "COMPILER"
 )
 
-
 type CompilerConfig struct {
 	UpdateInterval *int // In seconds.
 }
@@ -33,8 +32,8 @@ type Compiler struct {
 	adders []views.Adder
 
 	newRoots chan *skyobject.Root
-	quit    chan struct{}
-	wg      sync.WaitGroup
+	quit     chan struct{}
+	wg       sync.WaitGroup
 }
 
 func NewCompiler(config *CompilerConfig, newRoots chan *skyobject.Root, node *node.Node, adders ...views.Adder) *Compiler {

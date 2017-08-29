@@ -17,6 +17,9 @@ sleep 10
 
 # Login.
 
+NewUser 5410 user1
+NewUser 7410 user2
+
 Login 5410 user1
 Login 7410 user2
 

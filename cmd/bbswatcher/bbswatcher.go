@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	cmdStr = "bbsnode"
+	cmdStr        = "bbsnode"
 	pauseDuration = 1
 )
 
