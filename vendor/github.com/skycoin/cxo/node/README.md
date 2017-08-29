@@ -5,13 +5,12 @@ node
 
 Node is low level package that implements P2P transport for CX objects
 
-##### TODO
+#### Get
 
-- [ ] add OnDial filter to close connection that rejected by peer
-- [ ] add examples
-- [ ] improve documentation
-- [ ] add RPC methods to see conn->feeds and feed->conns
-- [ ] implement Tree RPC method
-- [ ] add OnDropRoot callback
-- [ ] add ability to remove non-full root objects that will not be filled
-- [ ] add more tests
+```
+go get -u -t github.com/skycoin/cxo/node
+```
+
+#### Changes
+
+see `CHANGELOG.md` for changes

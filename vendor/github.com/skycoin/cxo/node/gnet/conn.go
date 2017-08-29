@@ -9,6 +9,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"github.com/skycoin/cxo/node/log"
 )
 
 // A ConnState represents connection state
@@ -35,6 +37,19 @@ func (c ConnState) String() string {
 	return fmt.Sprintf("ConnState<%d>", c)
 }
 
+// A Conn represents connection. The Conn can has and can has
+// not underlying TCP connection. The Conn recereates connection
+// if it fails. This behaviour should be configures. There are
+// DialTimeout, RedialTimeout, MaxRedialTimeout and DialsLimit
+// configuration.Also, you can control dialing and redialing
+// using Config.OnDial callback that called when a Conn tries
+// to dial or redial. To detect current state of connection
+// use State method. The state can be ConnStateConnected,
+// ConnStateDialing and ConnStateClosed. But the state can
+// be changed any time after. If the state is ConnStateClosed
+// then it will not be changed anymore. Use Clsoe method to
+// terminate connection and wait until it release associated
+// resources (goroutines, TCP connection, buffers)
 type Conn struct {
 	address string // diaing address
 
@@ -76,7 +91,7 @@ type Conn struct {
 
 // accept connection by listener
 func (p *Pool) acceptConnection(c net.Conn) (cn *Conn, err error) {
-	p.Debug("accept connection ", c.RemoteAddr().String())
+	p.Debug(log.All, "accept connection ", c.RemoteAddr().String())
 
 	p.cmx.Lock()
 	defer p.cmx.Unlock()
@@ -117,7 +132,7 @@ func (p *Pool) acceptConnection(c net.Conn) (cn *Conn, err error) {
 
 // create outgoing connections
 func (p *Pool) createConnection(address string) (cn *Conn) {
-	p.Debug("create connection: ", address)
+	p.Debug(log.All, "create connection: ", address)
 
 	cn = new(Conn)
 
@@ -154,7 +169,7 @@ func (p *Pool) createConnection(address string) (cn *Conn) {
 // ========================================================================== //
 
 func (c *Conn) triggerDialing(err error) {
-	c.p.Debugf("trigger dialing of %s by %v", c.address, err)
+	c.p.Debugf(log.All, "trigger dialing of %s by %v", c.address, err)
 
 	c.cmx.Lock()
 	defer c.cmx.Unlock()
@@ -168,7 +183,7 @@ func (c *Conn) triggerDialing(err error) {
 }
 
 func (c *Conn) closeConnection() {
-	c.p.Debug("close connection of: ", c.address)
+	c.p.Debug(log.All, "close connection of: ", c.address)
 
 	c.cmx.Lock()
 	defer c.cmx.Unlock()
@@ -179,26 +194,26 @@ func (c *Conn) closeConnection() {
 	}
 }
 
-func (cn *Conn) dialing() (c net.Conn, err error) {
-	cn.p.Debug("dialing to ", cn.address)
+func (c *Conn) dialing() (conn net.Conn, err error) {
+	c.p.Debug(log.All, "dialing to ", c.address)
 
 	// tcp or tls
-	if cn.p.conf.TLSConfig == nil {
+	if c.p.conf.TLSConfig == nil {
 		// timeout or not
-		if cn.p.conf.DialTimeout > 0 {
-			c, err = net.DialTimeout("tcp", cn.address, cn.p.conf.DialTimeout)
+		if c.p.conf.DialTimeout > 0 {
+			conn, err = net.DialTimeout("tcp", c.address, c.p.conf.DialTimeout)
 		} else {
-			c, err = net.Dial("tcp", cn.address)
+			conn, err = net.Dial("tcp", c.address)
 		}
 	} else {
 		// timeout or not
-		if cn.p.conf.DialTimeout > 0 {
+		if c.p.conf.DialTimeout > 0 {
 			var d net.Dialer
-			d.Timeout = cn.p.conf.DialTimeout
-			c, err = tls.DialWithDialer(&d, "tcp", cn.address,
-				cn.p.conf.TLSConfig)
+			d.Timeout = c.p.conf.DialTimeout
+			conn, err = tls.DialWithDialer(&d, "tcp", c.address,
+				c.p.conf.TLSConfig)
 		} else {
-			c, err = tls.Dial("tcp", cn.address, cn.p.conf.TLSConfig)
+			conn, err = tls.Dial("tcp", c.address, c.p.conf.TLSConfig)
 		}
 	}
 	return
@@ -212,10 +227,10 @@ func (c *Conn) triggerDialingRead(err error, conn net.Conn) {
 
 	if c.incoming {
 		c.Close() // terminate
-		return    // don't redial if conenction is incoming
+		return    // don't redial if connection is incoming
 	}
 
-	c.p.Debugf("triggerDialingRead of %s: %v", c.address, err)
+	c.p.Debugf(log.All, "triggerDialingRead of %s: %v", c.address, err)
 
 	// may be writing loop already waits
 	// reading loop to fail, thus we use
@@ -247,7 +262,7 @@ func (c *Conn) triggerDialingWrite(err error, conn net.Conn) {
 		return
 	}
 
-	c.p.Debugf("triggerDialingWrite of %s: %v", c.address, err)
+	c.p.Debugf(log.All, "triggerDialingWrite of %s: %v", c.address, err)
 
 	select {
 	case <-c.readd:
@@ -289,20 +304,20 @@ func (c *Conn) connectionWriter(conn net.Conn) (w io.Writer, bw *bufio.Writer) {
 	return
 }
 
-func (cn *Conn) updateConnection(c net.Conn) {
-	cn.p.Debug("update connection of ", cn.address)
+func (c *Conn) updateConnection(conn net.Conn) {
+	c.p.Debug(log.All, "update connection of ", c.address)
 
-	cn.cmx.Lock()
-	defer cn.cmx.Unlock()
+	c.cmx.Lock()
+	defer c.cmx.Unlock()
 
-	cn.conn = c
-	cn.state = ConnStateConnected
+	c.conn = conn
+	c.state = ConnStateConnected
 }
 
 // update connection and trigger read and
 // write loops after successful dialing
 func (c *Conn) triggerReadWrite(conn net.Conn) {
-	c.p.Debug("trigger read/write loops of ", c.address)
+	c.p.Debug(log.All, "trigger read/write loops of ", c.address)
 
 	c.updateConnection(conn)
 	select {
@@ -333,8 +348,8 @@ func (c *Conn) isClosed() (closed bool) {
 }
 
 func (c *Conn) dial(diallm int) {
-	c.p.Debug("start dial loop ", c.address)
-	defer c.p.Debug("stop dial loop ", c.address)
+	c.p.Debug(log.All, "start dial loop ", c.address)
+	defer c.p.Debug(log.All, "stop dial loop ", c.address)
 
 	defer c.p.await.Done()
 	defer c.Close()
@@ -356,14 +371,14 @@ TriggerLoop: // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
 		select {
 		case err = <-c.dialtr: // trigger
-			c.p.Debug("redialing ", c.address)
+			c.p.Debug(log.All, "redialing ", c.address)
 			tm = c.p.conf.RedialTimeout // set/reset
 
 		DialLoop: // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			for {
 
 				if diallm == 0 { // check out dialing limit
-					c.p.Debug("dials limit exceeded: ", c.address)
+					c.p.Debug(log.All, "dials limit exceeded: ", c.address)
 					return // close
 				}
 				diallm--
@@ -371,7 +386,8 @@ TriggerLoop: // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 				// perform dialing callback
 				if callback := c.p.conf.OnDial; callback != nil {
 					if err = callback(c, err); err != nil {
-						c.p.Debug("dialing terminanted by OnDial callback: ",
+						c.p.Debug(log.All,
+							"dialing terminanted by OnDial callback: ",
 							err)
 						return // we don't want to redial anymore (close)
 					}
@@ -421,14 +437,14 @@ TriggerLoop: // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 }
 
 func (c *Conn) read() {
-	c.p.Debug("start read loop ", c.address)
-	defer c.p.Debug("stop read loop ", c.address)
+	c.p.Debug(log.All, "start read loop ", c.address)
+	defer c.p.Debug(log.All, "stop read loop ", c.address)
 
 	defer c.p.await.Done()
 	defer c.Close()
 
 	var (
-		head []byte = make([]byte, 4)
+		head = make([]byte, 4)
 		body []byte
 
 		ln uint32
@@ -442,18 +458,18 @@ func (c *Conn) read() {
 
 DialLoop: // -------------------------------------------------------------------
 	for {
-		c.p.Debug("read: DialLoop")
+		c.p.Debug(log.All, "read: DialLoop")
 		select {
 		case conn = <-c.dialrl: // waiting for dialing
 			r = c.connectionReader(conn)
 		case <-c.closed:
 			return
 		}
-		c.p.Debug("start reading in loop ", c.address)
+		c.p.Debug(log.All, "start reading in loop ", c.address)
 
 	ReadLoop: // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 		for {
-			c.p.Debug("read head ", c.address)
+			c.p.Debug(log.All, "read head ", c.address)
 			if _, err = io.ReadFull(r, head); err != nil {
 				if c.isClosed() {
 					return
@@ -477,7 +493,7 @@ DialLoop: // -------------------------------------------------------------------
 			}
 			body = make([]byte, l) // create new slice
 			// and read it
-			c.p.Debug("read body ", c.address)
+			c.p.Debug(log.All, "read body ", c.address)
 			if _, err = io.ReadFull(r, body); err != nil {
 				if c.isClosed() {
 					return
@@ -490,7 +506,7 @@ DialLoop: // -------------------------------------------------------------------
 			}
 			select {
 			case c.readq <- body: // receive
-				c.p.Debug("msg enqueued to ReceiveQueue ", c.address)
+				c.p.Debug(log.All, "msg enqueued to ReceiveQueue ", c.address)
 			case <-c.closed:
 				return
 			}
@@ -503,7 +519,7 @@ DialLoop: // -------------------------------------------------------------------
 
 func (c *Conn) writeMsg(w io.Writer, body []byte) (terminate bool, err error) {
 
-	c.p.Debug("write message to ", c.address)
+	c.p.Debug(log.All, "write message to ", c.address)
 
 	if c.p.conf.MaxMessageSize > 0 &&
 		len(body) > c.p.conf.MaxMessageSize {
@@ -514,7 +530,7 @@ func (c *Conn) writeMsg(w io.Writer, body []byte) (terminate bool, err error) {
 		return // terminate everything
 	}
 
-	var head []byte = make([]byte, 4)
+	var head = make([]byte, 4)
 
 	binary.LittleEndian.PutUint32(head, uint32(len(body)))
 
@@ -546,8 +562,8 @@ func (c *Conn) writeMsg(w io.Writer, body []byte) (terminate bool, err error) {
 }
 
 func (c *Conn) write() {
-	c.p.Debug("start write loop of ", c.address)
-	defer c.p.Debug("stop write loop of ", c.address)
+	c.p.Debug(log.All, "start write loop of ", c.address)
+	defer c.p.Debug(log.All, "stop write loop of ", c.address)
 
 	defer c.p.await.Done()
 	defer c.Close()
@@ -571,16 +587,17 @@ DialLoop: // -------------------------------------------------------------------
 		case <-c.closed:
 			return
 		}
-		c.p.Debug("start writing in loop ", c.address)
+		c.p.Debug(log.All, "start writing in loop ", c.address)
 
 	WriteLoop: // -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 		for {
 			select {
 			case body = <-c.writeq: // send
-				c.p.Debug("msg was dequeued from SendQueue ", c.address)
+				c.p.Debug(log.All, "msg was dequeued from SendQueue ",
+					c.address)
 			case <-c.readd:
 				// redialing triggered by reading loop
-				c.p.Debug("delegate dialing to reading trigger")
+				c.p.Debug(log.All, "delegate dialing to reading trigger")
 				continue DialLoop
 			case <-c.closed:
 				return
@@ -599,7 +616,8 @@ DialLoop: // -------------------------------------------------------------------
 				select {
 				case body = <-c.writeq:
 
-					c.p.Debug("msg was dequeued from SendQueue ", c.address)
+					c.p.Debug(log.All, "msg was dequeued from SendQueue ",
+						c.address)
 					if terminate, err = c.writeMsg(w, body); terminate {
 						return
 					} else if err != nil {
@@ -611,7 +629,7 @@ DialLoop: // -------------------------------------------------------------------
 
 					// flush the buffer if writing is buffered
 					if bw != nil {
-						c.p.Debug("flush write buffer ", c.address)
+						c.p.Debug(log.All, "flush write buffer ", c.address)
 						if err = bw.Flush(); err != nil {
 							if c.isClosed() {
 								return
@@ -639,7 +657,7 @@ DialLoop: // -------------------------------------------------------------------
 //                            an attached value                               //
 // ========================================================================== //
 
-// The Value returns value provided using SetValue method
+// Value returns value provided using SetValue method
 func (c *Conn) Value() interface{} {
 	c.vmx.Lock()
 	defer c.vmx.Unlock()
@@ -647,7 +665,7 @@ func (c *Conn) Value() interface{} {
 	return c.val
 }
 
-// The SetValue attach any value to the connection
+// SetValue attach any value to the connection
 func (c *Conn) SetValue(val interface{}) {
 	c.vmx.Lock()
 	defer c.vmx.Unlock()
@@ -729,10 +747,11 @@ func (c *Conn) Conn() net.Conn {
 //                                  close                                     //
 // ========================================================================== //
 
+// Close connection
 func (c *Conn) Close() (err error) {
 	c.closeo.Do(func() {
-		c.p.Debugf("closing %s...", c.address)
-		defer c.p.Debugf("%s was closed", c.address)
+		c.p.Debugf(log.All, "closing %s...", c.address)
+		defer c.p.Debugf(log.All, "%s was closed", c.address)
 
 		close(c.closed)
 		c.closeConnection()

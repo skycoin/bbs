@@ -8,32 +8,33 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/peterh/liner"
 
 	"github.com/skycoin/skycoin/src/cipher"
 
-	"github.com/skycoin/cxo/data"
 	"github.com/skycoin/cxo/node"
 )
 
+// defaults
 const (
-	HISTORY = ".cxocli.history"
-	ADDRESS = "[::]:8997"
+	HISTORY = ".cxocli.history" // history file name
+	ADDRESS = "[::]:8997"       // default RPC address to connect to
 )
 
 var (
-	ErrUnknowCommand    = errors.New("unknown command")
-	ErrMisisngArgument  = errors.New("missing argument")
-	ErrTooManyArguments = errors.New("too many arguments")
+	out io.Writer = os.Stdout // it's nessesary for tests
+
+	errUnknowCommand    = errors.New("unknown command")
+	errMisisngArgument  = errors.New("missing argument")
+	errTooManyArguments = errors.New("too many arguments")
 
 	commands = []string{
-		"want",
-		"got",
-		"subscribe",
+		"add_feed",
 		"subscribe_to",
-		"unsubscribe",
+		"del_feed",
 		"unsubscribe_from",
 		"feeds",
 		"stat",
@@ -43,6 +44,7 @@ var (
 		"connect",
 		"disconnect",
 		"listening_address",
+		"roots",
 		"tree",
 		"terminate",
 		"quit",
@@ -86,7 +88,7 @@ func main() {
 	flag.Parse()
 
 	if help {
-		fmt.Printf("Usage %s <flags>\n", os.Args[0])
+		fmt.Fprintf(out, "Usage %s <flags>\n", os.Args[0])
 		flag.PrintDefaults()
 		return
 	}
@@ -135,7 +137,7 @@ func main() {
 
 	// rpompt loop
 
-	fmt.Println("enter 'help' to get help")
+	fmt.Fprintln(out, "enter 'help' to get help")
 	for {
 		cmd, err = line.Prompt("> ")
 		if err != nil && err != liner.ErrPromptAborted {
@@ -204,11 +206,11 @@ Error:
 func args(ss []string) (string, error) {
 	switch len(ss) {
 	case 0, 1:
-		return "", ErrMisisngArgument
+		return "", errMisisngArgument
 	case 2:
 		return ss[1], nil
 	}
-	return "", ErrTooManyArguments
+	return "", errTooManyArguments
 }
 
 func executeCommand(command string, rpc *node.RPCClient) (terminate bool,
@@ -219,18 +221,14 @@ func executeCommand(command string, rpc *node.RPCClient) (terminate bool,
 		return
 	}
 	switch strings.ToLower(ss[0]) {
-	case "want":
-		err = want(rpc, ss)
-	case "got":
-		err = got(rpc, ss)
-	case "subscribe":
-		err = subscribe(rpc, ss)
+	case "add_feed":
+		err = add_feed(rpc, ss)
 	case "subscribe_to":
-		err = subscribe_to(rpc, ss)
-	case "unsubscribe":
-		err = unsubscribe(rpc, ss)
+		err = subscribeTo(rpc, ss)
+	case "del_feed":
+		err = del_feed(rpc, ss)
 	case "unsubscribe_from":
-		err = unsubscribe_from(rpc, ss)
+		err = unsubscribeFrom(rpc, ss)
 	case "feeds":
 		err = feeds(rpc)
 	case "stat":
@@ -238,15 +236,17 @@ func executeCommand(command string, rpc *node.RPCClient) (terminate bool,
 	case "connections":
 		err = connections(rpc)
 	case "incoming_connections":
-		err = incoming_connections(rpc)
+		err = incomingConnections(rpc)
 	case "outgoing_connections":
-		err = outgoing_connections(rpc)
+		err = outgoingConnections(rpc)
 	case "connect":
 		err = connect(rpc, ss)
 	case "disconnect":
 		err = disconnect(rpc, ss)
 	case "listening_address":
-		err = listening_address(rpc)
+		err = listeningAddress(rpc)
+	case "roots":
+		err = roots(rpc, ss)
 	case "tree":
 		err = tree(rpc, ss)
 	case "terminate":
@@ -256,32 +256,28 @@ func executeCommand(command string, rpc *node.RPCClient) (terminate bool,
 		showHelp()
 	case "quit", "exit":
 		terminate = true
-		fmt.Println("cya")
+		fmt.Fprintln(out, "cya")
 	default:
-		err = ErrUnknowCommand
+		err = errUnknowCommand
 	}
 	return
 }
 
 func showHelp() {
-	fmt.Println(`
+	fmt.Fprintln(out, `
 
-  want <public key>
-    list objects of feed the server doesn't have (yet), but knows about
-  got <public key>
-    list objects of feed
-  subscribe <public key>
+  add_feed <public key>
     start shareing feed
   subscribe_to <address> <pub key>
     subscribe to feed of a connected peer
-  unsubscribe <public key>
+  del_feed <public key>
     stop sharing feed
   unsubscribe_from <address> <public key>
     unsubscribe_from feed of a connected peer
   feeds
     list feeds
   stat
-    database statistic
+    statistic
   connections
     list connections
   incoming_connections
@@ -294,8 +290,11 @@ func showHelp() {
     disconnect from
   listening_address
     print listening address
-  tree <public key>
-    print objects tree of feed
+  roots <public key>
+    print brief information about all root objects of given feed
+  tree <pub key> [seq]
+    print root by public key and seq number, if the seq omited then
+    last full root printed
   terminate
     terminate server if allowed
   help
@@ -320,53 +319,15 @@ func publicKeyArg(ss []string) (pub cipher.PubKey, err error) {
 	return
 }
 
-func want(rpc *node.RPCClient, ss []string) (err error) {
+func add_feed(rpc *node.RPCClient, ss []string) (err error) {
 	var pk cipher.PubKey
 	if pk, err = publicKeyArg(ss); err != nil {
 		return
 	}
-	var list []cipher.SHA256
-	if list, err = rpc.Want(pk); err != nil {
+	if err = rpc.Subscribe("", pk); err != nil {
 		return
 	}
-	if len(list) == 0 {
-		fmt.Println("  don't want anything")
-		return
-	}
-	for _, w := range list {
-		fmt.Println("  +", w.Hex())
-	}
-	return
-}
-
-func got(rpc *node.RPCClient, ss []string) (err error) {
-	var pk cipher.PubKey
-	if pk, err = publicKeyArg(ss); err != nil {
-		return
-	}
-	var list []cipher.SHA256
-	if list, err = rpc.Got(pk); err != nil {
-		return
-	}
-	if len(list) == 0 {
-		fmt.Println("  hasn't got anything")
-		return
-	}
-	for _, w := range list {
-		fmt.Println("  +", w.Hex())
-	}
-	return
-}
-
-func subscribe(rpc *node.RPCClient, ss []string) (err error) {
-	var pk cipher.PubKey
-	if pk, err = publicKeyArg(ss); err != nil {
-		return
-	}
-	if err = rpc.Subscribe(node.ConnFeed{Feed: pk}); err != nil {
-		return
-	}
-	fmt.Println("  subscribed")
+	fmt.Fprintln(out, "  subscribed")
 	return
 }
 
@@ -375,51 +336,51 @@ func addressFeedArgs(ss []string) (address string, pk cipher.PubKey,
 
 	switch len(ss) {
 	case 0, 1, 2:
-		err = ErrMisisngArgument
+		err = errMisisngArgument
 	case 3:
 		address = ss[1]
 		pk, err = cipher.PubKeyFromHex(ss[2])
 	default:
-		err = ErrTooManyArguments
+		err = errTooManyArguments
 	}
 	return
 }
 
-func subscribe_to(rpc *node.RPCClient, ss []string) (err error) {
+func subscribeTo(rpc *node.RPCClient, ss []string) (err error) {
 	var pk cipher.PubKey
 	var address string
 	if address, pk, err = addressFeedArgs(ss); err != nil {
 		return
 	}
-	if err = rpc.Subscribe(node.ConnFeed{address, pk}); err != nil {
+	if err = rpc.Subscribe(address, pk); err != nil {
 		return
 	}
-	fmt.Println("  subscribed") // optimistic
+	fmt.Fprintln(out, "  subscribed") // optimistic
 	return
 }
 
-func unsubscribe(rpc *node.RPCClient, ss []string) (err error) {
+func del_feed(rpc *node.RPCClient, ss []string) (err error) {
 	var pk cipher.PubKey
 	if pk, err = publicKeyArg(ss); err != nil {
 		return
 	}
-	if err = rpc.Unsubscribe(node.ConnFeed{Feed: pk}); err != nil {
+	if err = rpc.Unsubscribe("", pk); err != nil {
 		return
 	}
-	fmt.Println("  unsubscribed") // optimistic
+	fmt.Fprintln(out, "  unsubscribed") // optimistic
 	return
 }
 
-func unsubscribe_from(rpc *node.RPCClient, ss []string) (err error) {
+func unsubscribeFrom(rpc *node.RPCClient, ss []string) (err error) {
 	var pk cipher.PubKey
 	var address string
 	if address, pk, err = addressFeedArgs(ss); err != nil {
 		return
 	}
-	if err = rpc.Unsubscribe(node.ConnFeed{address, pk}); err != nil {
+	if err = rpc.Unsubscribe(address, pk); err != nil {
 		return
 	}
-	fmt.Println("  unsubscribed") // optimistic
+	fmt.Fprintln(out, "  unsubscribed") // optimistic
 	return
 }
 
@@ -429,33 +390,38 @@ func feeds(rpc *node.RPCClient) (err error) {
 		return
 	}
 	if len(list) == 0 {
-		fmt.Println("  no feeds")
+		fmt.Fprintln(out, "  no feeds")
 		return
 	}
 	for _, f := range list {
-		fmt.Println("  +", f.Hex())
+		fmt.Fprintln(out, "  +", f.Hex())
 	}
 	return
 }
 
 func stat(rpc *node.RPCClient) (err error) {
-	var stat data.Stat
-	if stat, err = rpc.Stat(); err != nil {
+	return errors.New("method temporary removed")
+	/*
+		var stat node.Stat
+		if stat, err = rpc.Stat(); err != nil {
+			return
+		}
+		fmt.Fprintln(out, "  ----")
+		fmt.Fprintln(out, "  Objects:", stat.Data.Objects)
+		fmt.Fprintln(out, "  Space:  ", stat.Data.Space.String())
+		fmt.Fprintln(out, "  ----")
+		for pk, fs := range stat.Data.Feeds {
+			fmt.Fprintln(out, "  -", pk.Hex())
+			fmt.Fprintln(out, "    Root Objects: ", fs.Roots)
+			fmt.Fprintln(out, "    Space:        ", fs.Space.String())
+		}
+		fmt.Fprintln(out, "  ----")
+		fmt.Fprintln(out, "  Registries:    ", stat.CXO.Registries)
+		fmt.Fprintln(out, "  Save    (avg): ", stat.CXO.Save)
+		fmt.Fprintln(out, "  Cleanup (avg): ", stat.CXO.CleanUp)
+		fmt.Fprintln(out, "  ----")
 		return
-	}
-	fmt.Println("  ----")
-	fmt.Println("  Objects:", stat.Objects)
-	fmt.Println("  Space:  ", stat.Space.String())
-	fmt.Println("  ----")
-	for pk, fs := range stat.Feeds {
-		fmt.Println("  -", pk.Hex())
-		fmt.Println("    Root Objects: ", fs.Roots)
-		fmt.Println("    Space:        ", fs.Space.String())
-	}
-	if len(stat.Feeds) > 0 {
-		fmt.Println("  ----")
-	}
-	return
+	*/
 }
 
 func connections(rpc *node.RPCClient) (err error) {
@@ -464,41 +430,41 @@ func connections(rpc *node.RPCClient) (err error) {
 		return
 	}
 	if len(list) == 0 {
-		fmt.Println("  no connections")
+		fmt.Fprintln(out, "  no connections")
 		return
 	}
 	for _, c := range list {
-		fmt.Println("  +", c)
+		fmt.Fprintln(out, "  +", c)
 	}
 	return
 }
 
-func incoming_connections(rpc *node.RPCClient) (err error) {
+func incomingConnections(rpc *node.RPCClient) (err error) {
 	var list []string
 	if list, err = rpc.IncomingConnections(); err != nil {
 		return
 	}
 	if len(list) == 0 {
-		fmt.Println("  no incoming connections")
+		fmt.Fprintln(out, "  no incoming connections")
 		return
 	}
 	for _, c := range list {
-		fmt.Println("  +", c)
+		fmt.Fprintln(out, "  +", c)
 	}
 	return
 }
 
-func outgoing_connections(rpc *node.RPCClient) (err error) {
+func outgoingConnections(rpc *node.RPCClient) (err error) {
 	var list []string
 	if list, err = rpc.OutgoingConnections(); err != nil {
 		return
 	}
 	if len(list) == 0 {
-		fmt.Println("  no outgoing connections")
+		fmt.Fprintln(out, "  no outgoing connections")
 		return
 	}
 	for _, c := range list {
-		fmt.Println("  +", c)
+		fmt.Fprintln(out, "  +", c)
 	}
 	return
 }
@@ -511,7 +477,7 @@ func connect(rpc *node.RPCClient, ss []string) (err error) {
 	if err = rpc.Connect(address); err != nil {
 		return
 	}
-	fmt.Println("  connected")
+	fmt.Fprintln(out, "  connected")
 	return
 }
 
@@ -523,33 +489,69 @@ func disconnect(rpc *node.RPCClient, ss []string) (err error) {
 	if err = rpc.Disconnect(address); err != nil {
 		return
 	}
-	fmt.Println("  disconnected")
+	fmt.Fprintln(out, "  disconnected")
 	return
 }
 
-func listening_address(rpc *node.RPCClient) (err error) {
+func listeningAddress(rpc *node.RPCClient) (err error) {
 	var address string
 	if address, err = rpc.ListeningAddress(); err != nil {
 		return
 	}
-	fmt.Println("  ", address)
+	fmt.Fprintln(out, "  ", address)
+	return
+}
+
+func roots(rpc *node.RPCClient, ss []string) (err error) {
+	var pub cipher.PubKey
+	if pub, err = publicKeyArg(ss); err != nil {
+		return
+	}
+	var ris []node.RootInfo
+	if ris, err = rpc.Roots(pub); err != nil {
+		return
+	}
+	if len(ris) == 0 {
+		fmt.Fprintln(out, "  empty feed")
+		return
+	}
+	for _, ri := range ris {
+		fmt.Fprintln(out, "  -", ri.Hash.Hex())
+		fmt.Fprintln(out, "      time:", ri.Time)
+		fmt.Fprintln(out, "      seq:", ri.Seq)
+		fmt.Fprintln(out, "      fill:", ri.IsFull)
+	}
 	return
 }
 
 func tree(rpc *node.RPCClient, ss []string) (err error) {
+
 	var pk cipher.PubKey
-	if pk, err = publicKeyArg(ss); err != nil {
+	var seq uint64
+	var lsatFull bool
+
+	switch len(ss) {
+	case 0, 1:
+		return errors.New("to few arguments: want <pub key> [seq]")
+	case 2:
+		lsatFull = true
+	case 3:
+	default:
+		return errors.New("to many arguments: want <pub key> [seq]")
+	}
+	if pk, err = cipher.PubKeyFromHex(ss[1]); err != nil {
 		return
 	}
-	var tree []byte
-	if tree, err = rpc.Tree(pk); err != nil {
+	if lsatFull == false {
+		if seq, err = strconv.ParseUint(ss[2], 10, 64); err != nil {
+			return
+		}
+	}
+	var tree string
+	if tree, err = rpc.Tree(pk, seq, lsatFull); err != nil {
 		return
 	}
-	if len(tree) == 0 {
-		fmt.Println("  empty tree")
-		return
-	}
-	_, err = os.Stdout.Write(tree)
+	fmt.Fprintln(out, tree)
 	return
 }
 
@@ -560,6 +562,6 @@ func term(rpc *node.RPCClient) (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println("  terminated")
+	fmt.Fprintln(out, "  terminated")
 	return
 }

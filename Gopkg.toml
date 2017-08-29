@@ -23,7 +23,7 @@
 
 [[constraint]]
   name = "github.com/skycoin/cxo"
-  version = "1.0.0"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/skycoin/skycoin"
