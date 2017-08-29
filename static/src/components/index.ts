@@ -6,6 +6,7 @@ export * from './user/user.component';
 export * from './connection/connection.component';
 export * from './fixed-button/fixed-button.component';
 export * from './vote-box/vote-box.component';
+export * from './chip/chip.component';
 
 // Modal
 export * from './alert/alert.component';

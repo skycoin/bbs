@@ -7,9 +7,7 @@ app-threadpage {
     min-width: 20px;
     min-height: 20px;
   }
-  .thread {
-    padding-bottom: 1rem;
-  }
+  .thread {}
   .post-box {
     margin-bottom: 5rem;
   }
@@ -30,8 +28,7 @@ app-threadpage {
       }
     }
     .content-box {
-      width: 100%;
-      // width: 95%;
+      width: 100%; // width: 95%;
       padding: 1rem;
       .other-block {
         display: flex;
@@ -114,6 +111,49 @@ app-threadpage {
     margin: .8rem 0;
     .card-block {
       .content {
+        .title-box {
+          width: 100%;
+          .title,
+          .other {
+            float: left;
+          }
+          .title {
+            width: 80%;
+          }
+          .other {
+            display: inline-block;
+            width: 20%;
+            text-align: right;
+            .fa {
+              cursor: pointer;
+              position: relative;
+              user-select: none;
+              .vote-menu {
+                position: absolute;
+                right: -100%;
+                top: 150%;
+                font-size: 1rem;
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                user-select: none;
+                box-sizing: border-box;
+                text-align: left;
+                background-color: #fff;
+                border-radius: .25rem;
+                border: 1px solid rgba(0, 0, 0, 0.2);
+                box-shadow: 0.1rem 0.1rem 0.1rem rgba(0, 0, 0, 0.2);
+                z-index: 99;
+                li {
+                  padding: .5rem 1rem;
+                  &:hover {
+                    background-color: rgba(0, 0, 0, 0.05);
+                  }
+                }
+              }
+            }
+          }
+        }
         p {
           margin: 0;
         }

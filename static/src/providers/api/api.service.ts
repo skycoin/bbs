@@ -54,7 +54,7 @@ export class ApiService {
   }
 
   addPostVote(data: FormData) {
-    return this.common.handlePost(this.baseUrl + 'posts/votes/add', data);
+    return this.common.handlePost(this.voteUrl + 'vote_post', data);
   }
 
   getUserVotes(data: FormData) {

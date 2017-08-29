@@ -30,8 +30,9 @@ export interface Post {
   creator?: string;
   created?: number;
   ref?: string;
-  // votes?: VotesSummary; // Posts now have vote summary here.
+  votes?: Votes;
   uiOptions?: VoteOptions;
+  voteMenu?: boolean;
 }
 
 export interface VoteOptions {
