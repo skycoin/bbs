@@ -87,37 +87,53 @@ func NewBoardInstance(
 	return bi, nil
 }
 
+// Close closes
+func (bi *BoardInstance) Close() {
+	bi.piMux.Lock()
+	defer bi.piMux.Unlock()
+
+	bi.needUpdateMux.Lock()
+	defer bi.needUpdateMux.Unlock()
+
+	bi.pi.pack.Close()
+}
+
 // Update updates the board instance. (External trigger).
 func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 	defer bi.ClearUpdateNeeded()
+
 	return bi.ChangePack(func(oldPI *PackInstance) (*PackInstance, error) {
 
-		if root == nil {
-			// If master of board, update last changes.
-			if bi.c.Master {
-				e := oldPI.Do(func(p *skyobject.Pack, h *pack.Headers) error {
-					_, e := p.Save()
-					if e != nil {
-						return e
-					}
-					node.Publish(p.Root())
-					root, e = node.Container().LastFull(bi.c.PK)
+		var newPack *skyobject.Pack
+
+		if bi.c.Master {
+			e := oldPI.Do(func(p *skyobject.Pack, h *pack.Headers) error {
+				if e := p.Save(); e != nil {
 					return e
-				})
-				if e != nil {
-					return nil, e
 				}
-			} else {
-				return oldPI, nil
+				node.Publish(p.Root())
+				root = p.Root()
+				newPack = p
+				return nil
+			})
+			if e != nil {
+				return nil, e
+			}
+
+		} else {
+
+			oldPI.Close()
+
+			var e error
+			ct := node.Container()
+			newPack, e = ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), bi.c.SK)
+			if e != nil {
+				return nil, e
 			}
 		}
 
-		// Prepare new pack instance.
-		ct := node.Container()
-		newPack, e := ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), bi.c.SK)
-		if e != nil {
-			return nil, e
-		}
+		fmt.Println("NEW ROOT SEQ:", newPack.Root().Seq)
+
 		newPI, e := NewPackInstance(oldPI, newPack)
 		if e != nil {
 			return nil, e

@@ -5,34 +5,59 @@
 
 source "include/include.sh"
 
-# Run some nodes (HTTP | SUB | CXO).
+# Run some nodes (HTTP | SUB | CXO | GUI).
 
-RunNode 5100 5200 5300
-RunNode 6100 6200 6300
+RunNode 5410 5411 5412 false
+RunNode 7410 7411 7412 true
 
 # Wait for nodes to start running (assuming 10s is enough).
 
 pv2 "SLEEP 10s"
 sleep 10
 
+# Login.
+
+Login 5410 user1
+Login 7410 user2
+
 # Host some boards on the nodes (HTTP | SEED | SUB).
 
-NewBoard 5100 a 5200
+NewBoard 5410 a 5411
 sleep 1
 
-NewBoard 5100 b 5200
+NewBoard 5410 b 5411
 sleep 1
 
-NewBoard 6100 c 6200
+NewBoard 7410 c 7411
 sleep 1
 
-# Give instructions on how to connect/subscribe.
+# Connect and subscribe.
 
-pv2 "INSTRUCTIONS FOR CONNECTION AND SUBSCRIPTION"
-pv " - Connect to '[::]:5300'"
-pv " - Subscribe to '032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b'"
-pv " - Subscribe to '02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b'"
-pv " - Connect to '[::]:6300'"
-pv " - Subscribe to '035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7'"
+NewConnection 7410 "[::]:5412"
+sleep 1
+
+NewSubscription 7410 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b"
+sleep 1
+
+NewSubscription 7410 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b"
+sleep 1
+
+# Add some threads.
+
+for i in {1..9}
+do
+NewTestThread 5410 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" ${i} &
+done
+NewTestThread 5410 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" 10
+
+for i in {1..9}
+do
+NewTestThread 5410 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" ${i} &
+done
+NewTestThread 5410 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" 10
+
+# All done.
+sleep 1
+pv2 "ALL DONE"
 
 wait
