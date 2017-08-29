@@ -8,10 +8,10 @@
   version = "v1.3.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/disiqueira/gotree"
   packages = ["."]
-  revision = "d05a2d1b7080d84969935755628ff9b3e330c585"
-  version = "0.1"
+  revision = "4c287e3603a85571820a6a8ad100a45002150053"
 
 [[projects]]
   name = "github.com/op/go-logging"
@@ -58,6 +58,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f3fc51818da1c9dfa9a12cf02945aa18ef77420867e8ad5c3813f9ccb88b28e5"
+  inputs-digest = "3300bf7852b4c2c6fe59d503c75d0c03b529f3e00d8cb3dfde0069dca1e84c32"
   solver-name = "gps-cdcl"
   solver-version = 1
