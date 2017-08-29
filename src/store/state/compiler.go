@@ -17,7 +17,6 @@ const (
 	LogPrefix = "COMPILER"
 )
 
-type RemoteUpdate func() (*node.Node, *skyobject.Root)
 
 type CompilerConfig struct {
 	UpdateInterval *int // In seconds.
@@ -33,20 +32,20 @@ type Compiler struct {
 	boards map[cipher.PubKey]*BoardInstance
 	adders []views.Adder
 
-	trigger chan RemoteUpdate
+	newRoots chan *skyobject.Root
 	quit    chan struct{}
 	wg      sync.WaitGroup
 }
 
-func NewCompiler(config *CompilerConfig, trigger chan RemoteUpdate, node *node.Node, adders ...views.Adder) *Compiler {
+func NewCompiler(config *CompilerConfig, newRoots chan *skyobject.Root, node *node.Node, adders ...views.Adder) *Compiler {
 	compiler := &Compiler{
-		c:       config,
-		l:       inform.NewLogger(true, os.Stdout, LogPrefix),
-		node:    node,
-		boards:  make(map[cipher.PubKey]*BoardInstance),
-		adders:  adders,
-		trigger: trigger,
-		quit:    make(chan struct{}),
+		c:        config,
+		l:        inform.NewLogger(true, os.Stdout, LogPrefix),
+		node:     node,
+		boards:   make(map[cipher.PubKey]*BoardInstance),
+		adders:   adders,
+		newRoots: newRoots,
+		quit:     make(chan struct{}),
 	}
 	go compiler.updateLoop()
 	return compiler
@@ -76,10 +75,13 @@ func (c *Compiler) updateLoop() {
 		case <-ticker.C:
 			c.doMasterUpdate()
 
-		case trigger := <-c.trigger:
-			c.doRemoteUpdate(trigger)
+		case root := <-c.newRoots:
+			c.doRemoteUpdate(root)
 
 		case <-c.quit:
+			for _, bi := range c.boards {
+				bi.Close()
+			}
 			return
 		}
 	}
@@ -91,6 +93,7 @@ func (c *Compiler) doMasterUpdate() {
 
 	for _, bi := range c.boards {
 		if bi.IsMaster() && bi.UpdateNeeded() {
+			c.l.Println("Update needed for master board:", bi.c.PK.Hex())
 			if e := bi.Update(c.node, nil); e != nil {
 				c.l.Println("Error on update instance:", e)
 			}
@@ -98,9 +101,7 @@ func (c *Compiler) doMasterUpdate() {
 	}
 }
 
-func (c *Compiler) doRemoteUpdate(trigger RemoteUpdate) {
-	n, root := trigger()
-
+func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 	bi, e := c.GetBoard(root.Pub)
 	if e != nil {
 		c.l.Println("Received root error:", e)
@@ -115,7 +116,7 @@ func (c *Compiler) doRemoteUpdate(trigger RemoteUpdate) {
 		}
 	}
 
-	if e := bi.Update(n, root); e != nil {
+	if e := bi.Update(c.node, root); e != nil {
 		c.l.Println("Update board instance error:",
 			e.Error())
 	}
@@ -158,6 +159,19 @@ func (c *Compiler) InitBoard(pk cipher.PubKey, sk ...cipher.SecKey) error {
 	return nil
 }
 
+func (c *Compiler) DeleteBoard(bpk cipher.PubKey) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	bi, has := c.boards[bpk]
+	if !has {
+		return
+	}
+
+	bi.Close()
+	delete(c.boards, bpk)
+}
+
 func (c *Compiler) GetBoard(pk cipher.PubKey) (*BoardInstance, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -167,4 +181,16 @@ func (c *Compiler) GetBoard(pk cipher.PubKey) (*BoardInstance, error) {
 			"board of public key '%s' is not found in compiler", pk.Hex())
 	}
 	return bi, nil
+}
+
+func (c *Compiler) GetBoardForce(pk cipher.PubKey) (*BoardInstance, error) {
+	bi, e := c.GetBoard(pk)
+	if e != nil {
+		if e := c.InitBoard(pk); e != nil {
+			return nil, e
+		}
+		return c.GetBoard(pk)
+	} else {
+		return bi, nil
+	}
 }

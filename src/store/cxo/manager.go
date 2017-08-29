@@ -48,24 +48,24 @@ type Manager struct {
 	node     *node.Node
 	compiler *state.Compiler
 	wg       sync.WaitGroup
-	trigger  chan state.RemoteUpdate
+	newRoots chan *skyobject.Root
 	quit     chan struct{}
 }
 
 // NewManager creates a new CXO manager.
 func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Manager {
 	manager := &Manager{
-		c:       config,
-		l:       inform.NewLogger(true, os.Stdout, LogPrefix),
-		file:    new(object.CXOFile),
-		trigger: make(chan state.RemoteUpdate, 10),
-		quit:    make(chan struct{}),
+		c:        config,
+		l:        inform.NewLogger(true, os.Stdout, LogPrefix),
+		file:     new(object.CXOFile),
+		newRoots: make(chan *skyobject.Root, 10),
+		quit:     make(chan struct{}),
 	}
 	if e := manager.setup(); e != nil {
 		manager.l.Panicln("failed to start CXO manager:", e)
 	}
 	manager.compiler = state.NewCompiler(
-		compilerConfig, manager.trigger, manager.node,
+		compilerConfig, manager.newRoots, manager.node,
 		views.AddContent(),
 		views.AddFollow(),
 	)
@@ -134,42 +134,49 @@ func (m *Manager) setup() error {
 	c.RemoteClose = false
 	fmt.Println("[::]:" + strconv.Itoa(*m.c.CXORPCPort))
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
-	c.OnRootFilled = func(n *node.Node, c *gnet.Conn, root *skyobject.Root) {
+	c.OnRootFilled = func(c *node.Conn, root *skyobject.Root) {
 		select {
-		case m.trigger <- state.RemoteUpdate(func() (*node.Node, *skyobject.Root) {
-			return n, root
-		}):
+		case m.newRoots <- root:
 		default:
 		}
 	}
-	c.OnCreateConnection = func(n *node.Node, c *gnet.Conn) {
+	//c.OnSubscribeRemote = func(c *node.Conn, bpk cipher.PubKey) error {
+	//	if e := c.Node().AddFeed(bpk); e != nil {
+	//		c.Node().Fatal("please replace you HDD")
+	//	}
+	//	return nil
+	//}
+	c.OnCreateConnection = func(c *node.Conn) {
 		go func() {
-			for _, pk := range n.Feeds() {
-				n.Subscribe(c, pk)
+			m.wg.Add(1)
+			defer m.wg.Done()
+
+			for _, pk := range m.node.Feeds() {
+				c.Subscribe(pk)
 			}
 		}()
 	}
-	c.OnCloseConnection = func(n *node.Node, c *gnet.Conn) {
-		m.file.Lock()
-		defer m.file.Unlock()
-		for _, conn := range m.file.Connections {
-			if conn == c.Address() {
-				go func() {
-					m.wg.Add(1)
-					defer m.wg.Done()
-
-					timer := time.NewTimer(5 * time.Second)
-					defer timer.Stop()
-
-					select {
-					case <-m.quit:
-					case <-timer.C:
-						m.node.Pool().Dial(c.Address())
-					}
-				}()
-			}
-		}
-	}
+	//c.OnCloseConnection = func(c *node.Conn) {
+	//	m.file.Lock()
+	//	defer m.file.Unlock()
+	//	for _, conn := range m.file.Connections {
+	//		if conn == c.Address() {
+	//			go func() {
+	//				m.wg.Add(1)
+	//				defer m.wg.Done()
+	//
+	//				timer := time.NewTimer(5 * time.Second)
+	//				defer timer.Stop()
+	//
+	//				select {
+	//				case <-m.quit:
+	//				case <-timer.C:
+	//					m.node.Pool().Dial(c.Address())
+	//				}
+	//			}()
+	//		}
+	//	}
+	//}
 	var e error
 	if m.node, e = node.NewNode(c); e != nil {
 		return e
@@ -178,7 +185,7 @@ func (m *Manager) setup() error {
 		return e
 	}
 	m.init()
-	go m.retryLoop()
+	//go m.retryLoop()
 	return nil
 }
 
@@ -231,23 +238,23 @@ func (m *Manager) init() {
 	<<< LOOPS >>>
 */
 
-func (m *Manager) retryLoop() {
-	m.wg.Add(1)
-	defer m.wg.Done()
-
-	ticker := time.NewTicker(RetryDuration)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			m.init()
-
-		case <-m.quit:
-			return
-		}
-	}
-}
+//func (m *Manager) retryLoop() {
+//	m.wg.Add(1)
+//	defer m.wg.Done()
+//
+//	ticker := time.NewTicker(RetryDuration)
+//	defer ticker.Stop()
+//
+//	for {
+//		select {
+//		case <-ticker.C:
+//			m.init()
+//
+//		case <-m.quit:
+//			return
+//		}
+//	}
+//}
 
 /*
 	<<< CONNECT >>>
@@ -357,9 +364,6 @@ func (m *Manager) SubscribeRemote(bpk cipher.PubKey) error {
 		return e
 	}
 	m.subscribeNode(bpk)
-	//if e := m.compiler.InitBoard(bpk); e != nil {
-	//	return e
-	//}
 	return nil
 }
 
@@ -390,11 +394,32 @@ func (m *Manager) subscribeFileMaster(bpk cipher.PubKey, bsk cipher.SecKey) erro
 	return m.save()
 }
 
-func (m *Manager) subscribeNode(bpk cipher.PubKey) {
-	m.node.Subscribe(nil, bpk)
-	for _, conn := range m.node.Pool().Connections() {
-		m.node.Subscribe(conn, bpk)
+func (m *Manager) subscribeNode(bpk cipher.PubKey) error {
+	if e := m.node.AddFeed(bpk); e != nil {
+		return boo.WrapType(e, boo.Internal,
+			"failed to add feed")
 	}
+	m.l.Printf("Subscribing to feed '%s'...", bpk.Hex())
+	connections, count := m.node.Connections(), 0
+	for _, conn := range connections  {
+		if e := conn.Subscribe(bpk); e != nil {
+			switch e {
+			case node.ErrSubscriptionRejected:
+				m.l.Printf(" - '%s' rejected feed '%s'",
+					conn.Address(), bpk.Hex())
+			default:
+				return boo.WrapType(e, boo.Internal,
+					"failed to subscribe")
+			}
+		} else {
+			count += 1
+			m.l.Printf(" - '%s' accepted feed '%s'",
+				conn.Address(), bpk.Hex())
+		}
+	}
+	m.l.Printf("Feed '%s' accepted on %d/%d connections",
+		bpk.Hex(), count, len(connections))
+	return nil
 }
 
 /*
@@ -434,7 +459,8 @@ func (m *Manager) unsubscribeFileMaster(bpk cipher.PubKey) error {
 }
 
 func (m *Manager) unsubscribeNode(bpk cipher.PubKey) {
-	m.node.Unsubscribe(nil, bpk)
+	m.compiler.DeleteBoard(bpk)
+	m.node.DelFeed(bpk)
 }
 
 /*
@@ -466,11 +492,13 @@ func (m *Manager) GetBoards() ([]interface{}, []interface{}, error) {
 	for i, sub := range m.file.RemoteSubs {
 		bi, e := m.compiler.GetBoard(sub.PK)
 		if e != nil {
-			return nil, nil, e
+			m.l.Println(e)
+			continue
 		}
 		bView, e := bi.Get(views.Content, content_view.Board)
 		if e != nil {
-			return nil, nil, e
+			m.l.Println(e)
+			continue
 		}
 		remoteOut[i] = bView
 	}
@@ -521,7 +549,7 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 		&object.DiffPage{},
 		&object.UsersPage{},
 	)
-	if _, e := pack.Save(); e != nil {
+	if e := pack.Save(); e != nil {
 		return e
 	}
 	node.Publish(pack.Root())
