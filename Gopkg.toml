@@ -20,6 +20,7 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+required = ["github.com/disiqueira/gotree"]
 
 [[constraint]]
   name = "github.com/skycoin/cxo"
@@ -32,3 +33,7 @@
 [[constraint]]
   name = "gopkg.in/urfave/cli.v1"
   version = "1.20.0"
+
+[[constraint]]
+  name = "github.com/disiqueira/gotree"
+  branch = "master"

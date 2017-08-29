@@ -100,14 +100,6 @@ func (m *Manager) GetCurrentFile() (*object.UserFile, error) {
 	return &(*m.file), nil
 }
 
-func (m *Manager) GetUPK() cipher.PubKey {
-	defer m.lock()()
-	if m.file == nil {
-		return cipher.PubKey{}
-	}
-	return m.file.User.PubKey
-}
-
 func (m *Manager) Login(in *object.LoginIO) (*object.UserFile, error) {
 	defer m.lock()()
 	if m.file != nil {
