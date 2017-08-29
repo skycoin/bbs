@@ -13,7 +13,7 @@ import (
 const (
 	Host        string = "[::]:8998" // default host address of the server
 	RPC         string = "[::]:8997" // default RPC address
-	RemoteClose bool   = false
+	RemoteClose bool   = false       // don't allow closing by RPC by default
 )
 
 func waitInterrupt(quit <-chan struct{}) {
@@ -31,7 +31,7 @@ func main() {
 
 	defer func() { os.Exit(code) }()
 
-	var c node.NodeConfig = node.NewNodeConfig()
+	var c = node.NewConfig()
 
 	c.RPCAddress = RPC
 	c.Listen = Host
@@ -43,18 +43,13 @@ func main() {
 	var s *node.Node
 	var err error
 
+	// create and launch
 	if s, err = node.NewNode(c); err != nil {
 		log.Print(err)
 		code = 1
 		return
 	}
 	defer s.Close()
-
-	if err = s.Start(); err != nil {
-		log.Print(err)
-		code = 1
-		return
-	}
 
 	// TODO: subscribe and connect to KNOWN
 

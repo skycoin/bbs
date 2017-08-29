@@ -3,7 +3,6 @@ package session
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
@@ -107,19 +106,6 @@ func (m *Manager) GetUPK() cipher.PubKey {
 		return cipher.PubKey{}
 	}
 	return m.file.User.PubKey
-}
-
-func (m *Manager) Sign(obj interface{}) error {
-	defer m.lock()()
-	if m.file == nil {
-		return ErrNotLoggedIn
-	}
-	tag.Sign(
-		obj,
-		m.file.User.PubKey,
-		m.file.User.SecKey,
-	)
-	return nil
 }
 
 func (m *Manager) Login(in *object.LoginIO) (*object.UserFile, error) {

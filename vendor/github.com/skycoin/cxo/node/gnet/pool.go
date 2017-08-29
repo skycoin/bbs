@@ -52,7 +52,7 @@ func NewPool(c Config) (p *Pool, err error) {
 	p.conf = c
 
 	if c.Logger == nil {
-		p.Logger = log.NewLogger("[pool] ", false)
+		p.Logger = log.NewLogger(log.Config{Prefix: "[pool]", Debug: false})
 	} else {
 		p.Logger = c.Logger
 	}
@@ -103,6 +103,9 @@ func (p *Pool) release() {
 //                                  listeninng                                //
 // ========================================================================== //
 
+// Listen on given address. Only one listener allowed. The listener
+// never recreated. If it fails, you need to recreate entire Pool to
+// listen again
 func (p *Pool) Listen(address string) (err error) {
 	if p.isClosed() {
 		err = ErrClosed
@@ -140,8 +143,8 @@ func (p *Pool) listen(l net.Listener) {
 	defer p.await.Done()
 	defer l.Close()
 
-	p.Debug("start accept loop")
-	defer p.Debug("stop accept loop")
+	p.Debug(log.All, "start accept loop")
+	defer p.Debug(log.All, "stop accept loop")
 
 	var (
 		c   net.Conn
@@ -152,11 +155,11 @@ func (p *Pool) listen(l net.Listener) {
 	)
 
 	for {
-		p.Debug("accept acquiring")
+		p.Debug(log.All, "accept acquiring")
 		if err = p.acquireBlock(); err != nil {
 			return // err closed
 		}
-		p.Debug("accepting")
+		p.Debug(log.All, "accepting")
 		if c, err = l.Accept(); err != nil {
 			p.release()
 			select {
@@ -262,7 +265,7 @@ func (p *Pool) Connections() (cs []*Conn) {
 	return
 }
 
-// Connections returns a connection by address
+// Connection returns a connection by address
 // or nil if connectios with given address doesn't exists
 func (p *Pool) Connection(address string) *Conn {
 	p.cmx.Lock()
@@ -280,7 +283,7 @@ func (p *Pool) closeListener() (err error) {
 	defer p.lmx.Unlock()
 
 	if p.l != nil {
-		p.Debug("close listener")
+		p.Debug(log.All, "close listener")
 
 		err = p.l.Close()
 	}
@@ -288,7 +291,7 @@ func (p *Pool) closeListener() (err error) {
 }
 
 func (p *Pool) closeConnections() {
-	p.Debug("close connections")
+	p.Debug(log.All, "close connections")
 
 	p.cmx.Lock()
 	defer p.cmx.Unlock()
