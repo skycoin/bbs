@@ -2,9 +2,10 @@ package state
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"errors"
 )
 
 func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
@@ -28,7 +29,7 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 		}
 
 		// Get root children pages.
-		pages, e := r0.GetPages(p, nil, true, true, false)
+		pages, e := r0.GetPages(p, nil, false, true, true, false)
 		if e != nil {
 			return e
 		}
@@ -72,7 +73,7 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		}
 
 		// Get root pages.
-		pages, e := r0.GetPages(p, nil, true, true, false)
+		pages, e := r0.GetPages(p, nil, false, true, true, false)
 		if e != nil {
 			return e
 		}
@@ -118,7 +119,7 @@ func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get root children pages.
-		pages, e := r0.GetPages(p, nil, false, true, true)
+		pages, e := r0.GetPages(p, nil, false, false, true, true)
 		if e != nil {
 			return e
 		}
@@ -135,7 +136,46 @@ func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 
 		// Add vote to appropriate user activity page.
 		if e := pages.UsersPage.AddUserActivity(uapHash, vote); e != nil {
-			return e
+
+			// TODO: Actually fix bug where UserActivityHash is not updated. This is a work around.
+
+			// <<< START : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+			bi.l.Printf("Encountered error '%s'. Applying workaround...", e.Error())
+
+			// Error when done.
+			var doneError = errors.New("done")
+			var newUAP *r0.UserActivityPage
+			var newIndex int
+
+			// Find actual uap hash.
+			e := pages.UsersPage.RangeUserActivityPages(func(i int, uap *r0.UserActivityPage) error {
+				if vote.Creator == uap.PubKey {
+					newUAP = uap
+					newIndex = i
+					return doneError
+				}
+				return nil
+			}, nil)
+
+			if e == doneError {
+				e = nil
+				elem, e := pages.UsersPage.Users.RefByIndex(newIndex)
+				if e != nil {
+					return e
+				}
+				if e := newUAP.VoteActions.Append(vote); e != nil {
+					return e
+				}
+				if e := elem.SetValue(newUAP); e != nil {
+					return e
+				}
+			} else {
+				bi.l.Println("Workaround failed...")
+				return boo.New(boo.Internal, "workaround failed")
+			}
+
+			// <<< END : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 		}
 
 		// Add vote to diff page.
@@ -185,7 +225,7 @@ func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get root children.
-		pages, e := r0.GetPages(p, nil, true, false, false)
+		pages, e := r0.GetPages(p, nil, false, true, false, false)
 		if e != nil {
 			return e
 		}

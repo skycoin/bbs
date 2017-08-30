@@ -1,10 +1,10 @@
 package content_view
 
 import (
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"sync"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 /*

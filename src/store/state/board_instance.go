@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
@@ -14,7 +15,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type BoardInstanceConfig struct {
@@ -113,7 +113,7 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 				}
 				node.Publish(p.Root())
 				root = p.Root()
-				newPack = p
+				//newPack = p // <<< ORIGINAL >>>
 				return nil
 			})
 			if e != nil {
@@ -122,15 +122,31 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 
 		} else {
 
-			oldPI.Close()
+			// <<< START : ORIGINAL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-			var e error
-			ct := node.Container()
-			newPack, e = ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), bi.c.SK)
-			if e != nil {
-				return nil, e
-			}
+			//oldPI.Close()
+			//
+			//var e error
+			//ct := node.Container()
+			//newPack, e = ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), bi.c.SK)
+			//if e != nil {
+			//	return nil, e
+			//}
+
+			// <<< END : ORIGINAL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 		}
+
+		// <<< START : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+		oldPI.Close()
+		var e error
+		ct := node.Container()
+		newPack, e = ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), bi.c.SK)
+		if e != nil {
+			return nil, e
+		}
+
+		// <<< END : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 		fmt.Println("NEW ROOT SEQ:", newPack.Root().Seq)
 

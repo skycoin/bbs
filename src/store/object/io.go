@@ -2,9 +2,9 @@ package object
 
 import (
 	"github.com/skycoin/bbs/src/misc/tag"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"time"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 // NewBoard represents io required to create a new board.

@@ -2,10 +2,10 @@ package pack
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 /*
@@ -34,7 +34,7 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 	}
 
 	// Get required root children.
-	pages, e := r0.GetPages(p, nil, true, true, true)
+	pages, e := r0.GetPages(p, nil, false, true, true, true)
 	if e != nil {
 		return nil, e
 	}
