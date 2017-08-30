@@ -11,7 +11,7 @@ export class PopupStack {
     private router: Router) {
     this._windowFactory = _componentFactoryResolver.resolveComponentFactory(PopupWindow);
   }
-  open(content: any, isAutoLeave: boolean = true) {
+  open(content: any) {
     let windowCmpRef: ComponentRef<PopupWindow>
     const containerEl = document.querySelector('body');
     let contentRef = null;
@@ -31,7 +31,7 @@ export class PopupStack {
       // componentRef.destroy();
     }
     containerEl.appendChild(windowCmpRef.location.nativeElement);
-    return { ref: new PopupRef(windowCmpRef, this.router, isAutoLeave), instance: contentRef.instance };
+    return { ref: new PopupRef(windowCmpRef, this.router), instance: contentRef.instance };
   }
   private isString(value: any): value is string {
     return typeof value === 'string';
