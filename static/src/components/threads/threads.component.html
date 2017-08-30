@@ -2,51 +2,30 @@
   <div class="jumbotron">
     <div class="container">
       <h1 class="display-5">{{board?.name}}</h1>
-      <p class="lead break-line">{{board?.description}}</p>
-      <hr class="my-4">
-      <!-- <p>It uses utility classes for typography and spacing to space content out within the larger container.</p> -->
-      <p class="lead text-right">
+      <p class="lead break-line" [innerHTML]="board?.body"></p>
+      <!-- <hr class="my-4"> -->
+      <!-- <p class="lead text-right">
         <a class="btn btn-primary btn-lg" href="javascript:void(0);" role="button" (click)="openAdd(content)">New Thread</a>
-      </p>
+      </p> -->
     </div>
   </div>
   <div class="container">
-    <div class="card" (click)="open(thread?.reference)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
+    <div class="card" (click)="open(thread?.ref)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
       <div class="card-body">
-        <h5>{{thread.title}}</h5>
-        <p class="margin-0 text-muted">{{thread?.body}}</p>
+        <h5>{{thread.name}}</h5>
+        <p class="margin-0 text-muted block-with-text">{{thread?.body}}</p>
         <p class="margin-0 text-right created underline"><small>{{thread?.created / 1000000 | date: 'medium'}}</small></p>
       </div>
     </div>
-    <!-- <table class="table table_fixed table-hover">
-      <thead>
-        <tr>
-          <th scope="col" width="85%">Thread</th>
-          <th scope="col" width="15%" class="more"><i class="fa fa-ellipsis-h"></i></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let thread of threads;" (click)="open(thread?.master_board,thread?.ref)">
-          <td class="break-line" title="{{board?.name}} {{board?.description}}">
-            <h5 class="single-line">
-              <span class="badge badge-pill badge-primary" *ngIf="thread.master_board != board.public_key">Imported</span>{{thread.name}}
-            </h5>
-            <small class="text-muted">
-              {{thread.description}}
-              </small>
-          </td>
-          <td class="more">
-            <a href="javascript:void(0);" (click)="openImport($event,thread.ref,importBox)"><i title="Import Thread" class="fa fa-exchange"></i></a>
-            <a href="javascript:void(0);" (click)="openInfo($event,thread,infoBox)"><i class="fa fa-info-circle"></i></a>
-          </td>
-        </tr>
-      </tbody>
-    </table> -->
     <h5 class="not-found" *ngIf="threads?.length == 0">No Threads Found</h5>
   </div>
 </div>
 
-
+<ng-template #fab>
+  <fab>
+    <fa-button name="New Thread" icon="fa-th-large" (click)="openAdd(add)"></fa-button>
+  </fab>
+</ng-template>
 
 
 <!--Info Box-->
@@ -65,7 +44,7 @@
 </ng-template>
 
 <!--Add Thread-->
-<ng-template #content let-c="close" let-d="dismiss">
+<ng-template #add let-c="close" let-d="dismiss">
   <div class="modal-header">
     <h4 class="modal-title">New Thread</h4>
     <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
@@ -75,8 +54,8 @@
   <div class="modal-body">
     <form [formGroup]="addForm" novalidate>
       <div class="form-group">
-        <label for="title">Thread name</label>
-        <input type="text" class="form-control" placeholder="Title" id="title" formControlName="title">
+        <label for="name">Thread name</label>
+        <input type="text" class="form-control" placeholder="name" id="name" formControlName="name">
       </div>
       <div class="form-group">
         <label for="body">Thread Body</label>

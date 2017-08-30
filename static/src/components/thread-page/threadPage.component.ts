@@ -1,9 +1,19 @@
-import { Component, HostBinding, HostListener, OnInit, ViewEncapsulation, ViewChild, OnDestroy, AfterViewInit } from '@angular/core';
-import { ApiService, CommonService, ThreadPage, Post, VotesSummary, Thread } from '../../providers';
+import {
+  Component,
+  HostBinding,
+  HostListener,
+  OnInit,
+  ViewEncapsulation,
+  ViewChild,
+  AfterViewInit,
+  TemplateRef
+} from '@angular/core';
+import { ApiService, CommonService, ThreadPage, Post, VotesSummary, Thread, Alert, Popup, LoadingService } from '../../providers';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
+import { flyInOutAnimation } from '../../animations/common.animations';
 import 'rxjs/add/operator/filter';
 
 @Component({
@@ -11,19 +21,19 @@ import 'rxjs/add/operator/filter';
   templateUrl: 'threadPage.component.html',
   styleUrls: ['threadPage.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation],
+  animations: [slideInLeftAnimation, flyInOutAnimation],
 })
 
-export class ThreadPageComponent implements OnInit, OnDestroy {
+export class ThreadPageComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  @ViewChild('addPost') replyBox: any;
+  @ViewChild('fab') fab: TemplateRef<any>;
   public sort = 'esc';
   public boardKey = '';
   public threadKey = '';
   public data: ThreadPage;
   public postForm = new FormGroup({
-    title: new FormControl('', Validators.required),
+    name: new FormControl('', Validators.required),
     body: new FormControl('', Validators.required),
   });
   public editorOptions = {
@@ -73,53 +83,88 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private modal: NgbModal,
-    private common: CommonService) {
+    private common: CommonService,
+    private alert: Alert,
+    private pop: Popup,
+    private loading: LoadingService) {
   }
 
   ngOnInit() {
     this.route.params.subscribe(res => {
-      this.boardKey = res['board'];
-      this.threadKey = res['thread'];
+      this.boardKey = res['board_public_key'];
+      this.threadKey = res['thread_ref'];
       this.open(this.boardKey, this.threadKey);
     });
-    this.common.fb.display = 'flex';
-    this.common.fb.handle = () => {
-      this.openReply(this.replyBox);
+    // this.common.fb.display = 'flex';
+    // this.common.fb.handle = () => {
+    //   this.openReply(this.replyBox);
+    // }
+    this.pop.open(this.fab);
+  }
+  Menu(ev: Event, post: Post) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (!post.voteMenu) {
+      post.voteMenu = true;
+    } else {
+      post.voteMenu = false;
     }
   }
-  ngOnDestroy() {
-    this.common.fb.display = 'none';
-    this.common.fb.handle = null;
-  }
+  // upThread(ev: Event) {
+  //   ev.stopImmediatePropagation();
+  //   ev.stopPropagation();
+  //   ev.preventDefault();
+  //   this.data.data.thread.votes.up_votes.count += 1;
+  //   const data = new FormData();
+  //   data.append('mode', '+1');
+  //   this.addThreadVote(data);
+  // }
+  // downThread(ev: Event) {
+  //   ev.stopImmediatePropagation();
+  //   ev.stopPropagation();
+  //   ev.preventDefault();
+  //   this.data.data.thread.votes.down_votes.count += 1;
+  //   const data = new FormData();
+  //   this.addThreadVote(data);
+  // }
   public setSort() {
     this.sort = this.sort === 'desc' ? 'asc' : 'desc';
   }
-  addThreadVote(mode: string, thread: Thread, ev: Event) {
-    // ev.stopImmediatePropagation();
-    // ev.stopPropagation();
-    // if (thread.uiOptions !== undefined && thread.uiOptions.voted !== undefined && thread.uiOptions.voted) {
-    //   return;
-    // }
-    // thread.uiOptions = { voted: true };
-    // const data = new FormData();
-    // data.append('board', this.boardKey);
-    // data.append('thread', thread.ref);
-    // data.append('mode', mode);
-    // this.api.addThreadVote(data).subscribe(result => {
-    //   if (result) {
-    //     data.delete('mode');
-    //     this.api.getThreadVotes(data).subscribe((votes: VotesSummary) => {
-    //       thread.votes.up_votes = votes.up_votes;
-    //       thread.votes.down_votes = votes.down_votes;
-    //     }, err => {
-    //       console.log('update vote fail');
-    //     })
-    //   } else {
-    //     // this.common.showErrorAlert('Vote Fail');
-    //   }
-    // }, err => {
-    //   thread.uiOptions.voted = false;
-    // })
+  trackPosts(index, post) {
+    return post ? post.ref : undefined;
+  }
+  addThreadVote(mode: string, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (!this.data.data.thread.votes) {
+      this.data.data.thread.votes = {
+        up_votes: { count: 0, voted: false },
+        down_votes: { count: 0, voted: false }
+      }
+    }
+    if (mode === '-1') {
+      this.data.data.thread.votes.down_votes.count += 1;
+    } else {
+      this.data.data.thread.votes.up_votes.count += 1;
+    }
+    const data = new FormData();
+    data.append('board_public_key', this.boardKey);
+    data.append('thread_ref', this.threadKey);
+    data.append('mode', mode);
+    this.api.addThreadVote(data).subscribe(voteRes => {
+      if (voteRes.okay) {
+        console.log('voteRes:', voteRes);
+        this.data.data.thread.votes = voteRes.data.votes;
+      }
+    }, err => {
+      if (mode === '-1') {
+        this.data.data.thread.votes.down_votes.count -= 1;
+      } else {
+        this.data.data.thread.votes.up_votes.count -= 1;
+      }
+    })
   }
   addUserVote(mode: string, post: Post, ev: Event) {
     ev.stopImmediatePropagation();
@@ -131,8 +176,8 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
     }
     post.uiOptions = { userVoted: true };
     const data = new FormData();
-    data.append('board', this.boardKey);
-    data.append('user', post.author);
+    data.append('board_public_key', this.boardKey);
+    data.append('post_ref', this.threadKey);
     data.append('mode', mode);
     this.api.addUserVote(data).subscribe(result => {
       if (result) {
@@ -142,34 +187,40 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
         // this.common.showErrorAlert('Vote Fail');
       }
     }, err => {
-      post.uiOptions.userVoted = false;
     })
   }
   addPostVote(mode: string, post: Post, ev: Event) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    post.voteMenu = false;
     if (post.uiOptions !== undefined && post.uiOptions.voted !== undefined && post.uiOptions.voted) {
       return;
     }
-    post.uiOptions = { voted: true };
-    let data = new FormData();
-    data.append('board', this.boardKey);
-    data.append('post', post.ref);
+    if (!post.votes) {
+      post.votes = {
+        up_votes: { count: 0, voted: false },
+        down_votes: { count: 0, voted: false }
+      }
+    }
+    if (mode === '-1') {
+      post.votes.down_votes.count += 1;
+    } else {
+      post.votes.up_votes.count += 1;
+    }
+    const data = new FormData();
+    data.append('board_public_key', this.boardKey);
+    data.append('post_ref', post.ref);
     data.append('mode', mode);
-    this.api.addPostVote(data).subscribe(result => {
-      if (result) {
-        data = new FormData();
-        data.append('board', this.boardKey);
-        data.append('post', post.ref);
-        this.api.getPostVotes(data).subscribe((votes: VotesSummary) => {
-          post.votes.up_votes = votes.up_votes;
-          post.votes.down_votes = votes.down_votes;
-        })
-      } else {
-        // this.common.showErrorAlert('Vote Fail');
+    this.api.addPostVote(data).subscribe(res => {
+      if (res.okay) {
+        post.votes = res.data.votes;
       }
     }, err => {
-      post.uiOptions.voted = false;
+      if (mode === '-1') {
+        post.votes.down_votes.count -= 1;
+      } else {
+        post.votes.up_votes.count -= 1;
+      }
     })
   }
   openReply(content) {
@@ -181,20 +232,17 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
           return;
         }
         const data = new FormData();
-        data.append('board', this.boardKey);
-        data.append('thread', this.threadKey);
-        data.append('title', this.postForm.get('title').value);
+        data.append('board_public_key', this.boardKey);
+        data.append('thread_ref', this.threadKey);
+        data.append('name', this.postForm.get('name').value);
         data.append('body', this.postForm.get('body').value);
-        // this.common.loading.start();
-        this.api.addPost(data).subscribe(post => {
-          if (post) {
-            if (this.data.posts.length > 0) {
-              this.data.posts.unshift(post);
-            } else {
-              this.data.posts = this.data.posts.concat(post);
-            }
-            // this.common.loading.close();
-            // this.common.showAlert('Added successfully', 'success', 3000);
+        this.loading.start();
+        this.api.newPost(data).subscribe((res: ThreadPage) => {
+          if (res.okay) {
+            console.log('res.posts:', res.data.posts);
+            this.data.data.posts = res.data.posts;
+            this.alert.success({ content: 'Added successfully' });
+            this.loading.close();
           }
         });
       }
@@ -212,18 +260,16 @@ export class ThreadPageComponent implements OnInit, OnDestroy {
       post.uiOptions.menu = !post.uiOptions.menu;
     }
   }
-  open(master, ref: string) {
-    if (master === '' || ref === '') {
-      // this.common.showErrorAlert('Parameter error!!!');
+  open(boardKey, ref: string) {
+    if (boardKey === '' || ref === '') {
+      this.alert.error({ content: 'Parameter error!!!' });
       return;
     }
-    // this.common.loading.start();
     const data = new FormData();
-    data.append('board_public_key', master);
-    data.append('thread_reference', ref);
+    data.append('board_public_key', boardKey);
+    data.append('thread_ref', ref);
     this.api.getThreadpage(data).subscribe(res => {
       this.data = res;
-      // this.common.loading.close();
     }, err => {
       this.router.navigate(['']);
     });

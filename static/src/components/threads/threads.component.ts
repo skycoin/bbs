@@ -1,5 +1,5 @@
-import { Component, EventEmitter, HostBinding, OnInit, Output, ViewEncapsulation } from '@angular/core';
-import { ApiService, Board, CommonService, Thread, Alert, BoardPage } from '../../providers';
+import { Component, EventEmitter, HostBinding, OnInit, Output, ViewEncapsulation, ViewChild, TemplateRef } from '@angular/core';
+import { ApiService, Board, CommonService, Thread, Alert, BoardPage, Popup } from '../../providers';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -18,6 +18,7 @@ import 'rxjs/add/operator/switchMap';
 export class ThreadsComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
+  @ViewChild('fab') fabBtnTemplate: TemplateRef<any>;
   threads: Array<Thread> = [];
   importBoards: Array<Board> = [];
   importBoardKey = '';
@@ -29,7 +30,7 @@ export class ThreadsComponent implements OnInit {
 
   public addForm = new FormGroup({
     body: new FormControl('', Validators.required),
-    title: new FormControl('', Validators.required),
+    name: new FormControl('', Validators.required),
   });
   @Output() thread: EventEmitter<{ master: string, ref: string }> = new EventEmitter();
 
@@ -38,7 +39,8 @@ export class ThreadsComponent implements OnInit {
     private route: ActivatedRoute,
     private modal: NgbModal,
     private common: CommonService,
-    private alert: Alert) {
+    private alert: Alert,
+    private pop: Popup) {
   }
 
   ngOnInit() {
@@ -46,6 +48,7 @@ export class ThreadsComponent implements OnInit {
       this.boardKey = params['boardKey'];
       this.init();
     })
+    this.pop.open(this.fabBtnTemplate);
     // this.route.params.subscribe(res => {
     //   this.boardKey = res.params['boardKey'];
     //   this.init();
@@ -88,25 +91,32 @@ export class ThreadsComponent implements OnInit {
   }
 
   openAdd(content) {
-    this.addForm.reset();
-    this.modal.open(content).result.then((result) => {
-      if (result) {
-        if (!this.addForm.valid) {
-          this.alert.error({ content: 'Parameter error!!!' });
-          return;
-        }
-        const data = new FormData();
-        data.append('board_public_key', this.boardKey);
-        data.append('body', this.common.replaceHtmlEnter(this.addForm.get('body').value));
-        data.append('title', this.addForm.get('title').value);
-        this.api.addThread(data).subscribe(threadRes => {
-          console.log('thread:', threadRes);
-          this.threads = threadRes.data.threads;
-          this.alert.success({ content: 'Added successfully' });
+    this.api.getSessionInfo().subscribe(info => {
+      if (info.data.logged_in) {
+        this.addForm.reset();
+        this.modal.open(content).result.then((result) => {
+          if (result) {
+            if (!this.addForm.valid) {
+              this.alert.error({ content: 'Parameter error!!!' });
+              return;
+            }
+            const data = new FormData();
+            data.append('board_public_key', this.boardKey);
+            data.append('body', this.common.replaceHtmlEnter(this.addForm.get('body').value));
+            data.append('name', this.addForm.get('name').value);
+            this.api.newThread(data).subscribe(threadRes => {
+              console.log('thread:', threadRes);
+              this.threads = threadRes.data.threads;
+              this.alert.success({ content: 'Added successfully' });
+            });
+          }
+        }, err => {
         });
+      } else {
+        this.alert.warning({ content: 'Please Login' });
       }
-    }, err => {
-    });
+    })
+
   }
 
   open(ref: string) {
@@ -114,7 +124,7 @@ export class ThreadsComponent implements OnInit {
       // this.common.showErrorAlert('Parameter error!!!');
       return;
     }
-    this.router.navigate(['/threads/p', { board: this.boardKey, thread: ref }]);
+    this.router.navigate(['/threads/p', { board_public_key: this.boardKey, thread_ref: ref }]);
   }
 
   openImport(ev: Event, threadKey: string, content: any) {

@@ -9,16 +9,18 @@ export class PopupRef {
   private _reject: (reason?: any) => void;
   result: Promise<any>;
 
-  constructor(private _windowRef: ComponentRef<PopupWindow>, private router: Router, ) {
+  constructor(private _windowRef: ComponentRef<PopupWindow>, private router: Router, private isAutoLeave = true) {
     this.result = new Promise((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
     });
     this.result.then(null, () => { });
     if (this.router) {
-      this.router.events.filter(ev => ev instanceof NavigationStart).subscribe(() => {
-        this.close();
-      });
+      if (this.isAutoLeave) {
+        this.router.events.filter(ev => ev instanceof NavigationStart).subscribe(() => {
+          this.close();
+        });
+      }
     }
   }
   close(result?: any) {

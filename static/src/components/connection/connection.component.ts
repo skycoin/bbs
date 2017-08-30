@@ -1,5 +1,5 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation } from '@angular/core';
-import { CommonService, ConnectionService } from '../../providers';
+import { CommonService, ConnectionService, ApiService, Connnections, Connnection } from '../../providers';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { AlertComponent } from '../../components/alert/alert.component';
@@ -14,21 +14,19 @@ import { AlertComponent } from '../../components/alert/alert.component';
 export class ConnectionComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  list: Array<string> = [];
+  list: Array<Connnection> = [];
   addUrl = '';
 
-  constructor(private conn: ConnectionService,
+  constructor(
     private modal: NgbModal,
-    private common: CommonService) {
+    private api: ApiService) {
   }
 
   ngOnInit() {
-    this.getAllConnections();
-  }
-
-  getAllConnections() {
-    this.conn.getAllConnections().subscribe(list => {
-      this.list = list;
+    this.api.getAllConnections().subscribe((conns: Connnections) => {
+      console.log('init conns1:', conns);
+      this.list = conns.data.connections;
+      console.log('init conns2:', this.list);
     });
   }
 
@@ -42,12 +40,11 @@ export class ConnectionComponent implements OnInit {
         }
         const data = new FormData();
         data.append('address', this.addUrl);
-        this.conn.addConnection(data).subscribe(isOk => {
-          if (isOk) {
-            this.getAllConnections();
-            // this.common.showAlert('The connection was added successfully', 'success', 3000);
+        this.api.newConnection(data).subscribe((conns: Connnections) => {
+          if (conns.okay) {
+            this.list = conns.data.connections;
           }
-        });
+        })
       }
     }, err => {
     });
@@ -61,12 +58,11 @@ export class ConnectionComponent implements OnInit {
       if (result) {
         const data = new FormData();
         data.append('address', address);
-        this.conn.removeConnection(data).subscribe(isOk => {
-          if (isOk) {
-            this.getAllConnections();
-            // this.common.showAlert('The connection has been deleted', 'success', 3000);
+        this.api.delConnection(data).subscribe((conns: Connnections) => {
+          if (conns.okay) {
+            this.list = conns.data.connections;
           }
-        });
+        })
       }
     }, err => { });
   }

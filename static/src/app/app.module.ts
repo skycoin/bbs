@@ -24,7 +24,9 @@ import {
   FixedButtonComponent,
   FabComponent,
   FabButton,
-  ToTopComponent
+  ToTopComponent,
+  VoteBoxComponent,
+  ChipComponent
 } from '../components';
 import { SafeHTMLPipe, OrderByPipe, RepalcePipe } from '../pipes';
 import { ClipDirective, IscrollDirective } from '../directives/index';
@@ -64,6 +66,8 @@ import { DialogModule } from '../providers/dialog/dialog.module';
     FabButton,
     FixedButtonComponent,
     ToTopComponent,
+    VoteBoxComponent,
+    ChipComponent,
     // Pipes
     SafeHTMLPipe,
     OrderByPipe,
