@@ -17,20 +17,3 @@ export const AlertAnimation: AnimationEntryMetadata =
       }))
     ])
   ])
-export const DialogAnimation: AnimationEntryMetadata =
-  trigger('dialogInOut', [
-    state('void', style({ opacity: 1, transform: 'scale3d(1)' })),
-    transition('void => *', [
-      style({
-        opacity: 0,
-        transform: 'scale3d(0.5)'
-      }),
-      animate('0.3s ease-in')
-    ]),
-    transition('* => void', [
-      animate('0.3s 0.1s ease-out', style({
-        opacity: 0,
-        transform: 'scale3d(0.5)'
-      }))
-    ])
-  ])
