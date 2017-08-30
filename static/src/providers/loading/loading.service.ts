@@ -5,7 +5,7 @@ import 'rxjs/add/observable/timer'
 
 @Injectable()
 export class LoadingService {
-  static ref: ComponentRef<LoadingComponent>;
+  private ref: ComponentRef<LoadingComponent>;
   constructor(private _componentFactoryResolver: ComponentFactoryResolver,
     private _injector: Injector, private _applicationRef: ApplicationRef) { }
 
@@ -20,19 +20,14 @@ export class LoadingService {
   }
 
   close() {
-    Observable.timer(10).subscribe(() => {
-      if (LoadingService.ref) {
-        LoadingService.ref.destroy();
-        LoadingService.ref = null;
-      }
-    });
+    this.ref.destroy();
     return Promise.resolve();
   }
   private show(loadingText: string, options?: LoadingOptions) {
     const containerEl = document.querySelector('body');
     const contentCmptFactory = this._componentFactoryResolver.resolveComponentFactory(LoadingComponent);
-    LoadingService.ref = contentCmptFactory.create(this._injector);
-    const instance = LoadingService.ref.instance;
+    this.ref = contentCmptFactory.create(this._injector);
+    const instance = this.ref.instance;
     instance.loadingText = loadingText;
     instance.iconColor = options.IconColor;
     instance.textColor = options.TextColor;
@@ -41,8 +36,8 @@ export class LoadingService {
         this.close();
       })
     }
-    this._applicationRef.attachView(LoadingService.ref.hostView);
-    containerEl.appendChild(LoadingService.ref.location.nativeElement);
+    this._applicationRef.attachView(this.ref.hostView);
+    containerEl.appendChild(this.ref.location.nativeElement);
   }
 
 }

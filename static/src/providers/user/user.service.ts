@@ -8,8 +8,7 @@ import { User } from './user.msg';
 
 @Injectable()
 export class UserService {
-  private baseUrl = 'http://127.0.0.1:7410/api/';
-  private userUrl = this.baseUrl + 'session/users/';
+  private baseUrl = 'http://127.0.0.1:7410/api/users/';
   private mastersUrl = this.baseUrl + 'masters/';
   private currentUrl = this.mastersUrl + 'current/';
 
@@ -29,8 +28,8 @@ export class UserService {
   }
 
   getAll() {
-    return this.common.handleGet(this.userUrl + 'get_all');
-
+    return this.http.get(this.baseUrl + 'get_all').map((res: Response) => <Array<User>>res.json())
+      .catch(err => this.common.handleError(err));
   }
 
   setCurrent(data: FormData) {

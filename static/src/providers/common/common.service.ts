@@ -4,12 +4,11 @@ import 'rxjs/add/observable/throw';
 import { Observable } from 'rxjs/Observable';
 import { FixedButtonComponent } from '../../components';
 import { Alert } from '../alert/alert.service';
-import { LoadingService } from '../loading/loading.service';
 
 @Injectable()
 export class CommonService {
   public fb: FixedButtonComponent = null;
-  constructor(private http: HttpClient, private alert: Alert, private loading: LoadingService) {
+  constructor(private http: HttpClient, private alert: Alert) {
   }
 
   replaceURL(str: string) {
@@ -59,7 +58,6 @@ export class CommonService {
         title: json ? json.title : errorResponse.statusText,
         content: json ? json.details : errorResponse.message
       });
-    this.loading.close();
     return Observable.throw(json ? json.details : errorResponse.message);
   }
 

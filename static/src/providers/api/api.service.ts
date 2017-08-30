@@ -6,43 +6,13 @@ import 'rxjs/add/operator/catch';
 @Injectable()
 export class ApiService {
   private baseUrl = 'http://127.0.0.1:7410/api/';
-  private voteUrl = this.baseUrl + 'votes/';
-  private connUrl = this.baseUrl + 'connections/'
-  private sessionUrl = this.baseUrl + 'session/'
-  private userUrl = this.sessionUrl + 'users/';
   private subscriptionsUrl = this.baseUrl + 'subscriptions/';
-  private contentUrl = this.baseUrl + 'content/';
-  private submissionAddressUrl = this.baseUrl + 'admin/board/';
+  private boardsUrl = this.baseUrl + 'content/';
+  private submissionAddressUrl = this.boardsUrl + 'meta/submission_addresses/';
   private threadsUrl = this.baseUrl + 'threads/';
   private postsUrl = this.baseUrl + 'posts/';
 
   constructor(private common: CommonService) {
-  }
-
-  delConnection(data: FormData) {
-    return this.common.handlePost(this.connUrl + 'delete', data);
-  }
-  newConnection(data: FormData) {
-    return this.common.handlePost(this.connUrl + 'new', data);
-  }
-  getAllConnections() {
-    return this.common.handleGet(this.connUrl + 'get_all');
-  }
-  delUser(data: FormData) {
-    return this.common.handlePost(this.userUrl + 'delete', data);
-  }
-  getAllUser() {
-    return this.common.handleGet(this.userUrl + 'get_all');
-
-  }
-  logout() {
-    return this.common.handleGet(this.sessionUrl + 'logout');
-  }
-  login(data: FormData) {
-    return this.common.handlePost(this.sessionUrl + 'login', data);
-  }
-  getSessionInfo() {
-    return this.common.handleGet(this.sessionUrl + 'get_info');
   }
 
   addUserVote(data: FormData) {
@@ -50,11 +20,11 @@ export class ApiService {
   }
 
   addThreadVote(data: FormData) {
-    return this.common.handlePost(this.voteUrl + 'vote_thread', data);
+    return this.common.handlePost(this.baseUrl + 'threads/votes/add', data);
   }
 
   addPostVote(data: FormData) {
-    return this.common.handlePost(this.voteUrl + 'vote_post', data);
+    return this.common.handlePost(this.baseUrl + 'posts/votes/add', data);
   }
 
   getUserVotes(data: FormData) {
@@ -75,12 +45,12 @@ export class ApiService {
     return this.common.handlePost(this.submissionAddressUrl + 'get_all', data);
   }
 
-  newSubmissionAddress(data: FormData) {
-    return this.common.handlePost(this.submissionAddressUrl + 'new_submission_address', data);
+  addSubmissionAddress(data: FormData) {
+    return this.common.handlePost(this.submissionAddressUrl + 'add', data);
   }
 
-  delSubmissionAddress(data: FormData) {
-    return this.common.handlePost(this.submissionAddressUrl + 'delete_submission_address', data);
+  removeSubmissionAddress(data: FormData) {
+    return this.common.handlePost(this.submissionAddressUrl + 'remove', data);
   }
 
   getSubscriptions() {
@@ -108,7 +78,7 @@ export class ApiService {
   }
 
   getBoards() {
-    return this.common.handleGet(this.contentUrl + 'get_boards');
+    return this.common.handleGet(this.boardsUrl + 'get_boards');
   }
 
   getPosts(data: FormData) {
@@ -117,28 +87,28 @@ export class ApiService {
   }
 
   getBoardPage(data: any) {
-    return this.common.handlePost(this.contentUrl + 'get_board_page', data);
+    return this.common.handlePost(this.boardsUrl + 'get_board_page', data);
   }
 
   getThreadpage(data: FormData) {
-    return this.common.handlePost(this.contentUrl + 'get_thread_page', data);
+    return this.common.handlePost(this.threadsUrl + 'page/get', data);
 
   }
 
   addBoard(data: FormData) {
-    return this.common.handlePost(this.contentUrl + 'new_board', data);
+    return this.common.handlePost(this.boardsUrl + 'new_board', data);
   }
 
   delBoard(data: FormData) {
-    return this.common.handlePost(this.contentUrl + 'delete_board', data);
+    return this.common.handlePost(this.boardsUrl + 'delete_board', data);
   }
-  newThread(data: FormData) {
-    return this.common.handlePost(this.contentUrl + 'new_thread', data);
+  addThread(data: FormData) {
+    return this.common.handlePost(this.threadsUrl + 'new', data);
 
   }
 
-  newPost(data: FormData) {
-    return this.common.handlePost(this.contentUrl + 'new_post', data);
+  addPost(data: FormData) {
+    return this.common.handlePost(this.postsUrl + 'add', data);
 
   }
 

@@ -1,22 +1,3 @@
-export interface Connnections extends Base {
-  data?: ConnnectionData;
-}
-export interface ConnnectionData {
-  connections: Array<Connnection>;
-}
-export interface Connnection {
-  address?: string;
-  state?: string;
-}
-export interface Users extends Base {
-  data: UserData;
-}
-export interface UserData {
-  users?: Array<User>;
-}
-export interface User {
-  alias?: string;
-}
 export interface VotesSummary {
   up_votes?: number; // Total number of up-votes.
   down_votes?: number; // Total number of down-votes.
@@ -25,14 +6,13 @@ export interface VotesSummary {
 }
 
 export interface Post {
-  name?: string;
+  title?: string;
   body?: string;
-  creator?: string;
+  author?: string;
   created?: number;
   ref?: string;
-  votes?: Votes;
+  votes?: VotesSummary; // Posts now have vote summary here.
   uiOptions?: VoteOptions;
-  voteMenu?: boolean;
 }
 
 export interface VoteOptions {
@@ -41,14 +21,12 @@ export interface VoteOptions {
   menu?: boolean;
 }
 
-export interface ThreadPage extends Base {
-  data?: ThreadPageData;
-}
-export interface ThreadPageData {
+export interface ThreadPage {
   board?: Board;
   thread?: Thread;
   posts?: Array<Post>;
 }
+
 export interface BoardPage extends Base {
   data?: BoardPageData;
 }
@@ -64,19 +42,19 @@ export interface Stats {
 }
 
 export interface Thread {
-  name?: string;
+  title?: string;
   body?: string;
   created?: number;
-  ref?: string;
-  creator?: string;
-  // author_alias?: string;
+  reference?: string;
+  author_reference?: string;
+  author_alias?: string;
   votes?: Votes;
   uiOptions?: VoteOptions;
 }
 export interface Votes {
-  ref?: string;
-  up_votes?: VoteData;
-  down_votes?: VoteData;
+  up?: VoteData;
+  down?: VoteData;
+  spam?: VoteData;
 }
 export interface VoteData {
   voted?: boolean;

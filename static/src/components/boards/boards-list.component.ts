@@ -1,5 +1,5 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation, ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
-import { ApiService, CommonService, UserService, AllBoards, Alert, Popup, Dialog, LoadingService } from '../../providers';
+import { ApiService, CommonService, UserService, AllBoards, Alert, Popup, Dialog } from '../../providers';
 import { Board } from '../../providers/api/msg';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -28,7 +28,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     board: new FormControl('', Validators.required),
   });
   addressForm = new FormGroup({
-    ip: new FormControl(''),
+    ip: new FormControl('', Validators.required),
     port: new FormControl('', Validators.required),
   });
   addForm = new FormGroup({
@@ -47,16 +47,16 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     public common: CommonService,
     private pop: Popup,
     private alert: Alert,
-    private dialog: Dialog,
-    private loading: LoadingService) {
+    private dialog: Dialog) {
   }
 
   ngOnInit(): void {
+    // const ref = this.dialog.open();
+    // console.log('ref:', ref);
     this.getBoards();
     this.api.getStats().subscribe(status => {
       this.isRoot = status.node_is_master;
     });
-
   }
   ngAfterViewInit() {
     this.pop.open(this.fabBtnTemplate);
@@ -78,28 +78,27 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   addAddress(content: any, key: string) {
     this.addressForm.reset();
     if (key === '') {
-      this.alert.error({ content: 'The Key can not be empty!!!' });
+      // this.common.showErrorAlert('The Key can not be empty!!!');
       return;
     }
     this.modal.open(content, { windowClass: 'multi-modal' }).result.then((reslut) => {
       if (reslut) {
         if (!this.addressForm.valid) {
-          this.alert.error({ content: 'The Port Or Url can not be empty!!!' });
+          // this.common.showErrorAlert('The Port Or Url can not be empty!!!');
           return;
         }
-        const data = new FormData();
-        data.append('board_public_key', key);
-        let ip = this.addressForm.get('ip').value;
-        if (ip === '' || !ip) {
-          ip = '[::]:'
-        } else {
-          ip = ip + ':';
-        }
-        data.append('address', ip + this.addressForm.get('port').value);
-        this.loading.start();
-        this.api.newSubmissionAddress(data).subscribe(res => {
-          this.tmpBoard.submission_addresses = res.data.board.submission_addresses;
-          this.loading.close();
+        let data = new FormData();
+        data.append('board', key);
+        data.append('address', this.addressForm.get('ip').value + ':' + this.addressForm.get('port').value);
+        this.api.addSubmissionAddress(data).subscribe(isOk => {
+          if (isOk) {
+            data = new FormData();
+            data.append('board', key);
+            this.api.getSubmissionAddresses(data).subscribe(res => {
+              this.tmpBoard.submission_addresses = res;
+            });
+            // this.common.showSucceedAlert('successfully added');
+          }
         });
       }
     });
@@ -157,18 +156,25 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
       // this.common.showErrorAlert('The key and address can not be empty');
       return;
     }
-    const data = new FormData();
-    data.append('board_public_key', key);
+    let data = new FormData();
+    data.append('board', key);
     data.append('address', address);
     const modalRef = this.modal.open(AlertComponent, { windowClass: 'multi-modal' });
     modalRef.componentInstance.title = 'Delete Address';
     modalRef.componentInstance.body = 'Do you delete the address?';
     modalRef.result.then(result => {
       if (result) {
-        this.loading.start();
-        this.api.delSubmissionAddress(data).subscribe(res => {
-          this.tmpBoard.submission_addresses = res.data.board.submission_addresses;
-          this.loading.close();
+        this.api.removeSubmissionAddress(data).subscribe(isOk => {
+          if (isOk) {
+            data = new FormData();
+            data.append('board', key);
+            this.api.getSubmissionAddresses(data).subscribe(res => {
+              this.tmpBoard.submission_addresses = res;
+            });
+            // this.common.showSucceedAlert('deleted successfully');
+          } else {
+            // this.common.showErrorAlert('failed to delete');
+          }
         });
       }
     }, err => { });
