@@ -1,5 +1,5 @@
 <div class="container">
-  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.thread?.title != '' " [@flyInOut]>
+  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.data?.thread?.name != '' " [@flyInOut]>
 
     <div class="content-box">
       <div class="other-block">
@@ -52,11 +52,17 @@
                 </i>
               </small>
             </div>
-            <p class="card-text text-primary author-box" placement="top">
-              <small class="single-line post-author" title="{{item?.author}}" [ngbTooltip]="item?.author">{{item?.creator}}</small>
-              <small class="action-box">
-            </small>
-            </p>
+            <div class="card-text author-box">
+              <span>
+                  <small class="single-line author">
+                      {{item?.creator}}
+                    </small>
+                    <div class="user-info-menu" *ngIf="false">
+                        <h6>{{item?.creator}}</h6>
+                      </div>
+              </span>
+
+            </div>
             <p class="card-text text-muted break-line" [innerHTML]="item?.body | safeHtml"></p>
             <div class="card-block" *ngIf="item?.votes?.up_votes?.count || item?.votes?.down_votes?.count">
               <p class="text-right p-0">

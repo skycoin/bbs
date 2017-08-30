@@ -84,7 +84,7 @@ export interface VoteData {
 }
 export interface Board {
   name?: string;
-  description?: string;
+  body?: string;
   created?: number;
   submission_addresses?: Array<string>;
   public_key?: string;

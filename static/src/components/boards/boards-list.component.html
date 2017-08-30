@@ -14,7 +14,21 @@
         <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p>
       </div>
     </div>
-    <h5 class="not-found" *ngIf="boards?.length == 0">
+    <div class="card" (click)="openThreads($event,board.public_key)" *ngFor="let board of (remoteBoards | orderBy: sort);let i = index;trackBy: trackBoards"
+    [@flyInOut]>
+    <div class="card-block">
+      <div>
+        <h5 class="single-line name">{{board?.name}}</h5>
+        <p class="text-right action">
+          <a href="javascript:void(0);" (click)="delBoard($event,board?.public_key)"><i class="fa fa-trash" aria-hidden="true" aria-label="subscribe"></i></a>
+          <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
+        </p>
+      </div>
+      <p class="description block-with-text" [innerHTML]="board?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
+      <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p>
+    </div>
+  </div>
+    <h5 class="not-found" *ngIf="boards?.length === 0 && remoteBoards?.length === 0">
       <p><i class="fa fa-exclamation-circle fa-2x" aria-hidden="true"></i></p>
       <p class="hint-text">No Boards Found</p>
     </h5>

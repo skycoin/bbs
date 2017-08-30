@@ -158,34 +158,17 @@ app-threadpage {
           margin: 0;
         }
         .author-box {
-          display: flex;
-          .action-box {
-            position: relative;
-            cursor: pointer;
-            &:hover {
-              color: red;
-            }
-            .overlay {
-              position: fixed;
-              top: -70px;
-              bottom: 0;
-              left: 0;
-              right: 0;
-              z-index: 9999;
-              background-color: transparent;
-            }
-            .author-menu {
-              position: absolute;
-              display: block;
-              top: 90%;
-              left: -70%;
-              min-width: auto;
-            }
-          }
-          .post-author {
-            position: relative;
+          .author {
             display: inline-block;
             width: 10rem;
+          }
+          span {
+            position: relative;
+            .user-info-menu {
+              position: absolute;
+              top: 150%;
+              background-color: #ccc;
+            }
           }
         }
         .card-text {
