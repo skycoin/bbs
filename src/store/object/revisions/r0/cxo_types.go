@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	RootPageName         = "bbs.r0.RootPage"
 	BoardPageName        = "bbs.r0.BoardPage"
 	ThreadPageName       = "bbs.r0.ThreadPage"
 	DiffPageName         = "bbs.r0.DiffPage"
@@ -43,6 +44,7 @@ var indexString = [...]string{
 
 type Pages struct {
 	PK        cipher.PubKey
+	RootPage *RootPage
 	BoardPage *BoardPage
 	DiffPage  *DiffPage
 	UsersPage *UsersPage
@@ -51,6 +53,10 @@ type Pages struct {
 func GetPages(p *skyobject.Pack, mux *sync.Mutex, get ...bool) (out *Pages, e error) {
 	defer dynamicLock(mux)()
 	out = &Pages{PK: p.Root().Pub}
+
+	if len(get) > IndexRootPage && get[IndexRootPage] {
+		// TODO: Implement.
+	}
 
 	if len(get) > IndexBoardPage && get[IndexBoardPage] {
 		if out.BoardPage, e = GetBoardPage(p, nil); e != nil {
@@ -100,10 +106,9 @@ const (
 
 // RootPage helps determine the type, version of the root, and whether the root has been deleted.
 type RootPage struct {
-	Type    string // Type of root.
-	Version uint64 // Version of root type.
-	Deleted bool   // Whether root is deleted.
-	Meta    []byte // Other stuff.
+	Typ string // Type of root.
+	Rev uint64 // Revision of root type.
+	Del bool   // Whether root is deleted.
 }
 
 /*
@@ -514,6 +519,7 @@ func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivity
 */
 
 type UserActivityPage struct {
+	R cipher.SHA256 `enc:"-"`
 	PubKey      cipher.PubKey
 	VoteActions skyobject.Refs `skyobject:"schema=bbs.r0.Vote"`
 }
@@ -528,6 +534,7 @@ func GetUserActivityPage(uapElem *skyobject.RefsElem, mux *sync.Mutex) (*UserAct
 	if !ok {
 		return nil, elemExtErr(uapElem)
 	}
+	uap.R = uapElem.Hash
 	return uap, nil
 }
 

@@ -2,11 +2,11 @@ package follow_view
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type FollowView struct {
@@ -19,7 +19,7 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *sync
 	v.uMap = make(map[cipher.PubKey]*FollowRep)
 
 	// Get pages.
-	pages, e := r0.GetPages(pack, mux, false, false, true)
+	pages, e := r0.GetPages(pack, mux, false, false, false, true)
 	if e != nil {
 		return e
 	}

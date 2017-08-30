@@ -3,8 +3,8 @@ package store
 import (
 	"context"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 type UsersOutput struct {

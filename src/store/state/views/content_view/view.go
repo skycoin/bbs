@@ -2,12 +2,12 @@ package content_view
 
 import (
 	"fmt"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"sync"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type ContentView struct {
@@ -22,7 +22,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := r0.GetPages(pack, mux, true, false, true)
+	pages, e := r0.GetPages(pack, mux, false, true, false, true)
 	if e != nil {
 		return e
 	}
@@ -78,7 +78,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := r0.GetPages(pack, mux, true)
+	pages, e := r0.GetPages(pack, mux, false, true)
 	if e != nil {
 		return e
 	}

@@ -4,9 +4,8 @@
 package consensus
 
 import (
-//"github.com/skycoin/skycoin/src/cipher"
+	//"github.com/skycoin/skycoin/src/cipher"
 )
-
 ////////////////////////////////////////////////////////////////////////////////
 type ConnectionManagerInterface interface {
 	SendBlockToAllMySubscriber(blockPtr *BlockBase)
@@ -22,5 +21,4 @@ type ConnectionManagerInterface interface {
 	// function. This is not currently enforced, but is required for the
 	// consensus to work properly.
 }
-
 ////////////////////////////////////////////////////////////////////////////////

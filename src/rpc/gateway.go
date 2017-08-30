@@ -3,8 +3,8 @@ package rpc
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/cxo"
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 // Gateway is the access point for remote clients to interact with.

@@ -3,8 +3,8 @@ package rpc
 import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"net/rpc"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"net/rpc"
 )
 
 // Call represents a function that outputs method and input object of call.

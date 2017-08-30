@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
@@ -20,7 +21,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 const (
@@ -113,6 +113,7 @@ func (m *Manager) setup() error {
 	c.Log.Prefix = "[CXO] "
 	c.Log.Debug = false
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
+		t.Register(r0.RootPageName, r0.RootPage{})
 		t.Register(r0.BoardPageName, r0.BoardPage{})
 		t.Register(r0.ThreadPageName, r0.ThreadPage{})
 		t.Register(r0.DiffPageName, r0.DiffPage{})
@@ -502,6 +503,11 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 		return e
 	}
 	pack.Append(
+		&r0.RootPage{
+			Typ: r0.RootTypeBoard,
+			Rev: 0,
+			Del: false,
+		},
 		&r0.BoardPage{
 			Board: pack.Ref(in.Board),
 		},

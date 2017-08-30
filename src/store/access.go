@@ -6,13 +6,13 @@ import (
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"github.com/skycoin/skycoin/src/cipher"
 	"time"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type Access struct {
