@@ -1,10 +1,10 @@
 package content_view
 
 import (
-	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"sync"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 /*
@@ -29,8 +29,8 @@ type BoardRep struct {
 	Threads      []IndexHash
 }
 
-func (r *BoardRep) Fill(pk cipher.PubKey, board *object.Board) *BoardRep {
-	data := object.GetData(board)
+func (r *BoardRep) Fill(pk cipher.PubKey, board *r0.Board) *BoardRep {
+	data := r0.GetData(board)
 	r.PubKey = pk
 	r.Name = data.Name
 	r.Body = data.Body
@@ -75,8 +75,8 @@ type ThreadRep struct {
 	Posts   []IndexHash
 }
 
-func (r *ThreadRep) FillThread(thread *object.Thread, mux *sync.Mutex) *ThreadRep {
-	data := object.GetData(thread)
+func (r *ThreadRep) FillThread(thread *r0.Thread, mux *sync.Mutex) *ThreadRep {
+	data := r0.GetData(thread)
 	r.Ref = thread.R
 	r.Name = data.Name
 	r.Body = data.Body
@@ -85,13 +85,13 @@ func (r *ThreadRep) FillThread(thread *object.Thread, mux *sync.Mutex) *ThreadRe
 	return r
 }
 
-func (r *ThreadRep) FillThreadPage(tPage *object.ThreadPage, mux *sync.Mutex) *ThreadRep {
+func (r *ThreadRep) FillThreadPage(tPage *r0.ThreadPage, mux *sync.Mutex) *ThreadRep {
 	t, e := tPage.GetThread(mux)
 	if e != nil {
 		log.Println("ThreadRep.FillThreadPage() Error:", e)
 		return nil
 	}
-	data := object.GetData(t)
+	data := r0.GetData(t)
 	r.Ref = t.R
 	r.Name = data.Name
 	r.Body = data.Body
@@ -139,8 +139,8 @@ type PostRep struct {
 	Creator cipher.PubKey
 }
 
-func (r *PostRep) Fill(post *object.Post, mux *sync.Mutex) *PostRep {
-	data := object.GetData(post)
+func (r *PostRep) Fill(post *r0.Post, mux *sync.Mutex) *PostRep {
+	data := r0.GetData(post)
 	r.Ref = post.R
 	r.Name = data.Name
 	r.Body = data.Body
@@ -180,18 +180,18 @@ func (r *PostRep) View(i int, votes *VoteRepView) *PostRepView {
 
 type VotesRep struct {
 	Ref       cipher.SHA256
-	Votes     map[cipher.PubKey]*object.Vote
+	Votes     map[cipher.PubKey]*r0.Vote
 	UpCount   int
 	DownCount int
 }
 
 func (r *VotesRep) Fill(hash cipher.SHA256) *VotesRep {
 	r.Ref = hash
-	r.Votes = make(map[cipher.PubKey]*object.Vote)
+	r.Votes = make(map[cipher.PubKey]*r0.Vote)
 	return r
 }
 
-func (r *VotesRep) Add(vote *object.Vote) {
+func (r *VotesRep) Add(vote *r0.Vote) {
 	if oldVote, has := r.Votes[vote.Creator]; has {
 		switch oldVote.Mode {
 		case +1:

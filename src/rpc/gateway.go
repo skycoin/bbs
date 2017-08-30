@@ -3,8 +3,8 @@ package rpc
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/cxo"
-	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 // Gateway is the access point for remote clients to interact with.
@@ -13,7 +13,7 @@ type Gateway struct {
 }
 
 // NewThread accepts a request to create a new thread, returning a sequence goal or error.
-func (g *Gateway) NewThread(thread *object.Thread, goal *uint64) error {
+func (g *Gateway) NewThread(thread *r0.Thread, goal *uint64) error {
 	if thread == nil || goal == nil {
 		return boo.New(boo.InvalidInput, "nil error")
 	}
@@ -31,7 +31,7 @@ func (g *Gateway) NewThread(thread *object.Thread, goal *uint64) error {
 }
 
 // NewPost accepts a request to create a new post, returning a sequence goal or error.
-func (g *Gateway) NewPost(post *object.Post, goal *uint64) error {
+func (g *Gateway) NewPost(post *r0.Post, goal *uint64) error {
 	if post == nil || goal == nil {
 		return boo.New(boo.InvalidInput, "nil error")
 	}
@@ -49,7 +49,7 @@ func (g *Gateway) NewPost(post *object.Post, goal *uint64) error {
 }
 
 // NewVote accepts a request to create a new vote, returning a sequence goal or error.
-func (g *Gateway) NewVote(vote *object.Vote, goal *uint64) error {
+func (g *Gateway) NewVote(vote *r0.Vote, goal *uint64) error {
 	if vote == nil || goal == nil {
 		return boo.New(boo.InvalidInput, "nil error")
 	}

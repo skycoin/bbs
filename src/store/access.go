@@ -12,6 +12,7 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"github.com/skycoin/skycoin/src/cipher"
 	"time"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type Access struct {
@@ -191,8 +192,8 @@ func (a *Access) AddSubmissionAddress(ctx context.Context, in *object.Submission
 			"this node does not own board of public key '%s'",
 			in.BoardPubKeyStr)
 	}
-	goal, e := bi.BoardAction(func(board *object.Board) (bool, error) {
-		data := object.GetData(board)
+	goal, e := bi.BoardAction(func(board *r0.Board) (bool, error) {
+		data := r0.GetData(board)
 		for _, address := range data.SubAddresses {
 			if address == in.SubAddress {
 				return false, boo.Newf(boo.AlreadyExists,
@@ -204,7 +205,7 @@ func (a *Access) AddSubmissionAddress(ctx context.Context, in *object.Submission
 			data.SubAddresses,
 			in.SubAddress,
 		)
-		object.SetData(board, data)
+		r0.SetData(board, data)
 		return true, nil
 	})
 	if e != nil {
@@ -233,8 +234,8 @@ func (a *Access) RemoveSubmissionAddress(ctx context.Context, in *object.Submiss
 			"this node does not own board of public key '%s'",
 			in.BoardPubKeyStr)
 	}
-	goal, e := bi.BoardAction(func(board *object.Board) (bool, error) {
-		data := object.GetData(board)
+	goal, e := bi.BoardAction(func(board *r0.Board) (bool, error) {
+		data := r0.GetData(board)
 		for i, address := range data.SubAddresses {
 			if address == in.SubAddress {
 				// Deletion.
@@ -242,7 +243,7 @@ func (a *Access) RemoveSubmissionAddress(ctx context.Context, in *object.Submiss
 					data.SubAddresses[:i],
 					data.SubAddresses[i+1:]...,
 				)
-				object.SetData(board, data)
+				r0.SetData(board, data)
 				return true, nil
 			}
 		}

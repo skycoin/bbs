@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
@@ -15,6 +14,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type BoardInstanceConfig struct {
@@ -33,7 +33,7 @@ type BoardInstance struct {
 	pi    *PackInstance
 	views map[string]views.View
 
-	changesChan chan *object.Changes // Changes to tree (for output - web socket).
+	changesChan chan *r0.Changes // Changes to tree (for output - web socket).
 
 	needUpdateMux sync.RWMutex
 	needUpdate    bool
@@ -52,7 +52,7 @@ func NewBoardInstance(
 		c:           config,
 		l:           inform.NewLogger(true, os.Stdout, "INSTANCE:"+config.PK.Hex()),
 		views:       make(map[string]views.View),
-		changesChan: make(chan *object.Changes, 10),
+		changesChan: make(chan *r0.Changes, 10),
 	}
 
 	// Prepare flags.
@@ -167,7 +167,7 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 }
 
 // ChangesChan for WebSocket goodness.
-func (bi *BoardInstance) ChangesChan() chan *object.Changes {
+func (bi *BoardInstance) ChangesChan() chan *r0.Changes {
 	return bi.changesChan
 }
 

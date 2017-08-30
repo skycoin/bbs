@@ -12,8 +12,8 @@ RunNode 7410 7411 7412 true
 
 # Wait for nodes to start running (assuming 10s is enough).
 
-pv2 "SLEEP 10s"
-sleep 10
+pv2 "SLEEP 15s"
+sleep 15
 
 # Login.
 

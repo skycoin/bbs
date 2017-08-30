@@ -4,6 +4,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/skycoin/src/cipher"
 	"time"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 // NewBoard represents io required to create a new board.
@@ -15,17 +16,17 @@ type NewBoardIO struct {
 	Seed        string        `bbs:"bSeed"`
 	BoardPubKey cipher.PubKey `bbs:"bpk"`
 	BoardSecKey cipher.SecKey `bbs:"bsk"`
-	Board       *Board
+	Board       *r0.Board
 }
 
 func (a *NewBoardIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Board = &Board{
+	a.Board = &r0.Board{
 		Created: time.Now().UnixNano(),
 	}
-	SetData(a.Board, &ContentData{
+	r0.SetData(a.Board, &r0.ContentData{
 		Name:         a.Name,
 		Body:         a.Body,
 		SubAddresses: a.SubAddrs,
@@ -39,19 +40,19 @@ type NewThreadIO struct {
 	BoardPubKey    cipher.PubKey `bbs:"bpk"`
 	Name           string        `bbs:"name"`
 	Body           string        `bbs:"body"`
-	Thread         *Thread
+	Thread         *r0.Thread
 }
 
 func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Thread = &Thread{
+	a.Thread = &r0.Thread{
 		OfBoard: a.BoardPubKey,
 		Created: time.Now().UnixNano(),
 		Creator: upk,
 	}
-	SetData(a.Thread, &ContentData{
+	r0.SetData(a.Thread, &r0.ContentData{
 		Name: a.Name,
 		Body: a.Body,
 	})
@@ -68,21 +69,21 @@ type NewPostIO struct {
 	PostRef        cipher.SHA256 `bbs:"pRef"`
 	Name           string        `bbs:"name"`
 	Body           string        `bbs:"body"`
-	Post           *Post
+	Post           *r0.Post
 }
 
 func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Post = &Post{
+	a.Post = &r0.Post{
 		OfBoard:  a.BoardPubKey,
 		OfThread: a.ThreadRef,
 		OfPost:   a.PostRef,
 		Created:  time.Now().UnixNano(),
 		Creator:  upk,
 	}
-	SetData(a.Post, &ContentData{
+	r0.SetData(a.Post, &r0.ContentData{
 		Name: a.Name,
 		Body: a.Body,
 	})
@@ -105,7 +106,7 @@ func (a *NewUserIO) Process() error {
 		return e
 	}
 	a.File = &UserFile{
-		User: User{
+		User: r0.User{
 			Alias:  a.Alias,
 			PubKey: a.UserPubKey,
 			SecKey: a.UserSecKey,
@@ -186,14 +187,14 @@ type UserVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *Vote
+	Vote           *r0.Vote
 }
 
 func (a *UserVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = &Vote{
+	a.Vote = &r0.Vote{
 		OfBoard: a.BoardPubKey,
 		OfUser:  a.UserPubKey,
 		Mode:    a.Mode,
@@ -214,14 +215,14 @@ type ThreadVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *Vote
+	Vote           *r0.Vote
 }
 
 func (a *ThreadVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = &Vote{
+	a.Vote = &r0.Vote{
 		OfBoard:  a.BoardPubKey,
 		OfThread: a.ThreadRef,
 		Mode:     a.Mode,
@@ -242,14 +243,14 @@ type PostVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *Vote
+	Vote           *r0.Vote
 }
 
 func (a *PostVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = &Vote{
+	a.Vote = &r0.Vote{
 		OfBoard: a.BoardPubKey,
 		OfPost:  a.PostRef,
 		Mode:    a.Mode,

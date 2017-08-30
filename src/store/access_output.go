@@ -4,19 +4,20 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type UsersOutput struct {
-	Users []object.UserView `json:"users"`
+	Users []r0.UserView `json:"users"`
 }
 
 func getUsers(_ context.Context, aliases []string) *UsersOutput {
 	out := &UsersOutput{
-		Users: make([]object.UserView, len(aliases)),
+		Users: make([]r0.UserView, len(aliases)),
 	}
 	for i, alias := range aliases {
-		out.Users[i] = object.UserView{
-			User: object.User{Alias: alias},
+		out.Users[i] = r0.UserView{
+			User: r0.User{Alias: alias},
 		}
 	}
 	return out
@@ -42,10 +43,10 @@ func getSession(_ context.Context, f *object.UserFile) *SessionOutput {
 }
 
 type ConnectionsOutput struct {
-	Connections []object.Connection `json:"connections"`
+	Connections []r0.Connection `json:"connections"`
 }
 
-func getConnections(_ context.Context, cs []object.Connection) *ConnectionsOutput {
+func getConnections(_ context.Context, cs []r0.Connection) *ConnectionsOutput {
 	return &ConnectionsOutput{
 		Connections: cs,
 	}

@@ -2,12 +2,12 @@ package state
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
-func (bi *BoardInstance) NewThread(thread *object.Thread) (uint64, error) {
+func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 	if e := thread.Verify(); e != nil {
 		return 0, e
 	}
@@ -28,7 +28,7 @@ func (bi *BoardInstance) NewThread(thread *object.Thread) (uint64, error) {
 		}
 
 		// Get root children pages.
-		pages, e := object.GetPages(p, nil, true, true, false)
+		pages, e := r0.GetPages(p, nil, true, true, false)
 		if e != nil {
 			return e
 		}
@@ -50,7 +50,7 @@ func (bi *BoardInstance) NewThread(thread *object.Thread) (uint64, error) {
 	return goalSeq, e
 }
 
-func (bi *BoardInstance) NewPost(post *object.Post) (uint64, error) {
+func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 	if e := post.Verify(); e != nil {
 		return 0, e
 	}
@@ -72,7 +72,7 @@ func (bi *BoardInstance) NewPost(post *object.Post) (uint64, error) {
 		}
 
 		// Get root pages.
-		pages, e := object.GetPages(p, nil, true, true, false)
+		pages, e := r0.GetPages(p, nil, true, true, false)
 		if e != nil {
 			return e
 		}
@@ -101,7 +101,7 @@ func (bi *BoardInstance) NewPost(post *object.Post) (uint64, error) {
 	return goalSeq, e
 }
 
-func (bi *BoardInstance) NewVote(vote *object.Vote) (uint64, error) {
+func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 	if e := vote.Verify(); e != nil {
 		return 0, e
 	}
@@ -118,7 +118,7 @@ func (bi *BoardInstance) NewVote(vote *object.Vote) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get root children pages.
-		pages, e := object.GetPages(p, nil, false, true, true)
+		pages, e := r0.GetPages(p, nil, false, true, true)
 		if e != nil {
 			return e
 		}
@@ -150,12 +150,12 @@ func (bi *BoardInstance) NewVote(vote *object.Vote) (uint64, error) {
 	return goalSeq, e
 }
 
-func checkVote(vote *object.Vote, h *pack.Headers) error {
+func checkVote(vote *r0.Vote, h *pack.Headers) error {
 	switch vote.GetType() {
-	case object.UserVote:
+	case r0.UserVote:
 		// TODO.
 
-	case object.ThreadVote:
+	case r0.ThreadVote:
 		_, ok := h.GetThreadPageHash(vote.OfThread)
 		if !ok {
 			return boo.Newf(boo.NotFound,
@@ -163,19 +163,19 @@ func checkVote(vote *object.Vote, h *pack.Headers) error {
 				vote.OfThread.Hex())
 		}
 
-	case object.PostVote:
+	case r0.PostVote:
 		// TODO.
 
 	default:
 		return boo.Newf(boo.NotAllowed,
 			"invalid vote type of '%s'",
-			object.VoteString[object.UnknownVoteType])
+			r0.VoteString[r0.UnknownVoteType])
 	}
 
 	return nil
 }
 
-type BoardAction func(board *object.Board) (bool, error)
+type BoardAction func(board *r0.Board) (bool, error)
 
 func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
 	var goalSeq uint64
@@ -185,7 +185,7 @@ func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get root children.
-		pages, e := object.GetPages(p, nil, true, false, false)
+		pages, e := r0.GetPages(p, nil, true, false, false)
 		if e != nil {
 			return e
 		}

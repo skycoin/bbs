@@ -1,4 +1,4 @@
-package object
+package r0
 
 import (
 	"fmt"
@@ -10,13 +10,28 @@ import (
 )
 
 const (
-	IndexBoardPage    = 0
-	IndexDiffPage     = 1
-	IndexUsersPage    = 2
-	RootChildrenCount = 3
+	BoardPageName        = "bbs.r0.BoardPage"
+	ThreadPageName       = "bbs.r0.ThreadPage"
+	DiffPageName         = "bbs.r0.DiffPage"
+	UsersPageName        = "bbs.r0.UsersPage"
+	UserActivityPageName = "bbs.r0.UserActivityPage"
+	BoardName            = "bbs.r0.Board"
+	ThreadName           = "bbs.r0.Thread"
+	PostName             = "bbs.r0.Post"
+	VoteName             = "bbs.r0.Vote"
+	UserName             = "bbs.r0.User"
+)
+
+const (
+	IndexRootPage     = 0
+	IndexBoardPage    = 1
+	IndexDiffPage     = 2
+	IndexUsersPage    = 3
+	RootChildrenCount = 4
 )
 
 var indexString = [...]string{
+	IndexRootPage:  "RootPage",
 	IndexBoardPage: "BoardPage",
 	IndexDiffPage:  "DiffPage",
 	IndexUsersPage: "UsersPage",
@@ -76,12 +91,28 @@ func (p *Pages) Save(pack *skyobject.Pack, mux *sync.Mutex) error {
 }
 
 /*
+	<<< ROOT PAGE >>>
+*/
+
+const (
+	RootTypeBoard = "board"
+)
+
+// RootPage helps determine the type, version of the root, and whether the root has been deleted.
+type RootPage struct {
+	Type    string // Type of root.
+	Version uint64 // Version of root type.
+	Deleted bool   // Whether root is deleted.
+	Meta    []byte // Other stuff.
+}
+
+/*
 	<<< BOARD PAGE >>>
 */
 
 type BoardPage struct {
-	Board   skyobject.Ref  `skyobject:"schema=bbs.Board"`
-	Threads skyobject.Refs `skyobject:"schema=bbs.ThreadPage"`
+	Board   skyobject.Ref  `skyobject:"schema=bbs.r0.Board"`
+	Threads skyobject.Refs `skyobject:"schema=bbs.r0.ThreadPage"`
 }
 
 func GetBoardPage(p *skyobject.Pack, mux *sync.Mutex) (*BoardPage, error) {
@@ -164,8 +195,8 @@ func (bp *BoardPage) AddThread(tRef skyobject.Ref, mux *sync.Mutex) error {
 */
 
 type ThreadPage struct {
-	Thread skyobject.Ref  `skyobject:"schema=bbs.Thread"`
-	Posts  skyobject.Refs `skyobject:"schema=bbs.Post"`
+	Thread skyobject.Ref  `skyobject:"schema=bbs.r0.Thread"`
+	Posts  skyobject.Refs `skyobject:"schema=bbs.r0.Post"`
 }
 
 func GetThreadPage(tpElem *skyobject.RefsElem, mux *sync.Mutex) (*ThreadPage, error) {
@@ -238,9 +269,9 @@ func (tp *ThreadPage) Save(tpElem *skyobject.RefsElem) error {
 */
 
 type DiffPage struct {
-	Threads skyobject.Refs `skyobject:"schema=bbs.Thread"`
-	Posts   skyobject.Refs `skyobject:"schema=bbs.Post"`
-	Votes   skyobject.Refs `skyobject:"schema=bbs.Vote"`
+	Threads skyobject.Refs `skyobject:"schema=bbs.r0.Thread"`
+	Posts   skyobject.Refs `skyobject:"schema=bbs.r0.Post"`
+	Votes   skyobject.Refs `skyobject:"schema=bbs.r0.Vote"`
 }
 
 func GetDiffPage(p *skyobject.Pack, mux *sync.Mutex) (*DiffPage, error) {
@@ -408,7 +439,7 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 */
 
 type UsersPage struct {
-	Users skyobject.Refs `skyobject:"schema=bbs.UserActivityPage"`
+	Users skyobject.Refs `skyobject:"schema=bbs.r0.UserActivityPage"`
 }
 
 func GetUsersPage(p *skyobject.Pack, mux *sync.Mutex) (*UsersPage, error) {
@@ -484,7 +515,7 @@ func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivity
 
 type UserActivityPage struct {
 	PubKey      cipher.PubKey
-	VoteActions skyobject.Refs `skyobject:"schema=bbs.Vote"`
+	VoteActions skyobject.Refs `skyobject:"schema=bbs.r0.Vote"`
 }
 
 func GetUserActivityPage(uapElem *skyobject.RefsElem, mux *sync.Mutex) (*UserActivityPage, error) {
@@ -536,6 +567,10 @@ type Connection struct {
 	State   string `json:"state"`
 }
 
+/*
+	<<< HELPER FUNCTIONS >>>
+*/
+
 func dynamicLock(mux *sync.Mutex) func() {
 	if mux != nil {
 		mux.Lock()
@@ -543,10 +578,6 @@ func dynamicLock(mux *sync.Mutex) func() {
 	}
 	return func() {}
 }
-
-/*
-	<<< HELPER FUNCTIONS >>>
-*/
 
 func getRootChildErr(e error, i int) error {
 	return boo.WrapTypef(e, boo.InvalidRead,

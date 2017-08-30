@@ -4,12 +4,12 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/session/stores/drive_store"
+	"github.com/skycoin/bbs/src/store/session/stores/memory_store"
 	"log"
 	"os"
 	"path"
 	"sync"
-	"github.com/skycoin/bbs/src/store/session/stores/memory_store"
-	"github.com/skycoin/bbs/src/store/session/stores/drive_store"
 )
 
 const (
@@ -32,9 +32,9 @@ type Manager struct {
 	c *ManagerConfig
 	l *log.Logger
 
-	mux  sync.Mutex
+	mux     sync.Mutex
 	current *string
-	db Store
+	db      Store
 }
 
 func NewManager(config *ManagerConfig) *Manager {

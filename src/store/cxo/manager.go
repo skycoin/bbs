@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 const (
@@ -112,16 +113,16 @@ func (m *Manager) setup() error {
 	c.Log.Prefix = "[CXO] "
 	c.Log.Debug = false
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
-		t.Register("bbs.BoardPage", object.BoardPage{})
-		t.Register("bbs.ThreadPage", object.ThreadPage{})
-		t.Register("bbs.DiffPage", object.DiffPage{})
-		t.Register("bbs.UsersPage", object.UsersPage{})
-		t.Register("bbs.UserActivityPage", object.UserActivityPage{})
-		t.Register("bbs.Board", object.Board{})
-		t.Register("bbs.Thread", object.Thread{})
-		t.Register("bbs.Post", object.Post{})
-		t.Register("bbs.Vote", object.Vote{})
-		t.Register("bbs.User", object.User{})
+		t.Register(r0.BoardPageName, r0.BoardPage{})
+		t.Register(r0.ThreadPageName, r0.ThreadPage{})
+		t.Register(r0.DiffPageName, r0.DiffPage{})
+		t.Register(r0.UsersPageName, r0.UsersPage{})
+		t.Register(r0.UserActivityPageName, r0.UserActivityPage{})
+		t.Register(r0.BoardName, r0.Board{})
+		t.Register(r0.ThreadName, r0.Thread{})
+		t.Register(r0.PostName, r0.Post{})
+		t.Register(r0.VoteName, r0.Vote{})
+		t.Register(r0.UserName, r0.User{})
 	})
 	c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
@@ -140,12 +141,14 @@ func (m *Manager) setup() error {
 		default:
 		}
 	}
+	// TODO: Service discovery / auto root sync.
 	//c.OnSubscribeRemote = func(c *node.Conn, bpk cipher.PubKey) error {
 	//	if e := c.Node().AddFeed(bpk); e != nil {
 	//		c.Node().Fatal("please replace you HDD")
 	//	}
 	//	return nil
 	//}
+
 	c.OnCreateConnection = func(c *node.Conn) {
 		go func() {
 			m.wg.Add(1)
@@ -156,27 +159,6 @@ func (m *Manager) setup() error {
 			}
 		}()
 	}
-	//c.OnCloseConnection = func(c *node.Conn) {
-	//	m.file.Lock()
-	//	defer m.file.Unlock()
-	//	for _, conn := range m.file.Connections {
-	//		if conn == c.Address() {
-	//			go func() {
-	//				m.wg.Add(1)
-	//				defer m.wg.Done()
-	//
-	//				timer := time.NewTimer(5 * time.Second)
-	//				defer timer.Stop()
-	//
-	//				select {
-	//				case <-m.quit:
-	//				case <-timer.C:
-	//					m.node.Pool().Dial(c.Address())
-	//				}
-	//			}()
-	//		}
-	//	}
-	//}
 	var e error
 	if m.node, e = node.NewNode(c); e != nil {
 		return e
@@ -185,7 +167,6 @@ func (m *Manager) setup() error {
 		return e
 	}
 	m.init()
-	//go m.retryLoop()
 	return nil
 }
 
@@ -235,36 +216,14 @@ func (m *Manager) init() {
 }
 
 /*
-	<<< LOOPS >>>
-*/
-
-//func (m *Manager) retryLoop() {
-//	m.wg.Add(1)
-//	defer m.wg.Done()
-//
-//	ticker := time.NewTicker(RetryDuration)
-//	defer ticker.Stop()
-//
-//	for {
-//		select {
-//		case <-ticker.C:
-//			m.init()
-//
-//		case <-m.quit:
-//			return
-//		}
-//	}
-//}
-
-/*
 	<<< CONNECT >>>
 */
 
-func (m *Manager) GetConnections() []object.Connection {
+func (m *Manager) GetConnections() []r0.Connection {
 	m.file.Lock()
 	defer m.file.Unlock()
 
-	out := make([]object.Connection, len(m.file.Connections))
+	out := make([]r0.Connection, len(m.file.Connections))
 	for i, address := range m.file.Connections {
 		conn, state := m.node.Pool().Connection(address), ""
 		if conn == nil {
@@ -272,7 +231,7 @@ func (m *Manager) GetConnections() []object.Connection {
 		} else {
 			state = conn.State().String()
 		}
-		out[i] = object.Connection{
+		out[i] = r0.Connection{
 			Address: address,
 			State:   state,
 		}
@@ -524,7 +483,7 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	return nil
 }
 
-func (m *Manager) NewThread(thread *object.Thread) (uint64, error) {
+func (m *Manager) NewThread(thread *r0.Thread) (uint64, error) {
 	bi, e := m.compiler.GetBoard(thread.OfBoard)
 	if e != nil {
 		return 0, e
@@ -543,11 +502,11 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 		return e
 	}
 	pack.Append(
-		&object.BoardPage{
+		&r0.BoardPage{
 			Board: pack.Ref(in.Board),
 		},
-		&object.DiffPage{},
-		&object.UsersPage{},
+		&r0.DiffPage{},
+		&r0.UsersPage{},
 	)
 	if e := pack.Save(); e != nil {
 		return e

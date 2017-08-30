@@ -2,12 +2,12 @@ package content_view
 
 import (
 	"fmt"
-	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"sync"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type ContentView struct {
@@ -22,7 +22,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := object.GetPages(pack, mux, true, false, true)
+	pages, e := r0.GetPages(pack, mux, true, false, true)
 	if e != nil {
 		return e
 	}
@@ -40,7 +40,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 	v.vMap = make(map[cipher.SHA256]*VotesRep)
 
 	// Fill threads and posts.
-	e = pages.BoardPage.RangeThreadPages(func(i int, tp *object.ThreadPage) error {
+	e = pages.BoardPage.RangeThreadPages(func(i int, tp *r0.ThreadPage) error {
 		v.board.Threads[i] = IndexHash{h: tp.Thread.Hash, i: i}
 
 		threadRep := new(ThreadRep).FillThreadPage(tp, nil)
@@ -48,7 +48,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 		// Fill posts.
 		threadRep.Posts = make([]IndexHash, tp.GetPostCount())
 
-		e = tp.RangePosts(func(i int, post *object.Post) error {
+		e = tp.RangePosts(func(i int, post *r0.Post) error {
 			threadRep.Posts[i] = IndexHash{h: post.R, i: i}
 			v.pMap[post.R] = new(PostRep).Fill(post, nil)
 			return nil
@@ -67,8 +67,8 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 		return e
 	}
 
-	return pages.UsersPage.RangeUserActivityPages(func(_ int, uap *object.UserActivityPage) error {
-		return uap.RangeVoteActions(func(_ int, vote *object.Vote) error {
+	return pages.UsersPage.RangeUserActivityPages(func(_ int, uap *r0.UserActivityPage) error {
+		return uap.RangeVoteActions(func(_ int, vote *r0.Vote) error {
 			return v.processVote(vote)
 		}, nil)
 	}, nil)
@@ -78,7 +78,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := object.GetPages(pack, mux, true)
+	pages, e := r0.GetPages(pack, mux, true)
 	if e != nil {
 		return e
 	}
@@ -113,21 +113,21 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 	return nil
 }
 
-func (v *ContentView) processVote(vote *object.Vote) error {
+func (v *ContentView) processVote(vote *r0.Vote) error {
 	var cHash cipher.SHA256
 
 	// Only if vote is for post or thread.
 	switch vote.GetType() {
-	case object.UserVote, object.UnknownVoteType:
+	case r0.UserVote, r0.UnknownVoteType:
 		return nil
 
-	case object.ThreadVote:
+	case r0.ThreadVote:
 		if v.tMap[vote.OfThread] == nil {
 			return nil
 		}
 		cHash = vote.OfThread
 
-	case object.PostVote:
+	case r0.PostVote:
 		if v.pMap[vote.OfPost] == nil {
 			return nil
 		}

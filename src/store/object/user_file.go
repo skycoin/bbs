@@ -1,13 +1,15 @@
 package object
 
+import "github.com/skycoin/bbs/src/store/object/revisions/r0"
+
 type UserFile struct {
-	User User
+	User r0.User
 	Seed string
 }
 
 func (f *UserFile) View() *UserFileView {
 	return &UserFileView{
-		User: UserView{
+		User: r0.UserView{
 			User:   f.User,
 			PubKey: f.User.PubKey.Hex(),
 			SecKey: f.User.SecKey.Hex(),
@@ -17,6 +19,6 @@ func (f *UserFile) View() *UserFileView {
 }
 
 type UserFileView struct {
-	User UserView `json:"user"`
+	User r0.UserView `json:"user"`
 	Seed string   `json:"seed"`
 }

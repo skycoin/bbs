@@ -2,13 +2,13 @@ package drive_store
 
 import (
 	"github.com/skycoin/bbs/src/store/object"
-	"path"
-	"sync"
-	"io/ioutil"
-	"strings"
-	"github.com/skycoin/skycoin/src/util/file"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
+	"github.com/skycoin/skycoin/src/util/file"
+	"io/ioutil"
 	"os"
+	"path"
+	"strings"
+	"sync"
 )
 
 type Store struct {

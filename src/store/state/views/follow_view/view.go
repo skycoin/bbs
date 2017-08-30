@@ -2,11 +2,11 @@ package follow_view
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 type FollowView struct {
@@ -19,16 +19,16 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *sync
 	v.uMap = make(map[cipher.PubKey]*FollowRep)
 
 	// Get pages.
-	pages, e := object.GetPages(pack, mux, false, false, true)
+	pages, e := r0.GetPages(pack, mux, false, false, true)
 	if e != nil {
 		return e
 	}
 
-	return pages.UsersPage.RangeUserActivityPages(func(i int, uap *object.UserActivityPage) error {
-		return uap.RangeVoteActions(func(j int, vote *object.Vote) error {
+	return pages.UsersPage.RangeUserActivityPages(func(i int, uap *r0.UserActivityPage) error {
+		return uap.RangeVoteActions(func(j int, vote *r0.Vote) error {
 
 			// Only parse if vote is of user.
-			if vote.GetType() == object.UserVote {
+			if vote.GetType() == r0.UserVote {
 
 				// Ensure creator's follow page exists.
 				followRef, has := v.uMap[vote.Creator]
@@ -51,7 +51,7 @@ func (v *FollowView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *sy
 	for _, vote := range headers.GetChanges().NewVotes {
 
 		// Only parse if vote is of user.
-		if vote.GetType() == object.UserVote {
+		if vote.GetType() == r0.UserVote {
 
 			// Ensure creator's follow page exists.
 			followRef, has := v.uMap[vote.Creator]
