@@ -84,6 +84,8 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 			// TODO: Fix bug. Workaround...
 			// <<< START : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+			bi.l.Println(e.Error())
+
 			var doneError = errors.New("done")
 			e := pages.BoardPage.Threads.Ascend(func(i int, tpRefGot *skyobject.RefsElem) (err error) {
 				if tpRefGot.Hash == tpHash {

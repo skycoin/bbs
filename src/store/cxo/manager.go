@@ -14,13 +14,15 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util/file"
-	"log"
+	log2 "log"
 	"os"
 	"path"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
+	"io/ioutil"
+	"github.com/skycoin/cxo/node/log"
 )
 
 const (
@@ -44,7 +46,7 @@ type ManagerConfig struct {
 type Manager struct {
 	mux      sync.Mutex
 	c        *ManagerConfig
-	l        *log.Logger
+	l        *log2.Logger
 	file     *object.CXOFile
 	node     *node.Node
 	compiler *state.Compiler
@@ -110,8 +112,16 @@ func (m *Manager) Close() {
 // Sets up the CXO manager.
 func (m *Manager) setup() error {
 	c := node.NewConfig()
+
 	c.Log.Prefix = "[CXO] "
 	c.Log.Debug = false
+	// suppress gnet logs
+	c.Config.Logger = log.NewLogger(log.Config{Output: ioutil.Discard})
+
+	c.Log.Prefix = "[server] "
+	c.Log.Debug = true
+	c.Log.Pins = log.All // all
+
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
 		t.Register(r0.RootPageName, r0.RootPage{})
 		t.Register(r0.BoardPageName, r0.BoardPage{})
@@ -125,7 +135,12 @@ func (m *Manager) setup() error {
 		t.Register(r0.VoteName, r0.Vote{})
 		t.Register(r0.UserName, r0.User{})
 	})
-	c.MaxMessageSize = 0 // TODO -> Adjust.
+
+	c.Skyobject.Log.Debug = true
+	c.Skyobject.Log.Pins = skyobject.PackSavePin // all
+	c.Skyobject.Log.Prefix = "[server cxo] "
+
+	//c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
 	c.DBPath = filepath.Join(c.DataDir, DBName)
