@@ -81,7 +81,28 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		// Add post to board page.
 		tpRef, tPage, e := pages.BoardPage.GetThreadPage(tpHash, nil)
 		if e != nil {
-			return e
+			// TODO: Fix bug. Workaround...
+			// <<< START : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+			var doneError = errors.New("done")
+			e := pages.BoardPage.Threads.Ascend(func(i int, tpRefGot *skyobject.RefsElem) (err error) {
+				if tpRefGot.Hash == tpHash {
+					tpRef = tpRefGot
+					tpValue, e := tpRef.Value()
+					if e != nil {
+						return e
+					}
+					tPage, _ = tpValue.(*r0.ThreadPage)
+					return doneError
+				}
+				return nil
+			})
+
+			if e != nil && e != doneError{
+				return e
+			}
+
+			// <<< END : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 		}
 		if e := tPage.AddPost(pRef.Hash, post, nil); e != nil {
 			return e
