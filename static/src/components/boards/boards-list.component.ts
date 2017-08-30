@@ -23,6 +23,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   sort = 'asc';
   isRoot = false;
   boards: Array<Board> = [];
+  remoteBoards: Array<Board> = [];
   subscribeForm = new FormGroup({
     address: new FormControl('', Validators.required),
     board: new FormControl('', Validators.required),
@@ -59,6 +60,9 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
 
   }
   ngAfterViewInit() {
+    // setTimeout(() => {
+    //   this.dialog.open();
+    // }, 10);
     this.pop.open(this.fabBtnTemplate);
   }
 
@@ -72,6 +76,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
         return;
       }
       this.boards = allBoards.data.master_boards;
+      this.remoteBoards = allBoards.data.remote_boards;
     });
   }
 
@@ -124,6 +129,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     return board ? board.public_key : undefined;
   }
   openAdd(content) {
+    // this.pop.open(content);
     this.addForm.reset();
     this.api.newSeed().subscribe(seed => {
       this.addForm.patchValue({ seed: seed.data });

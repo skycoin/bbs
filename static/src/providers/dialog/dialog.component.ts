@@ -1,8 +1,8 @@
-import { Component, OnInit, ViewEncapsulation, ComponentRef, HostListener } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ComponentRef, HostListener, HostBinding } from '@angular/core';
 import { DialogAnimation } from './dialog.animation';
 
 @Component({
-  selector: 'app-dialog',
+  selector: 'bbs-dialog',
   templateUrl: './dialog.component.html',
   styleUrls: ['./dialog.component.scss'],
   encapsulation: ViewEncapsulation.None,
@@ -10,7 +10,8 @@ import { DialogAnimation } from './dialog.animation';
 })
 
 export class DialogComponent implements OnInit {
-  self: ComponentRef<DialogComponent>;
+  @HostBinding('@dialogInOut') animation = true;
+  @HostBinding('style.display') display = 'block';
   title = 'Test Title';
   body = 'Test Body';
 
@@ -21,9 +22,6 @@ export class DialogComponent implements OnInit {
   }
   @HostListener('click', ['$event'])
   _click(ev: Event) {
-    const el = this.self.location.nativeElement;
-    el.parentNode.removeChild(el);
-    this.self.destroy();
-    this.self = null;
+    console.log('click dialog');
   }
 }

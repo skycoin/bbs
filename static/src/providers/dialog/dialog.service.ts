@@ -1,5 +1,6 @@
 import { Injectable, ComponentFactoryResolver, Injector, ApplicationRef, ComponentRef, ComponentFactory } from '@angular/core';
 import { DialogComponent } from './dialog.component';
+import { DialogWindowComponent } from './dialog-window';
 import { DialogRef } from './dialog.ref'
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/timer'
@@ -11,13 +12,10 @@ export class Dialog {
   }
 
   open() {
-    Observable.timer(10).subscribe(() => {
-      const containerEl = document.querySelector('body');
-      const contentCmptFactory = this._componentFactoryResolver.resolveComponentFactory(DialogComponent);
-      const ref = contentCmptFactory.create(this._injector);
-      ref.instance.self = ref;
-      this._applicationRef.attachView(ref.hostView);
-      containerEl.appendChild(ref.location.nativeElement);
-    });
+    const containerEl = document.body;
+    const windowCmptFactory = this._componentFactoryResolver.resolveComponentFactory(DialogWindowComponent);
+    const ref = windowCmptFactory.create(this._injector);
+    this._applicationRef.attachView(ref.hostView);
+    containerEl.appendChild(ref.location.nativeElement);
   }
 }

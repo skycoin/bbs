@@ -155,7 +155,6 @@ export class ThreadPageComponent implements OnInit {
     data.append('mode', mode);
     this.api.addThreadVote(data).subscribe(voteRes => {
       if (voteRes.okay) {
-        console.log('voteRes:', voteRes);
         this.data.data.thread.votes = voteRes.data.votes;
       }
     }, err => {
@@ -239,7 +238,6 @@ export class ThreadPageComponent implements OnInit {
         this.loading.start();
         this.api.newPost(data).subscribe((res: ThreadPage) => {
           if (res.okay) {
-            console.log('res.posts:', res.data.posts);
             this.data.data.posts = res.data.posts;
             this.alert.success({ content: 'Added successfully' });
             this.loading.close();

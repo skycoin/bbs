@@ -8,11 +8,11 @@
         <p class="item"><i class="fa fa-user" aria-hidden="true"></i><strong>Name:</strong><span class="name text-muted" (click)="copy($event)">{{user?.alias}}</span>
           <a href="javascript:void(0);" (click)="switchUser(switch)">switch</a>
         </p>
-        <p class="item"><i class="fa fa-suitcase" aria-hidden="true"></i><strong>Master:</strong><span class="master text-muted">{{user?.master}}</span></p>
-        <p class="item break-line">
+        <!-- <p class="item"><i class="fa fa-suitcase" aria-hidden="true"></i><strong>Master:</strong><span class="master text-muted">{{user?.master}}</span></p> -->
+        <!-- <p class="item break-line">
           <i class="fa fa-key" aria-hidden="true"></i><strong>Key:</strong><span class="key text-muted">{{user?.public_key}}</span>
           <i class="fa fa-files-o clip" title="copy" appClip [clipText]="user?.public_key" (onClip)="copy($event)"></i>
-        </p>
+        </p> -->
       </div>
     </div>
   </div>

@@ -61,7 +61,7 @@ export class Alert {
       this.start(data);
       return;
     }
-    const containerEl = document.querySelector('body');
+    const containerEl = document.body;
     const contentCmptFactory = this._componentFactoryResolver.resolveComponentFactory(AlertWindowComponent);
     Alert.Ref = contentCmptFactory.create(this._injector);
     Alert.Ref.instance.alerts.push(data);
