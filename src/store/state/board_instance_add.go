@@ -1,11 +1,11 @@
 package state
 
 import (
+	"errors"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
-	"errors"
 )
 
 func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
@@ -100,7 +100,7 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 				return nil
 			})
 
-			if e != nil && e != doneError{
+			if e != nil && e != doneError {
 				return e
 			}
 
