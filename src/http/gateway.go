@@ -89,8 +89,8 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/session/users/new",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewUser(r.Context(), &object.NewUserIO{
-					Seed:  r.FormValue("seed"),
-					Alias: r.FormValue("alias"),
+				Seed:  r.FormValue("seed"),
+				Alias: r.FormValue("alias"),
 			}))
 		})
 
