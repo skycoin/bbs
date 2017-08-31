@@ -4,6 +4,8 @@ Skycoin BBS is a next generation decentralised social network (BBS stands for [B
 
 Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) (CXO) to store and synchronise data between nodes.
 
+[![Skycoin BBS Showcase 4 - YouTube](https://i.ytimg.com/vi/Oue3WVkmGh4/0.jpg)](https://youtu.be/Oue3WVkmGh4)
+
 ## Building Skycoin BBS
 
 First ensure that `go`, `npm`, `zip` and `ng` are installed and the `GOPATH` environment variable is set.
@@ -60,4 +62,7 @@ There are currently two ways of interacting with Skycoin BBS.
 
 ## Participate
 
-* [Telegram](https://t.me/skycoinbbs) (Skycoin BBS Community)
+#### Telegram
+
+* [Community Chat](https://t.me/skycoinbbs) - Get up to date with development and talk to the developers.
+* [Board Hosting Channel](https://t.me/skycoinbbshosting) - Get a list of nodes to connect to and boards to subscribe to.
