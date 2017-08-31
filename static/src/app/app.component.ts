@@ -15,9 +15,11 @@ export class AppComponent implements OnInit {
   public name = '';
   public isMasterNode = false;
   userName = 'LogIn';
+  alias = '';
   isLogIn = false;
   navBarBg = 'default-navbar';
   userMenu = false;
+  showLoginBox = false;
   constructor(
     private api: ApiService,
     private user: UserService,
@@ -47,11 +49,30 @@ export class AppComponent implements OnInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
+    if (this.showLoginBox) {
+      this.showLoginBox = false;
+      return;
+    }
     if (!this.isLogIn) {
-      this.login();
+      this.alias = '';
+      this.showLoginBox = true;
     } else {
       this.showUserMenu();
     }
+  }
+  login(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    const data = new FormData();
+    data.append('alias', this.alias);
+    this.api.login(data).subscribe(res => {
+      if (res.okay) {
+        this.isLogIn = res.data.logged_in;
+        this.userName = res.data.session.user.alias;
+      }
+      this.showLoginBox = false;
+    })
   }
   showUserMenu() {
     this.userMenu = !this.userMenu;
@@ -68,17 +89,7 @@ export class AppComponent implements OnInit {
       }
     })
   }
-  login() {
-    const data = new FormData();
-    data.append('alias', 'angular4');
-    this.api.login(data).subscribe(res => {
-      if (res.okay) {
-        console.log('res:', res);
-        this.isLogIn = res.data.logged_in;
-        this.userName = res.data.session.user.alias;
-      }
-    })
-  }
+
 
   @HostListener('window:scroll', ['$event'])
   windowScroll(event) {

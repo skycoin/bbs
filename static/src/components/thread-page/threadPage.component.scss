@@ -131,6 +131,7 @@ app-threadpage {
               .vote-menu {
                 position: absolute;
                 right: -100%;
+                width: 10rem;
                 top: 150%;
                 font-size: 1rem;
                 list-style: none;
@@ -161,13 +162,27 @@ app-threadpage {
           .author {
             display: inline-block;
             width: 10rem;
+            cursor: pointer;
+            &:hover {
+              text-decoration: underline;
+            }
           }
           span {
             position: relative;
             .user-info-menu {
               position: absolute;
-              top: 150%;
-              background-color: #ccc;
+              top: 100%;
+              box-shadow: 0.1rem 0.1rem 1rem rgba(0, 0, 0, 0.4);
+              z-index: 999;
+              .following,.avoiding {
+                cursor: pointer;
+              }
+              .following {
+                color: #e84737;
+              }
+              .avoiding {
+                color: #756e6e;
+              }
             }
           }
         }

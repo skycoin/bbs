@@ -26,8 +26,8 @@
       </div>
       <div class="card-block">
         <p class="text-right p-0">
-          <chip color="#e84737" text="like" [count]="data?.data?.thread?.votes?.up_votes?.count" (click)="addThreadVote('1',$event)"></chip>
-          <chip color="#756e6e" text="dislike" [count]="data?.data?.thread?.votes?.down_votes?.count" (click)="addThreadVote('-1',$event)"></chip>
+          <chip color="#e84737" icon="fa-arrow-up" text="up vote" [count]="data?.data?.thread?.votes?.up_votes?.count" (click)="addThreadVote('1',$event)"></chip>
+          <chip color="#756e6e" icon="fa-arrow-down" text="down vote" [count]="data?.data?.thread?.votes?.down_votes?.count" (click)="addThreadVote('-1',$event)"></chip>
         </p>
       </div>
     </div>
@@ -45,29 +45,47 @@
               <h6 class="card-text single-line title">{{item?.name}}&nbsp; &nbsp;<small class="text-muted time-box">replies:<span class="created">{{item?.created / 1000000 | date:'short'}}</span></small></h6>
               <small class="text-muted other">
                 <i class="fa fa-chevron-down" aria-hidden="true" (click)="Menu($event,item)">
+                  <div class="overlay" *ngIf="item?.voteMenu" (click)="Menu($event,item)"></div>
                   <ul class="vote-menu" *ngIf="item?.voteMenu">
-                    <li (click)="addPostVote('+1',item,$event)">like</li>
-                    <li (click)="addPostVote('-1',item,$event)">dislike</li>
+                    <li (click)="addPostVote('+1',item,$event)"><i class="fa fa-arrow-up" aria-hidden="true"></i>
+                      up vote</li>
+                    <li (click)="addPostVote('-1',item,$event)"><i class="fa fa-arrow-down" aria-hidden="true"></i>
+                      down vote</li>
                   </ul>
                 </i>
               </small>
             </div>
             <div class="card-text author-box">
               <span>
-                  <small class="single-line author">
+                  <small class="single-line author" (click)="showUserMenu(item,$event)">
                       {{item?.creator}}
                     </small>
-                    <div class="user-info-menu" *ngIf="false">
-                        <h6>{{item?.creator}}</h6>
-                      </div>
+                    <div class="overlay" *ngIf="item?.creatorMenu" (click)="showUserMenu(item,$event)"></div>
+                    <div class="card user-info-menu" *ngIf="item?.creatorMenu">
+                        <div class="card-body">
+                            <h6 class="card-title">{{item?.creator}}</h6>
+                            <hr>
+                            <div class="card-block" *ngIf="userFollow?.follow_page?.following?.length > 0 || userFollow?.follow_page?.avoiding?.length">
+                                <p class="text-left p-0" >
+                                  <chip color="#e84737" *ngFor="let follow of userFollow?.follow_page?.following" [text]="follow?.tag" show=""></chip>
+                                  <chip color="#756e6e" *ngFor="let avoid of userFollow?.follow_page?.avoiding" [text]="avoid?.tag" show=""></chip>
+                                </p>
+                              </div>
+                              <p class="text-right p-0">
+                                <input class="text-input" type="text" placeholder="input your tag" [(ngModel)]="userTag">
+                                <button class="button" type="button" style="background-color:#e84737;color:#fff;" (click)="addUserVote($event,item?.creator,'+1')">follow</button>
+                                <button class="button" type="button" style="background-color:#756e6e;color:#fff;" (click)="addUserVote($event,item?.creator,'-1')">avoid</button>
+                              </p>
+                        </div>
+                    </div>
               </span>
 
             </div>
             <p class="card-text text-muted break-line" [innerHTML]="item?.body | safeHtml"></p>
             <div class="card-block" *ngIf="item?.votes?.up_votes?.count || item?.votes?.down_votes?.count">
               <p class="text-right p-0">
-                <chip color="#e84737" text="like" [count]="item?.votes?.up_votes?.count" (click)="addPostVote('+1',item,$event)"></chip>
-                <chip color="#756e6e" text="dislike" [count]="item?.votes?.down_votes?.count" (click)="addPostVote('-1',item,$event)"></chip>
+                <chip color="#e84737" icon="fa-arrow-up" text="up vote" [count]="item?.votes?.up_votes?.count" (click)="addPostVote('+1',item,$event)"></chip>
+                <chip color="#756e6e" icon="fa-arrow-down" text="down vote" [count]="item?.votes?.down_votes?.count" (click)="addPostVote('-1',item,$event)"></chip>
               </p>
             </div>
           </div>

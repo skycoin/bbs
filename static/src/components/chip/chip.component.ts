@@ -2,7 +2,9 @@ import { Component, OnInit, ViewEncapsulation, Input, HostBinding, HostListener 
 
 @Component({
   selector: 'chip',
-  template: `{{text}} <span>{{count}}</span>`,
+  template: `<i class="fa" [ngClass]="icon" aria-hidden="true" *ngIf="icon"></i>
+  {{text}}
+  <span *ngIf="show">{{count}}</span>`,
   styleUrls: ['./chip.component.scss'],
   encapsulation: ViewEncapsulation.None,
 })
@@ -10,8 +12,10 @@ import { Component, OnInit, ViewEncapsulation, Input, HostBinding, HostListener 
 export class ChipComponent implements OnInit {
   @Input() color = '';
   @Input() text = '';
-  @Input() count = 0;
+  @Input() count = 1;
   @Input() size = 'lg';
+  @Input() show = true;
+  @Input() icon = '';
   hoverTextColor = '';
   @HostBinding('style.borderColor') borderColor = '';
   @HostBinding('style.color') textColor = '';
@@ -33,14 +37,18 @@ export class ChipComponent implements OnInit {
   }
   @HostListener('mouseenter')
   _mouseover() {
-    this.bgColor = this.color;
-    this.textColor = this.hoverTextColor;
+    if (this.show) {
+      this.bgColor = this.color;
+      this.textColor = this.hoverTextColor;
+    }
   }
   @HostListener('mouseleave')
   _mouseleave() {
-    this.borderColor = this.color;
-    this.textColor = this.color;
-    this.bgColor = '';
+    if (this.show) {
+      this.borderColor = this.color;
+      this.textColor = this.color;
+      this.bgColor = '';
+    }
   }
   padZero(str: string, len?: number) {
     console.log('pad zero');

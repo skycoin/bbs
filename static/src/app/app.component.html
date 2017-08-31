@@ -1,7 +1,12 @@
 <nav class="navbar navbar-expand-lg fixed-top navbar-dark" [ngClass]="navBarBg">
-  <a class="navbar-brand" href="#" title="BBS">
+  <a class="navbar-brand" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" title="BBS">
     <img src="../assets/logo.svg" width="170.74" height="30" alt="bbs">
   </a>
+  <div class="overlay" *ngIf="showLoginBox"  (click)="userAction($event)"></div>
+  <div class="login-box" *ngIf="showLoginBox">
+    <input type="text" class="text-input" autofocus [(ngModel)]="alias">
+    <button class="button" style="background-color:#15c3f9;color:#fff;" (click)="login($event)">Login</button>
+  </div>
   <div>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
       aria-expanded="false" aria-label="Toggle navigation">
@@ -31,6 +36,7 @@
   </div>
   <a class="use-status-box big-status-box" href="javascript:void(0);" (click)="userAction($event)">
     <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>{{userName}}
+
     <div class="pop-box" *ngIf="userMenu">
       <ul>
         <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>

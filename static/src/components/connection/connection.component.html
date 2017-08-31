@@ -1,28 +1,24 @@
-<div class="connection">
-  <div class="container">
-    <div class="page-header">
-      <p class="d-flex justify-content-end">
-        <button type="button" class="btn btn-outline-primary" (click)="openAdd(form)">New Connection</button>
-      </p>
-    </div>
-    <table class="table table_fixed table-hover" *ngIf="list?.length > 0">
-      <thead>
-        <tr>
-          <th scope="col" width="10%"></th>
-          <th scope="col" width="80%">Url</th>
-          <th scope="col" width="10%" class="more"><i class="fa fa-ellipsis-h"></i></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of list;let i =index;">
-          <td>{{i+1}}</td>
-          <td class="url">{{item?.address}}</td>
-          <td class="del more" (click)="remove(item?.address)"><i class="fa fa-trash" aria-hidden="true"></i></td>
-        </tr>
-      </tbody>
-    </table>
-    <h3 class="not-found" *ngIf="list?.length <= 0">No Connections Found</h3>
+<div class="container">
+  <div class="page-header">
+    <p class="d-flex justify-content-end">
+      <button type="button" class="btn btn-primary" (click)="openAdd(form)">New Connection</button>
+    </p>
   </div>
+  <div class="list-box">
+    <div class="row user-item" *ngFor="let item of list;let i =index;">
+      <div class="col-10">
+        {{item?.address}}
+      </div>
+      <div class="col-2 text-center">
+        <a href="javascript:void(0);" class="del" (click)="remove(item?.address)"><i class="fa fa-trash" aria-hidden="true"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="not-found" *ngIf="list?.length <= 0">
+    <p><i class="fa fa-exclamation-circle fa-2x" aria-hidden="true"></i></p>
+    <p class="hint-text"> No Connections Found</p>
+  </h3>
 </div>
 
 <ng-template #form let-c="close" let-d="dismiss">
