@@ -230,7 +230,7 @@ func CheckAlias(alias string) error {
 		return boo.Newf(boo.InvalidInput,
 			"alias '%s' is too long", string(alias))
 	}
-	re := regexp.MustCompile("/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/")
+	re := regexp.MustCompile(`^[a-zA-Z0-9]+([._]?[a-zA-Z0-9]+)*$`)
 	if !re.Match([]byte(alias)) {
 		return boo.Newf(boo.InvalidInput,
 			"alias '%s' is invalid", string(alias))
