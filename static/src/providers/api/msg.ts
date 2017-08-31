@@ -1,3 +1,18 @@
+export interface FollowPage extends Base {
+  data?: FollowPageData;
+}
+export interface FollowPageData {
+  follow_page?: FollowPageDataInfo;
+}
+export interface FollowPageDataInfo {
+  user_public_key?: string;
+  following?: Array<FollowValue>;
+  avoiding?: Array<FollowValue>;
+}
+export interface FollowValue {
+  user_public_key?: string;
+  tag?: string;
+}
 export interface Connnections extends Base {
   data?: ConnnectionData;
 }
@@ -33,6 +48,7 @@ export interface Post {
   votes?: Votes;
   uiOptions?: VoteOptions;
   voteMenu?: boolean;
+  creatorMenu?: boolean;
 }
 
 export interface VoteOptions {

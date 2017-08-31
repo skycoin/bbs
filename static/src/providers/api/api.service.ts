@@ -18,7 +18,12 @@ export class ApiService {
 
   constructor(private common: CommonService) {
   }
-
+  newUser(data: FormData) {
+    return this.common.handlePost(this.userUrl + 'new', data);
+  }
+  getFollowPage(data: FormData) {
+    return this.common.handlePost(this.voteUrl + 'get_follow_page', data);
+  }
   delConnection(data: FormData) {
     return this.common.handlePost(this.connUrl + 'delete', data);
   }
@@ -46,7 +51,7 @@ export class ApiService {
   }
 
   addUserVote(data: FormData) {
-    return this.common.handlePost(this.baseUrl + 'users/votes/add', data);
+    return this.common.handlePost(this.voteUrl + 'vote_user', data);
   }
 
   addThreadVote(data: FormData) {

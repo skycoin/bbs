@@ -1,4 +1,4 @@
-import { Component, HostBinding, HostListener, OnInit } from '@angular/core';
+import { Component, HostBinding, HostListener, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonService, User, ApiService, Users, Alert } from '../../providers';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
@@ -10,6 +10,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
   templateUrl: './userlist.component.html',
   styleUrls: ['./userlist.component.scss'],
   animations: [slideInLeftAnimation],
+  encapsulation: ViewEncapsulation.None
 })
 export class UserlistComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
@@ -33,65 +34,46 @@ export class UserlistComponent implements OnInit {
       this.userlist = users.data.users;
     });
   }
-
-  // openEdit(content: any, key: string) {
-  //   this.editName = '';
-  //   if (key === '') {
-  //     // this.common.showErrorAlert('Parameter error!!!');
-  //     return;
-  //   }
-  //   const modalRef = this.modal.open(content).result.then(result => {
-  //     if (result) {
-  //       this.edit(this.editName, key);
-  //     }
-  //   });
-  // }
-
+  trackUsers(index, user) {
+    return user ? user.alias : undefined;
+  }
   openAdd(content: any) {
     this.addForm.reset();
     this.modal.open(content).result.then((result) => {
       if (result) {
         if (!this.addForm.valid) {
-          // this.common.showErrorAlert('Alias and Seed can not be empty');
+          this.alert.error({ content: 'Alias and Seed can not be empty' });
           return;
         }
         const data = new FormData();
         data.append('alias', this.addForm.get('alias').value);
         data.append('seed', this.addForm.get('seed').value);
-        // this.user.newMaster(data).subscribe(user => {
-        //   this.userlist.unshift(user);
-        // });
+        this.api.newUser(data).subscribe(res => {
+          console.log('user:', res);
+          if (res.okay) {
+            this.userlist = res.data.users;
+          }
+        });
       }
     });
   }
 
-  // edit(name, key: string) {
-  //   if (name === '') {
-  //     // this.common.showErrorAlert('UserName can not be empty');
-  //     return;
-  //   }
-  //   const data = new FormData();
-  //   data.append('alias', name);
-  //   data.append('user', key);
-  //   this.user.newOrModifyUser(data).subscribe(res => {
-  //     this.userlist = [];
-  //     this.user.getAll().subscribe(userlist => {
-  //       this.userlist = userlist;
-  //       // this.common.showAlert('modified successfully', 'success', 3000);
-  //     });
-  //   });
-  // }
 
-  delUser(ev: Event, key: string) {
+
+  delUser(ev: Event, alias: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    if (!alias) {
+      this.alert.error({ content: 'Parameter error!!!' });
+      return;
+    }
     const modalRef = this.modal.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete User';
     modalRef.componentInstance.body = 'Do you delete the user?';
     modalRef.result.then(result => {
       if (result) {
         const data = new FormData();
-        data.append('alias', key);
+        data.append('alias', alias);
         this.api.delUser(data).subscribe((users: Users) => {
           if (users.okay) {
             this.userlist = users.data.users;

@@ -8,7 +8,19 @@ import {
   AfterViewInit,
   TemplateRef
 } from '@angular/core';
-import { ApiService, CommonService, ThreadPage, Post, VotesSummary, Thread, Alert, Popup, LoadingService } from '../../providers';
+import {
+  ApiService,
+  CommonService,
+  ThreadPage,
+  Post,
+  VotesSummary,
+  Thread,
+  Alert,
+  Popup,
+  LoadingService,
+  FollowPage,
+  FollowPageData
+} from '../../providers';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -28,15 +40,18 @@ export class ThreadPageComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
   @ViewChild('fab') fab: TemplateRef<any>;
-  public sort = 'esc';
-  public boardKey = '';
-  public threadKey = '';
-  public data: ThreadPage;
-  public postForm = new FormGroup({
+  sort = 'esc';
+  boardKey = '';
+  threadKey = '';
+  data: ThreadPage;
+  postForm = new FormGroup({
     name: new FormControl('', Validators.required),
     body: new FormControl('', Validators.required),
   });
-  public editorOptions = {
+  userFollow: FollowPageData = {};
+  showUserInfoMenu = false;
+  userTag = '';
+  editorOptions = {
     placeholderText: 'Edit Your Content Here!',
     quickInsertButtons: ['table', 'ul', 'ol', 'hr'],
     toolbarButtons: [
@@ -99,7 +114,32 @@ export class ThreadPageComponent implements OnInit {
     // this.common.fb.handle = () => {
     //   this.openReply(this.replyBox);
     // }
+
     this.pop.open(this.fab);
+  }
+  showUserMenu(post: Post, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (post.creatorMenu) {
+      this.userFollow = {};
+      post.creatorMenu = false;
+      return;
+    }
+    post.creatorMenu = true;
+    this.userFollow = {};
+    if (!post.creator) {
+      return;
+    }
+    const data = new FormData();
+    data.append('board_public_key', this.boardKey);
+    data.append('user_public_key', post.creator);
+    this.api.getFollowPage(data).subscribe((res: FollowPage) => {
+      if (res.okay) {
+        this.userFollow = res.data;
+        this.showUserInfoMenu = true;
+      }
+    })
   }
   Menu(ev: Event, post: Post) {
     ev.stopImmediatePropagation();
@@ -165,25 +205,26 @@ export class ThreadPageComponent implements OnInit {
       }
     })
   }
-  addUserVote(mode: string, post: Post, ev: Event) {
+  addUserVote(ev: Event, user_public_key, mode: string, tag?: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
-    if (post.uiOptions !== undefined && post.uiOptions.userVoted !== undefined && post.uiOptions.userVoted) {
-      // this.common.showWarningAlert('You have already voted');
-      post.uiOptions.menu = false;
-      return;
+    ev.preventDefault();
+    if (!tag) {
+      if (this.userTag === '') {
+        tag = 'great';
+      } else {
+        tag = this.userTag;
+      }
     }
-    post.uiOptions = { userVoted: true };
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
-    data.append('post_ref', this.threadKey);
+    data.append('user_public_key', user_public_key);
     data.append('mode', mode);
+    data.append('tag', tag);
     this.api.addUserVote(data).subscribe(result => {
-      if (result) {
-        // this.common.showSucceedAlert('Voted Successful');
-        post.uiOptions.menu = false;
-      } else {
-        // this.common.showErrorAlert('Vote Fail');
+      console.log('vote user:', result);
+      if (result.okay) {
+        this.userFollow = result.data;
       }
     }, err => {
     })

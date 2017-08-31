@@ -1,11 +1,11 @@
-.connection {
-  .index {
-    text-align: center;
-  }
-  .del {
-    cursor: pointer;
-    &:hover {
-      color: red;
+app-connection {
+  .list-box {
+    border-radius: .25rem;
+    .user-item {
+      padding: 1rem .5rem;
+      font-size: 1.1rem;
+      background-color: #fff;
+      border-bottom: 1px solid rgba(204, 204, 204, 0.35);
     }
   }
 }
