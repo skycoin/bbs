@@ -5,6 +5,9 @@ import (
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
+	"regexp"
+	"strings"
+
 )
 
 const (
@@ -219,6 +222,20 @@ func CheckBody(body string) error {
 
 // CheckAlias ensures validity of user alias. TODO
 func CheckAlias(alias string) error {
+	if len(alias) < 5 {
+		return boo.Newf(boo.InvalidInput,
+			"alias:%s is too short ", string(alias))
+	}
+	if len(alias) > 40 {
+		return boo.Newf(boo.InvalidInput,
+			"alias:%s is too long", string(alias))
+	}
+	re := regexp.MustCompile("/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/")
+	if !re.Match([]byte(alias)) {
+		return boo.Newf(boo.InvalidInput,
+			"alias:%s is invalidate", string(alias))
+	}
+
 	return nil
 }
 
@@ -229,6 +246,20 @@ func CheckPassword(password string) error {
 
 // CheckAddress ensures validity of address. TODO
 func CheckAddress(address string) error {
+	pts := strings.Split(address, ":")
+	if len(pts) != 2 {
+		return boo.Newf(boo.InvalidInput,
+			"address:% is invalid ", string(address))
+	}
+	port, err := strconv.ParseUint(pts[1], 10, 16)
+	if err != nil {
+		return boo.Newf(boo.InvalidInput,
+			"address:%s is invalid ", string(address))
+	}
+	if port < 0 || port > 65535 {
+		return boo.Newf(boo.InvalidInput,
+			"address:%s port is invalid ", string(address))
+	}
 	return nil
 }
 

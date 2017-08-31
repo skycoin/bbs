@@ -12,7 +12,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"github.com/skycoin/bbs/src/misc"
 )
 
 // Gateway represents what is exposed to HTTP interface.
@@ -89,18 +88,10 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	// Creates a new user.
 	mux.HandleFunc("/api/session/users/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			alias := r.FormValue("alias")
-			_,e := misc.CheckAlias(alias)
-			if e != nil {
-				send(w) ( nil,e)
-			} else {
-				send(w)(g.Access.NewUser(r.Context(), &object.NewUserIO{
+			send(w)(g.Access.NewUser(r.Context(), &object.NewUserIO{
 					Seed:  r.FormValue("seed"),
 					Alias: r.FormValue("alias"),
-				}))
-			}
-
-
+			}))
 		})
 
 	// Deletes a user.
