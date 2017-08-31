@@ -1,7 +1,6 @@
 package cxo
 
 import (
-	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
@@ -11,9 +10,11 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
+	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util/file"
+	"io/ioutil"
 	log2 "log"
 	"os"
 	"path"
@@ -21,8 +22,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"io/ioutil"
-	"github.com/skycoin/cxo/node/log"
 )
 
 const (
@@ -115,12 +114,12 @@ func (m *Manager) setup() error {
 
 	c.Log.Prefix = "[CXO] "
 	c.Log.Debug = false
-	// suppress gnet logs
+	c.Log.Pins = log.All // all
 	c.Config.Logger = log.NewLogger(log.Config{Output: ioutil.Discard})
 
-	c.Log.Prefix = "[server] "
-	c.Log.Debug = true
-	c.Log.Pins = log.All // all
+	c.Skyobject.Log.Debug = true
+	c.Skyobject.Log.Pins = skyobject.PackSavePin // all
+	c.Skyobject.Log.Prefix = "[server cxo] "
 
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
 		t.Register(r0.RootPageName, r0.RootPage{})
@@ -136,20 +135,14 @@ func (m *Manager) setup() error {
 		t.Register(r0.UserName, r0.User{})
 	})
 
-	c.Skyobject.Log.Debug = true
-	c.Skyobject.Log.Pins = skyobject.PackSavePin // all
-	c.Skyobject.Log.Prefix = "[server cxo] "
-
 	//c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
 	c.DBPath = filepath.Join(c.DataDir, DBName)
 	c.EnableListener = true
-	fmt.Println("[::]:" + strconv.Itoa(*m.c.CXOPort))
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
 	c.EnableRPC = *m.c.CXORPCEnable
 	c.RemoteClose = false
-	fmt.Println("[::]:" + strconv.Itoa(*m.c.CXORPCPort))
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
 	c.OnRootFilled = func(c *node.Conn, root *skyobject.Root) {
 		select {
@@ -243,7 +236,7 @@ func (m *Manager) GetConnections() []r0.Connection {
 	for i, address := range m.file.Connections {
 		conn, state := m.node.Pool().Connection(address), ""
 		if conn == nil {
-			state = "disconnected"
+			state = "DISCONNECTED"
 		} else {
 			state = conn.State().String()
 		}

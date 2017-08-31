@@ -44,7 +44,7 @@ var indexString = [...]string{
 
 type Pages struct {
 	PK        cipher.PubKey
-	RootPage *RootPage
+	RootPage  *RootPage
 	BoardPage *BoardPage
 	DiffPage  *DiffPage
 	UsersPage *UsersPage
@@ -519,7 +519,7 @@ func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivity
 */
 
 type UserActivityPage struct {
-	R cipher.SHA256 `enc:"-"`
+	R           cipher.SHA256 `enc:"-"`
 	PubKey      cipher.PubKey
 	VoteActions skyobject.Refs `skyobject:"schema=bbs.r0.Vote"`
 }
