@@ -1,5 +1,5 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation } from '@angular/core';
-import { CommonService, ConnectionService, ApiService, Connnections, Connnection } from '../../providers';
+import { CommonService, ApiService, Connnections, Connnection } from '../../providers';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { AlertComponent } from '../../components/alert/alert.component';

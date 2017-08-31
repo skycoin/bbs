@@ -32,7 +32,7 @@
       </div>
     </div>
   </div>
-  <a class="noPosts text-center" href="javascropt:void(0);" *ngIf="data?.data?.posts?.length <= 0" (click)="openReply(addPost)">New Post<i class="fa fa-hand-o-left" aria-hidden="true"></i></a>
+  <a class="noPosts text-center" href="javascript:void(0);" *ngIf="data?.data?.posts?.length <= 0" (click)="openReply(addPost)">New Post<i class="fa fa-hand-o-left" aria-hidden="true"></i></a>
   <!--trackBy: item?.ref-->
   <!--(data.posts | orderBy:sort)-->
   <div class="post-box">
@@ -113,10 +113,7 @@
         <label for="name">Name</label>
         <input type="text" class="form-control " placeholder="name" id="name" formControlName="name">
       </div>
-      <div class="form-group">
-        <label for="body">Content</label>
-        <textarea [froalaEditor]="editorOptions" formControlName="body"></textarea>
-      </div>
+      <div class="editor" editor formControlName="body"></div>
     </form>
   </div>
   <div class="modal-footer">

@@ -6,7 +6,8 @@ import {
   ViewEncapsulation,
   ViewChild,
   AfterViewInit,
-  TemplateRef
+  TemplateRef,
+  ElementRef
 } from '@angular/core';
 import {
   ApiService,
@@ -39,6 +40,7 @@ import 'rxjs/add/operator/filter';
 export class ThreadPageComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
+  @ViewChild('editor') editor: ElementRef;
   @ViewChild('fab') fab: TemplateRef<any>;
   sort = 'esc';
   boardKey = '';
@@ -268,7 +270,7 @@ export class ThreadPageComponent implements OnInit {
     this.modal.open(content, { backdrop: 'static', size: 'lg', keyboard: false }).result.then((result) => {
       if (result) {
         if (!this.postForm.valid) {
-          // this.common.showErrorAlert('Can not reply,title and content can not be empty');
+          this.alert.error({ content: 'title and content can not be empty' });
           return;
         }
         const data = new FormData();

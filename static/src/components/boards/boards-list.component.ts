@@ -1,5 +1,5 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation, ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
-import { ApiService, CommonService, UserService, AllBoards, Alert, Popup, Dialog, LoadingService } from '../../providers';
+import { ApiService, CommonService, AllBoards, Alert, Popup, Dialog, LoadingService } from '../../providers';
 import { Board } from '../../providers/api/msg';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -25,7 +25,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   boards: Array<Board> = [];
   remoteBoards: Array<Board> = [];
   subscribeForm = new FormGroup({
-    address: new FormControl('', Validators.required),
     board: new FormControl('', Validators.required),
   });
   addressForm = new FormGroup({
@@ -42,7 +41,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   regexpStr = new RegExp('<br\s*/?>', 'g');
   replaceStr = '';
   constructor(private api: ApiService,
-    private user: UserService,
     private router: Router,
     private modal: NgbModal,
     public common: CommonService,
@@ -185,16 +183,15 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     this.modal.open(content).result.then(result => {
       if (result) {
         if (!this.subscribeForm.valid) {
-          // this.common.showErrorAlert('The Board Key Or Address can not be empty!!!');
+          this.alert.error({ content: 'The Board Key can not be empty!!!' });
           return;
         }
         const data = new FormData();
-        data.append('address', this.subscribeForm.get('address').value);
-        data.append('board', this.subscribeForm.get('board').value);
-        this.api.subscribe(data).subscribe(isOk => {
-          if (isOk) {
-            // this.common.showSucceedAlert('Subscribed successfully');
+        data.append('public_key', this.subscribeForm.get('board').value);
+        this.api.newSubscription(data).subscribe(res => {
+          if (res.okay) {
             this.getBoards();
+            this.alert.success({ content: 'Subscribed successfully' });
           }
         });
       }

@@ -2,7 +2,6 @@ export * from './boards/boards-list.component';
 export * from './threads/threads.component';
 export * from './thread-page/threadPage.component';
 export * from './userlist/userlist.component';
-export * from './user/user.component';
 export * from './connection/connection.component';
 export * from './fixed-button/fixed-button.component';
 export * from './chip/chip.component';
