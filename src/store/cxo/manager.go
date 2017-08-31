@@ -367,14 +367,14 @@ func (m *Manager) subscribeNode(bpk cipher.PubKey) error {
 		return boo.WrapType(e, boo.Internal,
 			"failed to add feed")
 	}
-	m.l.Printf("Subscribing to feed '%s'...", bpk.Hex())
+	m.l.Printf("Subscribing to feed '%s'...", bpk.Hex()[:5]+"...")
 	connections, count := m.node.Connections(), 0
 	for _, conn := range connections {
 		if e := conn.Subscribe(bpk); e != nil {
 			switch e {
 			case node.ErrSubscriptionRejected:
 				m.l.Printf(" - '%s' rejected feed '%s'",
-					conn.Address(), bpk.Hex())
+					conn.Address(), bpk.Hex()[:5]+"...")
 			default:
 				return boo.WrapType(e, boo.Internal,
 					"failed to subscribe")
@@ -382,11 +382,11 @@ func (m *Manager) subscribeNode(bpk cipher.PubKey) error {
 		} else {
 			count += 1
 			m.l.Printf(" - '%s' accepted feed '%s'",
-				conn.Address(), bpk.Hex())
+				conn.Address(), bpk.Hex()[:5]+"...")
 		}
 	}
 	m.l.Printf("Feed '%s' accepted on %d/%d connections",
-		bpk.Hex(), count, len(connections))
+		bpk.Hex()[:5]+"...", count, len(connections))
 	return nil
 }
 

@@ -1,7 +1,6 @@
 package state
 
 import (
-	"errors"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
@@ -81,30 +80,7 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		// Add post to board page.
 		tpRef, tPage, e := pages.BoardPage.GetThreadPage(tpHash, nil)
 		if e != nil {
-			// TODO: Fix bug. Workaround...
-			// <<< START : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-			bi.l.Println(e.Error())
-
-			var doneError = errors.New("done")
-			e := pages.BoardPage.Threads.Ascend(func(i int, tpRefGot *skyobject.RefsElem) (err error) {
-				if tpRefGot.Hash == tpHash {
-					tpRef = tpRefGot
-					tpValue, e := tpRef.Value()
-					if e != nil {
-						return e
-					}
-					tPage, _ = tpValue.(*r0.ThreadPage)
-					return doneError
-				}
-				return nil
-			})
-
-			if e != nil && e != doneError {
-				return e
-			}
-
-			// <<< END : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+			return e
 		}
 		if e := tPage.AddPost(pRef.Hash, post, nil); e != nil {
 			return e
@@ -159,46 +135,7 @@ func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 
 		// Add vote to appropriate user activity page.
 		if e := pages.UsersPage.AddUserActivity(uapHash, vote); e != nil {
-
-			// TODO: Actually fix bug where UserActivityHash is not updated. This is a work around.
-
-			// <<< START : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-			bi.l.Printf("Encountered error '%s'. Applying workaround...", e.Error())
-
-			// Error when done.
-			var doneError = errors.New("done")
-			var newUAP *r0.UserActivityPage
-			var newIndex int
-
-			// Find actual uap hash.
-			e := pages.UsersPage.RangeUserActivityPages(func(i int, uap *r0.UserActivityPage) error {
-				if vote.Creator == uap.PubKey {
-					newUAP = uap
-					newIndex = i
-					return doneError
-				}
-				return nil
-			}, nil)
-
-			if e == doneError {
-				e = nil
-				elem, e := pages.UsersPage.Users.RefByIndex(newIndex)
-				if e != nil {
-					return e
-				}
-				if e := newUAP.VoteActions.Append(vote); e != nil {
-					return e
-				}
-				if e := elem.SetValue(newUAP); e != nil {
-					return e
-				}
-			} else {
-				bi.l.Println("Workaround failed...")
-				return boo.New(boo.Internal, "workaround failed")
-			}
-
-			// <<< END : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+			return e
 		}
 
 		// Add vote to diff page.

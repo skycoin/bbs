@@ -2,7 +2,6 @@ package state
 
 import (
 	"context"
-	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
@@ -50,13 +49,13 @@ func NewBoardInstance(
 	// Prepare output.
 	bi := &BoardInstance{
 		c:           config,
-		l:           inform.NewLogger(true, os.Stdout, "INSTANCE:"+config.PK.Hex()),
+		l:           inform.NewLogger(true, os.Stdout, "INSTANCE:"+config.PK.Hex()[:5]+"..."),
 		views:       make(map[string]views.View),
 		changesChan: make(chan *r0.Changes, 10),
 	}
 
 	// Prepare flags.
-	bi.flag = skyobject.HashTableIndex | skyobject.EntireTree
+	bi.flag = 0 //skyobject.HashTableIndex | skyobject.EntireTree
 	if !bi.c.Master {
 		bi.flag |= skyobject.ViewOnly
 	}
@@ -75,12 +74,14 @@ func NewBoardInstance(
 	for _, adder := range viewAdders {
 		views.Add(bi.views, adder)
 	}
+	i := 1
 	for _, view := range bi.views {
 		if e := view.Init(p, bi.pi.headers, nil); e != nil {
 			return nil, boo.WrapType(e, boo.Internal,
 				"failed to generate view")
 		}
-		fmt.Println("VIEW LOADED:", view)
+		bi.l.Printf("Loaded views (%d/%d)", i, len(bi.views))
+		i++
 	}
 
 	// Output.
@@ -113,7 +114,7 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 				}
 				node.Publish(p.Root())
 				root = p.Root()
-				//newPack = p // <<< ORIGINAL >>>
+				newPack = p
 				return nil
 			})
 			if e != nil {
@@ -121,34 +122,17 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 			}
 
 		} else {
+			oldPI.Close()
 
-			// <<< START : ORIGINAL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-			//oldPI.Close()
-			//
-			//var e error
-			//ct := node.Container()
-			//newPack, e = ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), bi.c.SK)
-			//if e != nil {
-			//	return nil, e
-			//}
-
-			// <<< END : ORIGINAL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+			var e error
+			ct := node.Container()
+			newPack, e = ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), bi.c.SK)
+			if e != nil {
+				return nil, e
+			}
 		}
 
-		// <<< START : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-		oldPI.Close()
-		var e error
-		ct := node.Container()
-		newPack, e = ct.Unpack(root, bi.flag, ct.CoreRegistry().Types(), bi.c.SK)
-		if e != nil {
-			return nil, e
-		}
-
-		// <<< END : WORKAROUND >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-		fmt.Println("NEW ROOT SEQ:", newPack.Root().Seq)
+		bi.l.Printf("SEQ (%d)", newPack.Root().Seq)
 
 		newPI, e := NewPackInstance(oldPI, newPack)
 		if e != nil {
@@ -290,7 +274,6 @@ func (bi *BoardInstance) WaitSeq(ctx context.Context, goal uint64) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			bi.l.Printf("BoardInstance.WaitSeq() seq(%d) goal(%d)", bi.GetSeq(), goal)
 			if bi.GetSeq() >= goal {
 				return nil
 			}
