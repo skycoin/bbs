@@ -88,10 +88,8 @@ func (f *CXOFile) AddRemoteSub(pk cipher.PubKey) bool {
 	f.Lock()
 	defer f.Unlock()
 
-	for _, sub := range f.RemoteSubs {
-		if sub.PK == pk {
-			return false
-		}
+	if f.hasSub(pk) {
+		return false
 	}
 	f.RemoteSubs = append(f.RemoteSubs,
 		Subscription{PK: pk})
@@ -117,10 +115,8 @@ func (f *CXOFile) AddMasterSub(pk cipher.PubKey, sk cipher.SecKey) bool {
 	f.Lock()
 	defer f.Unlock()
 
-	for _, sub := range f.MasterSubs {
-		if sub.PK == pk {
-			return false
-		}
+	if f.hasSub(pk) {
+		return false
 	}
 	f.MasterSubs = append(f.MasterSubs,
 		Subscription{PK: pk, SK: sk})
@@ -141,3 +137,13 @@ func (f *CXOFile) RemoveMasterSub(pk cipher.PubKey) bool {
 	}
 	return false
 }
+
+func (f *CXOFile) hasSub(pk cipher.PubKey) bool {
+	for _, sub := range append(f.RemoteSubs, f.MasterSubs...) {
+		if pk == sub.PK {
+			return true
+		}
+	}
+	return false
+}
+

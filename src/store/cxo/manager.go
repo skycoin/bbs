@@ -144,19 +144,30 @@ func (m *Manager) setup() error {
 	c.EnableRPC = *m.c.CXORPCEnable
 	c.RemoteClose = false
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
+
 	c.OnRootFilled = func(c *node.Conn, root *skyobject.Root) {
+		m.l.Printf("Received board '%s'", root.Hash.Hex()[:5]+"...")
 		select {
 		case m.newRoots <- root:
 		default:
 		}
 	}
-	// TODO: Service discovery / auto root sync.
-	//c.OnSubscribeRemote = func(c *node.Conn, bpk cipher.PubKey) error {
-	//	if e := c.Node().AddFeed(bpk); e != nil {
-	//		c.Node().Fatal("please replace you HDD")
-	//	}
-	//	return nil
-	//}
+
+	// Service discovery / auto root sync.
+	c.OnSubscribeRemote = func(c *node.Conn, bpk cipher.PubKey) error {
+		m.l.Printf("Found board '(%s) %s'", c.Address(), bpk.Hex()[:5]+"...")
+		if e := m.subscribeFileRemote(bpk); e != nil {
+			m.l.Println(" -", e)
+		} else {
+			m.l.Println(" - Recorded feed in file.")
+		}
+		if e := c.Node().AddFeed(bpk); e != nil {
+			m.l.Println(" - Failed to add feed in CXO:", e)
+		} else {
+			m.l.Println(" - Feed added in CXO.")
+		}
+		return nil
+	}
 
 	c.OnCreateConnection = func(c *node.Conn) {
 		go func() {
@@ -349,7 +360,7 @@ func (m *Manager) SubscribeMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
 func (m *Manager) subscribeFileRemote(bpk cipher.PubKey) error {
 	if !m.file.AddRemoteSub(bpk) {
 		return boo.Newf(boo.AlreadyExists,
-			"already subscribed to remote board '%s'", bpk.Hex())
+			"already subscribed to remote board '%s'", bpk.Hex()[:5]+"...")
 	}
 	return m.save()
 }
@@ -357,7 +368,7 @@ func (m *Manager) subscribeFileRemote(bpk cipher.PubKey) error {
 func (m *Manager) subscribeFileMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
 	if !m.file.AddMasterSub(bpk, bsk) {
 		return boo.Newf(boo.AlreadyExists,
-			"already subscribed to master board '%s'", bpk.Hex())
+			"already subscribed to master board '%s'", bpk.Hex()[:5]+"...")
 	}
 	return m.save()
 }
@@ -413,7 +424,7 @@ func (m *Manager) UnsubscribeMaster(bpk cipher.PubKey) error {
 func (m *Manager) unsubscribeFileRemote(bpk cipher.PubKey) error {
 	if !m.file.RemoveRemoteSub(bpk) {
 		return boo.Newf(boo.NotFound,
-			"remote board of public key '%s' not found in cxo file", bpk.Hex())
+			"remote board of public key '%s' not found in cxo file", bpk.Hex()[:5]+"...")
 	}
 	return m.save()
 }
@@ -421,7 +432,7 @@ func (m *Manager) unsubscribeFileRemote(bpk cipher.PubKey) error {
 func (m *Manager) unsubscribeFileMaster(bpk cipher.PubKey) error {
 	if !m.file.RemoveMasterSub(bpk) {
 		return boo.Newf(boo.NotFound,
-			"master board of public key '%s' not found in cxo file", bpk.Hex())
+			"master board of public key '%s' not found in cxo file", bpk.Hex()[:5]+"...")
 	}
 	return m.save()
 }
