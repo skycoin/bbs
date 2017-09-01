@@ -378,6 +378,8 @@ func (dp *DiffPage) GetVoteOfIndex(i int, mux *sync.Mutex) (*Vote, error) {
 }
 
 type Changes struct {
+	NeedReset bool
+
 	ThreadCount int
 	PostCount   int
 	VoteCount   int
@@ -399,6 +401,19 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 	// Return if no old changes.
 	if oldC == nil {
 		return newC, nil
+	}
+
+	// Check if reset needed.
+	switch {
+	case
+		oldC.ThreadCount > newC.ThreadCount,
+		oldC.PostCount > newC.PostCount,
+		oldC.VoteCount > newC.VoteCount:
+
+		newC.NeedReset = true
+		return newC, nil
+
+	default:
 	}
 
 	// Get content.

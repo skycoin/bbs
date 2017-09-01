@@ -75,12 +75,12 @@ func NewBoardInstance(
 		views.Add(bi.views, adder)
 	}
 	i := 1
-	for _, view := range bi.views {
+	for name, view := range bi.views {
 		if e := view.Init(p, bi.pi.headers, nil); e != nil {
 			return nil, boo.WrapType(e, boo.Internal,
 				"failed to generate view")
 		}
-		bi.l.Printf("Loaded views (%d/%d)", i, len(bi.views))
+		bi.l.Printf("(%d/%d) Loaded '%s' view.", i, len(bi.views), name)
 		i++
 	}
 
@@ -138,6 +138,8 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 		newPI, e := NewPackInstance(oldPI.Headers(), newPack)
 		if e != nil {
 			return nil, e
+		} else if newPI.Headers().GetChanges().NeedReset {
+			return nil, boo.New(boo.Unknown, "reset needed")
 		}
 
 		// Update views.

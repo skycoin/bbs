@@ -90,14 +90,35 @@ func (c *Compiler) updateLoop() {
 }
 
 func (c *Compiler) doMasterUpdate() {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.file.Lock()
+	defer c.file.Unlock()
 
-	for _, bi := range c.boards {
-		if bi.IsMaster() && bi.UpdateNeeded() {
-			c.l.Println("Update needed for master board:", bi.c.PK.Hex())
+	for i, sub := range c.file.MasterSubs {
+		c.mux.Lock()
+		bi, ok := c.boards[sub.PK]
+		c.mux.Unlock()
+
+		if !ok {
+			c.l.Printf(" - [%d:'%s'] Initialising in compiler.",
+				i, sub.PK.Hex()[:5]+"...")
+			if e := c.InitBoard(false, sub.PK, sub.SK); e != nil {
+				c.l.Println(" - - (ERROR)", e)
+				continue
+			} else {
+				c.l.Println(" - - (OKAY)")
+				c.mux.Lock()
+				bi = c.boards[sub.PK]
+				c.mux.Unlock()
+			}
+		}
+
+		if bi.UpdateNeeded() {
 			if e := bi.Update(c.node, nil); e != nil {
-				c.l.Println("Error on update instance:", e)
+				c.l.Printf(" - [%d:'%s'] Update failed with error: %v",
+					i, sub.PK.Hex()[:5]+"...", e)
+				c.DeleteBoard(sub.PK)
+				c.l.Println(" - - (RESET) Result:",
+					c.InitBoard(false, sub.PK, sub.SK))
 			}
 		}
 	}
@@ -106,11 +127,25 @@ func (c *Compiler) doMasterUpdate() {
 func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 	bi, e := c.GetBoard(root.Pub)
 	if e != nil {
-		c.l.Println("Received root error:", e)
-		if e := c.InitBoard(true, root.Pub); e != nil {
-			c.l.Println("Init board error:", e)
+		c.l.Println("Board '%s' not compiled.", root.Pub.Hex()[:5]+"...")
+
+		sub, master, e := c.file.GetSub(root.Pub)
+		if e != nil {
 			return
 		}
+
+		if master {
+			if e := c.InitBoard(true, sub.PK, sub.SK); e != nil {
+				c.l.Println("Init board error:", e)
+				return
+			}
+		} else {
+			if e := c.InitBoard(true, sub.PK); e != nil {
+				c.l.Println("Init board error:", e)
+				return
+			}
+		}
+
 		bi, e = c.GetBoard(root.Pub)
 		if e != nil {
 			c.l.Println("Failed to obtain board after init:", e)

@@ -3,6 +3,7 @@ package object
 import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
+	"github.com/skycoin/bbs/src/misc/boo"
 )
 
 type SubscriptionView struct {
@@ -156,7 +157,11 @@ func (f *CXOFile) HasSub(pk cipher.PubKey) bool {
 }
 
 func (f *CXOFile) hasSub(pk cipher.PubKey) bool {
-	for _, sub := range append(f.RemoteSubs, f.MasterSubs...) {
+	return f.hasMasterSub(pk) || f.hasRemoteSub(pk)
+}
+
+func (f *CXOFile) hasMasterSub(pk cipher.PubKey) bool {
+	for _, sub := range f.MasterSubs {
 		if pk == sub.PK {
 			return true
 		}
@@ -164,3 +169,26 @@ func (f *CXOFile) hasSub(pk cipher.PubKey) bool {
 	return false
 }
 
+func (f *CXOFile) hasRemoteSub(pk cipher.PubKey) bool {
+	for _, sub := range f.RemoteSubs {
+		if pk == sub.PK {
+			return true
+		}
+	}
+	return false
+}
+
+func (f *CXOFile) GetSub(pk cipher.PubKey) (Subscription, bool, error) {
+	for _, sub := range f.MasterSubs {
+		if sub.PK == pk {
+			return sub, true, nil
+		}
+	}
+	for _, sub := range f.RemoteSubs {
+		if sub.PK == pk {
+			return sub, false, nil
+		}
+	}
+	return Subscription{}, false, boo.Newf(boo.NotFound,
+		"subscription '%s' not found", pk.Hex())
+}
