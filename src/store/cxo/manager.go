@@ -67,19 +67,22 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 		manager.l.Panicln("failed to start CXO manager:", e)
 	}
 	manager.compiler = state.NewCompiler(
-		compilerConfig, manager.newRoots, manager.node,
+		compilerConfig, manager.file, manager.newRoots, manager.node,
 		views.AddContent(),
 		views.AddFollow(),
 	)
 
 	manager.file.Lock()
-	defer manager.file.Unlock()
-	for _, sub := range manager.file.MasterSubs {
+	masterSubs := manager.file.MasterSubs
+	remoteSubs := manager.file.RemoteSubs
+	manager.file.Unlock()
+
+	for _, sub := range masterSubs {
 		if e := manager.compiler.InitBoard(sub.PK, sub.SK); e != nil {
 			manager.l.Println("compiler.InitBoard() :", e)
 		}
 	}
-	for _, sub := range manager.file.RemoteSubs {
+	for _, sub := range remoteSubs {
 		if e := manager.compiler.InitBoard(sub.PK); e != nil {
 			manager.l.Println("compiler.InitBoard() :", e)
 		}
@@ -156,15 +159,15 @@ func (m *Manager) setup() error {
 	// Service discovery / auto root sync.
 	c.OnSubscribeRemote = func(c *node.Conn, bpk cipher.PubKey) error {
 		m.l.Printf("Found board '(%s) %s'", c.Address(), bpk.Hex()[:5]+"...")
-		if e := m.subscribeFileRemote(bpk); e != nil {
-			m.l.Println(" -", e)
-		} else {
-			m.l.Println(" - Recorded feed in file.")
-		}
+		//if e := m.subscribeFileRemote(bpk); e != nil {
+		//	m.l.Println(" -", e)
+		//} else {
+		//	m.l.Println(" - Recorded feed in file.")
+		//}
 		if e := c.Node().AddFeed(bpk); e != nil {
-			m.l.Println(" - Failed to add feed in CXO:", e)
+			m.l.Println(" - Failed to relay feed:", e)
 		} else {
-			m.l.Println(" - Feed added in CXO.")
+			m.l.Println(" - Feed relayed.")
 		}
 		return nil
 	}
@@ -335,7 +338,14 @@ func (m *Manager) disconnectNode(address string) error {
 */
 
 func (m *Manager) GetSubscriptions() []cipher.PubKey {
-	return m.node.Feeds()
+	m.file.Lock()
+	defer m.file.Unlock()
+	subs := append(m.file.MasterSubs, m.file.RemoteSubs...)
+	out := make([]cipher.PubKey, len(subs))
+	for i, sub := range subs {
+		out[i] = sub.PK
+	}
+	return out
 }
 
 func (m *Manager) SubscribeRemote(bpk cipher.PubKey) error {

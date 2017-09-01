@@ -159,7 +159,9 @@ func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOu
 		return nil, e
 	}
 	if e := a.CXO.UnsubscribeMaster(in.PubKey); e != nil {
-		return nil, e
+		if e := a.CXO.UnsubscribeRemote(in.PubKey); e != nil {
+			return nil, e
+		}
 	}
 	return a.GetBoards(ctx)
 }
