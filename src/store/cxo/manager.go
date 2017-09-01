@@ -78,12 +78,12 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	manager.file.Unlock()
 
 	for _, sub := range masterSubs {
-		if e := manager.compiler.InitBoard(sub.PK, sub.SK); e != nil {
+		if e := manager.compiler.InitBoard(false, sub.PK, sub.SK); e != nil {
 			manager.l.Println("compiler.InitBoard() :", e)
 		}
 	}
 	for _, sub := range remoteSubs {
-		if e := manager.compiler.InitBoard(sub.PK); e != nil {
+		if e := manager.compiler.InitBoard(false, sub.PK); e != nil {
 			manager.l.Println("compiler.InitBoard() :", e)
 		}
 	}
@@ -361,7 +361,7 @@ func (m *Manager) SubscribeMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
 		return e
 	}
 	m.subscribeNode(bpk)
-	if e := m.compiler.InitBoard(bpk, bsk); e != nil {
+	if e := m.compiler.InitBoard(false, bpk, bsk); e != nil {
 		return e
 	}
 	return nil
@@ -507,7 +507,7 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	if e := newBoard(m.node, in); e != nil {
 		return e
 	}
-	if e := m.compiler.InitBoard(in.BoardPubKey, in.BoardSecKey); e != nil {
+	if e := m.compiler.InitBoard(false, in.BoardPubKey, in.BoardSecKey); e != nil {
 		return e
 	}
 	return nil
