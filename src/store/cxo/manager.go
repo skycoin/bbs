@@ -87,6 +87,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 			manager.l.Println("compiler.InitBoard() :", e)
 		}
 	}
+	go manager.retryLoop()
 	return manager
 }
 
@@ -177,6 +178,39 @@ func (m *Manager) setup() error {
 			}
 		}()
 	}
+
+	//c.OnCloseConnection = func(c *node.Conn) {
+	//	address := c.Address()
+	//	m.l.Printf("Connection to '%s' closed.", address)
+	//
+	//	if m.file.HasConnection(address) {
+	//		m.l.Printf("Reconnecting to '%s'...", address)
+	//		// Restart.
+	//
+	//		go func() {
+	//			m.wg.Add(1)
+	//			defer m.wg.Done()
+	//
+	//			ticker := time.NewTicker(RetryDuration)
+	//			defer ticker.Stop()
+	//
+	//			for {
+	//				select {
+	//				case <-m.quit:
+	//					return
+	//				case <-ticker.C:
+	//					if e := c.Node().Connect(address); e != nil {
+	//						m.l.Printf("Failed to reconnect to '%s': %v.", address, e)
+	//					} else {
+	//						m.l.Printf("Reconnected to '%s'.", address)
+	//						return
+	//					}
+	//				}
+	//			}
+	//		}()
+	//	}
+	//}
+
 	var e error
 	if m.node, e = node.NewNode(c); e != nil {
 		return e
@@ -230,6 +264,27 @@ func (m *Manager) init() {
 
 	for _, sub := range m.file.RemoteSubs {
 		m.subscribeNode(sub.PK)
+	}
+}
+
+func (m *Manager) retryLoop() {
+	m.wg.Add(1)
+	defer m.wg.Done()
+
+	ticker := time.NewTicker(RetryDuration)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-m.quit:
+			return
+		case <-ticker.C:
+			m.file.Lock()
+			for _, address := range m.file.Connections {
+				m.connectNode(address)
+			}
+			m.file.Unlock()
+		}
 	}
 }
 

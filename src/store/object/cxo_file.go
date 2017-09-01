@@ -84,6 +84,17 @@ func (f *CXOFile) RemoveConnection(address string) bool {
 	return false
 }
 
+func (f *CXOFile) HasConnection(address string) bool {
+	f.Lock()
+	defer f.Unlock()
+	for _, oldAddress := range f.Connections {
+		if address == oldAddress {
+			return true
+		}
+	}
+	return false
+}
+
 func (f *CXOFile) AddRemoteSub(pk cipher.PubKey) bool {
 	f.Lock()
 	defer f.Unlock()
