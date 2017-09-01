@@ -138,6 +138,12 @@ func (f *CXOFile) RemoveMasterSub(pk cipher.PubKey) bool {
 	return false
 }
 
+func (f *CXOFile) HasSub(pk cipher.PubKey) bool {
+	f.Lock()
+	defer f.Unlock()
+	return f.hasSub(pk)
+}
+
 func (f *CXOFile) hasSub(pk cipher.PubKey) bool {
 	for _, sub := range append(f.RemoteSubs, f.MasterSubs...) {
 		if pk == sub.PK {

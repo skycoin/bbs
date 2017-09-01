@@ -11,6 +11,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 const (
@@ -26,6 +27,7 @@ type Compiler struct {
 	l *log.Logger
 
 	node *node.Node
+	file *object.CXOFile
 
 	mux    sync.Mutex
 	boards map[cipher.PubKey]*BoardInstance
@@ -36,11 +38,12 @@ type Compiler struct {
 	wg       sync.WaitGroup
 }
 
-func NewCompiler(config *CompilerConfig, newRoots chan *skyobject.Root, node *node.Node, adders ...views.Adder) *Compiler {
+func NewCompiler(config *CompilerConfig, file *object.CXOFile, newRoots chan *skyobject.Root, node *node.Node, adders ...views.Adder) *Compiler {
 	compiler := &Compiler{
 		c:        config,
 		l:        inform.NewLogger(true, os.Stdout, LogPrefix),
 		node:     node,
+		file: file,
 		boards:   make(map[cipher.PubKey]*BoardInstance),
 		adders:   adders,
 		newRoots: newRoots,
@@ -122,6 +125,11 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 }
 
 func (c *Compiler) InitBoard(pk cipher.PubKey, sk ...cipher.SecKey) error {
+	if !c.file.HasSub(pk) {
+		return boo.Newf(boo.NotFound,
+			"Not subscribed to feed '%s'", pk.Hex()[:5]+"...")
+	}
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
