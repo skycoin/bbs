@@ -107,7 +107,7 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 
 		var newPack *skyobject.Pack
 
-		if bi.c.Master {
+		if bi.c.Master && root == nil {
 			e := oldPI.Do(func(p *skyobject.Pack, h *pack.Headers) error {
 				if e := p.Save(); e != nil {
 					return e
@@ -265,7 +265,7 @@ func (bi *BoardInstance) WaitSeq(ctx context.Context, goal uint64) error {
 		return nil
 	}
 
-	ctx, _ = context.WithTimeout(ctx, time.Second*10)
+	ctx, _ = context.WithTimeout(ctx, time.Second*30)
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()

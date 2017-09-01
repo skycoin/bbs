@@ -20,6 +20,11 @@ sleep 15
 NewUser 5410 user1
 Login 5410 user1
 
+for i in {1..10}
+do
+    NewUser 7410 "user${i}"
+done
+
 # Host some boards on the nodes (HTTP | SEED | SUB).
 
 NewBoard 5410 a 5411
@@ -46,13 +51,13 @@ sleep 1
 
 for i in {1..9}
 do
-NewTestThread 5410 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" ${i} &
+    NewTestThread 5410 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" ${i} &
 done
 NewTestThread 5410 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" 10
 
 for i in {1..9}
 do
-NewTestThread 5410 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" ${i} &
+    NewTestThread 5410 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" ${i} &
 done
 NewTestThread 5410 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" 10
 
