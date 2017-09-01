@@ -432,10 +432,10 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 			}
 		}
 	}
-	fmt.Printf("CHANGES(total count): t(%d) p(%d) v(%d)\n",
-		newC.ThreadCount, newC.PostCount, newC.VoteCount)
-	fmt.Printf("CHANGES(added count): t(%d) p(%d) v(%d)\n\n",
-		len(newC.NewThreads), len(newC.NewPosts), len(newC.NewVotes))
+	fmt.Printf("\t- (CHANGES) threads: %d(+%d), posts: %d(+%d), votes: %d(+%d)\n",
+		newC.ThreadCount, len(newC.NewThreads),
+		newC.PostCount, len(newC.NewPosts),
+		newC.VoteCount, len(newC.NewVotes))
 	return newC, nil
 }
 
@@ -476,31 +476,31 @@ func (up *UsersPage) NewUserActivityPage(upk cipher.PubKey) (cipher.SHA256, erro
 	return cipher.SumSHA256(encoder.Serialize(ua)), nil
 }
 
-func (up *UsersPage) AddUserActivity(uapHash cipher.SHA256, v interface{}) error {
+func (up *UsersPage) AddUserActivity(uapHash cipher.SHA256, v interface{}) (cipher.SHA256, error) {
 	uapElem, e := up.Users.RefByHash(uapHash)
 	if e != nil {
-		return refByHashErr(e, uapHash, "Users")
+		return cipher.SHA256{}, refByHashErr(e, uapHash, "Users")
 	}
 	uap, e := GetUserActivityPage(uapElem, nil)
 	if e != nil {
-		return e
+		return cipher.SHA256{}, e
 	}
 	switch v.(type) {
 	case *Vote:
 		if e := uap.VoteActions.Append(v); e != nil {
-			return appendErr(e, v, "UsersPage.VoteActions")
+			return cipher.SHA256{}, appendErr(e, v, "UsersPage.VoteActions")
 		}
 	default:
-		return boo.Newf(boo.NotAllowed,
+		return cipher.SHA256{}, boo.Newf(boo.NotAllowed,
 			"invalid type '%T' provided", v)
 	}
 
 	// Save.
 	if e := uapElem.SetValue(uap); e != nil {
-		return boo.Newf(boo.NotAllowed,
+		return cipher.SHA256{}, boo.Newf(boo.NotAllowed,
 			"failed to save")
 	}
-	return nil
+	return uapElem.Hash, nil
 }
 
 func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivityPage) error, mux *sync.Mutex) error {

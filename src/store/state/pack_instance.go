@@ -12,11 +12,11 @@ type PackInstance struct {
 	headers *pack.Headers
 }
 
-func NewPackInstance(oldPI *PackInstance, p *skyobject.Pack) (*PackInstance, error) {
-	oldPI.Close()
+func NewPackInstance(oldHeaders *pack.Headers, p *skyobject.Pack) (*PackInstance, error) {
+	//oldPI.Close()
 	newPI := &PackInstance{pack: p}
 	var e error
-	newPI.headers, e = pack.NewHeaders(oldPI.Headers(), p)
+	newPI.headers, e = pack.NewHeaders(oldHeaders, p)
 	if e != nil {
 		return nil, e
 	}
