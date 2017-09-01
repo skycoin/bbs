@@ -1,7 +1,6 @@
 package content_view
 
 import (
-	"fmt"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
@@ -91,7 +90,6 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 	changes := headers.GetChanges()
 
 	for _, thread := range changes.NewThreads {
-		fmt.Printf("NEW THREAD: %s\n", thread.R.Hex())
 		v.board.Threads = append(v.board.Threads, IndexHash{h: thread.R, i: len(v.board.Threads)})
 		v.tMap[thread.R] = new(ThreadRep).FillThread(thread, mux)
 	}

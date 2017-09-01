@@ -105,3 +105,10 @@ func (h *Headers) SetUser(upk cipher.PubKey, uapHash cipher.SHA256) {
 	defer h.uMux.Unlock()
 	h.users[upk] = uapHash
 }
+
+func (h *Headers) SetThread(tRef, tpRef cipher.SHA256) {
+	h.tMux.Lock()
+	defer h.tMux.Unlock()
+
+	h.threads[tRef] = tpRef
+}

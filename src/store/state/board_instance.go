@@ -134,7 +134,8 @@ func (bi *BoardInstance) Update(node *node.Node, root *skyobject.Root) error {
 
 		bi.l.Printf("SEQ (%d)", newPack.Root().Seq)
 
-		newPI, e := NewPackInstance(oldPI, newPack)
+		//oldPI.Close()
+		newPI, e := NewPackInstance(oldPI.Headers(), newPack)
 		if e != nil {
 			return nil, e
 		}

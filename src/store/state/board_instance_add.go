@@ -89,6 +89,9 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 			return e
 		}
 
+		// Modify headers.
+		h.SetThread(post.OfThread, tpRef.Hash)
+
 		// Add post to diff.
 		if e := pages.DiffPage.Add(post); e != nil {
 			return e
@@ -134,8 +137,10 @@ func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 		}
 
 		// Add vote to appropriate user activity page.
-		if e := pages.UsersPage.AddUserActivity(uapHash, vote); e != nil {
+		if uapHashNew, e := pages.UsersPage.AddUserActivity(uapHash, vote); e != nil {
 			return e
+		} else {
+			h.SetUser(vote.Creator, uapHashNew)
 		}
 
 		// Add vote to diff page.
