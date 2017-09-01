@@ -26,7 +26,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
-import { flyInOutAnimation } from '../../animations/common.animations';
+import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
 import 'rxjs/add/operator/filter';
 
 @Component({
@@ -34,7 +34,7 @@ import 'rxjs/add/operator/filter';
   templateUrl: 'threadPage.component.html',
   styleUrls: ['threadPage.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation, flyInOutAnimation],
+  animations: [slideInLeftAnimation, flyInOutAnimation, bounceInAnimation],
 })
 
 export class ThreadPageComponent implements OnInit {
@@ -227,6 +227,7 @@ export class ThreadPageComponent implements OnInit {
       console.log('vote user:', result);
       if (result.okay) {
         this.userFollow = result.data;
+        this.userTag = '';
       }
     }, err => {
     })

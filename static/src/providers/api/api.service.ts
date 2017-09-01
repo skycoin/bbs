@@ -101,7 +101,7 @@ export class ApiService {
   }
 
   delSubscription(data: FormData) {
-    return this.common.handlePost(this.subscriptionsUrl + 'remove', data);
+    return this.common.handlePost(this.subscriptionsUrl + 'delete', data);
   }
 
   getStats() {

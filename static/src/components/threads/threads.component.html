@@ -30,42 +30,46 @@
 
 <!--Info Box-->
 <ng-template #infoBox let-c="close" let-d="dismiss">
-  <div class="card">
-    <div class="card-header">
-      Thread Info
-    </div>
-    <div class="card-block">
-      <p class="thread-item">Name: <span>{{tmpThread.name}}</span></p>
-      <p class="thread-item">Description: <span>{{tmpThread.description}}</span></p>
-      <p class="thread-item">Master Board: <span>{{tmpThread.master_board}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.master_board" (onClip)="common.copy($event)"></i></span></p>
-      <p class="thread-item">Ref: <span>{{tmpThread.ref}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.ref" (onClip)="common.copy($event)"></i></span></p>
+  <div class="modal-box" [@bounceIn]>
+    <div class="card">
+      <div class="card-header">
+        Thread Info
+      </div>
+      <div class="card-block">
+        <p class="thread-item">Name: <span>{{tmpThread.name}}</span></p>
+        <p class="thread-item">Description: <span>{{tmpThread.description}}</span></p>
+        <p class="thread-item">Master Board: <span>{{tmpThread.master_board}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.master_board" (onClip)="common.copy($event)"></i></span></p>
+        <p class="thread-item">Ref: <span>{{tmpThread.ref}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.ref" (onClip)="common.copy($event)"></i></span></p>
+      </div>
     </div>
   </div>
 </ng-template>
 
 <!--Add Thread-->
 <ng-template #add let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">New Thread</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+  <div class="modal-box" [@bounceIn]>
+    <div class="modal-header">
+      <h4 class="modal-title">New Thread</h4>
+      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
       <span aria-hidden="true">&times;</span>
     </button>
-  </div>
-  <div class="modal-body">
-    <form [formGroup]="addForm" novalidate>
-      <div class="form-group">
-        <label for="name">Thread name</label>
-        <input type="text" class="form-control" placeholder="name" id="name" formControlName="name">
-      </div>
-      <div class="form-group">
-        <label for="body">Thread Body</label>
-        <textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>
-      </div>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
-    <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="addForm" novalidate>
+        <div class="form-group">
+          <label for="name">Thread name</label>
+          <input type="text" class="form-control" placeholder="name" id="name" formControlName="name">
+        </div>
+        <div class="form-group">
+          <label for="body">Thread Body</label>
+          <textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+      <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
   </div>
 </ng-template>
 

@@ -7,14 +7,14 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AlertComponent } from '../alert/alert.component';
 import { FabComponent } from '../fab/fab.component';
 import { slideInLeftAnimation } from '../../animations/router.animations';
-import { flyInOutAnimation } from '../../animations/common.animations';
+import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
 
 @Component({
   selector: 'app-boardslist',
   templateUrl: 'boards-list.component.html',
   styleUrls: ['boards-list.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation, flyInOutAnimation],
+  animations: [slideInLeftAnimation, flyInOutAnimation, bounceInAnimation],
 })
 export class BoardsListComponent implements OnInit, AfterViewInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
@@ -70,7 +70,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
 
   getBoards() {
     this.api.getBoards().subscribe((allBoards: AllBoards) => {
-      if (!allBoards.okay || allBoards.data.master_boards.length <= 0) {
+      if (!allBoards.okay) {
         return;
       }
       this.boards = allBoards.data.master_boards;
@@ -178,7 +178,10 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     }, err => { });
   }
 
-  subscribe(content: any) {
+  subscribe(content: any, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
     this.subscribeForm.reset();
     this.modal.open(content).result.then(result => {
       if (result) {
@@ -197,10 +200,37 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
       }
     }, err => { });
   }
+  delSubscribe(key: string, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    const modalRef = this.modal.open(AlertComponent);
+    modalRef.componentInstance.title = 'Delete Subscription';
+    modalRef.componentInstance.body = 'Do you delete the Subscription?';
+    modalRef.result.then(result => {
+      if (result) {
+        if (!key) {
+          this.alert.error({ content: 'The Board Key can not be empty!!!' });
+          return;
+        }
+        console.log('key:', key);
+        const data = new FormData();
+        data.append('public_key', key);
+        this.api.delSubscription(data).subscribe(res => {
+          if (res.okay) {
+            this.getBoards();
+            this.alert.success({ content: 'deleted successfully' });
+          }
+        })
+      }
+    }, err => { })
 
+
+  }
   delBoard(ev: Event, boardKey: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    ev.preventDefault();
     const modalRef = this.modal.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete Board';
     modalRef.componentInstance.body = 'Do you delete the board?';

@@ -2,13 +2,14 @@ import { Component, HostBinding, OnInit, ViewEncapsulation } from '@angular/core
 import { CommonService, ApiService, Connnections, Connnection } from '../../providers';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
+import { bounceInAnimation } from '../../animations/common.animations';
 import { AlertComponent } from '../../components/alert/alert.component';
 @Component({
   selector: 'app-connection',
   templateUrl: './connection.component.html',
   styleUrls: ['./connection.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation],
+  animations: [slideInLeftAnimation, bounceInAnimation],
 })
 
 export class ConnectionComponent implements OnInit {
@@ -24,9 +25,7 @@ export class ConnectionComponent implements OnInit {
 
   ngOnInit() {
     this.api.getAllConnections().subscribe((conns: Connnections) => {
-      console.log('init conns1:', conns);
       this.list = conns.data.connections;
-      console.log('init conns2:', this.list);
     });
   }
 

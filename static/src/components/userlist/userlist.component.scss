@@ -1,11 +1,26 @@
 app-userlist {
+  overflow-x: hidden;
   .list-box {
-    border-radius: .25rem;
+    .user-item-header {
+      color: #999;
+      cursor: default !important;
+      padding: .75rem 1rem !important;
+      &:hover {
+        transform: translateY(0) scale(1) !important;
+        box-shadow: none !important;
+      }
+    }
     .user-item {
       padding: 1rem .5rem;
       font-size: 1.1rem;
       background-color: #fff;
       border-bottom: 1px solid rgba(204, 204, 204, 0.35);
+      transition: all .25s;
+      cursor: pointer;
+      &:hover {
+        transform: translateY(-0.1rem) scale(1.03);
+        box-shadow: 0.1rem 0.1rem 1rem rgba(0, 0, 0, 0.3);
+      }
       &:first-child {
         border-radius: .25rem .25rem 0 0;
       }

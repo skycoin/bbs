@@ -36,7 +36,6 @@ export class AppComponent implements OnInit {
     });
     this.pop.open(ToTopComponent, false);
     this.api.getSessionInfo().subscribe(info => {
-      console.log('login info:', info);
       if (info.okay) {
         if (info.data.session && info.data.logged_in) {
           this.isLogIn = info.data.logged_in;

@@ -20,6 +20,10 @@ body {
 .p-0 {
   margin: 0;
   padding: 0;
+  p {
+    margin: 0;
+    padding: 0;
+  }
 }
 
 .overlay {
@@ -146,16 +150,14 @@ $tableHover-color: hsla(235,
   color: #486b4b;
 }
 
-.multi-modal {
-  .modal-content {
-    box-shadow: 0.1rem 0.2rem 0.8rem hsla(0, 0%, 0%, 0.5);
-  }
+.modal-box {
+  border-radius: .25rem;
+  background-color: #fff;
 }
-
 // Modal
 .modal-content {
   border: none;
-  box-shadow: 0.1rem 0.2rem 0.8rem hsla(0, 0%, 100%, 0.4);
+  background-color: transparent !important;
   .form-group {
     .form-control {
       border: 1px solid hsla(0, 0%, 80%, 0.45);
