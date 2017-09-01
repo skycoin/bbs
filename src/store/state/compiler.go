@@ -107,7 +107,7 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 	bi, e := c.GetBoard(root.Pub)
 	if e != nil {
 		c.l.Println("Received root error:", e)
-		if e := c.InitBoard(root.Pub); e != nil {
+		if e := c.InitBoard(true, root.Pub); e != nil {
 			c.l.Println("Init board error:", e)
 			return
 		}
@@ -124,8 +124,8 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 	}
 }
 
-func (c *Compiler) InitBoard(pk cipher.PubKey, sk ...cipher.SecKey) error {
-	if !c.file.HasSub(pk) {
+func (c *Compiler) InitBoard(checkFile bool, pk cipher.PubKey, sk ...cipher.SecKey) error {
+	if checkFile && !c.file.HasSub(pk) {
 		return boo.Newf(boo.NotFound,
 			"Not subscribed to feed '%s'", pk.Hex()[:5]+"...")
 	}
@@ -181,11 +181,14 @@ func (c *Compiler) DeleteBoard(bpk cipher.PubKey) {
 
 func (c *Compiler) GetBoard(pk cipher.PubKey) (*BoardInstance, error) {
 	c.mux.Lock()
-	defer c.mux.Unlock()
 	bi, ok := c.boards[pk]
+	c.mux.Unlock()
 	if !ok {
-		return nil, boo.Newf(boo.NotFound,
-			"board of public key '%s' is not found in compiler", pk.Hex())
+		c.l.Printf("First time compiling board '%s'", pk.Hex()[:5]+"...")
+		if e := c.InitBoard(false, pk); e != nil {
+			return nil, e
+		}
+		return c.GetBoard(pk)
 	}
 	return bi, nil
 }
@@ -193,7 +196,7 @@ func (c *Compiler) GetBoard(pk cipher.PubKey) (*BoardInstance, error) {
 func (c *Compiler) GetBoardForce(pk cipher.PubKey) (*BoardInstance, error) {
 	bi, e := c.GetBoard(pk)
 	if e != nil {
-		if e := c.InitBoard(pk); e != nil {
+		if e := c.InitBoard(false, pk); e != nil {
 			return nil, e
 		}
 		return c.GetBoard(pk)
