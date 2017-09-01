@@ -32,7 +32,7 @@ const (
 
 var (
 	devMode          = false
-	compilerInternal = 5
+	compilerInternal = 1
 )
 
 // Config represents configuration for node.

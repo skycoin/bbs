@@ -159,11 +159,6 @@ func (m *Manager) setup() error {
 	// Service discovery / auto root sync.
 	c.OnSubscribeRemote = func(c *node.Conn, bpk cipher.PubKey) error {
 		m.l.Printf("Found board '(%s) %s'", c.Address(), bpk.Hex()[:5]+"...")
-		//if e := m.subscribeFileRemote(bpk); e != nil {
-		//	m.l.Println(" -", e)
-		//} else {
-		//	m.l.Println(" - Recorded feed in file.")
-		//}
 		if e := c.Node().AddFeed(bpk); e != nil {
 			m.l.Println(" - Failed to relay feed:", e)
 		} else {
