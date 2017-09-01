@@ -10,7 +10,7 @@ import (
 
 const (
 	cmdStr        = "bbsnode"
-	pauseDuration = 1
+	pauseDuration = 5
 )
 
 func main() {
