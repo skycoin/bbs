@@ -5,23 +5,28 @@ import 'rxjs/add/operator/filter';
 
 @Injectable()
 export class PopupRef {
-  private _resolve: (result?: any) => void;
-  private _reject: (reason?: any) => void;
+  _resolve: (result?: any) => void;
+  _reject: (reason?: any) => void;
+  _windowRef: ComponentRef<PopupWindow>
   result: Promise<any>;
-
-  constructor(private _windowRef: ComponentRef<PopupWindow>, private router: Router, private isAutoLeave = true) {
+  constructor() {
     this.result = new Promise((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
     });
     this.result.then(null, () => { });
-    if (this.router) {
-      if (this.isAutoLeave) {
-        this.router.events.filter(ev => ev instanceof NavigationStart).subscribe(() => {
+
+  }
+  getRef(ref: ComponentRef<PopupWindow>, router: Router, isAutoLeave = true) {
+    if (router) {
+      if (isAutoLeave) {
+        router.events.filter(ev => ev instanceof NavigationStart).subscribe(() => {
           this.close();
         });
       }
     }
+    this._windowRef = ref;
+    return this;
   }
   close(result?: any) {
     if (this._windowRef) {

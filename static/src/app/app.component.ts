@@ -63,6 +63,9 @@ export class AppComponent implements OnInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
+    if (!this.alias) {
+      return;
+    }
     const data = new FormData();
     data.append('alias', this.alias);
     this.api.login(data).subscribe(res => {

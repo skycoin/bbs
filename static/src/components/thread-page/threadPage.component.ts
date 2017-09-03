@@ -218,18 +218,22 @@ export class ThreadPageComponent implements OnInit {
         tag = this.userTag;
       }
     }
+    const oldtags = this.userFollow;
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
     data.append('user_public_key', user_public_key);
     data.append('mode', mode);
     data.append('tag', tag);
+    this.loading.start();
     this.api.addUserVote(data).subscribe(result => {
-      console.log('vote user:', result);
+      console.log('vote user result:', result);
       if (result.okay) {
         this.userFollow = result.data;
         this.userTag = '';
       }
+      this.loading.close();
     }, err => {
+      this.loading.close();
     })
   }
   addPostVote(mode: string, post: Post, ev: Event) {

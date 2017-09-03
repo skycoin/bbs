@@ -1,7 +1,7 @@
 <div class="container">
   <p class="d-flex justify-content-end"><button type="button" class="btn btn-primary" (click)="openAdd(addBox)">New User</button></p>
   <div class="list-box">
-    <div class="row user-item user-item-header">
+    <div class="row user-item user-item-header" *ngIf="userlist?.length > 0">
       <div class="col-10">
         Alias
       </div>

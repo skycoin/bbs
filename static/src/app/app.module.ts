@@ -26,7 +26,7 @@ import {
   ChipComponent,
 } from '../components';
 import { SafeHTMLPipe, OrderByPipe, RepalcePipe } from '../pipes';
-import { ClipDirective, EditorDirective } from '../directives/index';
+import { ClipDirective, EditorDirective, FocusDirective } from '../directives/index';
 import { PopupModule } from '../providers/popup/popup.module';
 import { LoadingModule } from '../providers/loading/loading.module';
 import { AlertModule } from '../providers/alert/alert.module';
@@ -67,7 +67,8 @@ import { DialogModule } from '../providers/dialog/dialog.module';
     RepalcePipe,
     // Directives
     ClipDirective,
-    EditorDirective
+    EditorDirective,
+    FocusDirective
   ],
   entryComponents: [AlertComponent, FixedButtonComponent, ToTopComponent],
   providers: [CommonService, ApiService, {

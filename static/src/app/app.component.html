@@ -2,9 +2,9 @@
   <a class="navbar-brand" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" title="BBS">
     <img src="../assets/logo.svg" width="170.74" height="30" alt="bbs">
   </a>
-  <div class="overlay" *ngIf="showLoginBox"  (click)="userAction($event)"></div>
+  <div class="overlay" *ngIf="showLoginBox" (click)="userAction($event)"></div>
   <div class="login-box" *ngIf="showLoginBox">
-    <input type="text" class="text-input" autofocus [(ngModel)]="alias">
+    <input type="text" class="text-input" (keyup.enter)="login($event)" [focus]="showLoginBox" [(ngModel)]="alias" >
     <button class="button" style="background-color:#15c3f9;color:#fff;" (click)="login($event)">Login</button>
   </div>
   <div>

@@ -178,10 +178,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     }, err => { });
   }
 
-  subscribe(content: any, ev: Event) {
-    ev.stopImmediatePropagation();
-    ev.stopPropagation();
-    ev.preventDefault();
+  subscribe(content: any) {
     this.subscribeForm.reset();
     this.modal.open(content).result.then(result => {
       if (result) {
