@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, HostListener } from '@angular/core';
-import { ApiService, CommonService, UserService, Alert, LoadingService, Popup } from '../providers';
+import { ApiService, CommonService, Alert, LoadingService, Popup } from '../providers';
 import { FixedButtonComponent } from '../components';
 import { ToTopComponent } from '../components';
 import 'rxjs/add/operator/filter';
@@ -22,7 +22,6 @@ export class AppComponent implements OnInit {
   showLoginBox = false;
   constructor(
     private api: ApiService,
-    private user: UserService,
     public common: CommonService,
     private alert: Alert,
     private loading: LoadingService,
@@ -38,7 +37,7 @@ export class AppComponent implements OnInit {
     this.pop.open(ToTopComponent, false);
     this.api.getSessionInfo().subscribe(info => {
       if (info.okay) {
-        if (info.data.session) {
+        if (info.data.session && info.data.logged_in) {
           this.isLogIn = info.data.logged_in;
           this.userName = info.data.session.user.alias;
         }
@@ -64,6 +63,9 @@ export class AppComponent implements OnInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
+    if (!this.alias) {
+      return;
+    }
     const data = new FormData();
     data.append('alias', this.alias);
     this.api.login(data).subscribe(res => {

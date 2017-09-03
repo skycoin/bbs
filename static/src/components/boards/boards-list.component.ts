@@ -1,5 +1,5 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation, ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
-import { ApiService, CommonService, UserService, AllBoards, Alert, Popup, Dialog, LoadingService } from '../../providers';
+import { ApiService, CommonService, AllBoards, Alert, Popup, Dialog, LoadingService } from '../../providers';
 import { Board } from '../../providers/api/msg';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -7,14 +7,14 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AlertComponent } from '../alert/alert.component';
 import { FabComponent } from '../fab/fab.component';
 import { slideInLeftAnimation } from '../../animations/router.animations';
-import { flyInOutAnimation } from '../../animations/common.animations';
+import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
 
 @Component({
   selector: 'app-boardslist',
   templateUrl: 'boards-list.component.html',
   styleUrls: ['boards-list.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation, flyInOutAnimation],
+  animations: [slideInLeftAnimation, flyInOutAnimation, bounceInAnimation],
 })
 export class BoardsListComponent implements OnInit, AfterViewInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
@@ -25,7 +25,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   boards: Array<Board> = [];
   remoteBoards: Array<Board> = [];
   subscribeForm = new FormGroup({
-    address: new FormControl('', Validators.required),
     board: new FormControl('', Validators.required),
   });
   addressForm = new FormGroup({
@@ -42,7 +41,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   regexpStr = new RegExp('<br\s*/?>', 'g');
   replaceStr = '';
   constructor(private api: ApiService,
-    private user: UserService,
     private router: Router,
     private modal: NgbModal,
     public common: CommonService,
@@ -72,7 +70,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
 
   getBoards() {
     this.api.getBoards().subscribe((allBoards: AllBoards) => {
-      if (!allBoards.okay || allBoards.data.master_boards.length <= 0) {
+      if (!allBoards.okay) {
         return;
       }
       this.boards = allBoards.data.master_boards;
@@ -185,25 +183,51 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     this.modal.open(content).result.then(result => {
       if (result) {
         if (!this.subscribeForm.valid) {
-          // this.common.showErrorAlert('The Board Key Or Address can not be empty!!!');
+          this.alert.error({ content: 'The Board Key can not be empty!!!' });
           return;
         }
         const data = new FormData();
-        data.append('address', this.subscribeForm.get('address').value);
-        data.append('board', this.subscribeForm.get('board').value);
-        this.api.subscribe(data).subscribe(isOk => {
-          if (isOk) {
-            // this.common.showSucceedAlert('Subscribed successfully');
+        data.append('public_key', this.subscribeForm.get('board').value);
+        this.api.newSubscription(data).subscribe(res => {
+          if (res.okay) {
             this.getBoards();
+            this.alert.success({ content: 'Subscribed successfully' });
           }
         });
       }
     }, err => { });
   }
+  delSubscribe(key: string, ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    const modalRef = this.modal.open(AlertComponent);
+    modalRef.componentInstance.title = 'Delete Subscription';
+    modalRef.componentInstance.body = 'Do you delete the Subscription?';
+    modalRef.result.then(result => {
+      if (result) {
+        if (!key) {
+          this.alert.error({ content: 'The Board Key can not be empty!!!' });
+          return;
+        }
+        console.log('key:', key);
+        const data = new FormData();
+        data.append('public_key', key);
+        this.api.delSubscription(data).subscribe(res => {
+          if (res.okay) {
+            this.getBoards();
+            this.alert.success({ content: 'deleted successfully' });
+          }
+        })
+      }
+    }, err => { })
 
+
+  }
   delBoard(ev: Event, boardKey: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    ev.preventDefault();
     const modalRef = this.modal.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete Board';
     modalRef.componentInstance.body = 'Do you delete the board?';

@@ -96,12 +96,12 @@ export class ApiService {
     return this.common.handlePost(this.subscriptionsUrl + 'get', data);
   }
 
-  subscribe(data: FormData) {
-    return this.common.handlePost(this.subscriptionsUrl + 'add', data);
+  newSubscription(data: FormData) {
+    return this.common.handlePost(this.subscriptionsUrl + 'new', data);
   }
 
-  unSubscribe(data: FormData) {
-    return this.common.handlePost(this.subscriptionsUrl + 'remove', data);
+  delSubscription(data: FormData) {
+    return this.common.handlePost(this.subscriptionsUrl + 'delete', data);
   }
 
   getStats() {

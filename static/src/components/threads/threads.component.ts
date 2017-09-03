@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
-import { flyInOutAnimation } from '../../animations/common.animations';
+import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
 import 'rxjs/add/operator/switchMap';
 
 @Component({
@@ -12,7 +12,7 @@ import 'rxjs/add/operator/switchMap';
   templateUrl: 'threads.component.html',
   styleUrls: ['threads.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation, flyInOutAnimation],
+  animations: [slideInLeftAnimation, flyInOutAnimation, bounceInAnimation],
 })
 
 export class ThreadsComponent implements OnInit {

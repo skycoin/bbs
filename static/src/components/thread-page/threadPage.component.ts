@@ -6,7 +6,8 @@ import {
   ViewEncapsulation,
   ViewChild,
   AfterViewInit,
-  TemplateRef
+  TemplateRef,
+  ElementRef
 } from '@angular/core';
 import {
   ApiService,
@@ -25,7 +26,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
-import { flyInOutAnimation } from '../../animations/common.animations';
+import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
 import 'rxjs/add/operator/filter';
 
 @Component({
@@ -33,12 +34,13 @@ import 'rxjs/add/operator/filter';
   templateUrl: 'threadPage.component.html',
   styleUrls: ['threadPage.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation, flyInOutAnimation],
+  animations: [slideInLeftAnimation, flyInOutAnimation, bounceInAnimation],
 })
 
 export class ThreadPageComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
+  @ViewChild('editor') editor: ElementRef;
   @ViewChild('fab') fab: TemplateRef<any>;
   sort = 'esc';
   boardKey = '';
@@ -216,17 +218,22 @@ export class ThreadPageComponent implements OnInit {
         tag = this.userTag;
       }
     }
+    const oldtags = this.userFollow;
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
     data.append('user_public_key', user_public_key);
     data.append('mode', mode);
     data.append('tag', tag);
+    this.loading.start();
     this.api.addUserVote(data).subscribe(result => {
-      console.log('vote user:', result);
+      console.log('vote user result:', result);
       if (result.okay) {
         this.userFollow = result.data;
+        this.userTag = '';
       }
+      this.loading.close();
     }, err => {
+      this.loading.close();
     })
   }
   addPostVote(mode: string, post: Post, ev: Event) {
@@ -268,7 +275,7 @@ export class ThreadPageComponent implements OnInit {
     this.modal.open(content, { backdrop: 'static', size: 'lg', keyboard: false }).result.then((result) => {
       if (result) {
         if (!this.postForm.valid) {
-          // this.common.showErrorAlert('Can not reply,title and content can not be empty');
+          this.alert.error({ content: 'title and content can not be empty' });
           return;
         }
         const data = new FormData();

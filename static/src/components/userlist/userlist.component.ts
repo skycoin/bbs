@@ -2,6 +2,7 @@ import { Component, HostBinding, HostListener, OnInit, ViewEncapsulation } from 
 import { CommonService, User, ApiService, Users, Alert } from '../../providers';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
+import { bounceInAnimation } from '../../animations/common.animations';
 import { AlertComponent } from '../alert/alert.component';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
@@ -9,7 +10,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
   selector: 'app-userlist',
   templateUrl: './userlist.component.html',
   styleUrls: ['./userlist.component.scss'],
-  animations: [slideInLeftAnimation],
+  animations: [slideInLeftAnimation, bounceInAnimation],
   encapsulation: ViewEncapsulation.None
 })
 export class UserlistComponent implements OnInit {

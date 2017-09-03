@@ -15,19 +15,20 @@
       </div>
     </div>
     <div class="card" (click)="openThreads($event,board.public_key)" *ngFor="let board of (remoteBoards | orderBy: sort);let i = index;trackBy: trackBoards"
-    [@flyInOut]>
-    <div class="card-block">
-      <div>
-        <h5 class="single-line name">{{board?.name}}</h5>
-        <p class="text-right action">
-          <a href="javascript:void(0);" (click)="delBoard($event,board?.public_key)"><i class="fa fa-trash" aria-hidden="true" aria-label="subscribe"></i></a>
-          <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
-        </p>
+      [@flyInOut]>
+      <div class="remote-tag">Remote</div>
+      <div class="card-block">
+        <div>
+          <h5 class="single-line name">{{board?.name}}</h5>
+          <p class="text-right action">
+            <a href="javascript:void(0);" (click)="delSubscribe(board?.public_key,$event)"><i class="fa fa-chain-broken" aria-hidden="true" aria-label="subscribe"></i></a>
+            <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
+          </p>
+        </div>
+        <p class="description block-with-text" [innerHTML]="board?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
+        <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p>
       </div>
-      <p class="description block-with-text" [innerHTML]="board?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
-      <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p>
     </div>
-  </div>
     <h5 class="not-found" *ngIf="boards?.length === 0 && remoteBoards?.length === 0">
       <p><i class="fa fa-exclamation-circle fa-2x" aria-hidden="true"></i></p>
       <p class="hint-text">No Boards Found</p>
@@ -38,29 +39,68 @@
 <ng-template #fab>
   <fab>
     <fa-button name="New Board" icon="fa-th-large" (click)="openAdd(add)"></fa-button>
-    <!-- <fa-button name="Subscribe" icon="fa-heart" (click)="subscribe(subscribeBox)"></fa-button> -->
+    <fa-button name="New Subscription" icon="fa-heart" (click)="subscribe(subscribeBox)"></fa-button>
   </fab>
 </ng-template>
 
 <!-- Subscribe Box-->
 <ng-template #subscribeBox let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title text-muted">Subscribe</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+  <div class="modal-box" [@bounceIn]>
+
+    <div class="modal-header">
+      <h4 class="modal-title text-muted">Input Board Public Key</h4>
+      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
       <span aria-hidden="true">&times;</span>
     </button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="subscribeForm" novalidate>
+        <div class="form-group">
+          <label for="subscribeBoardKey" class="text-muted">Board Public Key</label>
+          <input type="text" class="form-control" placeholder="Public Key" id="subscribeBoardKey" formControlName="board" autofocus>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+        <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+      </div>
+    </div>
   </div>
-  <div class="modal-body">
-    <form [formGroup]="subscribeForm" novalidate>
-      <div class="form-group">
-        <label for="subscribeAddress" class="text-muted">Address</label>
-        <input type="text" class="form-control" placeholder="address" id="subscribeAddress" formControlName="address" autofocus>
-      </div>
-      <div class="form-group">
-        <label for="subscribeBoardKey" class="text-muted">Board Public Key</label>
-        <input type="text" class="form-control" placeholder="Public Key" id="subscribeBoardKey" formControlName="board">
-      </div>
-    </form>
+</ng-template>
+
+<!--New Board-->
+<ng-template #add let-c="close" let-d="dismiss">
+  <div class="modal-box" [@bounceIn]>
+    <div class="modal-header">
+      <h4 class="modal-title">New Board</h4>
+      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+            <span aria-hidden="true">&times;</span>
+          </button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="addForm" novalidate>
+        <div class="form-group">
+          <label for="name">Board name</label>
+          <input type="text" class="form-control" placeholder="name" id="name" formControlName="name" autofocus>
+        </div>
+        <div class="form-group">
+          <label for="body">Board description</label>
+          <textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="seed">Board seed</label>
+          <textarea class="form-control" rows="3" id="seed" style="resize:none" formControlName="seed"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="submission_addresses">Board addresses (optional)</label>
+          <textarea class="form-control" rows="3" id="addresses" formControlName="submission_addresses" placeholder='(Optional) Submission addresses separated by commas ","'></textarea>
+        </div>
+        <!-- <div class="form-group">
+              <label for="connections">Connections (optional)</label>
+              <textarea class="form-control" rows="3" id="addresses" formControlName="connections" placeholder='(Optional) Connections separated by commas ","'></textarea>
+            </div> -->
+      </form>
+    </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
       <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
@@ -68,90 +108,58 @@
   </div>
 </ng-template>
 
-<!--New Board-->
-<ng-template #add let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">New Board</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </div>
-  <div class="modal-body">
-    <form [formGroup]="addForm" novalidate>
-      <div class="form-group">
-        <label for="name">Board name</label>
-        <input type="text" class="form-control" placeholder="name" id="name" formControlName="name" autofocus>
-      </div>
-      <div class="form-group">
-        <label for="body">Board description</label>
-        <textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>
-      </div>
-      <div class="form-group">
-        <label for="seed">Board seed</label>
-        <textarea class="form-control" rows="3" id="seed" style="resize:none" formControlName="seed"></textarea>
-      </div>
-      <div class="form-group">
-        <label for="submission_addresses">Board addresses (optional)</label>
-        <textarea class="form-control" rows="3" id="addresses" formControlName="submission_addresses" placeholder='(Optional) Submission addresses separated by commas ","'></textarea>
-      </div>
-      <!-- <div class="form-group">
-        <label for="connections">Connections (optional)</label>
-        <textarea class="form-control" rows="3" id="addresses" formControlName="connections" placeholder='(Optional) Connections separated by commas ","'></textarea>
-      </div> -->
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
-    <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
-  </div>
-</ng-template>
-
 <!--Add Address-->
 <ng-template #addressBox let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">Add Submission Address</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+  <div class="modal-box" [@bounceIn]>
+
+    <div class="modal-header">
+      <h4 class="modal-title">Add Submission Address</h4>
+      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
       <span aria-hidden="true">&times;</span>
     </button>
-  </div>
-  <div class="modal-body">
-    <form class="form-inline" [formGroup]="addressForm" novalidate>
-      <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="ip" formControlName="ip">
-      <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="port" formControlName="port">
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
-    <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
+    <div class="modal-body">
+      <form class="form-inline" [formGroup]="addressForm" novalidate>
+        <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="ip" formControlName="ip">
+        <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" placeholder="port" formControlName="port">
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+      <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
   </div>
 </ng-template>
 
 <!--Board Info-->
 <ng-template #info let-c="close" let-d="dismiss">
-  <div class="card info-card">
-    <div class="card-header">
-      Board Info
-    </div>
-    <div class="card-block">
-      <div class="thread-item">
-        <h5>Name</h5><span class="break-line text-muted">{{tmpBoard?.name}}</span>
+  <div class="modal-box" [@bounceIn]>
+
+    <div class="card info-card">
+      <div class="card-header">
+        Board Info
       </div>
-      <div class="thread-item">
-        <h5>Description</h5>
-        <span class="break-line text-muted" [innerHTML]="tmpBoard?.body | safeHtml"></span>
-      </div>
-      <div class="thread-item">
-        <h5>Public Key</h5>
-        <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="common.copy($event)"></i></span>
-      </div>
-      <div class="thread-item">
-        <h5>Address</h5>
-        <span class="text-muted">
+      <div class="card-block">
+        <div class="thread-item">
+          <h5>Name</h5><span class="break-line text-muted">{{tmpBoard?.name}}</span>
+        </div>
+        <div class="thread-item">
+          <h5>Description</h5>
+          <span class="break-line text-muted" [innerHTML]="tmpBoard?.body | safeHtml"></span>
+        </div>
+        <div class="thread-item">
+          <h5>Public Key</h5>
+          <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="common.copy($event)"></i></span>
+        </div>
+        <div class="thread-item">
+          <h5>Address</h5>
+          <span class="text-muted">
           <li class="info-address-li" *ngFor="let address of tmpBoard?.submission_addresses">{{address}}<i class="fa fa-times address-close" aria-hidden="true" (click)="delAddress($event,tmpBoard?.public_key,address)"></i></li>
           <li class="info-address-li add-li" (click)="addAddress(addressBox,tmpBoard?.public_key)">Add...</li></span>
-      </div>
-      <div class="thread-item">
-        <h5>Created</h5> <span class="text-muted">{{tmpBoard?.created / 1000000 | date: 'medium'}}</span>
+        </div>
+        <div class="thread-item">
+          <h5>Created</h5> <span class="text-muted">{{tmpBoard?.created / 1000000 | date: 'medium'}}</span>
+        </div>
       </div>
     </div>
   </div>

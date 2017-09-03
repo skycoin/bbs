@@ -31,7 +31,7 @@ export class PopupStack {
       // componentRef.destroy();
     }
     containerEl.appendChild(windowCmpRef.location.nativeElement);
-    return { ref: new PopupRef(windowCmpRef, this.router, isAutoLeave), instance: contentRef.instance };
+    return { ref: new PopupRef().getRef(windowCmpRef, this.router, isAutoLeave), instance: contentRef.instance };
   }
   private isString(value: any): value is string {
     return typeof value === 'string';

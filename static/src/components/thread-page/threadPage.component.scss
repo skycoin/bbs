@@ -58,7 +58,17 @@ app-threadpage {
       }
     }
     .card-block {
+      .time-box {
+        text-decoration: underline;
+        margin: .5rem 0;
+        @media (max-width: 992px) {
+          margin-bottom: 1rem;
+        }
+      }
       .content {
+        @media (max-width:992px) {
+          margin-bottom: 1rem;
+        }
         .body {
           padding-right: 1rem;
         }
@@ -155,9 +165,6 @@ app-threadpage {
             }
           }
         }
-        p {
-          margin: 0;
-        }
         .author-box {
           .author {
             display: inline-block;
@@ -174,7 +181,8 @@ app-threadpage {
               top: 100%;
               box-shadow: 0.1rem 0.1rem 1rem rgba(0, 0, 0, 0.4);
               z-index: 999;
-              .following,.avoiding {
+              .following,
+              .avoiding {
                 cursor: pointer;
               }
               .following {
@@ -202,4 +210,9 @@ app-threadpage {
       }
     }
   }
+}
+
+.editor {
+  font-size: 1rem;
+  min-height: 10rem;
 }
