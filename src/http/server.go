@@ -117,6 +117,7 @@ func (s *Server) CXO() *cxo.Manager {
 // Close quits the http server.
 func (s *Server) Close() {
 	if s.quit != nil {
+		s.CXO().Close()
 		close(s.quit)
 		s.net.Close()
 		s.net = nil

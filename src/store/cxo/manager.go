@@ -21,13 +21,15 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"github.com/skycoin/skycoin/src/util/file"
 )
 
 const (
 	LogPrefix     = "CXO"
 	SubDir        = "cxo"
-	DBName        = "bbs.db"
 	FileName      = "bbs.json"
+	ExportSubDir = "exports"
+	ExportFileExt = ".export"
 	RetryDuration = time.Second * 5
 )
 
@@ -56,9 +58,9 @@ type Manager struct {
 // NewManager creates a new CXO manager.
 func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Manager {
 	manager := &Manager{
-		c:        config,
-		l:        inform.NewLogger(true, os.Stdout, LogPrefix),
-		file:     object.NewCXOManager(&object.CXOFileManagerConfig{
+		c: config,
+		l: inform.NewLogger(true, os.Stdout, LogPrefix),
+		file: object.NewCXOManager(&object.CXOFileManagerConfig{
 			Memory: config.Memory,
 		}),
 		newRoots: make(chan *skyobject.Root, 10),
@@ -92,6 +94,9 @@ func (m *Manager) Close() {
 		select {
 		case m.quit <- struct{}{}:
 		default:
+			if e := m.ExportAllMasters(); e != nil {
+				m.l.Println(e)
+			}
 			m.compiler.Close()
 			m.wg.Wait()
 			if e := m.node.Close(); e != nil {
@@ -164,9 +169,6 @@ func (m *Manager) prepareNode() error {
 
 	c.OnCreateConnection = func(c *node.Conn) {
 		go func() {
-			m.wg.Add(1)
-			defer m.wg.Done()
-
 			for _, pk := range m.node.Feeds() {
 				c.Subscribe(pk)
 			}
@@ -215,6 +217,10 @@ func (m *Manager) prepareFile() error {
 
 func (m *Manager) filePath() string {
 	return path.Join(*m.c.Config, SubDir, FileName)
+}
+
+func (m *Manager) exportPath(pk cipher.PubKey) string {
+	return path.Join(*m.c.Config, SubDir, ExportSubDir, pk.Hex()+ExportFileExt)
 }
 
 func (m *Manager) retryLoop() {
@@ -463,14 +469,6 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	return nil
 }
 
-func (m *Manager) NewThread(thread *r0.Thread) (uint64, error) {
-	bi, e := m.compiler.GetBoard(thread.OfBoard)
-	if e != nil {
-		return 0, e
-	}
-	return bi.NewThread(thread)
-}
-
 func newBoard(node *node.Node, in *object.NewBoardIO) error {
 	pack, e := node.Container().NewRoot(
 		in.BoardPubKey,
@@ -498,4 +496,39 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 	}
 	node.Publish(pack.Root())
 	return nil
+}
+
+/*
+	<<< EXPORT >>>
+*/
+
+func (m *Manager) ExportBoard(pk cipher.PubKey) (*r0.ExpRoot, error) {
+	bi, e := m.compiler.GetBoard(pk)
+	if e != nil {
+		return nil, e
+	}
+	out, e := bi.Export()
+	if e != nil {
+		return nil, e
+	}
+	if e := file.SaveJSON(m.exportPath(pk), out, os.FileMode(0600)); e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (m *Manager) ExportAllMasters() error {
+	if *m.c.Memory {
+		return nil
+	}
+	os.MkdirAll(path.Join(*m.c.Config, SubDir, ExportSubDir), os.FileMode(0700))
+	return m.file.RangeMasterSubs(func(pk cipher.PubKey, _ cipher.SecKey) {
+		m.l.Printf("Exporting master '%s' to '%s'.",
+			pk.Hex()[:5]+"...", m.exportPath(pk))
+		if _, e := m.ExportBoard(pk); e != nil {
+			m.l.Println(" - FAILED, Error:", e)
+		} else {
+			m.l.Println(" - DONE!")
+		}
+	})
 }
