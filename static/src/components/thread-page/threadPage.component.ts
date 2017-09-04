@@ -50,7 +50,6 @@ export class ThreadPageComponent implements OnInit {
     name: new FormControl('', Validators.required),
     body: new FormControl('', Validators.required),
   });
-  userFollow: FollowPageData = {};
   showUserInfoMenu = false;
   userTag = '';
   editorOptions = {
@@ -107,8 +106,8 @@ export class ThreadPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.route.params.subscribe(res => {
-      this.boardKey = res['board_public_key'];
+    this.route.queryParams.subscribe(res => {
+      this.boardKey = res['boardKey'];
       this.threadKey = res['thread_ref'];
       this.open(this.boardKey, this.threadKey);
     });
@@ -124,24 +123,14 @@ export class ThreadPageComponent implements OnInit {
     ev.stopPropagation();
     ev.preventDefault();
     if (post.creatorMenu) {
-      this.userFollow = {};
       post.creatorMenu = false;
       return;
     }
     post.creatorMenu = true;
-    this.userFollow = {};
     if (!post.creator) {
       return;
     }
-    const data = new FormData();
-    data.append('board_public_key', this.boardKey);
-    data.append('user_public_key', post.creator);
-    this.api.getFollowPage(data).subscribe((res: FollowPage) => {
-      if (res.okay) {
-        this.userFollow = res.data;
-        this.showUserInfoMenu = true;
-      }
-    })
+    this.showUserInfoMenu = true;
   }
   Menu(ev: Event, post: Post) {
     ev.stopImmediatePropagation();
@@ -207,34 +196,25 @@ export class ThreadPageComponent implements OnInit {
       }
     })
   }
-  addUserVote(ev: Event, user_public_key, mode: string, tag?: string) {
+  addUserVote(ev: Event, post: Post, mode: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
-    if (!tag) {
-      if (this.userTag === '') {
-        tag = 'great';
-      } else {
-        tag = this.userTag;
-      }
-    }
-    const oldtags = this.userFollow;
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
-    data.append('user_public_key', user_public_key);
+    data.append('user_public_key', post.creator);
     data.append('mode', mode);
-    data.append('tag', tag);
     this.loading.start();
     this.api.addUserVote(data).subscribe(result => {
-      console.log('vote user result:', result);
       if (result.okay) {
-        this.userFollow = result.data;
+        // this.userFollow = result.data;
         this.userTag = '';
       }
       this.loading.close();
     }, err => {
       this.loading.close();
     })
+    post.creatorMenu = false;
   }
   addPostVote(mode: string, post: Post, ev: Event) {
     ev.stopImmediatePropagation();
