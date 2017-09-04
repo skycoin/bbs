@@ -137,7 +137,6 @@ func (m *Manager) prepareNode() error {
 	//c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
-	c.DBPath = filepath.Join(c.DataDir, DBName)
 	c.EnableListener = true
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
 	c.EnableRPC = *m.c.CXORPCEnable

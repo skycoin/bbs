@@ -116,6 +116,7 @@ func NewNode(sc Config) (s *Node, err error) {
 		var cx data.CXDS
 		var idx data.IdxDB
 		if cx, err = cxds.NewDriveCXDS(cxPath); err != nil {
+
 			return
 		}
 		if idx, err = idxdb.NewDriveIdxDB(idxPath); err != nil {
