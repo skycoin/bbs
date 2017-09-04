@@ -155,6 +155,7 @@ $tableHover-color: hsla(235,
   border-radius: .25rem;
   background-color: #fff;
 }
+
 // Modal
 .modal-content {
   border: none;
@@ -214,4 +215,12 @@ $bgColor: white) {
 
 .block-with-text {
   @include multiLineEllipsis($lineHeight: 1.2em, $lineCount: 2, $bgColor: white);
+}
+
+.fa-sort-asc {
+  transform: translateY(3px);
+}
+
+.fa-sort-desc {
+  transform: translateY(-2px);
 }

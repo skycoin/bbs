@@ -44,7 +44,7 @@ export class ThreadsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
+    this.route.queryParams.subscribe(params => {
       this.boardKey = params['boardKey'];
       this.init();
     })
@@ -124,7 +124,7 @@ export class ThreadsComponent implements OnInit {
       // this.common.showErrorAlert('Parameter error!!!');
       return;
     }
-    this.router.navigate(['/threads/p', { board_public_key: this.boardKey, thread_ref: ref }]);
+    this.router.navigate(['/threads/p'], { queryParams: { boardKey: this.boardKey, thread_ref: ref } });
   }
 
   openImport(ev: Event, threadKey: string, content: any) {
@@ -156,7 +156,6 @@ export class ThreadsComponent implements OnInit {
             data.append('thread', threadKey);
             data.append('to_board', this.importBoardKey);
             this.api.importThread(data).subscribe(res => {
-              console.log('transfer thread:', res);
               // this.common.showAlert('successfully', 'success', 3000);
               this.initThreads(this.boardKey);
             });

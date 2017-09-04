@@ -26,8 +26,8 @@
       </div>
       <div class="card-block">
         <p class="text-right p-0">
-          <chip color="#e84737" icon="fa-arrow-up" text="up vote" [count]="data?.data?.thread?.votes?.up_votes?.count" (click)="addThreadVote('1',$event)"></chip>
-          <chip color="#756e6e" icon="fa-arrow-down" text="down vote" [count]="data?.data?.thread?.votes?.down_votes?.count" (click)="addThreadVote('-1',$event)"></chip>
+          <chip color="#e84737" icon="fa-sort-asc" text="up vote" [count]="data?.data?.thread?.votes?.up_votes?.count" (click)="addThreadVote('1',$event)"></chip>
+          <chip color="#756e6e" icon="fa-sort-desc" text="down vote" [count]="data?.data?.thread?.votes?.down_votes?.count" (click)="addThreadVote('-1',$event)"></chip>
         </p>
       </div>
     </div>
@@ -47,9 +47,9 @@
                 <i class="fa fa-chevron-down" aria-hidden="true" (click)="Menu($event,item)">
                   <div class="overlay" *ngIf="item?.voteMenu" (click)="Menu($event,item)"></div>
                   <ul class="vote-menu" *ngIf="item?.voteMenu">
-                    <li (click)="addPostVote('+1',item,$event)"><i class="fa fa-arrow-up" aria-hidden="true"></i>
+                    <li (click)="addPostVote('+1',item,$event)"><i class="fa fa-sort-asc" aria-hidden="true"></i>
                       up vote</li>
-                    <li (click)="addPostVote('-1',item,$event)"><i class="fa fa-arrow-down" aria-hidden="true"></i>
+                    <li (click)="addPostVote('-1',item,$event)"><i class="fa fa-sort-desc" aria-hidden="true"></i>
                       down vote</li>
                   </ul>
                 </i>
@@ -64,7 +64,10 @@
                     <div class="card user-info-menu" *ngIf="item?.creatorMenu">
                         <div class="card-body">
                             <h6 class="card-title">{{item?.creator}}</h6>
-                            <hr>
+                            <div class="text-center">
+                                <button type="button" class="btn btn-primary" (click)="addUserVote($event,item,'+1')">Follow</button>
+                            </div>
+                            <!-- <hr>
                             <div class="card-block" *ngIf="userFollow?.follow_page?.following?.length > 0 || userFollow?.follow_page?.avoiding?.length">
                                 <p class="text-left p-0" >
                                   <chip color="#e84737" *ngFor="let follow of userFollow?.follow_page?.following" [text]="follow?.tag" show=""></chip>
@@ -75,7 +78,7 @@
                                 <input class="text-input" type="text" placeholder="input your tag" [(ngModel)]="userTag">
                                 <button class="button" type="button" style="background-color:#e84737;color:#fff;" (click)="addUserVote($event,item?.creator,'+1')">follow</button>
                                 <button class="button" type="button" style="background-color:#756e6e;color:#fff;" (click)="addUserVote($event,item?.creator,'-1')">avoid</button>
-                              </p>
+                              </p> -->
                         </div>
                     </div>
               </span>

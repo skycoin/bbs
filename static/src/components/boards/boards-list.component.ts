@@ -257,6 +257,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
       this.alert.error({ content: 'Abnormal parameters!!!' });
       return;
     }
-    this.router.navigate(['/threads', { boardKey: key }]);
+    this.router.navigate(['/threads'], { queryParams: { boardKey: key } });
   }
 }
