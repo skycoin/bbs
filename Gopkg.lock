@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/skycoin/cxo"
   packages = ["data","data/cxds","data/idxdb","node","node/gnet","node/log","node/msg","skyobject"]
-  revision = "a63e3e8f2b1bb476adcb8e45b67208e5e019f462"
+  revision = "6516a94524903c78f0be4f760424eb9d4f70cbf5"
 
 [[projects]]
   name = "github.com/skycoin/skycoin"
@@ -47,7 +47,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "ab9e364efd8b52800ff7ee48a9ffba4e0ed78dfb"
+  revision = "7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce"
 
 [[projects]]
   name = "gopkg.in/urfave/cli.v1"

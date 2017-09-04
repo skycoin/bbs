@@ -54,7 +54,7 @@ space
 # Build static files.
 msg "BUILDING STATIC FILES"
 cmd "cd ${STATIC_DIR}"
-cmd "npm install"
+cmd "yarn install"
 cmd "ng build --prod"
 space
 

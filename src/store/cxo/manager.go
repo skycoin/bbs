@@ -13,7 +13,6 @@ import (
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/skycoin/src/util/file"
 	"io/ioutil"
 	log2 "log"
 	"os"
@@ -46,7 +45,7 @@ type Manager struct {
 	mux      sync.Mutex
 	c        *ManagerConfig
 	l        *log2.Logger
-	file     *object.CXOFile
+	file     *object.CXOFileManager
 	node     *node.Node
 	compiler *state.Compiler
 	wg       sync.WaitGroup
@@ -59,34 +58,30 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	manager := &Manager{
 		c:        config,
 		l:        inform.NewLogger(true, os.Stdout, LogPrefix),
-		file:     new(object.CXOFile),
+		file:     object.NewCXOManager(&object.CXOFileManagerConfig{
+			Memory: config.Memory,
+		}),
 		newRoots: make(chan *skyobject.Root, 10),
 		quit:     make(chan struct{}),
 	}
-	if e := manager.setup(); e != nil {
+
+	// Prepare CXO node.
+	if e := manager.prepareNode(); e != nil {
 		manager.l.Panicln("failed to start CXO manager:", e)
 	}
+
+	// Prepare CXO compiler.
 	manager.compiler = state.NewCompiler(
 		compilerConfig, manager.file, manager.newRoots, manager.node,
 		views.AddContent(),
 		views.AddFollow(),
 	)
 
-	manager.file.Lock()
-	masterSubs := manager.file.MasterSubs
-	remoteSubs := manager.file.RemoteSubs
-	manager.file.Unlock()
+	// Prepare CXO file.
+	if e := manager.prepareFile(); e != nil {
+		manager.l.Panicln("failed to start CXO manager:", e)
+	}
 
-	for _, sub := range masterSubs {
-		if e := manager.compiler.InitBoard(false, sub.PK, sub.SK); e != nil {
-			manager.l.Println("compiler.InitBoard() :", e)
-		}
-	}
-	for _, sub := range remoteSubs {
-		if e := manager.compiler.InitBoard(false, sub.PK); e != nil {
-			manager.l.Println("compiler.InitBoard() :", e)
-		}
-	}
 	go manager.retryLoop()
 	return manager
 }
@@ -112,8 +107,8 @@ func (m *Manager) Close() {
 	<<< HELPER FUNCTIONS >>>
 */
 
-// Sets up the CXO manager.
-func (m *Manager) setup() error {
+// Sets up the CXO node.
+func (m *Manager) prepareNode() error {
 	c := node.NewConfig()
 
 	c.Log.Prefix = "[CXO] "
@@ -179,92 +174,48 @@ func (m *Manager) setup() error {
 		}()
 	}
 
-	//c.OnCloseConnection = func(c *node.Conn) {
-	//	address := c.Address()
-	//	m.l.Printf("Connection to '%s' closed.", address)
-	//
-	//	if m.file.HasConnection(address) {
-	//		m.l.Printf("Reconnecting to '%s'...", address)
-	//		// Restart.
-	//
-	//		go func() {
-	//			m.wg.Add(1)
-	//			defer m.wg.Done()
-	//
-	//			ticker := time.NewTicker(RetryDuration)
-	//			defer ticker.Stop()
-	//
-	//			for {
-	//				select {
-	//				case <-m.quit:
-	//					return
-	//				case <-ticker.C:
-	//					if e := c.Node().Connect(address); e != nil {
-	//						m.l.Printf("Failed to reconnect to '%s': %v.", address, e)
-	//					} else {
-	//						m.l.Printf("Reconnected to '%s'.", address)
-	//						return
-	//					}
-	//				}
-	//			}
-	//		}()
-	//	}
-	//}
-
 	var e error
 	if m.node, e = node.NewNode(c); e != nil {
 		return e
 	}
-	if e := m.load(); e != nil {
+	return nil
+}
+
+// Sets up CXO file.
+func (m *Manager) prepareFile() error {
+	if e := m.file.Load(m.filePath()); e != nil {
 		return e
 	}
-	m.init()
+
+	if e := m.file.RangeConnections(func(address string) {
+		if _, e := m.connectNode(address); e != nil {
+			m.l.Println("prepareNode() Connection error:", e)
+		}
+	}); e != nil {
+		return e
+	}
+
+	if e := m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
+		if e := m.compiler.InitBoard(false, pk, sk); e != nil {
+			m.l.Println("prepareNode() Init board error:", e)
+		}
+	}); e != nil {
+		return e
+	}
+
+	if e := m.file.RangeRemoteSubs(func(pk cipher.PubKey) {
+		if e := m.compiler.InitBoard(false, pk); e != nil {
+			m.l.Println("prepareNode() Init board error:", e)
+		}
+	}); e != nil {
+		return e
+	}
+
 	return nil
 }
 
 func (m *Manager) filePath() string {
 	return path.Join(*m.c.Config, SubDir, FileName)
-}
-
-func (m *Manager) load() error {
-	if *m.c.Memory {
-		return nil
-	}
-	if e := file.LoadJSON(m.filePath(), m.file); e != nil {
-		if !os.IsNotExist(e) {
-			return boo.WrapType(e, boo.InvalidRead,
-				"failed to read CXO file")
-		}
-	}
-	return nil
-}
-
-func (m *Manager) save() error {
-	if *m.c.Memory {
-		return nil
-	}
-	if e := file.SaveJSON(m.filePath(), m.file, os.FileMode(0600)); e != nil {
-		return boo.WrapType(e, boo.Internal,
-			"failed to save CXO file")
-	}
-	return nil
-}
-
-func (m *Manager) init() {
-	m.file.Lock()
-	defer m.file.Unlock()
-
-	for _, sub := range m.file.MasterSubs {
-		m.subscribeNode(sub.PK)
-	}
-
-	for _, address := range m.file.Connections {
-		m.connectNode(address)
-	}
-
-	for _, sub := range m.file.RemoteSubs {
-		m.subscribeNode(sub.PK)
-	}
 }
 
 func (m *Manager) retryLoop() {
@@ -277,27 +228,24 @@ func (m *Manager) retryLoop() {
 	for {
 		select {
 		case <-m.quit:
+			m.file.Save(m.filePath())
 			return
 		case <-ticker.C:
-			m.file.Lock()
-			for _, address := range m.file.Connections {
+			m.file.RangeConnections(func(address string) {
 				m.connectNode(address)
-			}
-			m.file.Unlock()
+			})
+			m.file.Save(m.filePath())
 		}
 	}
 }
 
 /*
-	<<< CONNECT >>>
+	<<< CONNECTION >>>
 */
 
 func (m *Manager) GetConnections() []r0.Connection {
-	m.file.Lock()
-	defer m.file.Unlock()
-
-	out := make([]r0.Connection, len(m.file.Connections))
-	for i, address := range m.file.Connections {
+	i, out := 0, make([]r0.Connection, m.file.ConnectionsLen())
+	m.file.RangeConnections(func(address string) {
 		conn, state := m.node.Pool().Connection(address), ""
 		if conn == nil {
 			state = "DISCONNECTED"
@@ -308,12 +256,15 @@ func (m *Manager) GetConnections() []r0.Connection {
 			Address: address,
 			State:   state,
 		}
-	}
+		i += 1
+	})
 	return out
 }
 
 func (m *Manager) Connect(address string) error {
-	if e := m.connectFile(address); e != nil {
+
+	// Add to file first.
+	if e := m.file.AddConnection(address); e != nil {
 		return e
 	}
 	if _, e := m.connectNode(address); e != nil {
@@ -325,14 +276,6 @@ func (m *Manager) Connect(address string) error {
 		}
 	}
 	return nil
-}
-
-func (m *Manager) connectFile(address string) error {
-	if !m.file.AddConnection(address) {
-		return boo.Newf(boo.AlreadyExists,
-			"connection to address '%s' already exists", address)
-	}
-	return m.save()
 }
 
 func (m *Manager) connectNode(address string) (*gnet.Conn, error) {
@@ -350,26 +293,14 @@ func (m *Manager) connectNode(address string) (*gnet.Conn, error) {
 	}
 }
 
-/*
-	<<< DISCONNECT >>>
-*/
-
 func (m *Manager) Disconnect(address string) error {
-	if e := m.disconnectFile(address); e != nil {
+	if e := m.file.RemoveConnection(address); e != nil {
 		return e
 	}
 	if e := m.disconnectNode(address); e != nil {
 		return e
 	}
 	return nil
-}
-
-func (m *Manager) disconnectFile(address string) error {
-	if !m.file.RemoveConnection(address) {
-		return boo.Newf(boo.NotFound,
-			"connection to address '%s' is not recorded in cxo file", address)
-	}
-	return m.save()
 }
 
 func (m *Manager) disconnectNode(address string) error {
@@ -384,22 +315,16 @@ func (m *Manager) disconnectNode(address string) error {
 }
 
 /*
-	<<< SUBSCRIBE >>>
+	<<< SUBSCRIPTION >>>
 */
 
 func (m *Manager) GetSubscriptions() []cipher.PubKey {
-	m.file.Lock()
-	defer m.file.Unlock()
-	subs := append(m.file.MasterSubs, m.file.RemoteSubs...)
-	out := make([]cipher.PubKey, len(subs))
-	for i, sub := range subs {
-		out[i] = sub.PK
-	}
+	out, _ := m.file.GetSubKeyList()
 	return out
 }
 
 func (m *Manager) SubscribeRemote(bpk cipher.PubKey) error {
-	if e := m.subscribeFileRemote(bpk); e != nil {
+	if e := m.file.AddRemoteSub(bpk); e != nil {
 		return e
 	}
 	m.subscribeNode(bpk)
@@ -407,7 +332,7 @@ func (m *Manager) SubscribeRemote(bpk cipher.PubKey) error {
 }
 
 func (m *Manager) SubscribeMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
-	if e := m.subscribeFileMaster(bpk, bsk); e != nil {
+	if e := m.file.AddMasterSub(bpk, bsk); e != nil {
 		return e
 	}
 	m.subscribeNode(bpk)
@@ -415,22 +340,6 @@ func (m *Manager) SubscribeMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
 		return e
 	}
 	return nil
-}
-
-func (m *Manager) subscribeFileRemote(bpk cipher.PubKey) error {
-	if !m.file.AddRemoteSub(bpk) {
-		return boo.Newf(boo.AlreadyExists,
-			"already subscribed to remote board '%s'", bpk.Hex()[:5]+"...")
-	}
-	return m.save()
-}
-
-func (m *Manager) subscribeFileMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
-	if !m.file.AddMasterSub(bpk, bsk) {
-		return boo.Newf(boo.AlreadyExists,
-			"already subscribed to master board '%s'", bpk.Hex()[:5]+"...")
-	}
-	return m.save()
 }
 
 func (m *Manager) subscribeNode(bpk cipher.PubKey) error {
@@ -466,35 +375,27 @@ func (m *Manager) subscribeNode(bpk cipher.PubKey) error {
 */
 
 func (m *Manager) UnsubscribeRemote(bpk cipher.PubKey) error {
-	if e := m.unsubscribeFileRemote(bpk); e != nil {
-		return e
+	if m.file.HasRemoteSub(bpk) {
+		if e := m.file.RemoveSub(bpk); e != nil {
+			return e
+		}
+		m.unsubscribeNode(bpk)
+		return nil
 	}
-	m.unsubscribeNode(bpk)
-	return nil
+	return boo.Newf(boo.NotFound,
+		"remote board of public key '%s' not found in cxo file", bpk.Hex()[:5]+"...")
 }
 
 func (m *Manager) UnsubscribeMaster(bpk cipher.PubKey) error {
-	if e := m.unsubscribeFileMaster(bpk); e != nil {
-		return e
+	if m.file.HasMasterSub(bpk) {
+		if e := m.file.RemoveSub(bpk); e != nil {
+			return e
+		}
+		m.unsubscribeNode(bpk)
+		return nil
 	}
-	m.unsubscribeNode(bpk)
-	return nil
-}
-
-func (m *Manager) unsubscribeFileRemote(bpk cipher.PubKey) error {
-	if !m.file.RemoveRemoteSub(bpk) {
-		return boo.Newf(boo.NotFound,
-			"remote board of public key '%s' not found in cxo file", bpk.Hex()[:5]+"...")
-	}
-	return m.save()
-}
-
-func (m *Manager) unsubscribeFileMaster(bpk cipher.PubKey) error {
-	if !m.file.RemoveMasterSub(bpk) {
-		return boo.Newf(boo.NotFound,
-			"master board of public key '%s' not found in cxo file", bpk.Hex()[:5]+"...")
-	}
-	return m.save()
+	return boo.Newf(boo.NotFound,
+		"master board of public key '%s' not found in cxo file", bpk.Hex()[:5]+"...")
 }
 
 func (m *Manager) unsubscribeNode(bpk cipher.PubKey) {
@@ -511,36 +412,36 @@ func (m *Manager) GetBoardInstance(bpk cipher.PubKey) (*state.BoardInstance, err
 }
 
 func (m *Manager) GetBoards() ([]interface{}, []interface{}, error) {
-	m.file.Lock()
-	defer m.file.Unlock()
 
-	masterOut := make([]interface{}, len(m.file.MasterSubs))
-	for i, sub := range m.file.MasterSubs {
-		bi, e := m.compiler.GetBoard(sub.PK)
-		if e != nil {
-			return nil, nil, e
-		}
-		bView, e := bi.Get(views.Content, content_view.Board)
-		if e != nil {
-			return nil, nil, e
-		}
-		masterOut[i] = bView
-	}
-
-	remoteOut := make([]interface{}, len(m.file.RemoteSubs))
-	for i, sub := range m.file.RemoteSubs {
-		bi, e := m.compiler.GetBoard(sub.PK)
+	var masterOut []interface{}
+	m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
+		bi, e := m.compiler.GetBoard(pk)
 		if e != nil {
 			m.l.Println(e)
-			continue
+			return
 		}
 		bView, e := bi.Get(views.Content, content_view.Board)
 		if e != nil {
 			m.l.Println(e)
-			continue
+			return
 		}
-		remoteOut[i] = bView
-	}
+		masterOut = append(masterOut, bView)
+	})
+
+	var remoteOut []interface{}
+	m.file.RangeRemoteSubs(func(pk cipher.PubKey) {
+		bi, e := m.compiler.GetBoard(pk)
+		if e != nil {
+			m.l.Println(e)
+			return
+		}
+		bView, e := bi.Get(views.Content, content_view.Board)
+		if e != nil {
+			m.l.Println(e)
+			return
+		}
+		remoteOut = append(remoteOut, bView)
+	})
 
 	return masterOut, remoteOut, nil
 }
@@ -549,7 +450,7 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	if e := m.subscribeFileMaster(in.BoardPubKey, in.BoardSecKey); e != nil {
+	if e := m.file.AddMasterSub(in.BoardPubKey, in.BoardSecKey); e != nil {
 		return e
 	}
 	m.subscribeNode(in.BoardPubKey)
