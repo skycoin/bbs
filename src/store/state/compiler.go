@@ -3,6 +3,7 @@ package state
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
@@ -11,7 +12,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 const (
@@ -27,7 +27,7 @@ type Compiler struct {
 	l *log.Logger
 
 	node *node.Node
-	file *object.CXOFile
+	file *object.CXOFileManager
 
 	mux    sync.Mutex
 	boards map[cipher.PubKey]*BoardInstance
@@ -38,12 +38,18 @@ type Compiler struct {
 	wg       sync.WaitGroup
 }
 
-func NewCompiler(config *CompilerConfig, file *object.CXOFile, newRoots chan *skyobject.Root, node *node.Node, adders ...views.Adder) *Compiler {
+func NewCompiler(
+	config *CompilerConfig,
+	file *object.CXOFileManager,
+	newRoots chan *skyobject.Root,
+	node *node.Node,
+	adders ...views.Adder,
+) *Compiler {
 	compiler := &Compiler{
 		c:        config,
 		l:        inform.NewLogger(true, os.Stdout, LogPrefix),
 		node:     node,
-		file: file,
+		file:     file,
 		boards:   make(map[cipher.PubKey]*BoardInstance),
 		adders:   adders,
 		newRoots: newRoots,
@@ -90,38 +96,32 @@ func (c *Compiler) updateLoop() {
 }
 
 func (c *Compiler) doMasterUpdate() {
-	c.file.Lock()
-	defer c.file.Unlock()
-
-	for i, sub := range c.file.MasterSubs {
+	c.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		c.mux.Lock()
-		bi, ok := c.boards[sub.PK]
+		bi, ok := c.boards[pk]
 		c.mux.Unlock()
 
 		if !ok {
-			c.l.Printf(" - [%d:'%s'] Initialising in compiler.",
-				i, sub.PK.Hex()[:5]+"...")
-			if e := c.InitBoard(false, sub.PK, sub.SK); e != nil {
+			c.l.Printf(" - ['%s'] Initialising in compiler.", pk.Hex()[:5]+"...")
+			if e := c.InitBoard(false, pk, sk); e != nil {
 				c.l.Println(" - - (ERROR)", e)
-				continue
+				return
 			} else {
 				c.l.Println(" - - (OKAY)")
 				c.mux.Lock()
-				bi = c.boards[sub.PK]
+				bi = c.boards[pk]
 				c.mux.Unlock()
 			}
 		}
 
 		if bi.UpdateNeeded() {
 			if e := bi.Update(c.node, nil); e != nil {
-				c.l.Printf(" - [%d:'%s'] Update failed with error: %v",
-					i, sub.PK.Hex()[:5]+"...", e)
-				c.DeleteBoard(sub.PK)
-				c.l.Println(" - - (RESET) Result:",
-					c.InitBoard(false, sub.PK, sub.SK))
+				c.l.Printf(" - ['%s'] Update failed with error: %v", pk.Hex()[:5]+"...", e)
+				c.DeleteBoard(pk)
+				c.l.Println(" - - (RESET) Result:", c.InitBoard(false, pk, sk))
 			}
 		}
-	}
+	})
 }
 
 func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
@@ -129,18 +129,15 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 	if e != nil {
 		c.l.Println("Board '%s' not compiled.", root.Pub.Hex()[:5]+"...")
 
-		sub, master, e := c.file.GetSub(root.Pub)
-		if e != nil {
-			return
-		}
+		bsk, master := c.file.GetMasterSubSecKey(root.Pub)
 
 		if master {
-			if e := c.InitBoard(true, sub.PK, sub.SK); e != nil {
+			if e := c.InitBoard(true, root.Pub, bsk); e != nil {
 				c.l.Println("Init board error:", e)
 				return
 			}
 		} else {
-			if e := c.InitBoard(true, sub.PK); e != nil {
+			if e := c.InitBoard(true, root.Pub); e != nil {
 				c.l.Println("Init board error:", e)
 				return
 			}
@@ -160,7 +157,7 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 }
 
 func (c *Compiler) InitBoard(checkFile bool, pk cipher.PubKey, sk ...cipher.SecKey) error {
-	if checkFile && !c.file.HasSub(pk) {
+	if checkFile && !(c.file.HasMasterSub(pk) || c.file.HasRemoteSub(pk))  {
 		return boo.Newf(boo.NotFound,
 			"Not subscribed to feed '%s'", pk.Hex()[:5]+"...")
 	}

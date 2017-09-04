@@ -4,10 +4,9 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/skycoin/src/cipher"
-	"strconv"
 	"regexp"
+	"strconv"
 	"strings"
-
 )
 
 const (

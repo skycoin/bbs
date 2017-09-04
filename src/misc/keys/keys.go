@@ -16,7 +16,12 @@ func GetPubKey(s string) (cipher.PubKey, error) {
 		return cipher.PubKey{}, boo.New(boo.InvalidInput,
 			"invalid public key hex string length")
 	}
-	return cipher.NewPubKey(b), nil
+	pk := cipher.NewPubKey(b)
+	if e := pk.Verify(); e != nil {
+		return cipher.PubKey{}, boo.WrapType(e, boo.InvalidRead,
+			"failed to verify public key")
+	}
+	return pk, nil
 }
 
 // GetSecKey obtains the secret key from string, avoiding panics.
@@ -28,6 +33,11 @@ func GetSecKey(s string) (cipher.SecKey, error) {
 	} else if len(b) != len(cipher.SecKey{}) {
 		return cipher.SecKey{}, boo.New(boo.InvalidInput,
 			"invalid secret key hex string length")
+	}
+	sk := cipher.NewSecKey(b)
+	if e := sk.Verify(); e != nil {
+		return cipher.SecKey{}, boo.WrapType(e, boo.InvalidRead,
+			"failed to verify secret key")
 	}
 	return cipher.NewSecKey(b), nil
 }
