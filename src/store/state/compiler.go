@@ -165,7 +165,7 @@ func (c *Compiler) InitBoard(checkFile bool, pk cipher.PubKey, sk ...cipher.SecK
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	root, e := c.node.Container().LastFull(pk)
+	root, e := c.node.Container().LastRoot(pk)
 	if e != nil {
 		return e
 	}

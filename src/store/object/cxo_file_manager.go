@@ -16,6 +16,15 @@ const (
 	cxoFileManagerLogPrefix = "CXOFILEMANAGER"
 )
 
+var (
+	defaultConnections = []string{
+		"34.204.161.180:8210",
+	}
+	defaultSubscriptions = []string {
+		"03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
+	}
+)
+
 // CXOFileManagerConfig configures the CXOFileManager.
 type CXOFileManagerConfig struct {
 	Memory       *bool   // Whether to run in memory mode.
@@ -305,6 +314,18 @@ func (m *CXOFileManager) load(path string) error {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"failed to read CXO file from '%s'", path)
 		} else {
+			// Load default.
+			m.l.Println("First Run - Loading defaults:")
+			for i, address := range defaultConnections {
+				m.l.Printf(" - [%d] Connection '%s'", i, address)
+				m.connections.Append(address, address)
+			}
+			for i, pkStr := range defaultSubscriptions {
+				pk, _ := keys.GetPubKey(pkStr)
+				m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
+				m.remotes.Append(pk, &Subscription{PK:pk})
+			}
+			m.tagChanges()
 			return nil
 		}
 	}

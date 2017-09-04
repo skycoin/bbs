@@ -15,9 +15,15 @@ type Subscription struct {
 }
 
 func (s *Subscription) View() SubscriptionView {
-	return SubscriptionView{
-		PK: s.PK.Hex(),
-		SK: s.SK.Hex(),
+	if s.SK == (cipher.SecKey{}) {
+		return SubscriptionView{
+			PK: s.PK.Hex(),
+		}
+	} else {
+		return SubscriptionView{
+			PK: s.PK.Hex(),
+			SK: s.SK.Hex(),
+		}
 	}
 }
 

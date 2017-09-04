@@ -13,7 +13,7 @@ import (
 // common errors
 var (
 	ErrNotRequestMsg  = errors.New("not request msg")
-	ErrNotResponseMsg = errors.New("nto response msg")
+	ErrNotResponseMsg = errors.New("not response msg")
 )
 
 // ID represents uint64 random number
@@ -134,8 +134,16 @@ func (s *Src) NonPublicServer(rls *RequestListOfFeeds) (nps *NonPublicServer) {
 func (s *Src) Root(r *skyobject.Root) (root *Root) {
 	root = new(Root)
 	root.Feed = r.Pub
+	root.Seq = r.Seq
 	root.Value = r.Encode()
 	root.Sig = r.Sig
+	return
+}
+
+func (s *Src) RootDone(pk cipher.PubKey, seq uint64) (rd *RootDone) {
+	rd = new(RootDone)
+	rd.Feed = pk
+	rd.Seq = seq
 	return
 }
 
