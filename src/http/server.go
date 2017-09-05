@@ -11,7 +11,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -86,27 +85,21 @@ func (s *Server) prepareMux() error {
 }
 
 func (s *Server) prepareStatic() error {
+	appLoc := *s.c.StaticDir
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data, e := ioutil.ReadFile(path.Join(*s.c.StaticDir, indexFileName))
-		if e != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(e.Error()))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write(data)
+		page := path.Join(appLoc, "index.html")
+		http.ServeFile(w, r, page)
 	})
 
-	return filepath.Walk(*s.c.StaticDir, func(path string, info os.FileInfo, e error) error {
-		if info == nil || info.IsDir() {
-			return nil
+	fInfos, _ := ioutil.ReadDir(appLoc)
+	for _, fInfo := range fInfos {
+		route := fmt.Sprintf("/%s", fInfo.Name())
+		if fInfo.IsDir() {
+			route += "/"
 		}
-		httpPath := strings.TrimPrefix(path, *s.c.StaticDir)
-		s.mux.HandleFunc(httpPath, func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path)
-		})
-		return nil
-	})
+		s.mux.Handle(route, http.FileServer(http.Dir(appLoc)))
+	}
+	return nil
 }
 
 // CXO obtains the CXO.
