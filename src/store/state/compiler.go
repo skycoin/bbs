@@ -165,6 +165,11 @@ func (c *Compiler) InitBoard(checkFile bool, pk cipher.PubKey, sk ...cipher.SecK
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
+	if bi, has := c.boards[pk]; has {
+		bi.Close()
+		delete(c.boards, pk)
+	}
+
 	root, e := c.node.Container().LastRoot(pk)
 	if e != nil {
 		return e

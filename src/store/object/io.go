@@ -272,3 +272,16 @@ type UserIO struct {
 func (a *UserIO) Process() error {
 	return tag.Process(a)
 }
+
+type ExportBoardIO struct {
+	PubKeyStr string        `bbs:"bpkStr"`
+	PubKey    cipher.PubKey `bbs:"bpk"`
+	Name      string        `bbs:"alias"`
+}
+
+func (a *ExportBoardIO) Process() error {
+	if e := tag.Process(a); e != nil {
+		return e
+	}
+	return nil
+}

@@ -193,6 +193,24 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Exports an entire board root to file.
+	mux.HandleFunc("/api/admin/board/export",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.ExportBoard(r.Context(), &object.ExportBoardIO{
+				PubKeyStr: r.FormValue("board_public_key"),
+				Name:      r.FormValue("file_name"),
+			}))
+		})
+
+	// Imports an entire board root from file to CXO.
+	mux.HandleFunc("/api/admin/board/import",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.ImportBoard(r.Context(), &object.ExportBoardIO{
+				PubKeyStr: r.FormValue("board_public_key"),
+				Name:      r.FormValue("file_name"),
+			}))
+		})
+
 	/*
 		<<< CONTENT >>>
 	*/

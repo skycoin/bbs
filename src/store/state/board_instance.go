@@ -285,7 +285,7 @@ func (bi *BoardInstance) WaitSeq(ctx context.Context, goal uint64) error {
 }
 
 /*
-	<<< EXPORT >>>
+	<<< IMPORT / EXPORT >>>
 */
 
 func (bi *BoardInstance) Export() (*r0.ExpRoot, error) {
@@ -301,4 +301,11 @@ func (bi *BoardInstance) Export() (*r0.ExpRoot, error) {
 		return nil, e
 	}
 	return out, nil
+}
+
+func (bi *BoardInstance) Import(in *r0.ExpRoot) error {
+	defer bi.SetUpdateNeeded()
+	return bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
+		return in.Dump(p)
+	})
 }
