@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/skycoin/cxo"
   packages = ["data","data/cxds","data/idxdb","node","node/gnet","node/log","node/msg","skyobject"]
-  revision = "6516a94524903c78f0be4f760424eb9d4f70cbf5"
+  revision = "9575c31de22498959fb283e0afbad5118e54982a"
 
 [[projects]]
   name = "github.com/skycoin/skycoin"
