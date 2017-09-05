@@ -283,3 +283,29 @@ func (bi *BoardInstance) WaitSeq(ctx context.Context, goal uint64) error {
 		}
 	}
 }
+
+/*
+	<<< IMPORT / EXPORT >>>
+*/
+
+func (bi *BoardInstance) Export() (*r0.ExpRoot, error) {
+	var out = new(r0.ExpRoot)
+	if e := bi.PackRead(func(p *skyobject.Pack, h *pack.Headers) error {
+		// Get pages.
+		x, e := r0.GetPages(p, nil, true, true, false, true)
+		if e != nil {
+			return e
+		}
+		return out.Fill(x.RootPage, x.BoardPage, x.UsersPage)
+	}); e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (bi *BoardInstance) Import(in *r0.ExpRoot) error {
+	defer bi.SetUpdateNeeded()
+	return bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
+		return in.Dump(p)
+	})
+}

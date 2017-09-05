@@ -5,11 +5,11 @@ import (
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/typ"
+	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util/file"
 	"log"
 	"os"
 	"sync"
-	"github.com/skycoin/skycoin/src/cipher"
 )
 
 const (
@@ -20,14 +20,14 @@ var (
 	defaultConnections = []string{
 		"34.204.161.180:8210",
 	}
-	defaultSubscriptions = []string {
+	defaultSubscriptions = []string{
 		"03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
 	}
 )
 
 // CXOFileManagerConfig configures the CXOFileManager.
 type CXOFileManagerConfig struct {
-	Memory       *bool   // Whether to run in memory mode.
+	Memory *bool // Whether to run in memory mode.
 }
 
 // CXOFileManager manages the CXOFile.
@@ -36,7 +36,7 @@ type CXOFileManager struct {
 	c           *CXOFileManagerConfig
 	l           *log.Logger
 	mux         sync.Mutex
-	hasChanges bool // has changes.
+	hasChanges  bool // has changes.
 	masters     *typ.List
 	remotes     *typ.List
 	connections *typ.List
@@ -323,7 +323,7 @@ func (m *CXOFileManager) load(path string) error {
 			for i, pkStr := range defaultSubscriptions {
 				pk, _ := keys.GetPubKey(pkStr)
 				m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
-				m.remotes.Append(pk, &Subscription{PK:pk})
+				m.remotes.Append(pk, &Subscription{PK: pk})
 			}
 			m.tagChanges()
 			return nil

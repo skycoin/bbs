@@ -107,3 +107,15 @@ func getFollowPageOutput(v interface{}) *FollowPageOutput {
 		FollowPage: v,
 	}
 }
+
+type ExportBoardOutput struct {
+	FilePath string      `json:"file_path"`
+	FileData *r0.ExpRoot `json:"file_data"`
+}
+
+func getExportBoardOutput(path string, root *r0.ExpRoot) *ExportBoardOutput {
+	return &ExportBoardOutput{
+		FilePath: path,
+		FileData: root,
+	}
+}

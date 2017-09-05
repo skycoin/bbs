@@ -13,6 +13,7 @@ import (
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/util/file"
 	"io/ioutil"
 	log2 "log"
 	"os"
@@ -26,8 +27,9 @@ import (
 const (
 	LogPrefix     = "CXO"
 	SubDir        = "cxo"
-	DBName        = "bbs.db"
 	FileName      = "bbs.json"
+	ExportSubDir  = "exports"
+	ExportFileExt = ".export"
 	RetryDuration = time.Second * 5
 )
 
@@ -56,9 +58,9 @@ type Manager struct {
 // NewManager creates a new CXO manager.
 func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Manager {
 	manager := &Manager{
-		c:        config,
-		l:        inform.NewLogger(true, os.Stdout, LogPrefix),
-		file:     object.NewCXOManager(&object.CXOFileManagerConfig{
+		c: config,
+		l: inform.NewLogger(true, os.Stdout, LogPrefix),
+		file: object.NewCXOManager(&object.CXOFileManagerConfig{
 			Memory: config.Memory,
 		}),
 		newRoots: make(chan *skyobject.Root, 10),
@@ -80,6 +82,16 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	// Prepare CXO file.
 	if e := manager.prepareFile(); e != nil {
 		manager.l.Panicln("failed to start CXO manager:", e)
+	}
+
+	// Init directories.
+	if !*config.Memory {
+		e := os.MkdirAll(
+			path.Join(*config.Config, SubDir, ExportSubDir),
+			os.FileMode(0700))
+		if e != nil {
+			manager.l.Panicln(e)
+		}
 	}
 
 	go manager.retryLoop()
@@ -137,7 +149,6 @@ func (m *Manager) prepareNode() error {
 	//c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
-	c.DBPath = filepath.Join(c.DataDir, DBName)
 	c.EnableListener = true
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
 	c.EnableRPC = *m.c.CXORPCEnable
@@ -164,14 +175,9 @@ func (m *Manager) prepareNode() error {
 	}
 
 	c.OnCreateConnection = func(c *node.Conn) {
-		go func() {
-			m.wg.Add(1)
-			defer m.wg.Done()
-
-			for _, pk := range m.node.Feeds() {
-				c.Subscribe(pk)
-			}
-		}()
+		for _, pk := range m.node.Feeds() {
+			c.Subscribe(pk)
+		}
 	}
 
 	var e error
@@ -216,6 +222,10 @@ func (m *Manager) prepareFile() error {
 
 func (m *Manager) filePath() string {
 	return path.Join(*m.c.Config, SubDir, FileName)
+}
+
+func (m *Manager) exportPath(name string) string {
+	return path.Join(*m.c.Config, SubDir, ExportSubDir, name+ExportFileExt)
 }
 
 func (m *Manager) retryLoop() {
@@ -464,14 +474,6 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	return nil
 }
 
-func (m *Manager) NewThread(thread *r0.Thread) (uint64, error) {
-	bi, e := m.compiler.GetBoard(thread.OfBoard)
-	if e != nil {
-		return 0, e
-	}
-	return bi.NewThread(thread)
-}
-
 func newBoard(node *node.Node, in *object.NewBoardIO) error {
 	pack, e := node.Container().NewRoot(
 		in.BoardPubKey,
@@ -499,4 +501,68 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 	}
 	node.Publish(pack.Root())
 	return nil
+}
+
+/*
+	<<< IMPORT / EXPORT >>>
+*/
+
+func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *r0.ExpRoot, error) {
+	if *m.c.Memory {
+		return "", nil, nil
+	}
+	bi, e := m.compiler.GetBoard(pk)
+	if e != nil {
+		return "", nil, e
+	}
+	out, e := bi.Export()
+	if e != nil {
+		return "", nil, e
+	}
+	path := m.exportPath(name)
+	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
+		return "", nil, e
+	}
+	return path, out, nil
+}
+
+func (m *Manager) ExportAllMasters(prefix string) error {
+	if *m.c.Memory {
+		return nil
+	}
+	return m.file.RangeMasterSubs(func(pk cipher.PubKey, _ cipher.SecKey) {
+		m.l.Printf("Exporting master '%s' ...",
+			pk.Hex()[:5]+"...")
+		if path, _, e := m.ExportBoard(pk, prefix+"."+pk.Hex()); e != nil {
+			m.l.Println(" - FAILED, Error:", e)
+		} else {
+			m.l.Printf(" - SAVED TO '%s'.", path)
+		}
+	})
+}
+
+func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *r0.ExpRoot, error) {
+	if *m.c.Memory {
+		return "", nil, nil
+	}
+
+	path := m.exportPath(name)
+	out := new(r0.ExpRoot)
+	if e := file.LoadJSON(path, out); e != nil {
+		return "", nil, e
+	}
+
+	_, has := m.file.GetMasterSubSecKey(pk)
+	if !has {
+		return "", nil, boo.Newf(boo.NotAuthorised,
+			"this node is not the master of board of public key '%s'", pk.Hex())
+	}
+	bi, e := m.compiler.GetBoard(pk)
+	if e != nil {
+		return "", nil, e
+	}
+	if e := bi.Import(out); e != nil {
+		return "", nil, e
+	}
+	return path, out, nil
 }

@@ -38,7 +38,7 @@ type ContentData struct {
 }
 
 type Board struct {
-	R       cipher.PubKey `enc:"-"`
+	R       cipher.PubKey `enc:"-" json:"-"`
 	Data    []byte
 	Created int64
 }
@@ -47,8 +47,8 @@ func (b *Board) GetRaw() []byte  { return b.Data }
 func (b *Board) SetRaw(v []byte) { b.Data = v }
 
 type Thread struct {
-	R       cipher.SHA256 `enc:"-"`
-	OfBoard cipher.PubKey
+	R       cipher.SHA256 `enc:"-" json:"-"`
+	OfBoard cipher.PubKey `json:",string"`
 	Data    []byte
 	Created int64         `verify:"time"`
 	Creator cipher.PubKey `verify:"upk"`
@@ -60,10 +60,10 @@ func (t *Thread) GetRaw() []byte  { return t.Data }
 func (t *Thread) SetRaw(v []byte) { t.Data = v }
 
 type Post struct {
-	R        cipher.SHA256 `enc:"-"`
-	OfBoard  cipher.PubKey
-	OfThread cipher.SHA256
-	OfPost   cipher.SHA256 // Can be empty.
+	R        cipher.SHA256 `enc:"-" json:"-"`
+	OfBoard  cipher.PubKey `json:",string"`
+	OfThread cipher.SHA256 `json:",string"`
+	OfPost   cipher.SHA256 `json:",string"` // Can be empty.
 	Data     []byte
 	Created  int64         `verify:"time"`
 	Creator  cipher.PubKey `verify:"upk"`
@@ -103,10 +103,10 @@ var VoteString = [...]string{
 }
 
 type Vote struct {
-	OfBoard  cipher.PubKey
-	OfUser   cipher.PubKey
-	OfThread cipher.SHA256
-	OfPost   cipher.SHA256
+	OfBoard  cipher.PubKey `json:",string"`
+	OfUser   cipher.PubKey `json:",string"`
+	OfThread cipher.SHA256 `json:",string"`
+	OfPost   cipher.SHA256 `json:",string"`
 
 	Mode int8
 	Tag  []byte

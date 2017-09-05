@@ -55,9 +55,10 @@ func GetPages(p *skyobject.Pack, mux *sync.Mutex, get ...bool) (out *Pages, e er
 	out = &Pages{PK: p.Root().Pub}
 
 	if len(get) > IndexRootPage && get[IndexRootPage] {
-		// TODO: Implement.
+		if out.RootPage, e = GetRootPage(p, nil); e != nil {
+			return
+		}
 	}
-
 	if len(get) > IndexBoardPage && get[IndexBoardPage] {
 		if out.BoardPage, e = GetBoardPage(p, nil); e != nil {
 			return
@@ -109,6 +110,19 @@ type RootPage struct {
 	Typ string // Type of root.
 	Rev uint64 // Revision of root type.
 	Del bool   // Whether root is deleted.
+}
+
+func GetRootPage(p *skyobject.Pack, mux *sync.Mutex) (*RootPage, error) {
+	defer dynamicLock(mux)()
+	rpVal, e := p.RefByIndex(IndexRootPage)
+	if e != nil {
+		return nil, getRootChildErr(e, IndexRootPage)
+	}
+	rp, ok := rpVal.(*RootPage)
+	if !ok {
+		return nil, extRootChildErr(IndexRootPage)
+	}
+	return rp, nil
 }
 
 /*

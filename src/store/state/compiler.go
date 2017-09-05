@@ -157,13 +157,18 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 }
 
 func (c *Compiler) InitBoard(checkFile bool, pk cipher.PubKey, sk ...cipher.SecKey) error {
-	if checkFile && !(c.file.HasMasterSub(pk) || c.file.HasRemoteSub(pk))  {
+	if checkFile && !(c.file.HasMasterSub(pk) || c.file.HasRemoteSub(pk)) {
 		return boo.Newf(boo.NotFound,
 			"Not subscribed to feed '%s'", pk.Hex()[:5]+"...")
 	}
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
+
+	if bi, has := c.boards[pk]; has {
+		bi.Close()
+		delete(c.boards, pk)
+	}
 
 	root, e := c.node.Container().LastRoot(pk)
 	if e != nil {
