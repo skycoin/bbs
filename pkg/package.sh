@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-VERSION=3.0
+VERSION=3.1
 GOARCH=amd64
 NAME=skycoin_bbs
 
@@ -54,6 +54,7 @@ space
 # Build static files.
 msg "BUILDING STATIC FILES"
 cmd "cd ${STATIC_DIR}"
+cmd "npm install -g @angular/cli@latest"
 cmd "yarn install"
 cmd "ng build --prod"
 space
