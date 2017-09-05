@@ -36,6 +36,7 @@ const (
 // ManagerConfig represents the configuration for CXO Manager.
 type ManagerConfig struct {
 	Memory       *bool   // Whether to enable memory mode.
+	Master       *bool   // Whether node is to host boards and submission address.
 	Config       *string // Configuration directory.
 	CXOPort      *int    // CXO listening port.
 	CXORPCEnable *bool   // Whether to enable CXO RPC.
@@ -459,6 +460,11 @@ func (m *Manager) GetBoards() ([]interface{}, []interface{}, error) {
 func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
+
+	if *m.c.Master == false {
+		return boo.Newf(boo.NotMaster,
+			"boards can only be created on master nodes")
+	}
 
 	if e := m.file.AddMasterSub(in.BoardPubKey, in.BoardSecKey); e != nil {
 		return e
