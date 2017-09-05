@@ -137,6 +137,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 					),
 					CXO: cxo.NewManager(
 						&cxo.ManagerConfig{
+							Master:       &c.Master,
 							Memory:       &c.Memory,
 							Config:       &c.ConfigDir,
 							CXOPort:      &c.CXOPort,
