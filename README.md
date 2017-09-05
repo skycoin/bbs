@@ -8,15 +8,33 @@ Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) 
 
 ## Building Skycoin BBS
 
-First ensure that `go`, `npm`, `zip` and `ng` are installed and the `GOPATH` environment variable is set.
+First ensure that `go`, `npm`, `yarn`, `zip` and `ng` are installed and the `GOPATH` environment variable is set.
 
-#### BBS Node
+#### Manually
 
 To get the source code, dependencies and build BBS Node:
 ```bash
 go get github.com/skycoin/bbs/cmd/bbsnode
 ```
-The executables will be in `$GOPATH/bin`.
+
+To build the static files:
+```bash
+# Enter static directory.
+cd $GOPATH/src/github.com/skycoin/bbs/static
+
+# Install latest angular cli.
+npm install -g @angular/cli@latest
+
+# Install dependencies.
+yarn install
+
+# Build.
+ng build
+```
+
+The executables will be in `$GOPATH/bin`. Note that for serving static files in `$GOPATH/src/github.com/skycoin/bbs/static`, the `-dev` flag needs to be set.
+
+#### Via Package Script
 
 Optionally, you can then package BBS Node by running bash script provided: `pkg/package.sh`.
 ```bash
