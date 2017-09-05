@@ -1,54 +1,67 @@
-import { Component, HostBinding, OnInit, ViewEncapsulation } from '@angular/core';
-import { ApiService, CommonService, UserService } from '../../providers';
+import { Component, HostBinding, OnInit, ViewEncapsulation, ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
+import { ApiService, CommonService, AllBoards, Alert, Popup, Dialog, LoadingService } from '../../providers';
 import { Board } from '../../providers/api/msg';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AlertComponent } from '../alert/alert.component';
+import { FabComponent } from '../fab/fab.component';
 import { slideInLeftAnimation } from '../../animations/router.animations';
+import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
 
 @Component({
   selector: 'app-boardslist',
   templateUrl: 'boards-list.component.html',
   styleUrls: ['boards-list.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation],
+  animations: [slideInLeftAnimation, flyInOutAnimation, bounceInAnimation],
 })
-export class BoardsListComponent implements OnInit {
+export class BoardsListComponent implements OnInit, AfterViewInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  public sort = 'desc';
-  public isRoot = false;
-  public boards: Array<Board> = [];
-  public subscribeForm = new FormGroup({
-    address: new FormControl('', Validators.required),
+  @ViewChild('fab') fabBtnTemplate: TemplateRef<any>;
+  sort = 'asc';
+  isRoot = false;
+  boards: Array<Board> = [];
+  remoteBoards: Array<Board> = [];
+  subscribeForm = new FormGroup({
     board: new FormControl('', Validators.required),
   });
-  public addressForm = new FormGroup({
-    ip: new FormControl('', Validators.required),
+  addressForm = new FormGroup({
+    ip: new FormControl(''),
     port: new FormControl('', Validators.required),
   });
-  public addForm = new FormGroup({
+  addForm = new FormGroup({
     name: new FormControl('', Validators.required),
-    description: new FormControl('', Validators.required),
+    body: new FormControl('', Validators.required),
     seed: new FormControl({ value: '', disabled: true }, Validators.required),
-    addresses: new FormControl(''),
+    submission_addresses: new FormControl('')
   });
-  public tmpBoard: Board = null;
-
+  tmpBoard: Board = null;
+  regexpStr = new RegExp('<br\s*/?>', 'g');
+  replaceStr = '';
   constructor(private api: ApiService,
-    private user: UserService,
     private router: Router,
     private modal: NgbModal,
-    public common: CommonService) {
+    public common: CommonService,
+    private pop: Popup,
+    private alert: Alert,
+    private dialog: Dialog,
+    private loading: LoadingService) {
   }
 
   ngOnInit(): void {
-    this.common.loading.start();
     this.getBoards();
-    this.api.getStats().subscribe(root => {
-      this.isRoot = root;
+    this.api.getStats().subscribe(status => {
+      this.isRoot = status.node_is_master;
     });
+
+  }
+  ngAfterViewInit() {
+    // setTimeout(() => {
+    //   this.dialog.open();
+    // }, 10);
+    this.pop.open(this.fabBtnTemplate);
   }
 
   setSort() {
@@ -56,95 +69,88 @@ export class BoardsListComponent implements OnInit {
   }
 
   getBoards() {
-    this.api.getBoards().subscribe(boards => {
-      if (!boards || boards.length <= 0) {
-        this.common.loading.close();
+    this.api.getBoards().subscribe((allBoards: AllBoards) => {
+      if (!allBoards.okay) {
         return;
       }
-      this.boards = boards;
-      this.boards.forEach(el => {
-        if (!el || !el.public_key) {
-          return;
-        }
-        const data = new FormData();
-        data.append('board', el.public_key);
-        this.api.getSubscription(data).subscribe(res => {
-          el.ui_options = { subscribe: true };
-        });
-        this.common.loading.close();
-      });
+      this.boards = allBoards.data.master_boards;
+      this.remoteBoards = allBoards.data.remote_boards;
     });
   }
 
   addAddress(content: any, key: string) {
     this.addressForm.reset();
     if (key === '') {
-      this.common.showErrorAlert('The Public Key can not be empty!!!');
+      this.alert.error({ content: 'The Key can not be empty!!!' });
       return;
     }
     this.modal.open(content, { windowClass: 'multi-modal' }).result.then((reslut) => {
       if (reslut) {
         if (!this.addressForm.valid) {
-          this.common.showErrorAlert('The Port Or Url can not be empty!!!');
+          this.alert.error({ content: 'The Port Or Url can not be empty!!!' });
           return;
         }
-        let data = new FormData();
-        data.append('board', key);
-        data.append('address', this.addressForm.get('ip').value + ':' + this.addressForm.get('port').value);
-        this.api.addSubmissionAddress(data).subscribe(isOk => {
-          if (isOk) {
-            data = new FormData();
-            data.append('board', key);
-            this.api.getSubmissionAddresses(data).subscribe(res => {
-              this.tmpBoard.address = res;
-            });
-            this.common.showSucceedAlert('successfully added');
-          }
+        const data = new FormData();
+        data.append('board_public_key', key);
+        let ip = this.addressForm.get('ip').value;
+        if (ip === '' || !ip) {
+          ip = '[::]:'
+        } else {
+          ip = ip + ':';
+        }
+        data.append('address', ip + this.addressForm.get('port').value);
+        this.loading.start();
+        this.api.newSubmissionAddress(data).subscribe(res => {
+          this.tmpBoard.submission_addresses = res.data.board.submission_addresses;
+          this.loading.close();
         });
       }
     });
   }
-
+  openURL(ev: Event) {
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    window.open(ev.target['href'], '_blank');
+  }
   openInfo(ev: Event, board: Board, content: any) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     if (!board) {
-      this.common.showErrorAlert('Failed to get info!!');
+      // this.common.showErrorAlert('Failed to get info!!');
       return;
     }
     this.tmpBoard = board;
-    const data = new FormData();
-    data.append('board', this.tmpBoard.public_key);
-    this.api.getSubmissionAddresses(data).subscribe(address => {
-      this.tmpBoard.address = address;
-    });
     this.modal.open(content, { size: 'lg' });
   }
-
+  trackBoards(index, board) {
+    return board ? board.public_key : undefined;
+  }
   openAdd(content) {
+    // this.pop.open(content);
     this.addForm.reset();
-    this.api.generateSeed().subscribe(seed => {
-      this.addForm.patchValue({ seed: seed });
+    this.api.newSeed().subscribe(seed => {
+      this.addForm.patchValue({ seed: seed.data });
       this.modal.open(content).result.then((result) => {
         if (result === true) {
           if (!this.addForm.valid) {
-            this.common.showErrorAlert('Parameter error');
+            this.alert.error({ content: 'Parameter error' });
             return;
           }
           const data = new FormData();
-          data.append('name', this.addForm.get('name').value);
-          data.append('description', this.addForm.get('description').value);
           data.append('seed', this.addForm.get('seed').value);
-          data.append('submission_addresses', this.addForm.get('addresses').value);
+          data.append('name', this.addForm.get('name').value.trim());
+          data.append('body', this.common.replaceURL(this.common.replaceHtmlEnter(this.addForm.get('body').value)));
+          data.append('submission_addresses', this.addForm.get('submission_addresses').value);
           this.api.addBoard(data).subscribe(res => {
             this.getBoards();
-            this.common.showSucceedAlert('Added Successfully');
+            this.alert.success({ content: 'Added Successfully' });
           });
         }
       }, err => {
       });
     }, err => {
-      this.common.showErrorAlert('Unable to create,Please try again later');
+      // this.common.showErrorAlert('Unable to create,Please try again later');
     })
   }
 
@@ -152,87 +158,105 @@ export class BoardsListComponent implements OnInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     if (key === '' || address === '') {
-      this.common.showErrorAlert('The key and address can not be empty');
+      // this.common.showErrorAlert('The key and address can not be empty');
       return;
     }
-    let data = new FormData();
-    data.append('board', key);
+    const data = new FormData();
+    data.append('board_public_key', key);
     data.append('address', address);
     const modalRef = this.modal.open(AlertComponent, { windowClass: 'multi-modal' });
     modalRef.componentInstance.title = 'Delete Address';
     modalRef.componentInstance.body = 'Do you delete the address?';
     modalRef.result.then(result => {
       if (result) {
-        this.api.removeSubmissionAddress(data).subscribe(isOk => {
-          if (isOk) {
-            data = new FormData();
-            data.append('board', key);
-            this.api.getSubmissionAddresses(data).subscribe(res => {
-              this.tmpBoard.address = res;
-            });
-            this.common.showSucceedAlert('deleted successfully');
-          } else {
-            this.common.showErrorAlert('failed to delete');
-          }
+        this.loading.start();
+        this.api.delSubmissionAddress(data).subscribe(res => {
+          this.tmpBoard.submission_addresses = res.data.board.submission_addresses;
+          this.loading.close();
         });
       }
     }, err => { });
   }
 
-  subscribe(ev: Event, content: any) {
-    ev.stopImmediatePropagation();
-    ev.stopPropagation();
+  subscribe(content: any) {
     this.subscribeForm.reset();
     this.modal.open(content).result.then(result => {
       if (result) {
         if (!this.subscribeForm.valid) {
-          this.common.showErrorAlert('The Board Key Or Address can not be empty!!!');
+          this.alert.error({ content: 'The Board Key can not be empty!!!' });
           return;
         }
         const data = new FormData();
-        data.append('address', this.subscribeForm.get('address').value);
-        data.append('board', this.subscribeForm.get('board').value);
-        this.api.subscribe(data).subscribe(isOk => {
-          if (isOk) {
-            this.common.showSucceedAlert('Subscribed successfully');
+        data.append('public_key', this.subscribeForm.get('board').value);
+        this.api.newSubscription(data).subscribe(res => {
+          if (res.okay) {
             this.getBoards();
+            this.alert.success({ content: 'Subscribed successfully' });
           }
         });
       }
     }, err => { });
   }
-
-  unSubscribe(ev: Event, boardKey: string) {
+  delSubscribe(key: string, ev: Event) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    ev.preventDefault();
     const modalRef = this.modal.open(AlertComponent);
-    modalRef.componentInstance.title = 'UnSubscribe';
-    modalRef.componentInstance.body = 'Do you unsubscribe the board?';
+    modalRef.componentInstance.title = 'Delete Subscription';
+    modalRef.componentInstance.body = 'Do you delete the Subscription?';
+    modalRef.result.then(result => {
+      if (result) {
+        if (!key) {
+          this.alert.error({ content: 'The Board Key can not be empty!!!' });
+          return;
+        }
+        console.log('key:', key);
+        const data = new FormData();
+        data.append('public_key', key);
+        this.api.delSubscription(data).subscribe(res => {
+          if (res.okay) {
+            this.getBoards();
+            this.alert.success({ content: 'deleted successfully' });
+          }
+        })
+      }
+    }, err => { })
+
+
+  }
+  delBoard(ev: Event, boardKey: string) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    const modalRef = this.modal.open(AlertComponent);
+    modalRef.componentInstance.title = 'Delete Board';
+    modalRef.componentInstance.body = 'Do you delete the board?';
     modalRef.result.then(result => {
       if (result) {
         if (boardKey === '') {
-          this.common.showErrorAlert('UnSubscribe failed');
+          this.alert.error({ content: 'Delete failed' });
           return;
         }
         const data = new FormData();
-        data.append('board', boardKey);
-        this.api.unSubscribe(data).subscribe(isOk => {
-          if (isOk) {
-            this.common.showSucceedAlert('Unsubscribed successfully');
-            this.getBoards();
+        data.append('board_public_key', boardKey);
+        this.api.delBoard(data).subscribe(res => {
+          if (res.okay) {
+            this.alert.success({ content: 'Delete successfully' });
+            this.boards = res.data.master_boards;
           }
         });
       }
-    })
+    }, err => { })
   }
 
   openThreads(ev: Event, key: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    ev.preventDefault();
     if (!key) {
-      this.common.showErrorAlert('Abnormal parameters!!!', 3000);
+      this.alert.error({ content: 'Abnormal parameters!!!' });
       return;
     }
-    this.router.navigate(['/threads', { board: key }]);
+    this.router.navigate(['/threads'], { queryParams: { boardKey: key } });
   }
 }

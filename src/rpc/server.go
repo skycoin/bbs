@@ -1,67 +1,82 @@
 package rpc
 
 import (
+	"github.com/skycoin/bbs/src/misc/inform"
 	"log"
 	"net"
 	"net/rpc"
+	"os"
 	"strconv"
 	"sync"
 )
 
-// Server represents a RPC server to receive submissions from external nodes.
-type Server struct {
-	l      net.Listener
-	rpc    *rpc.Server
-	g      *Gateway
-	waiter sync.WaitGroup
+const (
+	logPrefix = "RPC"
+)
+
+// ServerConfig configures a RPC server.
+type ServerConfig struct {
+	Port   *int
+	Enable *bool
 }
 
-// NewServer creates a new RPC Server.
-func NewServer(g *Gateway, port int) (*Server, error) {
-	s := &Server{
+// Server represents a RPC server.
+type Server struct {
+	c   *ServerConfig
+	l   *log.Logger
+	lis net.Listener
+	rpc *rpc.Server
+	api *Gateway
+	wg  sync.WaitGroup
+}
+
+// NewServer creates a new RPC server.
+func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
+	server := &Server{
+		c:   config,
+		l:   inform.NewLogger(true, os.Stdout, logPrefix),
 		rpc: rpc.NewServer(),
-		g:   g,
+		api: api,
 	}
-	if e := s.open(":" + strconv.Itoa(port)); e != nil {
+	if e := server.open(":" + strconv.Itoa(*config.Port)); e != nil {
 		return nil, e
 	}
-	return s, nil
+	return server, nil
 }
 
 func (s *Server) open(address string) error {
 	var e error
-	if e = s.rpc.Register(s.g); e != nil {
+	if e = s.rpc.Register(s.api); e != nil {
 		return e
 	}
-	if s.l, e = net.Listen("tcp", address); e != nil {
+	if s.lis, e = net.Listen("tcp", address); e != nil {
 		return e
 	}
-	s.waiter.Add(1)
+	s.wg.Add(1)
 	go func(l net.Listener) {
-		defer s.waiter.Done()
+		defer s.wg.Done()
 		s.rpc.Accept(l)
-		log.Println("[RPCSERVER] Closed.")
-	}(s.l)
+		s.l.Println("Closed.")
+	}(s.lis)
 	return nil
 }
 
-// Close closes the rpc server.
-func (s *Server) Close() error {
-	if s == nil {
-		return nil
+// Close closes the RPC server.
+func (s *Server) Close() {
+	if s != nil {
+		if s.l != nil {
+			if e := s.lis.Close(); e != nil {
+				s.l.Println("Error on close:", e)
+			}
+		}
+		s.wg.Wait()
 	}
-	var e error
-	if s.l != nil {
-		e = s.l.Close()
-	}
-	s.waiter.Wait()
-	return e
 }
 
 // Address prints the rpc server's address.
 func (s *Server) Address() string {
-	if s.l != nil {
-		return s.l.Addr().String()
+	if s != nil && s.lis != nil {
+		return s.lis.Addr().String()
 	}
 	return ""
 }

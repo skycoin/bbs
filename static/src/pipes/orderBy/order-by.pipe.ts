@@ -6,7 +6,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class OrderByPipe implements PipeTransform {
 
   transform(values: Array<any>, args: string = 'desc'): Array<any> {
-    if (values.length < 1) {
+    if (!values || values.length < 1) {
       return [];
     }
     if (!values[0].created) {

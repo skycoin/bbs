@@ -5,11 +5,55 @@
 @import '../node_modules/font-awesome/scss/font-awesome';
 html,
 body {
+  margin: 0;
+  padding: 0;
   height: 100%;
 }
 
 body {
   padding-top: 70px;
+  background: url('./assets/nodes.svg') center center / cover, linear-gradient(-35deg, #00d2ff, #5895e8);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+.p-0 {
+  margin: 0;
+  padding: 0;
+  p {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.text-input {
+  padding: .1rem .5rem;
+  border-radius: .25rem;
+  box-shadow: none;
+  border: 1px solid rgba(204, 204, 204, 0.47);
+  outline: none;
+}
+
+button[class="button"] {
+  border: 1px solid rgba(204, 204, 204, 0.47);
+  border-radius: .25rem;
+  user-select: none;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+  }
+}
+
+hr {
+  margin: .5rem 0;
 }
 
 i {
@@ -17,8 +61,14 @@ i {
 }
 
 .not-found {
+  font-size: 2rem;
+  color: hsla(0, 0%, 100%, 0.4);
   text-align: center;
-  margin: 1rem 0;
+  margin: 5rem 0;
+  .hint-text {
+    text-decoration: underline;
+    font-style: italic;
+  }
 }
 
 .btn {
@@ -28,25 +78,8 @@ i {
   }
 }
 
-.thread-item {
-  padding: 1rem;
-  background-color: hsl(240, 14%, 97%);
-  border-radius: .25rem;
-  font-weight: bold;
-}
-
-.thread-item span {
-  font-size: .9rem;
-  font-weight: normal;
-}
-
-app-loading {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%; // display: block;
+.underline {
+  text-decoration: underline;
 }
 
 .table_fixed {
@@ -61,6 +94,10 @@ app-loading {
 
 .break-line {
   word-break: break-all;
+}
+
+.margin-0 {
+  margin: 0;
 }
 
 table {
@@ -85,7 +122,10 @@ table {
   }
 }
 
-$tableHover-color: hsla(235, 100%, 74%, 0.075);
+$tableHover-color: hsla(235,
+100%,
+74%,
+0.075);
 // Table Hover
 .table-hover {
   tbody {
@@ -111,21 +151,15 @@ $tableHover-color: hsla(235, 100%, 74%, 0.075);
   color: #486b4b;
 }
 
-.fa-files-o {
-  cursor: pointer;
-  color: blue;
-}
-
-.multi-modal {
-  .modal-content {
-    box-shadow: 0.1rem 0.2rem 0.8rem hsla(0, 0%, 0%, 0.5);
-  }
+.modal-box {
+  border-radius: .25rem;
+  background-color: #fff;
 }
 
 // Modal
 .modal-content {
   border: none;
-  box-shadow: 0.1rem 0.2rem 0.8rem hsla(0, 0%, 100%, 0.4);
+  background-color: transparent !important;
   .form-group {
     .form-control {
       border: 1px solid hsla(0, 0%, 80%, 0.45);
@@ -145,4 +179,48 @@ $tableHover-color: hsla(235, 100%, 74%, 0.075);
     font-weight: bold;
     color: #fff;
   }
+}
+
+// text-color
+.text-blue-gray {
+  color: #afbac1 !important;
+}
+
+@mixin multiLineEllipsis($lineHeight: 1.2em,
+$lineCount: 1,
+$bgColor: white) {
+  overflow: hidden;
+  position: relative;
+  line-height: $lineHeight;
+  max-height: $lineHeight * $lineCount;
+  text-align: justify;
+  margin-right: -1em;
+  padding-right: 1em;
+  &:before {
+    content: '...';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
+  &:after {
+    content: '';
+    position: absolute;
+    right: 0;
+    width: 1em;
+    height: 1em;
+    margin-top: 0.2em;
+    background: $bgColor;
+  }
+}
+
+.block-with-text {
+  @include multiLineEllipsis($lineHeight: 1.2em, $lineCount: 2, $bgColor: white);
+}
+
+.fa-sort-asc {
+  transform: translateY(3px);
+}
+
+.fa-sort-desc {
+  transform: translateY(-2px);
 }

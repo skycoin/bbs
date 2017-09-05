@@ -1,75 +1,96 @@
 <div class="container">
-  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.thread?.name != '' ">
-    <div class="vote-box">
-      <div (click)="addThreadVote(1,data.thread,$event)" class="vote-btn">
-        <span>{{data?.thread?.votes?.up_votes}}</span>
-        <span><i class="fa fa-caret-up  fa-2x"></i></span>
-      </div>
-      <div (click)="addThreadVote(-1,data.thread,$event)" class="vote-btn">
-        <span><i class="fa fa-caret-down fa-2x"></i></span>
-        <span>{{data?.thread?.votes?.down_votes}}</span>
-      </div>
-    </div>
+  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.data?.thread?.name != '' " [@flyInOut]>
+
     <div class="content-box">
       <div class="other-block">
         <a href="javascript:void(0)" class="img-box">
-          <div class="author" title="user"></div>
+            <i class="fa fa-user fa-3x" aria-hidden="true"></i>
         </a>
         <div class="info-box">
-          <small class="single-line author-name " title="{{data?.thread?.author}}">{{data?.thread?.author}}</small>
+          <small class="single-line author-name " title="{{data?.data?.thread?.creator}}">{{data?.data?.thread?.creator}}</small>
           <small class="text-muted">
           replies
-          <span class="replies">{{data?.posts?.length}}</span> &nbsp;• &nbsp;
-          created &nbsp;<span>{{data?.thread?.created / 1000000 | date:'yMMMdjms'}}</span>
+          <span class="replies">{{data?.data?.thread?.post_count}}</span> &nbsp;• &nbsp;
+          created &nbsp;<span>{{data?.data?.thread?.created / 1000000 | date:'yMMMdjms'}}</span>
         </small>
         </div>
       </div>
+      <hr>
       <div class="card-block">
         <div class="content">
           <div class="title-box">
-            <h4 class="card-title single-line title">{{data?.thread?.name}}</h4>
+            <h4 class="card-title single-line title">{{data?.data?.thread?.name}}</h4>
           </div>
-          <p class="card-text break-line text-muted">{{data?.thread?.description}}</p>
+          <p class="card-text break-line text-muted body">{{data?.data?.thread?.body}}</p>
         </div>
+      </div>
+      <div class="card-block">
+        <p class="text-right p-0">
+          <chip color="#e84737" icon="fa-sort-asc" text="up vote" [count]="data?.data?.thread?.votes?.up_votes?.count" (click)="addThreadVote('1',$event)"></chip>
+          <chip color="#756e6e" icon="fa-sort-desc" text="down vote" [count]="data?.data?.thread?.votes?.down_votes?.count" (click)="addThreadVote('-1',$event)"></chip>
+        </p>
       </div>
     </div>
   </div>
-  <p class="text-muted text-center" *ngIf="data?.posts?.length <= 0">Add the first <a href="javascript:void(0);" (click)="openReply(addPost)"><i class="fa fa-reply"></i>post</a></p>
+  <a class="noPosts text-center" href="javascript:void(0);" *ngIf="data?.data?.posts?.length <= 0" (click)="openReply(addPost)">New Post<i class="fa fa-hand-o-left" aria-hidden="true"></i></a>
   <!--trackBy: item?.ref-->
   <!--(data.posts | orderBy:sort)-->
   <div class="post-box">
-    <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data.posts | orderBy:sort);let i = index;">
-      <div class="vote-box">
-        <div (click)="addPostVote(1,item,$event)" class="vote-btn">
-          <span>{{item?.votes?.up_votes}}</span>
-          <span><i class="fa fa-caret-up  fa-2x"></i></span>
-        </div>
-        <div (click)="addPostVote(-1,item,$event)" class="vote-btn">
-          <span><i class="fa fa-caret-down fa-2x"></i></span>
-          <span>{{item?.votes?.down_votes}}</span>
-        </div>
-      </div>
+    <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.data?.posts | orderBy:sort);let i = index;trackBy:trackPosts"
+      [@flyInOut]>
       <div class="content-box">
         <div class="card-block">
           <div class="content">
             <div class="title-box">
-              <h6 class="card-text single-line title">{{item?.title}}</h6>
-              <small class="text-muted index">#{{i+1}}</small>
+              <h6 class="card-text single-line title">{{item?.name}}&nbsp; &nbsp;</h6>
+              <small class="text-muted other">
+                <i class="fa fa-chevron-down" aria-hidden="true" (click)="Menu($event,item)">
+                  <div class="overlay" *ngIf="item?.voteMenu" (click)="Menu($event,item)"></div>
+                  <ul class="vote-menu" *ngIf="item?.voteMenu">
+                    <li (click)="addPostVote('+1',item,$event)"><i class="fa fa-sort-asc" aria-hidden="true"></i>
+                      up vote</li>
+                    <li (click)="addPostVote('-1',item,$event)"><i class="fa fa-sort-desc" aria-hidden="true"></i>
+                      down vote</li>
+                  </ul>
+                </i>
+              </small>
             </div>
-            <p class="card-text text-primary author-box"  placement="top">
-              <small class="single-line post-author" title="{{item?.author}}" [ngbTooltip]="item?.author">{{item?.author}}</small>
-              <small class="action-box">
-              <i class="fa fa-caret-down fa-2x" (click)="PostAuthorMenu(item,$event)"></i>
-              <div class="overlay" *ngIf="item?.uiOptions?.menu" (click)="PostAuthorMenu(item,$event)"></div>
-              <div class="dropdown-menu author-menu" *ngIf="item?.uiOptions?.menu">
-                <a class="dropdown-item" href="javascript:void(0);" (click)="addUserVote(1,item,$event)">Up<i class="fa fa-caret-up"></i></a>
-                <a class="dropdown-item" href="javascript:void(0);" (click)="addUserVote(1,item,$event)">Down<i class="fa fa-caret-down"></i></a>
-              </div>
-            </small>
-            </p>
-            <p class="card-text text-muted break-line" [innerHTML]="item?.body | safeHtml"></p>
-            <div class="card-text">
-              <small class="text-muted time-box">Posted:<span class="created">{{item?.created / 1000000 | date:'yMMMdjms'}}</span></small>
+            <div class="card-text author-box">
+              <span>
+                  <small class="single-line author" (click)="showUserMenu(item,$event)">
+                      {{item?.creator}}
+                    </small>
+                    <div class="overlay" *ngIf="item?.creatorMenu" (click)="showUserMenu(item,$event)"></div>
+                    <div class="card user-info-menu" *ngIf="item?.creatorMenu">
+                        <div class="card-body">
+                            <h6 class="card-title">{{item?.creator}}</h6>
+                            <div class="text-center">
+                                <button type="button" class="btn btn-primary" (click)="addUserVote($event,item,'+1')">Follow</button>
+                            </div>
+                            <!-- <hr>
+                            <div class="card-block" *ngIf="userFollow?.follow_page?.following?.length > 0 || userFollow?.follow_page?.avoiding?.length">
+                                <p class="text-left p-0" >
+                                  <chip color="#e84737" *ngFor="let follow of userFollow?.follow_page?.following" [text]="follow?.tag" show=""></chip>
+                                  <chip color="#756e6e" *ngFor="let avoid of userFollow?.follow_page?.avoiding" [text]="avoid?.tag" show=""></chip>
+                                </p>
+                              </div>
+                              <p class="text-right p-0">
+                                <input class="text-input" type="text" placeholder="input your tag" [(ngModel)]="userTag">
+                                <button class="button" type="button" style="background-color:#e84737;color:#fff;" (click)="addUserVote($event,item?.creator,'+1')">follow</button>
+                                <button class="button" type="button" style="background-color:#756e6e;color:#fff;" (click)="addUserVote($event,item?.creator,'-1')">avoid</button>
+                              </p> -->
+                        </div>
+                    </div>
+              </span>
+
+            </div>
+            <p class="card-text text-muted break-line p-0" [innerHTML]="item?.body | safeHtml"></p>
+            <p class="card-text" class="time-box"><small>{{item?.created / 1000000 | date:'yMMMdjms'}}</small></p>
+            <div class="card-block" *ngIf="item?.votes?.up_votes?.count || item?.votes?.down_votes?.count">
+              <p class="text-right p-0">
+                <chip color="#e84737" icon="fa-arrow-up" text="up vote" [count]="item?.votes?.up_votes?.count" (click)="addPostVote('+1',item,$event)"></chip>
+                <chip color="#756e6e" icon="fa-arrow-down" text="down vote" [count]="item?.votes?.down_votes?.count" (click)="addPostVote('-1',item,$event)"></chip>
+              </p>
             </div>
           </div>
         </div>
@@ -77,30 +98,31 @@
     </div>
   </div>
 </div>
-<!--<div class="loading"></div>-->
-
+<ng-template #fab>
+  <fab>
+    <fa-button name="New Post" icon="fa-pencil" (click)="openReply(addPost)"></fa-button>
+  </fab>
+</ng-template>
 <ng-template #addPost let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">New Post</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+  <div class="modal-box" [@bounceIn]>
+    <div class="modal-header">
+      <h4 class="modal-title">New Post</h4>
+      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
       <span aria-hidden="true">&times;</span>
     </button>
-  </div>
-  <div class="modal-body">
-
-    <form [formGroup]="postForm" novalidate>
-      <div class="form-group">
-        <label for="title">Title</label>
-        <input type="text" class="form-control " placeholder="title" id="title" formControlName="title">
-      </div>
-      <div class="form-group">
-        <label for="body">Content</label>
-        <textarea [froalaEditor]="editorOptions" formControlName="body"></textarea>
-      </div>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
-    <button type="button" class="btn btn-primary" (click)="c(true)">submit</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="postForm" novalidate>
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" class="form-control " placeholder="name" id="name" formControlName="name">
+        </div>
+        <div class="editor" editor formControlName="body"></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+      <button type="button" class="btn btn-primary" (click)="c(true)">submit</button>
+    </div>
   </div>
 </ng-template>

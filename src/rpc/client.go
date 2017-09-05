@@ -1,63 +1,60 @@
 package rpc
 
 import (
-	"github.com/pkg/errors"
+	"context"
+	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"net/rpc"
-	"time"
 )
 
-// Client represents a RPC Client.
-type Client struct {
-	rpc  *rpc.Client
-	wait time.Duration
-}
+// Call represents a function that outputs method and input object of call.
+type Call func() (method string, in interface{})
 
-// NewClient creates a new rpc client with given address.
-func NewClient(address string) (*Client, error) {
-	c, e := rpc.Dial("tcp", address)
-	rpcc := Client{
-		rpc:  c,
-		wait: 10 * time.Second,
+// Send sends the "call" to specified addresses.
+func Send(ctx context.Context, addresses interface{}, req Call) (goal uint64, e error) {
+	for _, address := range addresses.([]string) {
+
+		var client *rpc.Client
+		client, e = rpc.Dial("tcp", address)
+		if e != nil {
+			continue
+		}
+
+		methodName, in := req()
+		call := client.Go(methodName, in, &goal, nil)
+
+		select {
+		case <-call.Done:
+			e = call.Error
+
+		case <-ctx.Done():
+			e = ctx.Err()
+		}
+
+		return
 	}
-	return &rpcc, e
+
+	return 0, boo.New(boo.NotFound,
+		"successful submission address not found")
 }
 
-func (c *Client) PingPong() (ok bool, e error) {
-	e = c.result(c.rpc.Go("Gateway.PingPong", nil, &ok, nil))
-	return
+// NewThread is a call to create a new thread.
+func NewThread(thread *r0.Thread) Call {
+	return func() (string, interface{}) {
+		return "Gateway.NewThread", thread
+	}
 }
 
-func (c *Client) NewPost(req *ReqNewPost) (ref string, e error) {
-	e = c.result(c.rpc.Go("Gateway.NewPost", req, &ref, nil))
-	return
+// NewPost is a call to create a new post.
+func NewPost(post *r0.Post) Call {
+	return func() (string, interface{}) {
+		return "Gateway.NewPost", post
+	}
 }
 
-func (c *Client) NewThread(req *ReqNewThread) (ref string, e error) {
-	e = c.result(c.rpc.Go("Gateway.NewThread", req, &ref, nil))
-	return
-}
-
-func (c *Client) VotePost(req *ReqVotePost) (ok bool, e error) {
-	e = c.result(c.rpc.Go("Gateway.VotePost", req, &ok, nil))
-	return
-}
-
-func (c *Client) VoteThread(req *ReqVoteThread) (ok bool, e error) {
-	e = c.result(c.rpc.Go("Gateway.VoteThread", req, &ok, nil))
-	return
-}
-
-func (c *Client) VoteUser(req *ReqVoteUser) (ok bool, e error) {
-	e = c.result(c.rpc.Go("Gateway.VoteUser", req, &ok, nil))
-	return
-}
-
-func (c *Client) result(call *rpc.Call) error {
-	timer := time.NewTimer(c.wait)
-	select {
-	case <-call.Done:
-		return call.Error
-	case <-timer.C:
-		return errors.New("timeout")
+// NewVote is a call to create a new vote.
+func NewVote(vote *r0.Vote) Call {
+	return func() (string, interface{}) {
+		return "Gateway.NewVote", vote
 	}
 }

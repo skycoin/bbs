@@ -1,34 +1,31 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation } from '@angular/core';
-import { CommonService, ConnectionService } from '../../providers';
+import { CommonService, ApiService, Connnections, Connnection } from '../../providers';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
-import { AlertComponent } from '../../components';
+import { bounceInAnimation } from '../../animations/common.animations';
+import { AlertComponent } from '../../components/alert/alert.component';
 @Component({
   selector: 'app-connection',
   templateUrl: './connection.component.html',
   styleUrls: ['./connection.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  animations: [slideInLeftAnimation],
+  animations: [slideInLeftAnimation, bounceInAnimation],
 })
 
 export class ConnectionComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
-  list: Array<string> = [];
+  list: Array<Connnection> = [];
   addUrl = '';
 
-  constructor(private conn: ConnectionService,
+  constructor(
     private modal: NgbModal,
-    private common: CommonService) {
+    private api: ApiService) {
   }
 
   ngOnInit() {
-    this.getAllConnections();
-  }
-
-  getAllConnections() {
-    this.conn.getAllConnections().subscribe(list => {
-      this.list = list;
+    this.api.getAllConnections().subscribe((conns: Connnections) => {
+      this.list = conns.data.connections;
     });
   }
 
@@ -37,17 +34,16 @@ export class ConnectionComponent implements OnInit {
     this.modal.open(content).result.then((result) => {
       if (result) {
         if (!this.addUrl) {
-          this.common.showAlert('The link can not be empty', 'danger', 3000);
+          // this.common.showAlert('The link can not be empty', 'danger', 3000);
           return;
         }
         const data = new FormData();
         data.append('address', this.addUrl);
-        this.conn.addConnection(data).subscribe(isOk => {
-          if (isOk) {
-            this.getAllConnections();
-            this.common.showAlert('The connection was added successfully', 'success', 3000);
+        this.api.newConnection(data).subscribe((conns: Connnections) => {
+          if (conns.okay) {
+            this.list = conns.data.connections;
           }
-        });
+        })
       }
     }, err => {
     });
@@ -61,12 +57,11 @@ export class ConnectionComponent implements OnInit {
       if (result) {
         const data = new FormData();
         data.append('address', address);
-        this.conn.removeConnection(data).subscribe(isOk => {
-          if (isOk) {
-            this.getAllConnections();
-            this.common.showAlert('The connection has been deleted', 'success', 3000);
+        this.api.delConnection(data).subscribe((conns: Connnections) => {
+          if (conns.okay) {
+            this.list = conns.data.connections;
           }
-        });
+        })
       }
     }, err => { });
   }

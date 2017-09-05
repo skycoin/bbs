@@ -1,3 +1,37 @@
+export interface FollowPage extends Base {
+  data?: FollowPageData;
+}
+export interface FollowPageData {
+  follow_page?: FollowPageDataInfo;
+}
+export interface FollowPageDataInfo {
+  user_public_key?: string;
+  following?: Array<FollowValue>;
+  avoiding?: Array<FollowValue>;
+}
+export interface FollowValue {
+  user_public_key?: string;
+  tag?: string;
+}
+export interface Connnections extends Base {
+  data?: ConnnectionData;
+}
+export interface ConnnectionData {
+  connections: Array<Connnection>;
+}
+export interface Connnection {
+  address?: string;
+  state?: string;
+}
+export interface Users extends Base {
+  data: UserData;
+}
+export interface UserData {
+  users?: Array<User>;
+}
+export interface User {
+  alias?: string;
+}
 export interface VotesSummary {
   up_votes?: number; // Total number of up-votes.
   down_votes?: number; // Total number of down-votes.
@@ -6,13 +40,15 @@ export interface VotesSummary {
 }
 
 export interface Post {
-  title?: string;
+  name?: string;
   body?: string;
-  author?: string;
+  creator?: string;
   created?: number;
   ref?: string;
-  votes?: VotesSummary; // Posts now have vote summary here.
+  votes?: Votes;
   uiOptions?: VoteOptions;
+  voteMenu?: boolean;
+  creatorMenu?: boolean;
 }
 
 export interface VoteOptions {
@@ -21,13 +57,19 @@ export interface VoteOptions {
   menu?: boolean;
 }
 
-export interface ThreadPage {
+export interface ThreadPage extends Base {
+  data?: ThreadPageData;
+}
+export interface ThreadPageData {
   board?: Board;
   thread?: Thread;
   posts?: Array<Post>;
 }
+export interface BoardPage extends Base {
+  data?: BoardPageData;
+}
 
-export interface BoardPage {
+export interface BoardPageData {
   board?: Board;
   threads?: Array<Thread>;
 }
@@ -39,22 +81,30 @@ export interface Stats {
 
 export interface Thread {
   name?: string;
-  description?: string;
-  author?: string;
-  created?: string;
-  master_board?: string;
+  body?: string;
+  created?: number;
   ref?: string;
-  votes?: VotesSummary; // Threads now have vote summary here.
+  creator?: string;
+  // author_alias?: string;
+  votes?: Votes;
   uiOptions?: VoteOptions;
 }
-
+export interface Votes {
+  ref?: string;
+  up_votes?: VoteData;
+  down_votes?: VoteData;
+}
+export interface VoteData {
+  voted?: boolean;
+  count?: number;
+}
 export interface Board {
   name?: string;
-  description?: string;
-  public_key?: string;
-  address?: Array<string>;
+  body?: string;
   created?: number;
-  ui_options?: UIOptions;
+  submission_addresses?: Array<string>;
+  public_key?: string;
+  ui_options?: UIOptions; // custom param
 }
 
 export interface UIOptions {
@@ -73,4 +123,17 @@ export interface SubscriptionOption {
   master?: boolean;
   public_key?: string;
   secret_key?: string;
+}
+
+export interface Base {
+  okay?: boolean;
+}
+
+export interface AllBoardsData {
+  master_boards?: Array<Board>;
+  remote_boards?: Array<Board>;
+}
+
+export interface AllBoards extends Base {
+  data?: AllBoardsData;
 }

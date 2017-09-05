@@ -1,0 +1,10 @@
+<div class="alert-box" [ngClass]="data?.type">
+  <i class="fa fa-2x" aria-hidden="true" [ngClass]="getIcon(data?.type)"></i>
+  <div class="alert-content">
+    <h5 class="alert-content-header">{{data?.title}}</h5>
+    <div class="alert-content-block">
+      {{data?.content}}
+    </div>
+    <small class="alert-content-footer"><em>{{data?.footer}}</em></small>
+  </div>
+</div>

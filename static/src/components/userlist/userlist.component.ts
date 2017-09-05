@@ -1,7 +1,8 @@
-import { Component, HostBinding, HostListener, OnInit } from '@angular/core';
-import { CommonService, User, UserService } from '../../providers';
+import { Component, HostBinding, HostListener, OnInit, ViewEncapsulation } from '@angular/core';
+import { CommonService, User, ApiService, Users, Alert } from '../../providers';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
+import { bounceInAnimation } from '../../animations/common.animations';
 import { AlertComponent } from '../alert/alert.component';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
@@ -9,7 +10,8 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
   selector: 'app-userlist',
   templateUrl: './userlist.component.html',
   styleUrls: ['./userlist.component.scss'],
-  animations: [slideInLeftAnimation],
+  animations: [slideInLeftAnimation, bounceInAnimation],
+  encapsulation: ViewEncapsulation.None
 })
 export class UserlistComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
@@ -21,91 +23,66 @@ export class UserlistComponent implements OnInit {
     seed: new FormControl('', Validators.required),
   });
 
-  constructor(private user: UserService, private modal: NgbModal, private common: CommonService) {
+  constructor(
+    private api: ApiService,
+    private modal: NgbModal,
+    private common: CommonService,
+    private alert: Alert) {
   }
 
   ngOnInit() {
-    this.user.getAll().subscribe(userlist => {
-      this.userlist = userlist;
+    this.api.getAllUser().subscribe((users: Users) => {
+      this.userlist = users.data.users;
     });
   }
-
-  openEdit(content: any, key: string) {
-    this.editName = '';
-    if (key === '') {
-      this.common.showErrorAlert('Parameter error!!!');
-      return;
-    }
-    const modalRef = this.modal.open(content).result.then(result => {
-      if (result) {
-        this.edit(this.editName, key);
-      }
-    });
+  trackUsers(index, user) {
+    return user ? user.alias : undefined;
   }
-
   openAdd(content: any) {
     this.addForm.reset();
     this.modal.open(content).result.then((result) => {
       if (result) {
         if (!this.addForm.valid) {
-          this.common.showErrorAlert('Alias and Seed can not be empty');
+          this.alert.error({ content: 'Alias and Seed can not be empty' });
           return;
         }
         const data = new FormData();
         data.append('alias', this.addForm.get('alias').value);
         data.append('seed', this.addForm.get('seed').value);
-        this.user.newMaster(data).subscribe(user => {
-          this.userlist.unshift(user);
+        this.api.newUser(data).subscribe(res => {
+          console.log('user:', res);
+          if (res.okay) {
+            this.userlist = res.data.users;
+          }
         });
       }
     });
   }
 
-  edit(name, key: string) {
-    if (name === '') {
-      this.common.showErrorAlert('UserName can not be empty');
-      return;
-    }
-    const data = new FormData();
-    data.append('alias', name);
-    data.append('user', key);
-    this.user.newOrModifyUser(data).subscribe(res => {
-      this.userlist = [];
-      this.user.getAll().subscribe(userlist => {
-        this.userlist = userlist;
-        this.common.showAlert('modified successfully', 'success', 3000);
-      });
-    });
-  }
 
-  remove(ev: Event, key: string) {
+
+  delUser(ev: Event, alias: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
-    const data = new FormData();
-    data.append('user', key);
+    if (!alias) {
+      this.alert.error({ content: 'Parameter error!!!' });
+      return;
+    }
     const modalRef = this.modal.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete User';
     modalRef.componentInstance.body = 'Do you delete the user?';
     modalRef.result.then(result => {
       if (result) {
-        this.user.remove(data).subscribe(isOk => {
-          if (isOk) {
-            this.userlist = [];
-            this.user.getAll().subscribe(userlist => {
-              this.userlist = userlist;
-              this.common.showAlert('deleted successfully', 'success', 1000);
-            });
-          } else {
-            this.common.showAlert('failed to delete', 'success', 1000);
+        const data = new FormData();
+        data.append('alias', alias);
+        this.api.delUser(data).subscribe((users: Users) => {
+          if (users.okay) {
+            this.userlist = users.data.users;
+            this.alert.success({ content: 'deleted successfully' });
           }
-        });
+        })
       }
     }, err => { });
 
-  }
-
-  @HostListener('window:scroll', ['$event'])
-  windowScroll(event) {
-    this.common.showOrHideToTopBtn();
   }
 }

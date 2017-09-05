@@ -1,0 +1,6 @@
+<div class="fab-box">
+  <div class="list" *ngIf="isShow" (click)="close()" [@flyInOut]>
+    <ng-content></ng-content>
+  </div>
+  <a href="javascript:void(0);" class="fab-btn" (click)="open($event)"><i class="fa fa-plus" aria-hidden="true"  [@rotate45]="fabAnimation"></i></a>
+</div>

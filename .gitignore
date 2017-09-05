@@ -27,4 +27,5 @@ node_modules
 /stage/
 /prime/
 /parts/
-/pkg/build/
+/pkg/build
+/static/dist/

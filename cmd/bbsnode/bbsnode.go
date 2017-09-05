@@ -1,345 +1,182 @@
 package main
 
 import (
-	"flag"
+	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/skycoin/bbs/src/gui"
-	"github.com/skycoin/bbs/src/misc"
+	"github.com/skycoin/bbs/src/http"
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
-	"github.com/skycoin/bbs/src/store/msg"
+	"github.com/skycoin/bbs/src/store/cxo"
+	"github.com/skycoin/bbs/src/store/session"
+	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/browser"
 	"github.com/skycoin/skycoin/src/util/file"
+	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strconv"
-	"time"
 )
 
-const webDir = "static/dist"
+const (
+	defaultIPAddr          = "127.0.0.1"
+	defaultConfigSubDir    = ".skybbs"
+	defaultStaticSubDir    = "static/dist"
+	defaultDevStaticSubDir = "src/github.com/skycoin/bbs/static/dist"
+	defaultCXOPort         = 8998
+	defaultCXORPCPort      = 8997
+	defaultSubPort         = 6421
+	defaultHTTPPort        = 7410
+)
 
-const correctionConfigSubDir = ".skybbs"
-const correctionWebSubDir = "src/github.com/skycoin/bbs/static/dist"
+var (
+	devMode          = false
+	compilerInternal = 1
+)
 
-// Config represents commandline arguments.
+// Config represents configuration for node.
 type Config struct {
-	// [TEST MODE] enforces the following behaviours:
-	// - `MemoryMode = false` (disables modification to cxo database, uses temp file instead).
-	// - `SaveConfig = false` (disables modification to config files).
+	Master    bool   `json:"master"`     // Whether to run node in master mode.
+	Memory    bool   `json:"memory"`     // Whether to run node in memory.
+	ConfigDir string `json:"config_dir"` // Full path for configuration directory.
 
-	TestMode            bool // Whether to enable test mode.
-	TestModeThreads     int  // Number of threads to use for test mode (will create them in test mode).
-	TestModeUsers       int  // Number of Master users used for simulated activity.
-	TestModeMinInterval int  // Minimum interval between simulated activity (in seconds).
-	TestModeMaxInterval int  // Maximum interval between simulated activity (in seconds).
-	TestModeTimeOut     int  // Will stop simulated activity after this time (in seconds). Disabled if negative.
-	TestModePostCap     int  // Maximum number of posts allowed. Disabled if negative.
+	CXOPort    int  `json:"cxo_port"`               // Listening port of CXO.
+	CXORPC     bool `json:"cxo_rpc"`                // Whether to enable CXO RPC.
+	CXORPCPort int  `json:"cxo_rpc_port,omitempty"` // Listening RPC port of CXO.
 
-	Master        bool   // Whether BBS node can host boards.
-	InternalState bool   // Whether to use internal state for votes.
-	ConfigDir     string // Configuration directory.
-	RPCPort       int    // RPC server port (Master node only).
-	RPCRemAdr     string // RPC remote address (Master node only).
+	SubPort int    `json:"sub_port,omitempty"` // Content submission port of node.
+	SubAddr string `json:"sub_addr,omitempty"` // Content submission address of node.
 
-	CXOPort    int  // Port of CXO Daemon.
-	CXORPCPort int  // Port of CXO Daemon's RPC.
-	MemoryMode bool // Whether to use in-memory database for CXO.
+	HTTPPort   int    `json:"http_port"`              // Port to serve HTTP API/GUI.
+	HTTPGUI    bool   `json:"http_gui"`               // Whether to enable GUI.
+	HTTPGUIDir string `json:"http_gui_dir,omitempty"` // Full path of GUI static files.
 
-	WebGUIEnable      bool   // Whether to enable web GUI.
-	WebGUIPort        int    // Port of web GUI.
-	WebGUIDir         string // Root directory that has the index.html file.
-	WebGUIOpenBrowser bool   // Whether to open browser on web GUI start.
+	Browser bool `json:"browser"` // Whether to open browser on GUI start.
 }
 
-// NewConfig makes Config with default values.
-func NewConfig() *Config {
+// NewDefaultConfig returns a default configuration for BBS node.
+func NewDefaultConfig() *Config {
 	return &Config{
-		TestMode:            false,
-		TestModeThreads:     3,
-		TestModeUsers:       1,
-		TestModeMinInterval: 1,
-		TestModeMaxInterval: 10,
-		TestModeTimeOut:     -1,
-		TestModePostCap:     -1,
-
-		Master:        false,
-		InternalState: true,
-		ConfigDir:     "",
-		MemoryMode:    false,
-		RPCPort:       6421,
-		RPCRemAdr:     "",
-
-		CXOPort:    8998,
-		CXORPCPort: 8997,
-
-		WebGUIEnable:      true,
-		WebGUIPort:        7410,
-		WebGUIDir:         webDir,
-		WebGUIOpenBrowser: true,
+		Master:     false, // Hosts submission address.
+		Memory:     false, // Save to disk.
+		ConfigDir:  "",    // --> Action: set as '$HOME/.skybbs'
+		CXOPort:    defaultCXOPort,
+		CXORPC:     false,
+		CXORPCPort: defaultCXORPCPort,
+		SubPort:    defaultSubPort,
+		SubAddr:    "", // -> Action: set as 'localhost:{Config.SubPort}'
+		HTTPPort:   defaultHTTPPort,
+		HTTPGUI:    true,
+		HTTPGUIDir: "", // --> Action: set as '$HOME/.skybbs/static'
+		Browser:    true,
 	}
 }
 
-// Parse fills the Config with commandline argument values.
-func (c *Config) Parse() *Config {
-	/*
-		<<< TEST FLAGS >>>
-	*/
-
-	flag.BoolVar(&c.TestMode,
-		"test-mode", c.TestMode,
-		"whether to enable test mode")
-
-	flag.IntVar(&c.TestModeThreads,
-		"test-mode-threads", c.TestModeThreads,
-		"number of threads to use for test mode")
-
-	flag.IntVar(&c.TestModeUsers,
-		"test-mode-users", c.TestModeUsers,
-		"number of users to use for test mode")
-
-	flag.IntVar(&c.TestModeMinInterval,
-		"test-mode-min", c.TestModeMinInterval,
-		"minimum interval in seconds between simulated activity")
-
-	flag.IntVar(&c.TestModeMaxInterval,
-		"test-mode-max", c.TestModeMaxInterval,
-		"maximum interval in seconds between simulated activity")
-
-	flag.IntVar(&c.TestModeTimeOut,
-		"test-mode-timeout", c.TestModeTimeOut,
-		"time in seconds before simulated activity stops - disabled if negative")
-
-	flag.IntVar(&c.TestModePostCap,
-		"test-mode-post-cap", c.TestModePostCap,
-		"maximum number of posts allowed to be created - disabled if negative")
-
-	/*
-		<<< BBS FLAGS >>>
-	*/
-
-	flag.BoolVar(&c.Master,
-		"master", c.Master,
-		"whether to enable bbs node to host boards")
-
-	flag.BoolVar(&c.InternalState,
-		"internal-state", c.InternalState,
-		"whether to enable internal state for caching and viewing votes")
-
-	flag.StringVar(&c.ConfigDir,
-		"config-dir", c.ConfigDir,
-		"configuration directory - set to $HOME/.skycoin/bbs if left empty")
-
-	flag.BoolVar(&c.MemoryMode,
-		"memory-mode", c.MemoryMode,
-		"whether to use in-memory database")
-
-	flag.IntVar(&c.RPCPort,
-		"rpc-port", c.RPCPort,
-		"port of rpc server for Master node")
-
-	flag.StringVar(&c.RPCRemAdr,
-		"rpc-remote-address", c.RPCRemAdr,
-		"remote address of rpc server for Master node")
-
-	/*
-		<<< CXO FLAGS >>>
-	*/
-
-	flag.IntVar(&c.CXOPort,
-		"cxo-port", c.CXOPort,
-		"port of cxo daemon to connect to")
-
-	flag.IntVar(&c.CXORPCPort,
-		"cxo-rpc-port", c.CXORPCPort,
-		"port of cxo daemon rpc to connect to")
-
-	/*
-		<<< WEB GUI FLAGS >>>
-	*/
-
-	flag.BoolVar(&c.WebGUIEnable,
-		"web-gui-enable", c.WebGUIEnable,
-		"whether to enable the web gui")
-
-	flag.IntVar(&c.WebGUIPort,
-		"web-gui-port", c.WebGUIPort,
-		"local port to serve web gui on")
-
-	flag.StringVar(&c.WebGUIDir,
-		"web-gui-dir", c.WebGUIDir,
-		"root directory of index.html file")
-
-	flag.BoolVar(&c.WebGUIOpenBrowser,
-		"web-gui-open-browser", c.WebGUIOpenBrowser,
-		"whether to open browser after web gui is ready")
-
-	flag.Parse()
-	return c
+func (c *Config) Print() {
+	data, _ := json.MarshalIndent(*c, "", "    ")
+	fmt.Println(string(data))
 }
 
-// PostProcess checks the validity and post processes the flags.
-func (c *Config) PostProcess() (*Config, error) {
-	// Action on test mode.
-	if c.TestMode {
-		// Check test mode settings.
-		if c.TestModeThreads < 0 {
-			return nil, errors.New("invalid number of test mode threads specified")
-		}
-		if c.TestModeUsers < 1 {
-			return nil, errors.New("invalid number of test mode users specified")
-		}
-		if c.TestModeMinInterval < 0 {
-			return nil, errors.New("invalid test mode minimum interval specified")
-		}
-		if c.TestModeMaxInterval < 0 {
-			return nil, errors.New("invalid test mode maximum interval specified")
-		}
-		if c.TestModeMinInterval > c.TestModeMaxInterval {
-			return nil, errors.New("test mode minimum interval > maximum interval")
-		}
-		// Enforce behaviour.
-		c.Master = true
-		c.WebGUIEnable = true
-		c.MemoryMode = true
-	}
-	// Configure configuration directories if necessary.
-	if !c.MemoryMode {
-		// Action on BBS configuration files.
+// PostProcess checks the flags and processes them.
+func (c *Config) PostProcess() error {
+	if !c.Memory {
 		if c.ConfigDir == "" {
-			c.ConfigDir = filepath.Join(file.UserHome(), correctionConfigSubDir)
+			c.ConfigDir = filepath.Join(file.UserHome(), defaultConfigSubDir)
 		}
-		// Ensure directories exist.
 		if e := os.MkdirAll(c.ConfigDir, os.FileMode(0700)); e != nil {
-			return nil, e
+			return e
 		}
 	}
-	// Master mode stuff.
-	if c.Master && c.RPCRemAdr == "" {
-		c.RPCRemAdr = misc.GetIP() + ":" + strconv.Itoa(c.RPCPort)
-		fmt.Println("External Addr:", c.RPCRemAdr)
+	if c.Master {
+		if c.SubAddr == "" {
+			c.SubAddr = defaultIPAddr + ":" + strconv.Itoa(c.SubPort)
+		}
+	} else {
+		c.SubPort = 0
+		c.SubAddr = ""
 	}
-	// Web interface.
-	if c.WebGUIDir == "" {
-		c.WebGUIDir = filepath.Join(os.Getenv("GOPATH"), correctionWebSubDir)
-		fmt.Println("Web Dir:", c.WebGUIDir)
+	if c.HTTPGUI {
+		if c.HTTPGUIDir == "" {
+			if devMode {
+				c.HTTPGUIDir = filepath.Join(os.Getenv("GOPATH"), defaultDevStaticSubDir)
+			} else {
+				c.HTTPGUIDir = defaultStaticSubDir
+			}
+		}
+	} else {
+		c.Browser = false
 	}
-	return c, nil
+	return nil
 }
 
-func run(config *Config, quit chan int) {
-	log.Println("[CONFIG] Master mode:", config.Master)
-	defer log.Println("Goodbye.")
-
-	log.Println("[CONFIG] Connecting to cxo on port", config.CXOPort)
-
-	storeConfig := &store.Config{
-		Master:        config.Master,
-		TestMode:      config.TestMode,
-		MemoryMode:    config.MemoryMode,
-		InternalState: config.InternalState,
-		ConfigDir:     config.ConfigDir,
-		CXOPort:       config.CXOPort,
-		CXORPCPort:    config.CXORPCPort,
-	}
-	container, e := store.NewCXO(storeConfig)
-	defer func() {
-		if r := recover(); r != nil {
-			if config.WebGUIEnable && config.WebGUIOpenBrowser {
-				browser.Open("http://127.0.0.1:7410")
-			}
-			return
+// GenerateAction generates a runnable action.
+func (c *Config) GenerateAction() cli.ActionFunc {
+	return func(_ *cli.Context) error {
+		if e := c.PostProcess(); e != nil {
+			return e
 		}
-	}()
-	CatchError(e, "unable to create cxo container")
-	defer container.Close()
+		c.Print()
 
-	boardSaver, e := store.NewBoardSaver(storeConfig, container)
-	CatchError(e, "unable to create board saver")
-	defer boardSaver.Close()
+		quit := CatchInterrupt()
+		defer log.Println("Goodbye.")
 
-	userSaver, e := store.NewUserSaver(storeConfig, container)
-	CatchError(e, "unable to create user saver")
-
-	_, e = store.NewFirstRunSaver(storeConfig, boardSaver)
-	CatchError(e, "unable to create first run saver")
-
-	queueSaver, e := msg.NewQueueSaver(storeConfig, container)
-	CatchError(e, "unable to create queue saver")
-	defer queueSaver.Close()
-
-	var rpcServer *rpc.Server
-	if config.Master {
-		rpcServer, e = rpc.NewServer(
-			rpc.NewGateway(container, boardSaver, userSaver),
-			config.RPCPort,
+		httpServer, e := http.NewServer(
+			&http.ServerConfig{
+				Port:      &c.HTTPPort,
+				StaticDir: &c.HTTPGUIDir,
+				EnableGUI: &c.HTTPGUI,
+			},
+			&http.Gateway{
+				Access: &store.Access{
+					Session: session.NewManager(
+						&session.ManagerConfig{
+							MemoryMode: &c.Memory,
+							ConfigDir:  &c.ConfigDir,
+						},
+					),
+					CXO: cxo.NewManager(
+						&cxo.ManagerConfig{
+							Master:       &c.Master,
+							Memory:       &c.Memory,
+							Config:       &c.ConfigDir,
+							CXOPort:      &c.CXOPort,
+							CXORPCEnable: &c.CXORPC,
+							CXORPCPort:   &c.CXORPCPort,
+						}, &state.CompilerConfig{
+							UpdateInterval: &compilerInternal,
+						},
+					),
+				},
+				Quit: quit,
+			},
 		)
-		CatchError(e, "unable to start rpc server")
+		CatchError(e, "failed to start HTTP Server")
+		defer httpServer.Close()
+
+		rpcServer, e := rpc.NewServer(
+			&rpc.ServerConfig{
+				Port:   &c.SubPort,
+				Enable: &c.Master,
+			},
+			&rpc.Gateway{
+				CXO: httpServer.CXO(),
+			},
+		)
+		CatchError(e, "failed to start RPC Server")
 		defer rpcServer.Close()
 
-		log.Println("[RPCSERVER] Serving on address:", rpcServer.Address())
-	}
-
-	// Final initiation of savers.
-	{
-		container.InitStateSaver()
-	}
-
-	httpConfig := &gui.HTTPConfig{
-		RPCRemoteAddr: config.RPCRemAdr,
-		Port:          config.WebGUIPort,
-		StaticDir:     config.WebGUIDir,
-		EnableGUI:     config.WebGUIEnable,
-	}
-
-	gateway := gui.NewGateway(
-		httpConfig, container, boardSaver, userSaver, queueSaver, quit)
-
-	serveAddr, e := gui.OpenWebInterface(httpConfig, gateway)
-	CatchError(e, "unable to start web server")
-	defer gui.Close()
-
-	if config.TestMode {
-		testConfig := &gui.TesterConfig{
-			ThreadCount: config.TestModeThreads,
-			UsersCount:  config.TestModeUsers,
-			PostCap:     config.TestModePostCap,
-			MinInterval: config.TestModeMinInterval,
-			MaxInterval: config.TestModeMaxInterval,
-			Timeout:     config.TestModeTimeOut,
+		if c.Browser {
+			address := fmt.Sprintf("http://127.0.0.1:%d", c.HTTPPort)
+			log.Println("Opening browser at address:", address)
+			if e := browser.Open(address); e != nil {
+				log.Println("Error on browser open:", e)
+			}
 		}
 
-		tester, e := gui.NewTester(testConfig, gateway)
-		CatchError(e, "unable to start tester")
-		defer tester.Close()
+		<-quit
+		return nil
 	}
-
-	log.Println("[WEBGUI] Serving on:", serveAddr)
-
-	if config.WebGUIEnable && config.WebGUIOpenBrowser {
-		go func() {
-			time.Sleep(time.Millisecond * 100)
-			log.Printf("Opening web browser at '%s' ...", serveAddr)
-			browser.Open(serveAddr)
-		}()
-	}
-
-	log.Println("!!! EVERYTHING UP AND RUNNING !!!")
-	defer log.Println("Shutting down...")
-	<-quit
-	time.Sleep(time.Second)
-
-}
-
-func main() {
-	quit := CatchInterrupt()
-	config, e := NewConfig().Parse().PostProcess()
-	if e != nil {
-		panic(e)
-	}
-	run(config, quit)
 }
 
 // CatchInterrupt catches Ctrl+C behaviour.
@@ -359,5 +196,71 @@ func CatchInterrupt() chan int {
 func CatchError(e error, msg string, args ...interface{}) {
 	if e != nil {
 		log.Panicf(msg+": %v", append(args, e)...)
+	}
+}
+
+func main() {
+	config := NewDefaultConfig()
+	flags := []cli.Flag{
+		cli.BoolFlag{
+			Name:        "dev",
+			Destination: &devMode,
+		},
+		cli.BoolFlag{
+			Name:        "master",
+			Destination: &config.Master,
+		},
+		cli.BoolFlag{
+			Name:        "memory",
+			Destination: &config.Memory,
+		},
+		cli.StringFlag{
+			Name:        "config-dir",
+			Destination: &config.ConfigDir,
+		},
+		cli.IntFlag{
+			Name:        "cxo-port",
+			Destination: &config.CXOPort,
+			Value:       config.CXOPort,
+		},
+		cli.BoolTFlag{
+			Name:        "cxo-rpc",
+			Destination: &config.CXORPC,
+		},
+		cli.IntFlag{
+			Name:        "cxo-rpc-port",
+			Destination: &config.CXORPCPort,
+			Value:       config.CXORPCPort,
+		},
+		cli.IntFlag{
+			Name:        "sub-port",
+			Destination: &config.SubPort,
+			Value:       config.SubPort,
+		},
+		cli.StringFlag{
+			Name:        "sub-addr",
+			Destination: &config.SubAddr,
+		},
+		cli.IntFlag{
+			Name:        "http-port",
+			Destination: &config.HTTPPort,
+			Value:       config.HTTPPort,
+		},
+		cli.BoolTFlag{
+			Name:        "http-gui",
+			Destination: &config.HTTPGUI,
+		},
+		cli.StringFlag{
+			Name:        "http-gui-dir",
+			Destination: &config.HTTPGUIDir,
+		},
+	}
+	app := cli.NewApp()
+	app.Name = "Skycoin BBS Node"
+	app.Usage = "Runs a Skycoin BBS Node"
+	app.Flags = flags
+	app.Action = config.GenerateAction()
+	if e := app.Run(os.Args); e != nil {
+		panic(e)
 	}
 }
