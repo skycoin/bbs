@@ -20,7 +20,7 @@ export class UserlistComponent implements OnInit {
   editName = '';
   public addForm = new FormGroup({
     alias: new FormControl('', Validators.required),
-    seed: new FormControl('', Validators.required),
+    seed: new FormControl({ value: '', disabled: true }, Validators.required),
   });
 
   constructor(
@@ -40,23 +40,26 @@ export class UserlistComponent implements OnInit {
   }
   openAdd(content: any) {
     this.addForm.reset();
-    this.modal.open(content).result.then((result) => {
-      if (result) {
-        if (!this.addForm.valid) {
-          this.alert.error({ content: 'Alias and Seed can not be empty' });
-          return;
-        }
-        const data = new FormData();
-        data.append('alias', this.addForm.get('alias').value);
-        data.append('seed', this.addForm.get('seed').value);
-        this.api.newUser(data).subscribe(res => {
-          console.log('user:', res);
-          if (res.okay) {
-            this.userlist = res.data.users;
+    this.api.newSeed().subscribe(seed => {
+      this.addForm.patchValue({ seed: seed.data })
+      this.modal.open(content).result.then((result) => {
+        if (result) {
+          if (!this.addForm.valid) {
+            this.alert.error({ content: 'Alias and Seed can not be empty' });
+            return;
           }
-        });
-      }
-    });
+          const data = new FormData();
+          data.append('alias', this.addForm.get('alias').value);
+          data.append('seed', this.addForm.get('seed').value);
+          this.api.newUser(data).subscribe(res => {
+            console.log('user:', res);
+            if (res.okay) {
+              this.userlist = res.data.users;
+            }
+          });
+        }
+      });
+    })
   }
 
 

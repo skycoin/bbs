@@ -26,6 +26,34 @@ export const flyInOutAnimation: AnimationEntryMetadata =
       animate(250, style({ transform: 'translateX(100%)' }))
     ])
   ])
+export const tabLeftAnimation: AnimationEntryMetadata =
+  trigger('tabLeft', [
+    state('in', style({ transform: 'translateX(0)' })),
+    transition('void => *', [
+      style({
+        opacity: 0,
+        transform: 'translateX(-100%)'
+      }),
+      animate(250)
+    ]),
+    transition('* => void', [
+      animate(0, style({ transform: 'translateX(100%)' }))
+    ])
+  ])
+export const tabRightAnimation: AnimationEntryMetadata =
+  trigger('tabRight', [
+    state('in', style({ transform: 'translateX(0)' })),
+    transition('void => *', [
+      style({
+        opacity: 0,
+        transform: 'translateX(100%)'
+      }),
+      animate(250)
+    ]),
+    transition('* => void', [
+      animate(0, style({ transform: 'translateX(-100%)' }))
+    ])
+  ])
 
 export const bounceInAnimation: AnimationEntryMetadata =
   trigger('bounceIn', [

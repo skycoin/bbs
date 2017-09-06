@@ -3,9 +3,40 @@
     <img src="../assets/logo.svg" width="170.74" height="30" alt="bbs">
   </a>
   <div class="overlay" *ngIf="showLoginBox" (click)="userAction($event)"></div>
-  <div class="login-box" *ngIf="showLoginBox">
-    <input type="text" class="text-input" (keyup.enter)="login($event)" [focus]="showLoginBox" [(ngModel)]="alias" >
-    <button class="button" style="background-color:#15c3f9;color:#fff;" (click)="login($event)">Login</button>
+  <div class="login-register-box" *ngIf="showLoginBox">
+    <div class="box">
+      <div class="header">
+        <a href="javascript:void(0);" class="button login-button" (click)="switchTab('login')">
+          <div class="active" *ngIf="loginBox"></div>
+          <span>Login</span>
+        </a>
+        <a href="javascript:void(0);" class="button register-button" (click)="switchTab('register')">
+          <div class="active" *ngIf="registerBox"></div>
+          <span>Register</span>
+        </a>
+      </div>
+      <div class="content">
+        <div class="login-box" *ngIf="loginBox" [@tabLeft]>
+          <h6>Login to your account</h6>
+          <div class="form-box">
+            <input type="text" class="text-input input-border-bottom" (keyup.enter)="login($event)" [focus]="loginBox" [(ngModel)]="alias"
+              placeholder="Input Your Alias">
+          </div>
+          <p class="text-right">
+            <button class="button" style="background-color:#1abc9c;color:#fff;" (click)="login($event)">Submit</button>
+          </p>
+        </div>
+        <div class="register-box" *ngIf="registerBox" [@tabRight]>
+          <h6>Create a account</h6>
+          <div class="form-box">
+            <input type="text" class="text-input input-border-bottom" (keyup.enter)="register($event)" [focus]="registerBox" [(ngModel)]="alias" placeholder="Input Your Alias">
+          </div>
+          <p class="text-right">
+            <button class="button" style="background-color:#e67e22;color:#fff;" (click)="register($event)">Submit</button>
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
   <div>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
@@ -15,8 +46,9 @@
     <a class="use-status-box small-status-box" href="javascript:void(0);" (click)="userAction($event)">
         <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
         <div class="pop-box" *ngIf="userMenu">
-          <ul>
-            <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
+            <ul>
+    <li><a href="javascript:void(0);" (click)="logout($event)">Follow Page</a></li>
+    <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
     </ul>
   </div>
   </a>
@@ -39,13 +71,44 @@
 
     <div class="pop-box" *ngIf="userMenu">
       <ul>
-        <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
+  <li><a href="javascript:void(0);" (click)="openFollow($event,page)">Follow Page</a></li>
+  <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
   </ul>
   </div>
   </a>
-  <div class="nav-overlay">
+  <div class="overlay" *ngIf="userMenu" (click)="userAction($event)">
   </div>
 </nav>
 <router-outlet></router-outlet>
-<!-- <app-loading></app-loading> -->
-<app-fixed-button></app-fixed-button>
+<ng-template #page let-c="close" let-d="dismiss">
+  <div class="modal-box" [@bounceIn]>
+    <div class="modal-header">
+      <h5 class="modal-title" id="exampleModalLongTitle">Follow Page</h5>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" (click)="d('Cross click')">
+            <span aria-hidden="true">&times;</span>
+          </button>
+    </div>
+    <div class="modal-body">
+      <p class="text-center follow-hint" *ngIf="userFollow?.following?.length <= 0 && userFollow?.avoiding?.length <= 0">No Found Following/Avoiding User</p>
+      <div *ngIf="userFollow?.following?.length > 0">
+        <h6 class="follow-title">Following</h6>
+        <div class="row">
+          <div class="col-md-3 text-center" *ngFor="let following of userFollow?.following">
+            <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
+            <p class="single-line" title="{{following.user_public_key}}">{{following.user_public_key}}</p>
+          </div>
+        </div>
+
+      </div>
+      <div *ngIf="userFollow?.avoiding?.length > 0">
+        <h6 class="follow-title">Avoiding</h6>
+        <div class="row">
+          <div class="col-md-3 text-center" *ngFor="let avoiding of userFollow?.avoiding">
+            <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
+            <p class="single-line" title="{{avoiding.user_public_key}}">{{avoiding.user_public_key}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
