@@ -97,110 +97,29 @@ func (c *Compiler) updateLoop() {
 
 func (c *Compiler) doMasterUpdate() {
 	c.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
-		c.mux.Lock()
-		bi, ok := c.boards[pk]
-		c.mux.Unlock()
+		bi := c.ensureBoard(pk)
 
-		if !ok {
-			c.l.Printf(" - ['%s'] Initialising in compiler.", pk.Hex()[:5]+"...")
-			if e := c.InitBoard(false, pk, sk); e != nil {
-				c.l.Println(" - - (ERROR)", e)
-				return
-			} else {
-				c.l.Println(" - - (OKAY)")
-				c.mux.Lock()
-				bi = c.boards[pk]
-				c.mux.Unlock()
-			}
+		r, e := c.node.Container().LastRoot(pk)
+		if e != nil {
+			c.l.Printf(" - [%s] LastRoot failed with error : %v", pk.Hex()[:5]+"...", e)
 		}
 
-		if bi.UpdateNeeded() {
-			if e := bi.Update(c.node, nil); e != nil {
-				c.l.Printf(" - ['%s'] Update failed with error: %v", pk.Hex()[:5]+"...", e)
-				c.DeleteBoard(pk)
-				c.l.Println(" - - (RESET) Result:", c.InitBoard(false, pk, sk))
-			}
+		if e := bi.UpdateWithReceived(r, sk); e != nil {
+			c.l.Printf(" - [%s] Update failed with error: %v", pk.Hex()[:5]+"...", e)
 		}
 	})
 }
 
 func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
-	bi, e := c.GetBoard(root.Pub)
-	if e != nil {
-		c.l.Println("Board '%s' not compiled.", root.Pub.Hex()[:5]+"...")
 
-		bsk, master := c.file.GetMasterSubSecKey(root.Pub)
+	isRemote := c.file.HasRemoteSub(root.Pub)
+	sk, isMaster := c.file.GetMasterSubSecKey(root.Pub)
 
-		if master {
-			if e := c.InitBoard(true, root.Pub, bsk); e != nil {
-				c.l.Println("Init board error:", e)
-				return
-			}
-		} else {
-			if e := c.InitBoard(true, root.Pub); e != nil {
-				c.l.Println("Init board error:", e)
-				return
-			}
-		}
-
-		bi, e = c.GetBoard(root.Pub)
-		if e != nil {
-			c.l.Println("Failed to obtain board after init:", e)
-			return
-		}
+	if !isRemote && !isMaster {
+		return
 	}
 
-	if e := bi.Update(c.node, root); e != nil {
-		c.l.Println("Update board instance error:",
-			e.Error())
-	}
-}
-
-func (c *Compiler) InitBoard(checkFile bool, pk cipher.PubKey, sk ...cipher.SecKey) error {
-	if checkFile && !(c.file.HasMasterSub(pk) || c.file.HasRemoteSub(pk)) {
-		return boo.Newf(boo.NotFound,
-			"Not subscribed to feed '%s'", pk.Hex()[:5]+"...")
-	}
-
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	if bi, has := c.boards[pk]; has {
-		bi.Close()
-		delete(c.boards, pk)
-	}
-
-	root, e := c.node.Container().LastRoot(pk)
-	if e != nil {
-		return e
-	}
-
-	switch len(sk) {
-	case 0:
-		bi, e := NewBoardInstance(
-			&BoardInstanceConfig{Master: false, PK: pk},
-			c.node.Container(), root, c.adders...,
-		)
-		if e != nil {
-			return e
-		}
-		c.boards[pk] = bi
-
-	case 1:
-		bi, e := NewBoardInstance(
-			&BoardInstanceConfig{Master: true, PK: pk, SK: sk[0]},
-			c.node.Container(), root, c.adders...,
-		)
-		if e != nil {
-			return e
-		}
-		c.boards[pk] = bi
-
-	default:
-		return boo.Newf(boo.Internal,
-			"invalid secret key count provided of %d", len(sk))
-	}
-	return nil
+	c.ensureBoard(root.Pub).UpdateWithReceived(root, sk)
 }
 
 func (c *Compiler) DeleteBoard(bpk cipher.PubKey) {
@@ -218,26 +137,30 @@ func (c *Compiler) DeleteBoard(bpk cipher.PubKey) {
 
 func (c *Compiler) GetBoard(pk cipher.PubKey) (*BoardInstance, error) {
 	c.mux.Lock()
+	defer c.mux.Unlock()
 	bi, ok := c.boards[pk]
-	c.mux.Unlock()
 	if !ok {
-		c.l.Printf("First time compiling board '%s'", pk.Hex()[:5]+"...")
-		if e := c.InitBoard(false, pk); e != nil {
-			return nil, e
-		}
-		return c.GetBoard(pk)
+		return nil, boo.Newf(boo.NotFound, "board '%s' not found", pk.Hex()[:5]+"...")
 	}
 	return bi, nil
 }
 
-func (c *Compiler) GetBoardForce(pk cipher.PubKey) (*BoardInstance, error) {
-	bi, e := c.GetBoard(pk)
-	if e != nil {
-		if e := c.InitBoard(false, pk); e != nil {
-			return nil, e
-		}
-		return c.GetBoard(pk)
-	} else {
-		return bi, nil
+func (c *Compiler) NewRootsChan() chan *skyobject.Root {
+	return c.newRoots
+}
+
+/*
+	<<< HELPER FUNCTIONS >>>
+*/
+
+func (c *Compiler) ensureBoard(pk cipher.PubKey) *BoardInstance {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	bi, has := c.boards[pk]
+	if !has {
+		bi = new(BoardInstance).Init(c.node, pk, c.adders...)
+		c.boards[pk] = bi
 	}
+	return bi
 }

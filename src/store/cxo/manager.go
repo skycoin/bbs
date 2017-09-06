@@ -13,7 +13,6 @@ import (
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/skycoin/src/util/file"
 	"io/ioutil"
 	log2 "log"
 	"os"
@@ -37,6 +36,7 @@ const (
 type ManagerConfig struct {
 	Memory       *bool   // Whether to enable memory mode.
 	Master       *bool   // Whether node is to host boards and submission address.
+	Defaults     *bool   // Whether to have default connection / subscription.
 	Config       *string // Configuration directory.
 	CXOPort      *int    // CXO listening port.
 	CXORPCEnable *bool   // Whether to enable CXO RPC.
@@ -61,8 +61,9 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	manager := &Manager{
 		c: config,
 		l: inform.NewLogger(true, os.Stdout, LogPrefix),
-		file: object.NewCXOManager(&object.CXOFileManagerConfig{
-			Memory: config.Memory,
+		file: object.NewCXOFileManager(&object.CXOFileManagerConfig{
+			Memory:   config.Memory,
+			Defaults: config.Defaults,
 		}),
 		newRoots: make(chan *skyobject.Root, 10),
 		quit:     make(chan struct{}),
@@ -196,23 +197,27 @@ func (m *Manager) prepareFile() error {
 
 	if e := m.file.RangeConnections(func(address string) {
 		if _, e := m.connectNode(address); e != nil {
-			m.l.Println("prepareNode() Connection error:", e)
+			m.l.Println("prepareFile() Connection error:", e)
 		}
 	}); e != nil {
 		return e
 	}
 
 	if e := m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
-		if e := m.compiler.InitBoard(false, pk, sk); e != nil {
-			m.l.Println("prepareNode() Init board error:", e)
+		if r, e := m.node.Container().LastRoot(pk); e != nil {
+			m.l.Println("prepareFile() LastRoot failed with error:", e)
+		} else {
+			m.compiler.NewRootsChan() <- r
 		}
 	}); e != nil {
 		return e
 	}
 
 	if e := m.file.RangeRemoteSubs(func(pk cipher.PubKey) {
-		if e := m.compiler.InitBoard(false, pk); e != nil {
-			m.l.Println("prepareNode() Init board error:", e)
+		if r, e := m.node.Container().LastRoot(pk); e != nil {
+			m.l.Println("prepareFile() LastRoot failed with error:", e)
+		} else {
+			m.compiler.NewRootsChan() <- r
 		}
 	}); e != nil {
 		return e
@@ -347,9 +352,9 @@ func (m *Manager) SubscribeMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
 		return e
 	}
 	m.subscribeNode(bpk)
-	if e := m.compiler.InitBoard(false, bpk, bsk); e != nil {
-		return e
-	}
+	//if e := m.compiler.InitBoard(false, bpk, bsk); e != nil {
+	//	return e
+	//}
 	return nil
 }
 
@@ -471,16 +476,15 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	}
 	m.subscribeNode(in.BoardPubKey)
 
-	if e := newBoard(m.node, in); e != nil {
+	if r, e := newBoard(m.node, in); e != nil {
 		return e
+	} else {
+		m.compiler.NewRootsChan() <- r
+		return nil
 	}
-	if e := m.compiler.InitBoard(false, in.BoardPubKey, in.BoardSecKey); e != nil {
-		return e
-	}
-	return nil
 }
 
-func newBoard(node *node.Node, in *object.NewBoardIO) error {
+func newBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 	pack, e := node.Container().NewRoot(
 		in.BoardPubKey,
 		in.BoardSecKey,
@@ -488,8 +492,10 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 		node.Container().CoreRegistry().Types(),
 	)
 	if e != nil {
-		return e
+		return nil, e
 	}
+	defer pack.Close()
+
 	pack.Append(
 		&r0.RootPage{
 			Typ: r0.RootTypeBoard,
@@ -503,72 +509,72 @@ func newBoard(node *node.Node, in *object.NewBoardIO) error {
 		&r0.UsersPage{},
 	)
 	if e := pack.Save(); e != nil {
-		return e
+		return nil, e
 	}
 	node.Publish(pack.Root())
-	return nil
+	return pack.Root(), nil
 }
 
 /*
 	<<< IMPORT / EXPORT >>>
 */
 
-func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *r0.ExpRoot, error) {
-	if *m.c.Memory {
-		return "", nil, nil
-	}
-	bi, e := m.compiler.GetBoard(pk)
-	if e != nil {
-		return "", nil, e
-	}
-	out, e := bi.Export()
-	if e != nil {
-		return "", nil, e
-	}
-	path := m.exportPath(name)
-	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
-		return "", nil, e
-	}
-	return path, out, nil
-}
+//func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *r0.ExpRoot, error) {
+//	if *m.c.Memory {
+//		return "", nil, nil
+//	}
+//	bi, e := m.compiler.GetBoard(pk)
+//	if e != nil {
+//		return "", nil, e
+//	}
+//	out, e := bi.Export()
+//	if e != nil {
+//		return "", nil, e
+//	}
+//	path := m.exportPath(name)
+//	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
+//		return "", nil, e
+//	}
+//	return path, out, nil
+//}
 
-func (m *Manager) ExportAllMasters(prefix string) error {
-	if *m.c.Memory {
-		return nil
-	}
-	return m.file.RangeMasterSubs(func(pk cipher.PubKey, _ cipher.SecKey) {
-		m.l.Printf("Exporting master '%s' ...",
-			pk.Hex()[:5]+"...")
-		if path, _, e := m.ExportBoard(pk, prefix+"."+pk.Hex()); e != nil {
-			m.l.Println(" - FAILED, Error:", e)
-		} else {
-			m.l.Printf(" - SAVED TO '%s'.", path)
-		}
-	})
-}
-
-func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *r0.ExpRoot, error) {
-	if *m.c.Memory {
-		return "", nil, nil
-	}
-
-	path := m.exportPath(name)
-	out := new(r0.ExpRoot)
-	if e := file.LoadJSON(path, out); e != nil {
-		return "", nil, e
-	}
-
-	_, has := m.file.GetMasterSubSecKey(pk)
-	if !has {
-		return "", nil, boo.Newf(boo.NotAuthorised,
-			"this node is not the master of board of public key '%s'", pk.Hex())
-	}
-	bi, e := m.compiler.GetBoard(pk)
-	if e != nil {
-		return "", nil, e
-	}
-	if e := bi.Import(out); e != nil {
-		return "", nil, e
-	}
-	return path, out, nil
-}
+//func (m *Manager) ExportAllMasters(prefix string) error {
+//	if *m.c.Memory {
+//		return nil
+//	}
+//	return m.file.RangeMasterSubs(func(pk cipher.PubKey, _ cipher.SecKey) {
+//		m.l.Printf("Exporting master '%s' ...",
+//			pk.Hex()[:5]+"...")
+//		if path, _, e := m.ExportBoard(pk, prefix+"."+pk.Hex()); e != nil {
+//			m.l.Println(" - FAILED, Error:", e)
+//		} else {
+//			m.l.Printf(" - SAVED TO '%s'.", path)
+//		}
+//	})
+//}
+//
+//func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *r0.ExpRoot, error) {
+//	if *m.c.Memory {
+//		return "", nil, nil
+//	}
+//
+//	path := m.exportPath(name)
+//	out := new(r0.ExpRoot)
+//	if e := file.LoadJSON(path, out); e != nil {
+//		return "", nil, e
+//	}
+//
+//	_, has := m.file.GetMasterSubSecKey(pk)
+//	if !has {
+//		return "", nil, boo.Newf(boo.NotAuthorised,
+//			"this node is not the master of board of public key '%s'", pk.Hex())
+//	}
+//	bi, e := m.compiler.GetBoard(pk)
+//	if e != nil {
+//		return "", nil, e
+//	}
+//	if e := bi.Import(out); e != nil {
+//		return "", nil, e
+//	}
+//	return path, out, nil
+//}

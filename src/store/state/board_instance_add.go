@@ -13,7 +13,7 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 	}
 
 	var goalSeq uint64
-	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal seq.
 		goalSeq = p.Root().Seq + 1
@@ -56,7 +56,7 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 	}
 
 	var goalSeq uint64
-	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal seq.
 		goalSeq = p.Root().Seq + 1
@@ -110,7 +110,7 @@ func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 	}
 
 	var goalSeq uint64
-	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Check vote.
 		if e := checkVote(vote, h); e != nil {
@@ -184,7 +184,7 @@ type BoardAction func(board *r0.Board) (bool, error)
 
 func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
 	var goalSeq uint64
-	e := bi.PackEdit(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal seq.
 		goalSeq = p.Root().Seq + 1

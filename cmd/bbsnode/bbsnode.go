@@ -52,7 +52,8 @@ type Config struct {
 	HTTPGUI    bool   `json:"http_gui"`               // Whether to enable GUI.
 	HTTPGUIDir string `json:"http_gui_dir,omitempty"` // Full path of GUI static files.
 
-	Browser bool `json:"browser"` // Whether to open browser on GUI start.
+	Browser  bool `json:"browser"`  // Whether to open browser on GUI start.
+	Defaults bool `json:"defaults"` // Whether to have default connections/subscriptions.
 }
 
 // NewDefaultConfig returns a default configuration for BBS node.
@@ -70,6 +71,7 @@ func NewDefaultConfig() *Config {
 		HTTPGUI:    true,
 		HTTPGUIDir: "", // --> Action: set as '$HOME/.skybbs/static'
 		Browser:    true,
+		Defaults:   true,
 	}
 }
 
@@ -143,6 +145,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 							CXOPort:      &c.CXOPort,
 							CXORPCEnable: &c.CXORPC,
 							CXORPCPort:   &c.CXORPCPort,
+							Defaults:     &c.Defaults,
 						}, &state.CompilerConfig{
 							UpdateInterval: &compilerInternal,
 						},
@@ -253,6 +256,10 @@ func main() {
 		cli.StringFlag{
 			Name:        "http-gui-dir",
 			Destination: &config.HTTPGUIDir,
+		},
+		cli.BoolTFlag{
+			Name: "defaults",
+			Destination: &config.Defaults,
 		},
 	}
 	app := cli.NewApp()
