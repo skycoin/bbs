@@ -3,9 +3,40 @@
     <img src="../assets/logo.svg" width="170.74" height="30" alt="bbs">
   </a>
   <div class="overlay" *ngIf="showLoginBox" (click)="userAction($event)"></div>
-  <div class="login-box" *ngIf="showLoginBox">
-    <input type="text" class="text-input" (keyup.enter)="login($event)" [focus]="showLoginBox" [(ngModel)]="alias">
-    <button class="button" style="background-color:#15c3f9;color:#fff;" (click)="login($event)">Login</button>
+  <div class="login-register-box" *ngIf="showLoginBox">
+    <div class="box">
+      <div class="header">
+        <a href="javascript:void(0);" class="button login-button" (click)="switchTab('login')">
+          <div class="active" *ngIf="loginBox"></div>
+          <span>Login</span>
+        </a>
+        <a href="javascript:void(0);" class="button register-button" (click)="switchTab('register')">
+          <div class="active" *ngIf="registerBox"></div>
+          <span>Register</span>
+        </a>
+      </div>
+      <div class="content">
+        <div class="login-box" *ngIf="loginBox" [@tabLeft]>
+          <h6>Login to your account</h6>
+          <div class="form-box">
+            <input type="text" class="text-input input-border-bottom" (keyup.enter)="login($event)" [focus]="loginBox" [(ngModel)]="alias"
+              placeholder="Input Your Alias">
+          </div>
+          <p class="text-right">
+            <button class="button" style="background-color:#1abc9c;color:#fff;" (click)="login($event)">Submit</button>
+          </p>
+        </div>
+        <div class="register-box" *ngIf="registerBox" [@tabRight]>
+          <h6>Create a account</h6>
+          <div class="form-box">
+            <input type="text" class="text-input input-border-bottom" (keyup.enter)="register($event)" [focus]="registerBox" [(ngModel)]="alias" placeholder="Input Your Alias">
+          </div>
+          <p class="text-right">
+            <button class="button" style="background-color:#e67e22;color:#fff;" (click)="register($event)">Submit</button>
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
   <div>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
