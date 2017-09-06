@@ -4,13 +4,13 @@ import { FixedButtonComponent } from '../components';
 import { ToTopComponent } from '../components';
 import 'rxjs/add/operator/filter';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { bounceInAnimation } from '../animations/common.animations';
+import { bounceInAnimation, tabLeftAnimation, tabRightAnimation } from '../animations/common.animations';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  animations: [bounceInAnimation]
+  animations: [bounceInAnimation, tabLeftAnimation, tabRightAnimation]
 })
 export class AppComponent implements OnInit {
   @ViewChild(FixedButtonComponent) fb: FixedButtonComponent;
@@ -19,12 +19,16 @@ export class AppComponent implements OnInit {
   public isMasterNode = false;
   userName = 'LogIn';
   alias = '';
+  seed = '';
   isLogIn = false;
   navBarBg = 'default-navbar';
   userMenu = false;
   showLoginBox = false;
   userPublicKey = '';
   boardKey = '';
+  loginBox = true;
+  registerBox = false;
+
   userFollow: FollowPageDataInfo = {};
   constructor(
     private api: ApiService,
@@ -52,6 +56,23 @@ export class AppComponent implements OnInit {
       }
     })
   }
+
+  switchTab(tab: string) {
+    switch (tab) {
+      case 'login':
+        this.loginBox = true;
+        this.registerBox = false;
+        break;
+      case 'register':
+        this.loginBox = false;
+        this.registerBox = true;
+
+        break;
+      default:
+        break;
+    }
+  }
+
   userAction(ev: Event) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
@@ -64,7 +85,10 @@ export class AppComponent implements OnInit {
     }
     if (!this.isLogIn) {
       this.alias = '';
+      this.seed = '';
       this.showLoginBox = true;
+      this.loginBox = true;
+      this.registerBox = false;
     } else {
       this.showUserMenu();
     }
@@ -74,8 +98,12 @@ export class AppComponent implements OnInit {
     ev.stopPropagation();
     ev.preventDefault();
     if (!this.alias) {
+      this.alert.error({ content: 'The alias can not empty!' });
       return;
     }
+    this.startLogin();
+  }
+  startLogin() {
     const data = new FormData();
     data.append('alias', this.alias);
     this.api.login(data).subscribe(res => {
@@ -83,9 +111,32 @@ export class AppComponent implements OnInit {
         this.isLogIn = res.data.logged_in;
         this.userName = res.data.session.user.alias;
         this.userPublicKey = res.data.session.user.public_key;
+        this.alias = '';
       }
       this.showLoginBox = false;
     })
+  }
+  register(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (!this.alias) {
+      this.alert.error({ content: 'The alias can not empty!' });
+      return;
+    }
+    this.api.newSeed().subscribe(seed => {
+      if (seed.okay) {
+        const data = new FormData();
+        data.append('alias', this.alias);
+        data.append('seed', seed.data);
+        this.api.newUser(data).subscribe(user => {
+          if (user.okay) {
+            this.startLogin();
+          }
+        })
+      }
+    });
+
   }
   showUserMenu() {
     this.userMenu = !this.userMenu;

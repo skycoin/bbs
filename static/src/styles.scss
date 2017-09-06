@@ -34,17 +34,39 @@ body {
   height: 100%;
 }
 
+.input-border-bottom {
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
+  transition: all .5s;
+  &:focus {
+    border-bottom-color: blue;
+  }
+}
+
 .text-input {
-  padding: .1rem .5rem;
+  padding: .25rem .5rem;
   border-radius: .25rem;
   box-shadow: none;
-  border: 1px solid rgba(204, 204, 204, 0.47);
+  border: 1px solid #EDEDED;
   outline: none;
+  &::-webkit-input-placeholder {
+    color: #ededed
+  }
+  &::-moz-placeholder {
+    color: #ededed;
+  }
+  &:disabled {
+    background-color: #EDEDED;
+    color: #d0d0d0;
+  }
 }
 
 button[class="button"] {
   border: 1px solid rgba(204, 204, 204, 0.47);
   border-radius: .25rem;
+  padding-bottom: 0.25rem 0.5rem;
   user-select: none;
   cursor: pointer;
   &:focus {

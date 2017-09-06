@@ -2,17 +2,84 @@
   .nav-box {
     display: inline-block;
   }
-  .login-box {
-    position: absolute;
-    display: flex;
+  .login-register-box {
+    position: absolute; // display: flex;
     right: 1%;
     top: 90%;
-    padding: .5rem;
-    border-radius: .25rem;
+    border-radius: .5rem;
     background-color: #fff;
-    box-shadow: 0.1rem 0.1rem 0.1rem rgba(0, 0, 0, 0.3);
-    .button {
-      margin-left: 1rem;
+    box-shadow: 0 0.1rem 1rem rgba(0, 0, 0, 0.4);
+    @media (max-width: 992px) {
+      top: 100%;
+      .box {
+        &::before {
+          right: 10% !important;
+        }
+      }
+    }
+    .box {
+      position: relative;
+      &::before {
+        position: absolute;
+        content: '';
+        bottom: 100%;
+        right: 15%;
+        width: 1rem;
+        height: 1rem;
+        border: 8px solid transparent;
+        border-bottom-color: #e67e22;
+      }
+      .header {
+        width: 100%;
+        display: flex;
+        .button {
+          position: relative;
+          width: 50%;
+          display: inline-block;
+          text-align: center;
+          padding: .5rem 0;
+          color: #fff;
+          text-decoration: none;
+          span {
+            user-select: none;
+          }
+          .active {
+            position: absolute;
+            content: '';
+            top: 65%;
+            right: 45%;
+            width: 1rem;
+            height: 1rem;
+            border: 8px solid transparent;
+            border-bottom-color: #fff;
+          }
+        }
+        .login-button {
+          background-color: #1abc9c;
+          border-top-left-radius: .5rem;
+        }
+        .register-button {
+          background-color: #e67e22;
+          border-top-right-radius: .5rem;
+        }
+      }
+      .content {
+        position: relative;
+        padding: 1rem 1.5rem;
+        overflow: hidden;
+        .form-box {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 1rem;
+          .input-label {
+            margin-bottom: .25rem;
+          }
+        }
+        .button {
+          width: 100%;
+          border-radius: 0;
+        }
+      }
     }
   }
   .small-status-box {
