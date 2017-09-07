@@ -28,7 +28,7 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 		}
 
 		// Get root children pages.
-		pages, e := r0.GetPages(p, false, true, true, false)
+		pages, e := r0.GetPages(p, false, true, true, true)
 		if e != nil {
 			return e
 		}

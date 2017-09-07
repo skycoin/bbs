@@ -67,7 +67,7 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	var (
 		master   = sk != cipher.SecKey{} // Whether this node owns the board.
 		ct       = bi.n.Container()      // CXO container.
-		pFlags   = skyobject.Flag(0)     // Flags for unpacking root.
+		pFlags   = skyobject.HashTableIndex     // Flags for unpacking root.
 		firstRun = false                 // Is the first time running update.
 	)
 
@@ -236,6 +236,9 @@ func (bi *BoardInstance) EditPack(action PackAction) error {
 		return ErrNotEditable
 	}
 
-	defer bi.needUpdate.Set()
-	return action(bi.p, bi.h)
+	bi.needUpdate.Set()
+	if e := action(bi.p, bi.h); e != nil {
+		return e
+	}
+	return nil
 }

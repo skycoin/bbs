@@ -132,10 +132,9 @@ func (r *ThreadRep) View(i int, votes *VoteRepView) *ThreadRepView {
 
 type PostRep struct {
 	Ref     cipher.SHA256
-	Type    r0.ContentType
 	Name    string
 	Body    string
-	Image   *r0.ContentImageData
+	Images  []*r0.ContentImageData
 	Created int64
 	Creator cipher.PubKey
 }
@@ -143,25 +142,24 @@ type PostRep struct {
 func (r *PostRep) Fill(post *r0.Post) *PostRep {
 	data := r0.GetData(post)
 	r.Ref = post.R
-	r.Type = data.Type
 	r.Name = data.Name
 	r.Body = data.Body
-	r.Image = data.Image
+	r.Images = data.Images
 	r.Created = post.Created
 	r.Creator = post.Creator
 	return r
 }
 
 type PostRepView struct {
-	Seq     int                  `json:"seq"`
-	Ref     string               `json:"ref"`
-	Type    string               `json:"type"`
-	Name    string               `json:"name"`
-	Body    string               `json:"body"`
-	Image   *r0.ContentImageData `json:"image,omitempty"`
-	Created int64                `json:"created"`
-	Creator string               `json:"creator"`
-	Votes   *VoteRepView         `json:"votes,omitempty"`
+	Seq     int                    `json:"seq"`
+	Ref     string                 `json:"ref"`
+	Type    string                 `json:"type"`
+	Name    string                 `json:"name"`
+	Body    string                 `json:"body"`
+	Images  []*r0.ContentImageData `json:"images,omitempty"`
+	Created int64                  `json:"created"`
+	Creator string                 `json:"creator"`
+	Votes   *VoteRepView           `json:"votes,omitempty"`
 }
 
 func (r *PostRep) View(i int, votes *VoteRepView) *PostRepView {
@@ -171,10 +169,9 @@ func (r *PostRep) View(i int, votes *VoteRepView) *PostRepView {
 	return &PostRepView{
 		Seq:     i,
 		Ref:     r.Ref.Hex(),
-		Type:    string(r.Type),
 		Name:    r.Name,
 		Body:    r.Body,
-		Image:   r.Image,
+		Images:  r.Images,
 		Created: r.Created,
 		Creator: r.Creator.Hex(),
 		Votes:   votes,

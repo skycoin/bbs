@@ -362,7 +362,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interf
 	})
 }
 
-func (a *Access) NewPost(ctx context.Context, in *object.NewTextPostIO) (interface{}, error) {
+func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}, error) {
 	uf, e := a.Session.GetCurrentFile()
 	if e != nil {
 		return nil, e

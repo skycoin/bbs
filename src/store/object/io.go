@@ -1,10 +1,12 @@
 package object
 
 import (
+	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"time"
+	"github.com/skycoin/bbs/src/misc/boo"
 )
 
 // NewBoard represents io required to create a new board.
@@ -53,7 +55,6 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		Creator: upk,
 	}
 	r0.SetData(a.Thread, &r0.ContentData{
-		Type: r0.ThreadType,
 		Name: a.Name,
 		Body: a.Body,
 	})
@@ -61,7 +62,7 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	return nil
 }
 
-type NewTextPostIO struct {
+type NewPostIO struct {
 	BoardPubKeyStr string        `bbs:"bpkStr"`
 	BoardPubKey    cipher.PubKey `bbs:"bpk"`
 	ThreadRefStr   string        `bbs:"tRefStr"`
@@ -70,11 +71,12 @@ type NewTextPostIO struct {
 	PostRef        cipher.SHA256 `bbs:"pRef"`
 	Name           string        `bbs:"name"`
 	Body           string        `bbs:"body"`
-	Image          *r0.ContentImageData
+	ImagesStr      string
+	Images         []*r0.ContentImageData
 	Post           *r0.Post
 }
 
-func (a *NewTextPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
+func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
@@ -85,17 +87,15 @@ func (a *NewTextPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		Created:  time.Now().UnixNano(),
 		Creator:  upk,
 	}
-	var dataType r0.ContentType
-	if a.Image == nil {
-		dataType = r0.TextPostType
-	} else {
-		dataType = r0.ImagePostType
+	if a.ImagesStr != "" {
+		if e := json.Unmarshal([]byte(a.ImagesStr), &a.Images); e != nil {
+			return boo.WrapType(e, boo.InvalidInput, "failed to read 'images' form value")
+		}
 	}
 	r0.SetData(a.Post, &r0.ContentData{
-		Type:  dataType,
-		Name:  a.Name,
-		Body:  a.Body,
-		Image: a.Image,
+		Name:   a.Name,
+		Body:   a.Body,
+		Images: a.Images,
 	})
 	tag.Sign(a.Post, upk, usk)
 	return nil

@@ -494,7 +494,6 @@ func newBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 	if e != nil {
 		return nil, e
 	}
-	defer pack.Close()
 
 	pack.Append(
 		&r0.RootPage{
@@ -512,7 +511,9 @@ func newBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 		return nil, e
 	}
 	node.Publish(pack.Root())
-	return pack.Root(), nil
+	pack.Close()
+
+	return node.Container().LastRoot(in.BoardPubKey)
 }
 
 /*

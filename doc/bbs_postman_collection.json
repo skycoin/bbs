@@ -442,7 +442,7 @@
 							"formdata": [
 								{
 									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
 									"description": "Public key of board.",
 									"type": "text"
 								}
@@ -463,19 +463,19 @@
 							"formdata": [
 								{
 									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
 									"description": "Public key of board to submit thread.",
 									"type": "text"
 								},
 								{
 									"key": "name",
-									"value": "Jason",
+									"value": "Test Thread",
 									"description": "Name of thread to submit.",
 									"type": "text"
 								},
 								{
 									"key": "body",
-									"value": "All about Jason.",
+									"value": "This is a test thread.",
 									"description": "Text body of thread to submit.",
 									"type": "text"
 								}
@@ -496,13 +496,13 @@
 							"formdata": [
 								{
 									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
 									"description": "Public key of board where thread belongs.",
 									"type": "text"
 								},
 								{
 									"key": "thread_ref",
-									"value": "43bad1c6e9376bbf27e993710f3ceb595af482f906f63ab91e0f0835daa6f24c",
+									"value": "fcef784bf16a1c62206b6230f5c1d88137bd3641d63087e9fe80cedf4e536d9f",
 									"description": "Reference of thread.",
 									"type": "text"
 								}
@@ -523,13 +523,13 @@
 							"formdata": [
 								{
 									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
 									"description": "Public key of board where post should belong.",
 									"type": "text"
 								},
 								{
 									"key": "thread_ref",
-									"value": "8562bc9b571c521af493075b7cbddde1b45a665a66d452cff49e242a19854ee7",
+									"value": "fcef784bf16a1c62206b6230f5c1d88137bd3641d63087e9fe80cedf4e536d9f",
 									"description": "Reference of thread where post should belong.",
 									"type": "text"
 								},
@@ -541,19 +541,100 @@
 								},
 								{
 									"key": "name",
-									"value": "Hello",
+									"value": "Test Image Post",
 									"description": "Name of post.",
 									"type": "text"
 								},
 								{
 									"key": "body",
-									"value": "This is a greeting.",
+									"value": "This is a test image post.",
 									"description": "Body of post.",
+									"type": "text"
+								},
+								{
+									"key": "images",
+									"value": "[{\"url\":\"https://i.imgur.com/ASFEeYi.jpg\",\"name\":\"Skywire Miner\",\"thumbnail_url\":\"https://i.imgur.com/ASFEeYim.jpg\",\"size\":5,\"height\":5,\"width\":3}]",
+									"description": "Json objects representing images (Optional, can leave blank).",
 									"type": "text"
 								}
 							]
 						},
 						"description": "Add a new post to specified board and thread. (Can also be a reply to another post)"
+					},
+					"response": []
+				},
+				{
+					"name": "New Image Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/new_image_post",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "02112526d8a5ff8082403afbe45e91ca88c1acaa4d5dbecf6b38db276e9cab239d",
+									"description": "Public key of board where post should belong.",
+									"type": "text"
+								},
+								{
+									"key": "thread_ref",
+									"value": "9d8555d62e2ed6aa9235896ad3b8bf9507565b454c5810c6fe35bb6155befbda",
+									"description": "Reference of thread where post should belong.",
+									"type": "text"
+								},
+								{
+									"key": "post_ref",
+									"value": "",
+									"description": "(Optional, not yet implemented) Include if this post is reply of another post.",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Image Post",
+									"description": "Name of post.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is an image post.",
+									"description": "Body of post.",
+									"type": "text"
+								},
+								{
+									"key": "image_url",
+									"value": "http://i.imgur.com/q62LNBE.jpg",
+									"description": "Url of image.",
+									"type": "text"
+								},
+								{
+									"key": "image_thumbnail_url",
+									"value": "http://i.imgur.com/q62LNBEm.jpg",
+									"description": "Url of thumbnail (Optional).",
+									"type": "text"
+								},
+								{
+									"key": "image_size",
+									"value": "10",
+									"description": "Size of image (Optional).",
+									"type": "text"
+								},
+								{
+									"key": "image_height",
+									"value": "5",
+									"description": "Height of image (Optional).",
+									"type": "text"
+								},
+								{
+									"key": "image_width",
+									"value": "4",
+									"description": "Width of image (Optional).",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Add a new image post to specified board and thread. (Can also be a reply to another post)"
 					},
 					"response": []
 				}
