@@ -8,10 +8,12 @@ import (
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // Gateway represents what is exposed to HTTP interface.
@@ -275,15 +277,39 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 			}))
 		})
 
-	// Adds a new post on specified thread.
+	// Adds a new text post on specified thread.
 	mux.HandleFunc("/api/content/new_post",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.NewPost(r.Context(), &object.NewPostIO{
+			send(w)(g.Access.NewPost(r.Context(), &object.NewTextPostIO{
 				BoardPubKeyStr: r.FormValue("board_public_key"),
 				ThreadRefStr:   r.FormValue("thread_ref"),
 				PostRefStr:     r.FormValue("post_ref"), // Optional.
 				Name:           r.FormValue("name"),
 				Body:           r.FormValue("body"),
+			}))
+		})
+
+	// Adds a new image post on specified thread.
+	mux.HandleFunc("/api/content/new_image_post",
+		func(w http.ResponseWriter, r *http.Request) {
+
+			image_size, _ := strconv.Atoi(r.FormValue("image_size"))
+			image_height, _ := strconv.Atoi(r.FormValue("image_height"))
+			image_width, _ := strconv.Atoi(r.FormValue("image_width"))
+
+			send(w)(g.Access.NewPost(r.Context(), &object.NewTextPostIO{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				ThreadRefStr:   r.FormValue("thread_ref"),
+				PostRefStr:     r.FormValue("post_ref"), // Optional.
+				Name:           r.FormValue("name"),
+				Body:           r.FormValue("body"),
+				Image: &r0.ContentImageData{
+					URL:      r.FormValue("image_url"),
+					ThumbURL: r.FormValue("image_thumbnail_url"),
+					Size:     image_size,
+					Height:   image_height,
+					Width:    image_width,
+				},
 			}))
 		})
 

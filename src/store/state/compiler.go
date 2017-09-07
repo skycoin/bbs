@@ -99,13 +99,8 @@ func (c *Compiler) doMasterUpdate() {
 	c.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		bi := c.ensureBoard(pk)
 
-		r, e := c.node.Container().LastRoot(pk)
-		if e != nil {
-			c.l.Printf(" - [%s] LastRoot failed with error : %v", pk.Hex()[:5]+"...", e)
-		}
-
-		if e := bi.UpdateWithReceived(r, sk); e != nil {
-			c.l.Printf(" - [%s] Update failed with error: %v", pk.Hex()[:5]+"...", e)
+		if e := bi.PublishChanges(); e != nil {
+			c.l.Printf(" - [%s] Publish failed with error: %v", pk.Hex()[:5]+"...", e)
 		}
 	})
 }
@@ -119,7 +114,13 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 		return
 	}
 
-	c.ensureBoard(root.Pub).UpdateWithReceived(root, sk)
+	bi := c.ensureBoard(root.Pub)
+
+	if isMaster && bi.needUpdate.Value() == true {
+		return
+	}
+
+	bi.UpdateWithReceived(root, sk)
 }
 
 func (c *Compiler) DeleteBoard(bpk cipher.PubKey) {

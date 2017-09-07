@@ -28,7 +28,7 @@ func (r *ExpRoot) Dump(p *skyobject.Pack) error {
 
 	if bp, e := ImportBoardPage(p, r.BoardPage); e != nil {
 		return e
-	} else if e := bp.Save(p, nil); e != nil {
+	} else if e := bp.Save(p); e != nil {
 		return e
 	} else if e := p.SetRefByIndex(IndexBoardPage, bp); e != nil {
 		return e
@@ -36,7 +36,7 @@ func (r *ExpRoot) Dump(p *skyobject.Pack) error {
 
 	if up, e := ImportUsersPage(p, r.UsersPage); e != nil {
 		return e
-	} else if e := up.Save(p, nil); e != nil {
+	} else if e := up.Save(p); e != nil {
 		return e
 	} else if e := p.SetRefByIndex(IndexUsersPage, up); e != nil {
 		return e
@@ -53,7 +53,7 @@ type ExpBoardPage struct {
 func ExportBoardPage(bp *BoardPage) (*ExpBoardPage, error) {
 	out := new(ExpBoardPage)
 
-	board, e := bp.GetBoard(nil)
+	board, e := bp.GetBoard()
 	if e != nil {
 		return nil, e
 	}
@@ -63,7 +63,7 @@ func ExportBoardPage(bp *BoardPage) (*ExpBoardPage, error) {
 	if e := bp.RangeThreadPages(func(i int, tp *ThreadPage) error {
 		out.Threads[i], e = ExportThreadPage(tp)
 		return e
-	}, nil); e != nil {
+	}); e != nil {
 		return nil, e
 	}
 
@@ -93,7 +93,7 @@ type ExpThreadPage struct {
 
 func ExportThreadPage(tp *ThreadPage) (*ExpThreadPage, error) {
 	var out = new(ExpThreadPage)
-	thread, e := tp.GetThread(nil)
+	thread, e := tp.GetThread()
 	if e != nil {
 		return out, e
 	}
@@ -103,7 +103,7 @@ func ExportThreadPage(tp *ThreadPage) (*ExpThreadPage, error) {
 	if e := tp.RangePosts(func(i int, post *Post) error {
 		out.Posts[i] = *post
 		return nil
-	}, nil); e != nil {
+	}); e != nil {
 		return nil, e
 	}
 
@@ -138,7 +138,7 @@ func ExportUsersPage(up *UsersPage) (*ExpUsersPage, error) {
 	if e := up.RangeUserActivityPages(func(i int, uap *UserActivityPage) error {
 		out.Users[i], e = ExportUserActivityPage(uap)
 		return e
-	}, nil); e != nil {
+	}); e != nil {
 		return nil, e
 	}
 
@@ -177,7 +177,7 @@ func ExportUserActivityPage(uap *UserActivityPage) (*ExpUserActivityPage, error)
 	if e := uap.RangeVoteActions(func(i int, vote *Vote) error {
 		out.VoteActions[i] = *vote
 		return nil
-	}, nil); e != nil {
+	}); e != nil {
 		return nil, e
 	}
 

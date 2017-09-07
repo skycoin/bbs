@@ -53,6 +53,7 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		Creator: upk,
 	}
 	r0.SetData(a.Thread, &r0.ContentData{
+		Type: r0.ThreadType,
 		Name: a.Name,
 		Body: a.Body,
 	})
@@ -60,7 +61,7 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	return nil
 }
 
-type NewPostIO struct {
+type NewTextPostIO struct {
 	BoardPubKeyStr string        `bbs:"bpkStr"`
 	BoardPubKey    cipher.PubKey `bbs:"bpk"`
 	ThreadRefStr   string        `bbs:"tRefStr"`
@@ -69,10 +70,11 @@ type NewPostIO struct {
 	PostRef        cipher.SHA256 `bbs:"pRef"`
 	Name           string        `bbs:"name"`
 	Body           string        `bbs:"body"`
+	Image          *r0.ContentImageData
 	Post           *r0.Post
 }
 
-func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
+func (a *NewTextPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
@@ -83,9 +85,17 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		Created:  time.Now().UnixNano(),
 		Creator:  upk,
 	}
+	var dataType r0.ContentType
+	if a.Image == nil {
+		dataType = r0.TextPostType
+	} else {
+		dataType = r0.ImagePostType
+	}
 	r0.SetData(a.Post, &r0.ContentData{
-		Name: a.Name,
-		Body: a.Body,
+		Type:  dataType,
+		Name:  a.Name,
+		Body:  a.Body,
+		Image: a.Image,
 	})
 	tag.Sign(a.Post, upk, usk)
 	return nil

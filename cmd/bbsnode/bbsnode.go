@@ -258,7 +258,7 @@ func main() {
 			Destination: &config.HTTPGUIDir,
 		},
 		cli.BoolTFlag{
-			Name: "defaults",
+			Name:        "defaults",
 			Destination: &config.Defaults,
 		},
 	}

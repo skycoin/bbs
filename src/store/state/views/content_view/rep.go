@@ -4,7 +4,6 @@ import (
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
-	"sync"
 )
 
 /*
@@ -75,7 +74,7 @@ type ThreadRep struct {
 	Posts   []IndexHash
 }
 
-func (r *ThreadRep) FillThread(thread *r0.Thread, mux *sync.Mutex) *ThreadRep {
+func (r *ThreadRep) FillThread(thread *r0.Thread) *ThreadRep {
 	data := r0.GetData(thread)
 	r.Ref = thread.R
 	r.Name = data.Name
@@ -85,8 +84,8 @@ func (r *ThreadRep) FillThread(thread *r0.Thread, mux *sync.Mutex) *ThreadRep {
 	return r
 }
 
-func (r *ThreadRep) FillThreadPage(tPage *r0.ThreadPage, mux *sync.Mutex) *ThreadRep {
-	t, e := tPage.GetThread(mux)
+func (r *ThreadRep) FillThreadPage(tPage *r0.ThreadPage) *ThreadRep {
+	t, e := tPage.GetThread()
 	if e != nil {
 		log.Println("ThreadRep.FillThreadPage() Error:", e)
 		return nil
@@ -133,30 +132,36 @@ func (r *ThreadRep) View(i int, votes *VoteRepView) *ThreadRepView {
 
 type PostRep struct {
 	Ref     cipher.SHA256
+	Type    r0.ContentType
 	Name    string
 	Body    string
+	Image   *r0.ContentImageData
 	Created int64
 	Creator cipher.PubKey
 }
 
-func (r *PostRep) Fill(post *r0.Post, mux *sync.Mutex) *PostRep {
+func (r *PostRep) Fill(post *r0.Post) *PostRep {
 	data := r0.GetData(post)
 	r.Ref = post.R
+	r.Type = data.Type
 	r.Name = data.Name
 	r.Body = data.Body
+	r.Image = data.Image
 	r.Created = post.Created
 	r.Creator = post.Creator
 	return r
 }
 
 type PostRepView struct {
-	Seq     int          `json:"seq"`
-	Ref     string       `json:"ref"`
-	Name    string       `json:"name"`
-	Body    string       `json:"body"`
-	Created int64        `json:"created"`
-	Creator string       `json:"creator"`
-	Votes   *VoteRepView `json:"votes,omitempty"`
+	Seq     int                  `json:"seq"`
+	Ref     string               `json:"ref"`
+	Type    string               `json:"type"`
+	Name    string               `json:"name"`
+	Body    string               `json:"body"`
+	Image   *r0.ContentImageData `json:"image,omitempty"`
+	Created int64                `json:"created"`
+	Creator string               `json:"creator"`
+	Votes   *VoteRepView         `json:"votes,omitempty"`
 }
 
 func (r *PostRep) View(i int, votes *VoteRepView) *PostRepView {
@@ -166,8 +171,10 @@ func (r *PostRep) View(i int, votes *VoteRepView) *PostRepView {
 	return &PostRepView{
 		Seq:     i,
 		Ref:     r.Ref.Hex(),
+		Type:    string(r.Type),
 		Name:    r.Name,
 		Body:    r.Body,
+		Image:   r.Image,
 		Created: r.Created,
 		Creator: r.Creator.Hex(),
 		Votes:   votes,

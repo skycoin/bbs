@@ -28,13 +28,13 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 		}
 
 		// Get root children pages.
-		pages, e := r0.GetPages(p, nil, false, true, true, false)
+		pages, e := r0.GetPages(p, false, true, true, false)
 		if e != nil {
 			return e
 		}
 
 		// Add thread to board page.
-		if e := pages.BoardPage.AddThread(tRef, nil); e != nil {
+		if e := pages.BoardPage.AddThread(tRef); e != nil {
 			return e
 		}
 
@@ -44,7 +44,7 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 		}
 
 		// Save changes.
-		return pages.Save(p, nil)
+		return pages.Save(p)
 	})
 
 	return goalSeq, e
@@ -72,17 +72,17 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		}
 
 		// Get root pages.
-		pages, e := r0.GetPages(p, nil, false, true, true, false)
+		pages, e := r0.GetPages(p, false, true, true, false)
 		if e != nil {
 			return e
 		}
 
 		// Add post to board page.
-		tpRef, tPage, e := pages.BoardPage.GetThreadPage(tpHash, nil)
+		tpRef, tPage, e := pages.BoardPage.GetThreadPage(tpHash)
 		if e != nil {
 			return e
 		}
-		if e := tPage.AddPost(pRef.Hash, post, nil); e != nil {
+		if e := tPage.AddPost(pRef.Hash, post); e != nil {
 			return e
 		}
 		if e := tPage.Save(tpRef); e != nil {
@@ -98,7 +98,7 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		}
 
 		// Save changes.
-		return pages.Save(p, nil)
+		return pages.Save(p)
 	})
 
 	return goalSeq, e
@@ -121,7 +121,7 @@ func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get root children pages.
-		pages, e := r0.GetPages(p, nil, false, false, true, true)
+		pages, e := r0.GetPages(p, false, false, true, true)
 		if e != nil {
 			return e
 		}
@@ -149,7 +149,7 @@ func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 		}
 
 		// Save changes.
-		return pages.Save(p, nil)
+		return pages.Save(p)
 	})
 
 	return goalSeq, e
@@ -190,13 +190,13 @@ func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get root children.
-		pages, e := r0.GetPages(p, nil, false, true, false, false)
+		pages, e := r0.GetPages(p, false, true, false, false)
 		if e != nil {
 			return e
 		}
 
 		// Get board.
-		board, e := pages.BoardPage.GetBoard(nil)
+		board, e := pages.BoardPage.GetBoard()
 		if e != nil {
 			return e
 		}
@@ -213,7 +213,7 @@ func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
 			return e
 		}
 
-		return pages.Save(p, nil)
+		return pages.Save(p)
 	})
 	return goalSeq, e
 }

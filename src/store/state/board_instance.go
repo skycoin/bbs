@@ -99,7 +99,7 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 		if firstRun {
 			i := 1
 			for name, view := range bi.v {
-				if e := view.Init(bi.p, bi.h, nil); e != nil {
+				if e := view.Init(bi.p, bi.h); e != nil {
 					return boo.WrapType(e, boo.Internal, "failed to generate view")
 				}
 				bi.l.Printf("(%d/%d) Loaded '%s' view.", i, len(bi.v), name)
@@ -108,7 +108,7 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 		} else {
 			i := 1
 			for name, view := range bi.v {
-				if e := view.Update(bi.p, bi.h, nil); e != nil {
+				if e := view.Update(bi.p, bi.h); e != nil {
 					return boo.WrapType(e, boo.Internal, "failed to update view")
 				}
 				bi.l.Printf("(%d/%d) Updated '%s' view.", i, len(bi.v), name)
@@ -144,9 +144,15 @@ func (bi *BoardInstance) PublishChanges() error {
 	}
 	bi.n.Publish(bi.p.Root())
 
+	// Update headers.
+	var e error
+	if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
+		return e
+	}
+
 	// Update views.
 	for _, view := range bi.v {
-		if e := view.Update(bi.p, bi.h, nil); e != nil {
+		if e := view.Update(bi.p, bi.h); e != nil {
 			return boo.WrapType(e, boo.Internal, "failed to update view")
 		}
 	}

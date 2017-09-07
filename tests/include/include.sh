@@ -58,6 +58,7 @@ RunNode() {
         -dev=true \
         -master=true \
         -memory=true \
+        -defaults=false \
         -cxo-port=${PORT_CXO} \
         -cxo-rpc=false \
         -sub-port=${PORT_SUB} \

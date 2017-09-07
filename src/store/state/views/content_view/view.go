@@ -17,17 +17,17 @@ type ContentView struct {
 	vMap  map[cipher.SHA256]*VotesRep
 }
 
-func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *sync.Mutex) error {
+func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := r0.GetPages(pack, mux, false, true, false, true)
+	pages, e := r0.GetPages(pack, false, true, false, true)
 	if e != nil {
 		return e
 	}
 
 	// Set board.
-	board, e := pages.BoardPage.GetBoard(mux)
+	board, e := pages.BoardPage.GetBoard()
 	if e != nil {
 		return e
 	}
@@ -42,16 +42,16 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 	e = pages.BoardPage.RangeThreadPages(func(i int, tp *r0.ThreadPage) error {
 		v.board.Threads[i] = IndexHash{h: tp.Thread.Hash, i: i}
 
-		threadRep := new(ThreadRep).FillThreadPage(tp, nil)
+		threadRep := new(ThreadRep).FillThreadPage(tp)
 
 		// Fill posts.
 		threadRep.Posts = make([]IndexHash, tp.GetPostCount())
 
 		e = tp.RangePosts(func(i int, post *r0.Post) error {
 			threadRep.Posts[i] = IndexHash{h: post.R, i: i}
-			v.pMap[post.R] = new(PostRep).Fill(post, nil)
+			v.pMap[post.R] = new(PostRep).Fill(post)
 			return nil
-		}, nil)
+		})
 		if e != nil {
 			return e
 		}
@@ -60,7 +60,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 		v.tMap[tp.Thread.Hash] = threadRep
 
 		return nil
-	}, mux)
+	})
 
 	if e != nil {
 		return e
@@ -69,19 +69,19 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *syn
 	return pages.UsersPage.RangeUserActivityPages(func(_ int, uap *r0.UserActivityPage) error {
 		return uap.RangeVoteActions(func(_ int, vote *r0.Vote) error {
 			return v.processVote(vote)
-		}, nil)
-	}, nil)
+		})
+	})
 }
 
-func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *sync.Mutex) error {
+func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := r0.GetPages(pack, mux, false, true)
+	pages, e := r0.GetPages(pack, false, true)
 	if e != nil {
 		return e
 	}
-	bRaw, e := pages.BoardPage.GetBoard(mux)
+	bRaw, e := pages.BoardPage.GetBoard()
 	if e != nil {
 		return e
 	}
@@ -91,7 +91,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 
 	for _, thread := range changes.NewThreads {
 		v.board.Threads = append(v.board.Threads, IndexHash{h: thread.R, i: len(v.board.Threads)})
-		v.tMap[thread.R] = new(ThreadRep).FillThread(thread, mux)
+		v.tMap[thread.R] = new(ThreadRep).FillThread(thread)
 	}
 
 	for _, post := range changes.NewPosts {
@@ -101,7 +101,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *s
 		} else {
 			ofThread.Posts = append(ofThread.Posts, IndexHash{h: post.R, i: len(ofThread.Posts)})
 		}
-		v.pMap[post.R] = new(PostRep).Fill(post, mux)
+		v.pMap[post.R] = new(PostRep).Fill(post)
 	}
 
 	for _, vote := range changes.NewVotes {
