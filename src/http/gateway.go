@@ -193,23 +193,23 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 			}))
 		})
 
-	// Exports an entire board root to file.
-	mux.HandleFunc("/api/admin/board/export",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.ExportBoard(r.Context(), &object.ExportBoardIO{
-				PubKeyStr: r.FormValue("board_public_key"),
-				Name:      r.FormValue("file_name"),
-			}))
-		})
+	//// Exports an entire board root to file.
+	//mux.HandleFunc("/api/admin/board/export",
+	//	func(w http.ResponseWriter, r *http.Request) {
+	//		send(w)(g.Access.ExportBoard(r.Context(), &object.ExportBoardIO{
+	//			PubKeyStr: r.FormValue("board_public_key"),
+	//			Name:      r.FormValue("file_name"),
+	//		}))
+	//	})
 
-	// Imports an entire board root from file to CXO.
-	mux.HandleFunc("/api/admin/board/import",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.ImportBoard(r.Context(), &object.ExportBoardIO{
-				PubKeyStr: r.FormValue("board_public_key"),
-				Name:      r.FormValue("file_name"),
-			}))
-		})
+	//// Imports an entire board root from file to CXO.
+	//mux.HandleFunc("/api/admin/board/import",
+	//	func(w http.ResponseWriter, r *http.Request) {
+	//		send(w)(g.Access.ImportBoard(r.Context(), &object.ExportBoardIO{
+	//			PubKeyStr: r.FormValue("board_public_key"),
+	//			Name:      r.FormValue("file_name"),
+	//		}))
+	//	})
 
 	/*
 		<<< CONTENT >>>
@@ -275,7 +275,7 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 			}))
 		})
 
-	// Adds a new post on specified thread.
+	// Adds a new text post on specified thread.
 	mux.HandleFunc("/api/content/new_post",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewPost(r.Context(), &object.NewPostIO{
@@ -284,6 +284,7 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 				PostRefStr:     r.FormValue("post_ref"), // Optional.
 				Name:           r.FormValue("name"),
 				Body:           r.FormValue("body"),
+				ImagesStr:      r.FormValue("images"), // Optional.
 			}))
 		})
 

@@ -34,14 +34,14 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 	}
 
 	// Get required root children.
-	pages, e := r0.GetPages(p, nil, false, true, true, true)
+	pages, e := r0.GetPages(p, false, true, true, true)
 	if e != nil {
 		return nil, e
 	}
 
 	// Fill threads header data.
 	e = pages.BoardPage.Threads.Ascend(func(i int, tpElem *skyobject.RefsElem) error {
-		tp, e := r0.GetThreadPage(tpElem, nil)
+		tp, e := r0.GetThreadPage(tpElem)
 		if e != nil {
 			return e
 		}
@@ -54,7 +54,7 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 
 	// Fill users header data.
 	e = pages.UsersPage.Users.Ascend(func(i int, uapElem *skyobject.RefsElem) error {
-		uap, e := r0.GetUserActivityPage(uapElem, nil)
+		uap, e := r0.GetUserActivityPage(uapElem)
 		if e != nil {
 			return e
 		}
@@ -70,7 +70,7 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 	if oldHeaders != nil {
 		oldChanges = oldHeaders.GetChanges()
 	}
-	headers.changes, e = pages.DiffPage.GetChanges(oldChanges, nil)
+	headers.changes, e = pages.DiffPage.GetChanges(oldChanges)
 	if e != nil {
 		return nil, e
 	}

@@ -1,10 +1,12 @@
 package object
 
 import (
+	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"time"
+	"github.com/skycoin/bbs/src/misc/boo"
 )
 
 // NewBoard represents io required to create a new board.
@@ -69,6 +71,8 @@ type NewPostIO struct {
 	PostRef        cipher.SHA256 `bbs:"pRef"`
 	Name           string        `bbs:"name"`
 	Body           string        `bbs:"body"`
+	ImagesStr      string
+	Images         []*r0.ContentImageData
 	Post           *r0.Post
 }
 
@@ -83,9 +87,15 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		Created:  time.Now().UnixNano(),
 		Creator:  upk,
 	}
+	if a.ImagesStr != "" {
+		if e := json.Unmarshal([]byte(a.ImagesStr), &a.Images); e != nil {
+			return boo.WrapType(e, boo.InvalidInput, "failed to read 'images' form value")
+		}
+	}
 	r0.SetData(a.Post, &r0.ContentData{
-		Name: a.Name,
-		Body: a.Body,
+		Name:   a.Name,
+		Body:   a.Body,
+		Images: a.Images,
 	})
 	tag.Sign(a.Post, upk, usk)
 	return nil

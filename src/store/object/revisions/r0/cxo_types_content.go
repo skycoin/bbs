@@ -6,7 +6,6 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
-	"sync"
 )
 
 type Content interface {
@@ -29,12 +28,6 @@ func GetData(c Content) *ContentData {
 func SetData(c Content, v *ContentData) {
 	data, _ := json.Marshal(v)
 	c.SetRaw(data)
-}
-
-type ContentData struct {
-	Name         string   `json:"heading"`
-	Body         string   `json:"body"`
-	SubAddresses []string `json:"submission_addresses,omitempty"`
 }
 
 type Board struct {
@@ -70,8 +63,7 @@ type Post struct {
 	Sig      cipher.Sig    `verify:"sig"`
 }
 
-func GetPost(pElem *skyobject.RefsElem, mux *sync.Mutex) (*Post, error) {
-	defer dynamicLock(mux)()
+func GetPost(pElem *skyobject.RefsElem) (*Post, error) {
 	pVal, e := pElem.Value()
 	if e != nil {
 		return nil, elemValueErr(e, pElem)
@@ -116,8 +108,7 @@ type Vote struct {
 	Sig     cipher.Sig    `verify:"sig"`
 }
 
-func GetVote(vElem *skyobject.RefsElem, mux *sync.Mutex) (*Vote, error) {
-	defer dynamicLock(mux)()
+func GetVote(vElem *skyobject.RefsElem) (*Vote, error) {
 	vVal, e := vElem.Value()
 	if e != nil {
 		return nil, elemValueErr(e, vElem)

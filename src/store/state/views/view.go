@@ -5,16 +5,15 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"github.com/skycoin/cxo/skyobject"
-	"sync"
 )
 
 type View interface {
 
 	// Init initiates the view.
-	Init(pack *skyobject.Pack, headers *pack.Headers, mux *sync.Mutex) error
+	Init(pack *skyobject.Pack, headers *pack.Headers) error
 
 	// Update updates the view.
-	Update(pack *skyobject.Pack, headers *pack.Headers, mux *sync.Mutex) error
+	Update(pack *skyobject.Pack, headers *pack.Headers) error
 
 	// Get obtains information from the view.
 	Get(id string, a ...interface{}) (interface{}, error)

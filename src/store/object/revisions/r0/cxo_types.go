@@ -50,47 +50,45 @@ type Pages struct {
 	UsersPage *UsersPage
 }
 
-func GetPages(p *skyobject.Pack, mux *sync.Mutex, get ...bool) (out *Pages, e error) {
-	defer dynamicLock(mux)()
+func GetPages(p *skyobject.Pack, get ...bool) (out *Pages, e error) {
 	out = &Pages{PK: p.Root().Pub}
 
 	if len(get) > IndexRootPage && get[IndexRootPage] {
-		if out.RootPage, e = GetRootPage(p, nil); e != nil {
+		if out.RootPage, e = GetRootPage(p); e != nil {
 			return
 		}
 	}
 	if len(get) > IndexBoardPage && get[IndexBoardPage] {
-		if out.BoardPage, e = GetBoardPage(p, nil); e != nil {
+		if out.BoardPage, e = GetBoardPage(p); e != nil {
 			return
 		}
 	}
 	if len(get) > IndexDiffPage && get[IndexDiffPage] {
-		if out.DiffPage, e = GetDiffPage(p, nil); e != nil {
+		if out.DiffPage, e = GetDiffPage(p); e != nil {
 			return
 		}
 	}
 	if len(get) > IndexUsersPage && get[IndexUsersPage] {
-		if out.UsersPage, e = GetUsersPage(p, nil); e != nil {
+		if out.UsersPage, e = GetUsersPage(p); e != nil {
 			return
 		}
 	}
 	return
 }
 
-func (p *Pages) Save(pack *skyobject.Pack, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (p *Pages) Save(pack *skyobject.Pack) error {
 	if p.BoardPage != nil {
-		if e := p.BoardPage.Save(pack, nil); e != nil {
+		if e := p.BoardPage.Save(pack); e != nil {
 			return e
 		}
 	}
 	if p.DiffPage != nil {
-		if e := p.DiffPage.Save(pack, nil); e != nil {
+		if e := p.DiffPage.Save(pack); e != nil {
 			return e
 		}
 	}
 	if p.UsersPage != nil {
-		if e := p.UsersPage.Save(pack, nil); e != nil {
+		if e := p.UsersPage.Save(pack); e != nil {
 			return e
 		}
 	}
@@ -112,8 +110,7 @@ type RootPage struct {
 	Del bool   // Whether root is deleted.
 }
 
-func GetRootPage(p *skyobject.Pack, mux *sync.Mutex) (*RootPage, error) {
-	defer dynamicLock(mux)()
+func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
 	rpVal, e := p.RefByIndex(IndexRootPage)
 	if e != nil {
 		return nil, getRootChildErr(e, IndexRootPage)
@@ -134,8 +131,7 @@ type BoardPage struct {
 	Threads skyobject.Refs `skyobject:"schema=bbs.r0.ThreadPage"`
 }
 
-func GetBoardPage(p *skyobject.Pack, mux *sync.Mutex) (*BoardPage, error) {
-	defer dynamicLock(mux)()
+func GetBoardPage(p *skyobject.Pack) (*BoardPage, error) {
 	bpVal, e := p.RefByIndex(IndexBoardPage)
 	if e != nil {
 		return nil, getRootChildErr(e, IndexBoardPage)
@@ -147,15 +143,14 @@ func GetBoardPage(p *skyobject.Pack, mux *sync.Mutex) (*BoardPage, error) {
 	return bp, nil
 }
 
-func (bp *BoardPage) Save(p *skyobject.Pack, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (bp *BoardPage) Save(p *skyobject.Pack) error {
 	if e := p.SetRefByIndex(IndexBoardPage, bp); e != nil {
 		return saveRootChildErr(e, IndexBoardPage)
 	}
 	return nil
 }
 
-func (bp *BoardPage) GetBoard(mux *sync.Mutex) (*Board, error) {
+func (bp *BoardPage) GetBoard() (*Board, error) {
 	bVal, e := bp.Board.Value()
 	if e != nil {
 		return nil, valueErr(e, &bp.Board)
@@ -172,10 +167,9 @@ func (bp *BoardPage) GetThreadCount() int {
 	return l
 }
 
-func (bp *BoardPage) RangeThreadPages(action func(i int, tp *ThreadPage) error, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (bp *BoardPage) RangeThreadPages(action func(i int, tp *ThreadPage) error) error {
 	return bp.Threads.Ascend(func(i int, tpElem *skyobject.RefsElem) error {
-		tp, e := GetThreadPage(tpElem, nil)
+		tp, e := GetThreadPage(tpElem)
 		if e != nil {
 			return e
 		}
@@ -183,8 +177,7 @@ func (bp *BoardPage) RangeThreadPages(action func(i int, tp *ThreadPage) error, 
 	})
 }
 
-func (bp *BoardPage) GetThreadPage(tpHash cipher.SHA256, mux *sync.Mutex) (*skyobject.RefsElem, *ThreadPage, error) {
-	defer dynamicLock(mux)()
+func (bp *BoardPage) GetThreadPage(tpHash cipher.SHA256) (*skyobject.RefsElem, *ThreadPage, error) {
 	tpElem, e := bp.Threads.RefByHash(tpHash)
 	if e != nil {
 		return nil, nil, refByHashErr(e, tpHash, "BoardPage.Threads")
@@ -200,8 +193,7 @@ func (bp *BoardPage) GetThreadPage(tpHash cipher.SHA256, mux *sync.Mutex) (*skyo
 	return tpElem, tp, nil
 }
 
-func (bp *BoardPage) AddThread(tRef skyobject.Ref, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (bp *BoardPage) AddThread(tRef skyobject.Ref) error {
 	e := bp.Threads.Append(ThreadPage{Thread: tRef})
 	if e != nil {
 		return boo.Wrap(e, "failed to append thread to 'BoardPage.Threads'")
@@ -218,8 +210,7 @@ type ThreadPage struct {
 	Posts  skyobject.Refs `skyobject:"schema=bbs.r0.Post"`
 }
 
-func GetThreadPage(tpElem *skyobject.RefsElem, mux *sync.Mutex) (*ThreadPage, error) {
-	defer dynamicLock(mux)()
+func GetThreadPage(tpElem *skyobject.RefsElem) (*ThreadPage, error) {
 	tpVal, e := tpElem.Value()
 	if e != nil {
 		return nil, elemValueErr(e, tpElem)
@@ -231,8 +222,7 @@ func GetThreadPage(tpElem *skyobject.RefsElem, mux *sync.Mutex) (*ThreadPage, er
 	return tp, nil
 }
 
-func (tp *ThreadPage) GetThread(mux *sync.Mutex) (*Thread, error) {
-	defer dynamicLock(mux)()
+func (tp *ThreadPage) GetThread() (*Thread, error) {
 	tVal, e := tp.Thread.Value()
 	if e != nil {
 		return nil, valueErr(e, &tp.Thread)
@@ -250,10 +240,9 @@ func (tp *ThreadPage) GetPostCount() int {
 	return l
 }
 
-func (tp *ThreadPage) RangePosts(action func(i int, post *Post) error, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (tp *ThreadPage) RangePosts(action func(i int, post *Post) error) error {
 	return tp.Posts.Ascend(func(i int, pElem *skyobject.RefsElem) error {
-		post, e := GetPost(pElem, nil)
+		post, e := GetPost(pElem)
 		if e != nil {
 			return e
 		}
@@ -261,14 +250,11 @@ func (tp *ThreadPage) RangePosts(action func(i int, post *Post) error, mux *sync
 	})
 }
 
-func (tp *ThreadPage) AddPost(postHash cipher.SHA256, post *Post, mux *sync.Mutex) error {
-	//if elem, e := tp.Posts.RefByHash(postHash); e == nil {
-	//	return boo.Newf(boo.AlreadyExists,
-	//		"post of hash '%s' already exists in 'ThreadPage.Posts'", postHash.Hex())
-	//
-	//	fmt.Println(elem.String())
-	//}
-	// TODO: Redo
+func (tp *ThreadPage) AddPost(postHash cipher.SHA256, post *Post) error {
+	if elem, _ := tp.Posts.RefByHash(postHash); elem != nil {
+		return boo.Newf(boo.AlreadyExists,
+			"post of hash '%s' already exists in 'ThreadPage.Posts'", postHash.Hex())
+	}
 	if e := tp.Posts.Append(post); e != nil {
 		return boo.WrapTypef(e, boo.Internal,
 			"failed to append %v to 'ThreadPage.Posts'", post)
@@ -293,8 +279,7 @@ type DiffPage struct {
 	Votes   skyobject.Refs `skyobject:"schema=bbs.r0.Vote"`
 }
 
-func GetDiffPage(p *skyobject.Pack, mux *sync.Mutex) (*DiffPage, error) {
-	defer dynamicLock(mux)()
+func GetDiffPage(p *skyobject.Pack) (*DiffPage, error) {
 	dpVal, e := p.RefByIndex(IndexDiffPage)
 	if e != nil {
 		return nil, getRootChildErr(e, IndexDiffPage)
@@ -306,8 +291,7 @@ func GetDiffPage(p *skyobject.Pack, mux *sync.Mutex) (*DiffPage, error) {
 	return dp, nil
 }
 
-func (dp *DiffPage) Save(p *skyobject.Pack, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (dp *DiffPage) Save(p *skyobject.Pack) error {
 	if e := p.SetRefByIndex(IndexDiffPage, dp); e != nil {
 		return saveRootChildErr(e, IndexDiffPage)
 	}
@@ -338,8 +322,7 @@ func (dp *DiffPage) Add(v interface{}) error {
 	return nil
 }
 
-func (dp *DiffPage) GetThreadOfIndex(i int, mux *sync.Mutex) (*Thread, error) {
-	defer dynamicLock(mux)()
+func (dp *DiffPage) GetThreadOfIndex(i int) (*Thread, error) {
 	tElem, e := dp.Threads.RefByIndex(i)
 	if e != nil {
 		return nil, refByIndexErr(e, i, "DiffPage.Threads")
@@ -356,8 +339,7 @@ func (dp *DiffPage) GetThreadOfIndex(i int, mux *sync.Mutex) (*Thread, error) {
 	return t, nil
 }
 
-func (dp *DiffPage) GetPostOfIndex(i int, mux *sync.Mutex) (*Post, error) {
-	defer dynamicLock(mux)()
+func (dp *DiffPage) GetPostOfIndex(i int) (*Post, error) {
 	pElem, e := dp.Posts.RefByIndex(i)
 	if e != nil {
 		return nil, refByIndexErr(e, i, "DiffPage.Posts")
@@ -374,8 +356,7 @@ func (dp *DiffPage) GetPostOfIndex(i int, mux *sync.Mutex) (*Post, error) {
 	return p, nil
 }
 
-func (dp *DiffPage) GetVoteOfIndex(i int, mux *sync.Mutex) (*Vote, error) {
-	defer dynamicLock(mux)()
+func (dp *DiffPage) GetVoteOfIndex(i int) (*Vote, error) {
 	vElem, e := dp.Votes.RefByIndex(i)
 	if e != nil {
 		return nil, refByIndexErr(e, i, "DiffPage.Votes")
@@ -403,8 +384,7 @@ type Changes struct {
 	NewVotes   []*Vote
 }
 
-func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error) {
-	defer dynamicLock(mux)()
+func (dp *DiffPage) GetChanges(oldC *Changes) (*Changes, error) {
 	newC := new(Changes)
 
 	// Get counts.
@@ -435,7 +415,7 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 		newC.NewThreads = make([]*Thread, newC.ThreadCount-oldC.ThreadCount)
 		for i := oldC.ThreadCount; i < newC.ThreadCount; i++ {
 			var e error
-			newC.NewThreads[i-oldC.ThreadCount], e = dp.GetThreadOfIndex(i, nil)
+			newC.NewThreads[i-oldC.ThreadCount], e = dp.GetThreadOfIndex(i)
 			if e != nil {
 				return nil, e
 			}
@@ -445,7 +425,7 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 		newC.NewPosts = make([]*Post, newC.PostCount-oldC.PostCount)
 		for i := oldC.PostCount; i < newC.PostCount; i++ {
 			var e error
-			newC.NewPosts[i-oldC.PostCount], e = dp.GetPostOfIndex(i, nil)
+			newC.NewPosts[i-oldC.PostCount], e = dp.GetPostOfIndex(i)
 			if e != nil {
 				return nil, e
 			}
@@ -455,7 +435,7 @@ func (dp *DiffPage) GetChanges(oldC *Changes, mux *sync.Mutex) (*Changes, error)
 		newC.NewVotes = make([]*Vote, newC.VoteCount-oldC.VoteCount)
 		for i := oldC.VoteCount; i < newC.VoteCount; i++ {
 			var e error
-			newC.NewVotes[i-oldC.VoteCount], e = dp.GetVoteOfIndex(i, nil)
+			newC.NewVotes[i-oldC.VoteCount], e = dp.GetVoteOfIndex(i)
 			if e != nil {
 				return nil, e
 			}
@@ -476,8 +456,7 @@ type UsersPage struct {
 	Users skyobject.Refs `skyobject:"schema=bbs.r0.UserActivityPage"`
 }
 
-func GetUsersPage(p *skyobject.Pack, mux *sync.Mutex) (*UsersPage, error) {
-	defer dynamicLock(mux)()
+func GetUsersPage(p *skyobject.Pack) (*UsersPage, error) {
 	upVal, e := p.RefByIndex(IndexUsersPage)
 	if e != nil {
 		return nil, getRootChildErr(e, IndexUsersPage)
@@ -489,8 +468,7 @@ func GetUsersPage(p *skyobject.Pack, mux *sync.Mutex) (*UsersPage, error) {
 	return up, nil
 }
 
-func (up *UsersPage) Save(p *skyobject.Pack, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (up *UsersPage) Save(p *skyobject.Pack) error {
 	if e := p.SetRefByIndex(IndexUsersPage, up); e != nil {
 		return saveRootChildErr(e, IndexUsersPage)
 	}
@@ -510,7 +488,7 @@ func (up *UsersPage) AddUserActivity(uapHash cipher.SHA256, v interface{}) (ciph
 	if e != nil {
 		return cipher.SHA256{}, refByHashErr(e, uapHash, "Users")
 	}
-	uap, e := GetUserActivityPage(uapElem, nil)
+	uap, e := GetUserActivityPage(uapElem)
 	if e != nil {
 		return cipher.SHA256{}, e
 	}
@@ -532,10 +510,9 @@ func (up *UsersPage) AddUserActivity(uapHash cipher.SHA256, v interface{}) (ciph
 	return uapElem.Hash, nil
 }
 
-func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivityPage) error, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivityPage) error) error {
 	return up.Users.Ascend(func(i int, uapElem *skyobject.RefsElem) error {
-		uap, e := GetUserActivityPage(uapElem, nil)
+		uap, e := GetUserActivityPage(uapElem)
 		if e != nil {
 			return e
 		}
@@ -553,8 +530,7 @@ type UserActivityPage struct {
 	VoteActions skyobject.Refs `skyobject:"schema=bbs.r0.Vote"`
 }
 
-func GetUserActivityPage(uapElem *skyobject.RefsElem, mux *sync.Mutex) (*UserActivityPage, error) {
-	defer dynamicLock(mux)()
+func GetUserActivityPage(uapElem *skyobject.RefsElem) (*UserActivityPage, error) {
 	uapVal, e := uapElem.Value()
 	if e != nil {
 		return nil, elemValueErr(e, uapElem)
@@ -567,10 +543,9 @@ func GetUserActivityPage(uapElem *skyobject.RefsElem, mux *sync.Mutex) (*UserAct
 	return uap, nil
 }
 
-func (uap *UserActivityPage) RangeVoteActions(action func(i int, vote *Vote) error, mux *sync.Mutex) error {
-	defer dynamicLock(mux)()
+func (uap *UserActivityPage) RangeVoteActions(action func(i int, vote *Vote) error) error {
 	return uap.VoteActions.Ascend(func(i int, vElem *skyobject.RefsElem) error {
-		vote, e := GetVote(vElem, nil)
+		vote, e := GetVote(vElem)
 		if e != nil {
 			return e
 		}

@@ -27,7 +27,8 @@ var (
 
 // CXOFileManagerConfig configures the CXOFileManager.
 type CXOFileManagerConfig struct {
-	Memory *bool // Whether to run in memory mode.
+	Memory   *bool // Whether to run in memory mode.
+	Defaults *bool
 }
 
 // CXOFileManager manages the CXOFile.
@@ -42,8 +43,8 @@ type CXOFileManager struct {
 	connections *typ.List
 }
 
-// NewCXOManager creates a new file manager with provided configuration.
-func NewCXOManager(config *CXOFileManagerConfig) *CXOFileManager {
+// NewCXOFileManager creates a new file manager with provided configuration.
+func NewCXOFileManager(config *CXOFileManagerConfig) *CXOFileManager {
 	return &CXOFileManager{
 		c:           config,
 		l:           inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
@@ -313,7 +314,7 @@ func (m *CXOFileManager) load(path string) error {
 		if !os.IsNotExist(e) {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"failed to read CXO file from '%s'", path)
-		} else {
+		} else if *m.c.Defaults {
 			// Load default.
 			m.l.Println("First Run - Loading defaults:")
 			for i, address := range defaultConnections {

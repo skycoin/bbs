@@ -6,20 +6,19 @@ import (
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"sync"
 )
 
 type FollowView struct {
 	uMap map[cipher.PubKey]*FollowRep
 }
 
-func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *sync.Mutex) error {
+func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 
 	// Init map.
 	v.uMap = make(map[cipher.PubKey]*FollowRep)
 
 	// Get pages.
-	pages, e := r0.GetPages(pack, mux, false, false, false, true)
+	pages, e := r0.GetPages(pack, false, false, false, true)
 	if e != nil {
 		return e
 	}
@@ -42,11 +41,11 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers, mux *sync
 			}
 
 			return nil
-		}, nil)
-	}, mux)
+		})
+	})
 }
 
-func (v *FollowView) Update(pack *skyobject.Pack, headers *pack.Headers, mux *sync.Mutex) error {
+func (v *FollowView) Update(pack *skyobject.Pack, headers *pack.Headers) error {
 
 	for _, vote := range headers.GetChanges().NewVotes {
 
