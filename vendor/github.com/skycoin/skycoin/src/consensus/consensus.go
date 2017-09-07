@@ -49,7 +49,6 @@ type BlockBase struct {
 	Hash  cipher.SHA256
 	Seqno uint64
 }
-
 //func (self *BlockBase) GetSig() cipher.Sig { return self.Sig }
 //func (self *BlockBase) GetHash() cipher.SHA256 { return self.Hash }
 //func (self *BlockBase) GetSeqno() uint64 { return self.Seqno }
@@ -64,19 +63,16 @@ func (self *BlockBase) Init(
 	self.Hash = hash
 	self.Seqno = seqno
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 func (self *BlockBase) Print() {
 	fmt.Printf("BlockBase={Sig=%s,Hash=%s,Seqno=%d}",
 		self.Sig.Hex()[:8], self.Hash.Hex()[:8], self.Seqno)
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 func (self *BlockBase) String() string {
 	return fmt.Sprintf("BlockBase={Sig=%s,Hash=%s,Seqno=%d}",
 		self.Sig.Hex()[:8], self.Hash.Hex()[:8], self.Seqno)
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // BlockchainTail is the most recent part of blockchain that is held in memory
@@ -182,7 +178,6 @@ func (self *BlockchainTail) Print() {
 	}
 	fmt.Printf("}")
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // HashCandidate
@@ -251,5 +246,4 @@ func (self *HashCandidate) is_consistent() bool {
 
 	return true
 }
-
 ////////////////////////////////////////////////////////////////////////////////
