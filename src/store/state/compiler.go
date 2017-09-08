@@ -114,9 +114,17 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 		return
 	}
 
+	c.l.Println("Compiling '%s'", root.Pub.Hex()[:5]+"...")
+	c.l.Printf("remote(%v) master(%v)", isRemote, isMaster)
+
 	bi := c.ensureBoard(root.Pub)
 
-	if isMaster && bi.needUpdate.Value() == true {
+	if root.IsFull == false {
+		c.l.Println("NOT FULL!")
+		return
+	}
+
+	if isMaster && bi.needPublish.Value() == true {
 		return
 	}
 
@@ -138,11 +146,19 @@ func (c *Compiler) DeleteBoard(bpk cipher.PubKey) {
 
 func (c *Compiler) GetBoard(pk cipher.PubKey) (*BoardInstance, error) {
 	c.mux.Lock()
-	defer c.mux.Unlock()
 	bi, ok := c.boards[pk]
-	if !ok {
-		return nil, boo.Newf(boo.NotFound, "board '%s' not found", pk.Hex()[:5]+"...")
+	c.mux.Unlock()
+
+	switch {
+	case ok == false:
+		return nil, boo.Newf(boo.NotFound,
+			"board '%s' not found", pk.Hex()[:5]+"...")
+
+	case bi.IsReceived() == false:
+		return nil, boo.Newf(boo.NotFound,
+			"board '%s' has not been received", pk.Hex()[:5]+"...")
 	}
+
 	return bi, nil
 }
 
@@ -163,5 +179,6 @@ func (c *Compiler) ensureBoard(pk cipher.PubKey) *BoardInstance {
 		bi = new(BoardInstance).Init(c.node, pk, c.adders...)
 		c.boards[pk] = bi
 	}
+	bi.SetReceived()
 	return bi
 }

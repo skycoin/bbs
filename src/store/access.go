@@ -137,7 +137,7 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *object.BoardIO) (*S
 */
 
 func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
-	m, r, e := a.CXO.GetBoards()
+	m, r, e := a.CXO.GetBoards(ctx)
 	if e != nil {
 		return nil, e
 	}

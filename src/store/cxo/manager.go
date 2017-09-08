@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"context"
 )
 
 const (
@@ -157,12 +158,15 @@ func (m *Manager) prepareNode() error {
 	c.RemoteClose = false
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
 
+	c.OnRootReceived = func(c *node.Conn, root *skyobject.Root) {
+		m.l.Printf("Receiving board '%s'", root.Pub.Hex()[:5]+"...")
+		m.newRoots <- root
+	}
+
 	c.OnRootFilled = func(c *node.Conn, root *skyobject.Root) {
-		m.l.Printf("Received board '%s'", root.Hash.Hex()[:5]+"...")
-		select {
-		case m.newRoots <- root:
-		default:
-		}
+		m.l.Printf("Received filled board '%s'", root.Pub.Hex()[:5]+"...")
+		root.IsFull = true
+		m.newRoots <- root
 	}
 
 	// Service discovery / auto root sync.
@@ -427,7 +431,7 @@ func (m *Manager) GetBoardInstance(bpk cipher.PubKey) (*state.BoardInstance, err
 	return m.compiler.GetBoard(bpk)
 }
 
-func (m *Manager) GetBoards() ([]interface{}, []interface{}, error) {
+func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, error) {
 
 	var masterOut []interface{}
 	m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
