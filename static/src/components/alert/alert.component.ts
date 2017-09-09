@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewEncapsulation, HostBinding } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { ActivePop } from '../../providers/popup/popup-stack';
 import { bounceInAnimation } from '../../animations/common.animations';
 
 @Component({
@@ -16,7 +16,7 @@ export class AlertComponent implements OnInit {
   title = '';
   body = '';
 
-  constructor(public activeModal: NgbActiveModal) {
+  constructor(public activeModal: ActivePop) {
   }
 
   ngOnInit() {

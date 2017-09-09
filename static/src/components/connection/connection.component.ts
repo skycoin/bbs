@@ -1,6 +1,5 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation } from '@angular/core';
-import { CommonService, ApiService, Connnections, Connnection } from '../../providers';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { CommonService, ApiService, Connnections, Connnection, Popup } from '../../providers';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { bounceInAnimation } from '../../animations/common.animations';
 import { AlertComponent } from '../../components/alert/alert.component';
@@ -19,8 +18,8 @@ export class ConnectionComponent implements OnInit {
   addUrl = '';
 
   constructor(
-    private modal: NgbModal,
-    private api: ApiService) {
+    private api: ApiService,
+    private pop: Popup) {
   }
 
   ngOnInit() {
@@ -31,7 +30,7 @@ export class ConnectionComponent implements OnInit {
 
   openAdd(content) {
     this.addUrl = '';
-    this.modal.open(content).result.then((result) => {
+    this.pop.open(content).result.then((result) => {
       if (result) {
         if (!this.addUrl) {
           // this.common.showAlert('The link can not be empty', 'danger', 3000);
@@ -50,7 +49,7 @@ export class ConnectionComponent implements OnInit {
   }
 
   remove(address: string) {
-    const modalRef = this.modal.open(AlertComponent);
+    const modalRef = this.pop.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete Connection';
     modalRef.componentInstance.body = 'Do you delete the connection?';
     modalRef.result.then(result => {

@@ -1,6 +1,5 @@
 import { Component, HostBinding, HostListener, OnInit, ViewEncapsulation } from '@angular/core';
-import { CommonService, User, ApiService, Users, Alert } from '../../providers';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { CommonService, User, ApiService, Users, Alert, Popup } from '../../providers';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { bounceInAnimation } from '../../animations/common.animations';
 import { AlertComponent } from '../alert/alert.component';
@@ -25,9 +24,9 @@ export class UserlistComponent implements OnInit {
 
   constructor(
     private api: ApiService,
-    private modal: NgbModal,
     private common: CommonService,
-    private alert: Alert) {
+    private alert: Alert,
+    private pop: Popup) {
   }
 
   ngOnInit() {
@@ -42,7 +41,7 @@ export class UserlistComponent implements OnInit {
     this.addForm.reset();
     this.api.newSeed().subscribe(seed => {
       this.addForm.patchValue({ seed: seed.data })
-      this.modal.open(content).result.then((result) => {
+      this.pop.open(content).result.then((result) => {
         if (result) {
           if (!this.addForm.valid) {
             this.alert.error({ content: 'Alias and Seed can not be empty' });
@@ -71,7 +70,7 @@ export class UserlistComponent implements OnInit {
       this.alert.error({ content: 'Parameter error!!!' });
       return;
     }
-    const modalRef = this.modal.open(AlertComponent);
+    const modalRef = this.pop.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete User';
     modalRef.componentInstance.body = 'Do you delete the user?';
     modalRef.result.then(result => {

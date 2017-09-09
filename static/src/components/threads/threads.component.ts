@@ -2,9 +2,10 @@ import { Component, EventEmitter, HostBinding, OnInit, Output, ViewEncapsulation
 import { ApiService, Board, CommonService, Thread, Alert, BoardPage, Popup } from '../../providers';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/timer'
 import 'rxjs/add/operator/switchMap';
 
 @Component({
@@ -37,7 +38,6 @@ export class ThreadsComponent implements OnInit {
   constructor(private api: ApiService,
     private router: Router,
     private route: ActivatedRoute,
-    private modal: NgbModal,
     private common: CommonService,
     private alert: Alert,
     private pop: Popup) {
@@ -48,14 +48,9 @@ export class ThreadsComponent implements OnInit {
       this.boardKey = params['boardKey'];
       this.init();
     })
-    this.pop.open(this.fabBtnTemplate);
-    // this.route.params.subscribe(res => {
-    //   this.boardKey = res.params['boardKey'];
-    //   this.init();
-    //   // this.api.getStats().subscribe(root => {
-    //   //   this.isRoot = root;
-    //   // });
-    // });
+    Observable.timer(10).subscribe(() => {
+      this.pop.open(this.fabBtnTemplate, { isDialog: false });
+    });
   }
   trackThreads(index, thread) {
     return thread ? thread.reference : undefined;
@@ -87,14 +82,14 @@ export class ThreadsComponent implements OnInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     this.tmpThread = thread;
-    this.modal.open(content, { size: 'lg' });
+    this.pop.open(content);
   }
 
   openAdd(content) {
     this.api.getSessionInfo().subscribe(info => {
       if (info.data.logged_in) {
         this.addForm.reset();
-        this.modal.open(content).result.then((result) => {
+        this.pop.open(content).result.then((result) => {
           if (result) {
             if (!this.addForm.valid) {
               this.alert.error({ content: 'Parameter error!!!' });
@@ -148,7 +143,7 @@ export class ThreadsComponent implements OnInit {
       }
       this.importBoards = tmp;
       this.importBoardKey = tmp[0].public_key;
-      this.modal.open(content, { size: 'lg' }).result.then(result => {
+      this.pop.open(content).result.then(result => {
         if (result) {
           if (this.importBoardKey) {
             const data = new FormData();

@@ -173,9 +173,39 @@ $tableHover-color: hsla(235,
   color: #486b4b;
 }
 
-.modal-box {
+.pop-dialog {
   border-radius: .25rem;
   background-color: #fff;
+}
+
+.pop-dialog-lg {
+  @media (min-width: 572px) {
+    max-width: 45rem !important;
+  }
+}
+
+.pop-dialog {
+  border-radius: .25rem;
+  background-color: #fff;
+  margin: 3rem auto;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, .5);
+  input[type="text"] {
+    padding: .75rem 1rem;
+    border-radius: 2rem;
+    &:focus {
+      border: 1px solid hsla(208, 98%, 68%, 0.5);
+      box-shadow: 0.1rem 0.1rem 1rem hsla(208, 98%, 68%, 0.5);
+    }
+  }
+  .btn {
+    border-radius: 2rem;
+    padding: .5rem 2rem;
+    font-weight: bold;
+    color: #fff;
+  }
+  @media (min-width: 572px) {
+    max-width: 35rem;
+  }
 }
 
 // Modal

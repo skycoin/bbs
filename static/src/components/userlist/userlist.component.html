@@ -25,8 +25,8 @@
 </div>
 
 
-<ng-template #addBox let-c="close" let-d="dismiss">
-  <div class="modal-box" [@bounceIn]>
+<ng-template #addBox let-c="close" >
+  <div class="pop-dialog" [@bounceIn]>
     <div class="modal-header">
       <h4 class="modal-title">New Master</h4>
       <button type="button" class="close" aria-label="Close" (click)="c(false)">
@@ -52,8 +52,8 @@
   </div>
 </ng-template>
 
-<ng-template #editBox let-c="close" let-d="dismiss">
-  <div class="modal-box" [@bounceIn]>
+<ng-template #editBox let-c="close" >
+  <div class="pop-dialog" [@bounceIn]>
     <div class="modal-header">
       <h4 class="modal-title">Edit</h4>
       <button type="button" class="close" aria-label="Close" (click)="c(false)">

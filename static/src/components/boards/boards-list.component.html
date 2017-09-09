@@ -44,12 +44,12 @@
 </ng-template>
 
 <!-- Subscribe Box-->
-<ng-template #subscribeBox let-c="close" let-d="dismiss">
-  <div class="modal-box" [@bounceIn]>
+<ng-template #subscribeBox let-c="close">
+  <div class="pop-dialog" [@bounceIn]>
 
     <div class="modal-header">
       <h4 class="modal-title text-muted">Input Board Public Key</h4>
-      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <button type="button" class="close" aria-label="Close" (click)="c(false)">
       <span aria-hidden="true">&times;</span>
     </button>
     </div>
@@ -69,11 +69,11 @@
 </ng-template>
 
 <!--New Board-->
-<ng-template #add let-c="close" let-d="dismiss">
-  <div class="modal-box" [@bounceIn]>
+<ng-template #add let-c="close">
+  <div class="pop-dialog" [@bounceIn]>
     <div class="modal-header">
       <h4 class="modal-title">New Board</h4>
-      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <button type="button" class="close" aria-label="Close" (click)="c(false)">
             <span aria-hidden="true">&times;</span>
           </button>
     </div>
@@ -109,12 +109,12 @@
 </ng-template>
 
 <!--Add Address-->
-<ng-template #addressBox let-c="close" let-d="dismiss">
-  <div class="modal-box" [@bounceIn]>
+<ng-template #addressBox let-c="close">
+  <div class="pop-dialog" [@bounceIn]>
 
     <div class="modal-header">
       <h4 class="modal-title">Add Submission Address</h4>
-      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <button type="button" class="close" aria-label="Close" (click)="c(false)">
       <span aria-hidden="true">&times;</span>
     </button>
     </div>
@@ -132,8 +132,8 @@
 </ng-template>
 
 <!--Board Info-->
-<ng-template #info let-c="close" let-d="dismiss">
-  <div class="modal-box" [@bounceIn]>
+<ng-template #info let-c="close">
+  <div class="pop-dialog pop-dialog-lg" [@bounceIn]>
 
     <div class="card info-card">
       <div class="card-header">

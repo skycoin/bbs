@@ -2,12 +2,13 @@ import { Component, HostBinding, OnInit, ViewEncapsulation, ViewChild, TemplateR
 import { ApiService, CommonService, AllBoards, Alert, Popup, Dialog, LoadingService } from '../../providers';
 import { Board } from '../../providers/api/msg';
 import { Router } from '@angular/router';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AlertComponent } from '../alert/alert.component';
 import { FabComponent } from '../fab/fab.component';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/timer'
 
 @Component({
   selector: 'app-boardslist',
@@ -42,7 +43,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   replaceStr = '';
   constructor(private api: ApiService,
     private router: Router,
-    private modal: NgbModal,
     public common: CommonService,
     private pop: Popup,
     private alert: Alert,
@@ -55,13 +55,11 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     this.api.getStats().subscribe(status => {
       this.isRoot = status.node_is_master;
     });
-
   }
   ngAfterViewInit() {
-    // setTimeout(() => {
-    //   this.dialog.open();
-    // }, 10);
-    this.pop.open(this.fabBtnTemplate);
+    Observable.timer(10).subscribe(() => {
+      this.pop.open(this.fabBtnTemplate, { isDialog: false });
+    });
   }
 
   setSort() {
@@ -84,7 +82,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
       this.alert.error({ content: 'The Key can not be empty!!!' });
       return;
     }
-    this.modal.open(content, { windowClass: 'multi-modal' }).result.then((reslut) => {
+    this.pop.open(content).result.then((reslut) => {
       if (reslut) {
         if (!this.addressForm.valid) {
           this.alert.error({ content: 'The Port Or Url can not be empty!!!' });
@@ -121,17 +119,17 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
       return;
     }
     this.tmpBoard = board;
-    this.modal.open(content, { size: 'lg' });
+    this.pop.open(content);
+    // this.pop.open(content, { size: 'lg' });
   }
   trackBoards(index, board) {
     return board ? board.public_key : undefined;
   }
   openAdd(content) {
-    // this.pop.open(content);
     this.addForm.reset();
     this.api.newSeed().subscribe(seed => {
       this.addForm.patchValue({ seed: seed.data });
-      this.modal.open(content).result.then((result) => {
+      this.pop.open(content).result.then((result) => {
         if (result === true) {
           if (!this.addForm.valid) {
             this.alert.error({ content: 'Parameter error' });
@@ -147,10 +145,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
             this.alert.success({ content: 'Added Successfully' });
           });
         }
-      }, err => {
-      });
-    }, err => {
-      // this.common.showErrorAlert('Unable to create,Please try again later');
+      })
     })
   }
 
@@ -164,7 +159,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     const data = new FormData();
     data.append('board_public_key', key);
     data.append('address', address);
-    const modalRef = this.modal.open(AlertComponent, { windowClass: 'multi-modal' });
+    const modalRef = this.pop.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete Address';
     modalRef.componentInstance.body = 'Do you delete the address?';
     modalRef.result.then(result => {
@@ -180,7 +175,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
 
   subscribe(content: any) {
     this.subscribeForm.reset();
-    this.modal.open(content).result.then(result => {
+    this.pop.open(content).result.then(result => {
       if (result) {
         if (!this.subscribeForm.valid) {
           this.alert.error({ content: 'The Board Key can not be empty!!!' });
@@ -201,7 +196,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
-    const modalRef = this.modal.open(AlertComponent);
+    const modalRef = this.pop.open(AlertComponent);
     modalRef.componentInstance.title = 'Delete Subscription';
     modalRef.componentInstance.body = 'Do you delete the Subscription?';
     modalRef.result.then(result => {
@@ -228,7 +223,8 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
-    const modalRef = this.modal.open(AlertComponent);
+    const modalRef = this.pop.open(AlertComponent);
+    console.log(modalRef.componentInstance);
     modalRef.componentInstance.title = 'Delete Board';
     modalRef.componentInstance.body = 'Do you delete the board?';
     modalRef.result.then(result => {
