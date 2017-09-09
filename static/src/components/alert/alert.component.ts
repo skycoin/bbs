@@ -15,7 +15,7 @@ export class AlertComponent implements OnInit {
   @HostBinding('@bounceIn') animation = true;
   title = '';
   body = '';
-
+  type = 'confirm';
   constructor(public activeModal: ActivePop) {
   }
 

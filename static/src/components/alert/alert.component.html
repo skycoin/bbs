@@ -1,16 +1,17 @@
 <div class="pop-dialog">
-  <div class="modal-header">
-    <h4 class="modal-title">{{title}}</h4>
-    <button type="button" class="close" aria-label="Close" (click)="activeModal.close(false)">
-          <span aria-hidden="true">&times;</span>
-        </button>
+  <div *ngIf="type === 'confirm'">
+    <div class="modal-header">
+      <h4 class="modal-title">{{title}}</h4>
+      <button type="button" class="close" aria-label="Close" (click)="activeModal.close(false)">
+            <span aria-hidden="true">&times;</span>
+          </button>
+    </div>
+    <div class="modal-body">
+      <p>{{body}}</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-info" (click)="activeModal.close(false)">Cancel</button>
+      <button type="button" class="btn btn-success" (click)="activeModal.close(true)">Submit</button>
+    </div>
   </div>
-  <div class="modal-body">
-    <p>{{body}}</p>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-info" (click)="activeModal.close(false)">Cancel</button>
-    <button type="button" class="btn btn-success" (click)="activeModal.close(true)">Submit</button>
-  </div>
-
 </div>

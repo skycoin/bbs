@@ -32,14 +32,13 @@ export class EditorDirective implements ControlValueAccessor {
       }
     })
     const toolbar = this.editor.getModule('toolbar');
-    toolbar.addHandler('image', (value) => {
-      const href = prompt('Enter the URL');
-      this.editor.format('image', href);
-      // if (value) {
-      //   this.editor.format('link', href);
-      // } else {
-      //   this.editor.format('link', false);
-      // }
+    toolbar.addHandler('image', (ev) => {
+      if (ev) {
+        const href = prompt('Enter the URL');
+        if (href) {
+          this.editor.insertEmbed(this.editor.getSelection(), 'image', href);
+        }
+      }
     });
   }
   onChange = (html: string) => { };

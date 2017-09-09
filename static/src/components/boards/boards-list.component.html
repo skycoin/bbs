@@ -92,7 +92,7 @@
           <textarea class="form-control" rows="3" id="seed" style="resize:none" formControlName="seed"></textarea>
         </div>
         <div class="form-group">
-          <label for="submission_addresses">Board addresses (optional)</label>
+          <label for="submission_addresses">Rpc Submission Url (optional)</label>
           <textarea class="form-control" rows="3" id="addresses" formControlName="submission_addresses" placeholder='(Optional) Submission addresses separated by commas ","'></textarea>
         </div>
         <!-- <div class="form-group">
@@ -113,7 +113,7 @@
   <div class="pop-dialog" [@bounceIn]>
 
     <div class="modal-header">
-      <h4 class="modal-title">Add Submission Address</h4>
+      <h4 class="modal-title">Add Rpc Submission Url</h4>
       <button type="button" class="close" aria-label="Close" (click)="c(false)">
       <span aria-hidden="true">&times;</span>
     </button>
@@ -152,7 +152,7 @@
           <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="common.copy($event)"></i></span>
         </div>
         <div class="thread-item">
-          <h5>Address</h5>
+          <h5>Rpc Submission Url</h5>
           <span class="text-muted">
           <li class="info-address-li" *ngFor="let address of tmpBoard?.submission_addresses">{{address}}<i class="fa fa-times address-close" aria-hidden="true" (click)="delAddress($event,tmpBoard?.public_key,address)"></i></li>
           <li class="info-address-li add-li" (click)="addAddress(addressBox,tmpBoard?.public_key)">Add...</li></span>

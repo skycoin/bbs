@@ -21,6 +21,11 @@
           <div class="form-box">
             <input type="text" class="text-input input-border-bottom" (keyup.enter)="login($event)" [focus]="loginBox" [(ngModel)]="alias"
               placeholder="Input Your Alias">
+            <!-- <div class="auto-alias">
+              <ul>
+                <li>1</li>
+              </ul>
+            </div> -->
           </div>
           <p class="text-right">
             <button class="button" style="background-color:#1abc9c;color:#fff;" (click)="login($event)">Submit</button>
@@ -29,7 +34,8 @@
         <div class="register-box" *ngIf="registerBox" [@tabRight]>
           <h6>Create a account</h6>
           <div class="form-box">
-            <input type="text" class="text-input input-border-bottom" (keyup.enter)="register($event)" [focus]="registerBox" [(ngModel)]="alias" placeholder="Input Your Alias">
+            <input type="text" class="text-input input-border-bottom" (keyup.enter)="register($event)" [focus]="registerBox" [(ngModel)]="alias"
+              placeholder="Input Your Alias">
           </div>
           <p class="text-right">
             <button class="button" style="background-color:#e67e22;color:#fff;" (click)="register($event)">Submit</button>
@@ -81,7 +87,7 @@
   </div>
 </nav>
 <router-outlet></router-outlet>
-<ng-template #page let-c="close" >
+<ng-template #page let-c="close">
   <div class="pop-dialog" [@bounceIn]>
     <div class="modal-header">
       <h5 class="modal-title" id="exampleModalLongTitle">Follow Page</h5>
