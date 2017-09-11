@@ -25,7 +25,13 @@ body {
     padding: 0;
   }
 }
-
+.input-box{
+  padding: .5rem 1rem;
+  .fa-refresh{
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+}
 .overlay {
   position: fixed;
   left: 0;

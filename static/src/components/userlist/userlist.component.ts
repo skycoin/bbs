@@ -19,7 +19,7 @@ export class UserlistComponent implements OnInit {
   editName = '';
   public addForm = new FormGroup({
     alias: new FormControl('', Validators.required),
-    seed: new FormControl({ value: '', disabled: true }, Validators.required),
+    seed: new FormControl({ value: '', disabled: false }, Validators.required),
   });
 
   constructor(
@@ -61,7 +61,14 @@ export class UserlistComponent implements OnInit {
     })
   }
 
-
+  getSeed(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.api.newSeed().subscribe(seed => {
+      this.addForm.patchValue({ seed: seed.data })
+    });
+  }
 
   delUser(ev: Event, alias: string) {
     ev.stopImmediatePropagation();

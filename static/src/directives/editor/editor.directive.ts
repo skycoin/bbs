@@ -34,7 +34,7 @@ export class EditorDirective implements ControlValueAccessor {
     const toolbar = this.editor.getModule('toolbar');
     toolbar.addHandler('image', (ev) => {
       if (ev) {
-        const href = prompt('Enter the URL');
+        const href = prompt('Enter the Image URL');
         if (href) {
           this.editor.insertEmbed(this.editor.getSelection(), 'image', href);
         }
