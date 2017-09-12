@@ -10,6 +10,11 @@ app-threadpage {
   .thread {}
   .post-box {
     margin-bottom: 5rem;
+    img {
+      vertical-align: text-top !important;
+      max-width: 320px !important;
+      max-height: 480px !important;
+    }
   }
   .card {
     flex-direction: row;
@@ -214,5 +219,8 @@ app-threadpage {
 
 .editor {
   font-size: 1rem;
-  min-height: 10rem;
+  height: 15rem;
+  img {
+    vertical-align: text-top !important;
+  }
 }

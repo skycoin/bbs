@@ -13,9 +13,14 @@ export class Dialog {
 
   open() {
     const containerEl = document.body;
-    const windowCmptFactory = this._componentFactoryResolver.resolveComponentFactory(DialogWindowComponent);
-    const ref = windowCmptFactory.create(this._injector);
-    this._applicationRef.attachView(ref.hostView);
-    containerEl.appendChild(ref.location.nativeElement);
+    const contentCmptFactory = this._componentFactoryResolver.resolveComponentFactory(DialogWindowComponent);
+    const contentRef = contentCmptFactory.create(this._injector);
+    this._applicationRef.attachView(contentRef.hostView);
+    containerEl.appendChild(contentRef.location.nativeElement);
   }
+}
+
+@Injectable()
+export class ActiveDialog {
+  close(result?: any): void { }
 }

@@ -7,7 +7,9 @@ import {
   ViewChild,
   AfterViewInit,
   TemplateRef,
-  ElementRef
+  ElementRef,
+  ViewChildren,
+  QueryList
 } from '@angular/core';
 import {
   ApiService,
@@ -24,9 +26,10 @@ import {
 } from '../../providers';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { flyInOutAnimation, bounceInAnimation } from '../../animations/common.animations';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/timer'
 import 'rxjs/add/operator/filter';
 
 @Component({
@@ -42,6 +45,7 @@ export class ThreadPageComponent implements OnInit {
   @HostBinding('style.display') display = 'block';
   @ViewChild('editor') editor: ElementRef;
   @ViewChild('fab') fab: TemplateRef<any>;
+  @ViewChildren('post') posts: QueryList<ElementRef>;
   sort = 'esc';
   boardKey = '';
   threadKey = '';
@@ -98,7 +102,6 @@ export class ThreadPageComponent implements OnInit {
   constructor(private api: ApiService,
     private router: Router,
     private route: ActivatedRoute,
-    private modal: NgbModal,
     private common: CommonService,
     private alert: Alert,
     private pop: Popup,
@@ -111,12 +114,9 @@ export class ThreadPageComponent implements OnInit {
       this.threadKey = res['thread_ref'];
       this.open(this.boardKey, this.threadKey);
     });
-    // this.common.fb.display = 'flex';
-    // this.common.fb.handle = () => {
-    //   this.openReply(this.replyBox);
-    // }
-
-    this.pop.open(this.fab);
+    Observable.timer(10).subscribe(() => {
+      this.pop.open(this.fab, { isDialog: false });
+    });
   }
   showUserMenu(post: Post, ev: Event) {
     ev.stopImmediatePropagation();
@@ -142,23 +142,6 @@ export class ThreadPageComponent implements OnInit {
       post.voteMenu = false;
     }
   }
-  // upThread(ev: Event) {
-  //   ev.stopImmediatePropagation();
-  //   ev.stopPropagation();
-  //   ev.preventDefault();
-  //   this.data.data.thread.votes.up_votes.count += 1;
-  //   const data = new FormData();
-  //   data.append('mode', '+1');
-  //   this.addThreadVote(data);
-  // }
-  // downThread(ev: Event) {
-  //   ev.stopImmediatePropagation();
-  //   ev.stopPropagation();
-  //   ev.preventDefault();
-  //   this.data.data.thread.votes.down_votes.count += 1;
-  //   const data = new FormData();
-  //   this.addThreadVote(data);
-  // }
   public setSort() {
     this.sort = this.sort === 'desc' ? 'asc' : 'desc';
   }
@@ -252,7 +235,7 @@ export class ThreadPageComponent implements OnInit {
   }
   openReply(content) {
     this.postForm.reset();
-    this.modal.open(content, { backdrop: 'static', size: 'lg', keyboard: false }).result.then((result) => {
+    this.pop.open(content).result.then((result) => {
       if (result) {
         if (!this.postForm.valid) {
           this.alert.error({ content: 'title and content can not be empty' });
@@ -269,6 +252,8 @@ export class ThreadPageComponent implements OnInit {
             this.data.data.posts = res.data.posts;
             this.alert.success({ content: 'Added successfully' });
             this.loading.close();
+            setTimeout(() => {
+            }, 1000);
           }
         });
       }
