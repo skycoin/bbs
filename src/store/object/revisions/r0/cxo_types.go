@@ -115,6 +115,7 @@ func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
 	if e != nil {
 		return nil, getRootChildErr(e, IndexRootPage)
 	}
+
 	rp, ok := rpVal.(*RootPage)
 	if !ok {
 		return nil, extRootChildErr(IndexRootPage)

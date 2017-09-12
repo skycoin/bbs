@@ -5,8 +5,11 @@ import (
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
+// NewThread triggers a request to add a new thread to the board.
+// Returns sequence of root in which thread is to be available, or error on failure.
 func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 	if e := thread.Verify(); e != nil {
 		return 0, e
@@ -50,6 +53,8 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 	return goalSeq, e
 }
 
+// NewPost triggers a request to add a new post to the board.
+// Returns sequence of root in which post is to be available, or error on failure.
 func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 	if e := post.Verify(); e != nil {
 		return 0, e
@@ -104,6 +109,8 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 	return goalSeq, e
 }
 
+// NewVote triggers a request to add a new vote to the board.
+// Returns sequence of root in which vote is to be available, or error on failure.
 func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
 	if e := vote.Verify(); e != nil {
 		return 0, e
@@ -180,8 +187,34 @@ func checkVote(vote *r0.Vote, h *pack.Headers) error {
 	return nil
 }
 
+func (bi *BoardInstance) ReplaceSubmissionKeys(keys []cipher.PubKey) (uint64, error) {
+	return bi.BoardAction(func(board *r0.Board) (bool, error) {
+		data := r0.GetData(board)
+		data.SubKeys = keys
+		r0.SetData(board, data)
+		return true, nil
+	})
+}
+
+func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
+	var pks []cipher.PubKey
+	if _, e := bi.BoardAction(func(board *r0.Board) (bool, error) {
+		data := r0.GetData(board)
+		bi.l.Println("submission public keys:", pks)
+		pks = data.SubKeys
+		return false, nil
+	}); e != nil {
+		return nil
+	}
+	return pks
+}
+
+// BoardAction is a function in which board modification/viewing takes place.
+// Returns a boolean that represents whether changes have been made and
+// an error on failure.
 type BoardAction func(board *r0.Board) (bool, error)
 
+// BoardAction triggers a board action.
 func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
 	var goalSeq uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {

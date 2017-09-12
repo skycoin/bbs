@@ -51,3 +51,11 @@ func GetHash(s string) (cipher.SHA256, error) {
 	}
 	return h, e
 }
+
+func PubKeyToSlice(pk cipher.PubKey) []byte {
+	out := make([]byte, 33)
+	for i, v := range [33]byte(pk) {
+		out[i] = v
+	}
+	return out
+}

@@ -35,7 +35,7 @@ type BoardInstance struct {
 
 	needPublish typ.Bool // Whether there are changes that need to be published.
 	isReceived  typ.Bool // Whether we have received this root.
-	isReady typ.Bool // Whether we have received a full root.
+	isReady     typ.Bool // Whether we have received a full root.
 }
 
 // Init initiates the  the board instance.
@@ -70,10 +70,10 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	bi.isReady.Set()
 
 	var (
-		master   = sk != cipher.SecKey{} // Whether this node owns the board.
-		ct       = bi.n.Container()      // CXO container.
-		pFlags   = skyobject.HashTableIndex     // Flags for unpacking root.
-		firstRun = false                 // Is the first time running update.
+		master   = sk != cipher.SecKey{}    // Whether this node owns the board.
+		ct       = bi.n.Container()         // CXO container.
+		pFlags   = skyobject.HashTableIndex // Flags for unpacking root.
+		firstRun = false                    // Is the first time running update.
 	)
 
 	// Preparation.
@@ -256,13 +256,13 @@ func (bi *BoardInstance) SetReceived() {
 // IsReceived determines whether board has been received.
 func (bi *BoardInstance) IsReceived() bool {
 	v := bi.isReceived.Value()
-	bi.l.Println("IsReceived:", v)
+	//bi.l.Println("IsReceived:", v)
 	return v
 }
 
 // IsReady determines whether board is received and ready.
 func (bi *BoardInstance) IsReady() bool {
 	v := bi.isReady.Value()
-	bi.l.Println("IsReady:", v)
+	//bi.l.Println("IsReady:", v)
 	return v
 }

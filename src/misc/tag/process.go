@@ -30,8 +30,8 @@ const (
 	valAlias        = "alias"
 	valPassword     = "password"
 	valAddress      = "address"
-	valSubAddrsStr  = "subAddrsStr"
-	valSubAddrs     = "subAddrs"
+	valSubPKsStr    = "subPKsStr"
+	valSubPKs       = "subPKs"
 	valConsStr      = "consStr"
 	valCons         = "cons"
 	valModeStr      = "modeStr"
@@ -101,15 +101,21 @@ func process(tm tMap) error {
 			tm.set(valPostRef, pRef)
 		}
 	}
-	// Submission addresses.
-	if subAddrsStr, has := tm[valSubAddrsStr]; has {
-		subAddrs, e := splitStr(subAddrsStr.String(), func(v string) bool {
+	// Submission public keys.
+	if subPKsStr, has := tm[valSubPKsStr]; has {
+		subPKStrs, e := splitStr(subPKsStr.String(), func(v string) bool {
 			return true
 		})
 		if e != nil {
 			return wrapErr(e, "submission addresses")
 		}
-		tm.set(valSubAddrs, subAddrs)
+		subPKs := make([]cipher.PubKey, len(subPKStrs))
+		for i, pkStr := range subPKStrs {
+			if subPKs[i], e = keys.GetPubKey(pkStr); e != nil {
+				return wrapErr(e, "submission public keys")
+			}
+		}
+		tm.set(valSubPKs, subPKs)
 	}
 	// Connections.
 	if consStr, has := tm[valConsStr]; has {

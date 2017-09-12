@@ -45,12 +45,12 @@ pv2 () {
 }
 
 RunNode() {
-    if [[ $# -ne 4 ]] ; then
-        echo "4 arguments required"
+    if [[ $# -ne 3 ]] ; then
+        echo "3 arguments required"
         exit 1
     fi
 
-    PORT_HTTP=$1 ; PORT_SUB=$2 ; PORT_CXO=$3 ; GUI=$4
+    PORT_HTTP=$1 ; PORT_CXO=$2 ; GUI=$3
 
     pv "START NODE: PORT_HTTP ${PORT_HTTP}, PORT_SUB ${PORT_SUB}, PORT_CXO ${PORT_CXO}..."
 
@@ -61,8 +61,6 @@ RunNode() {
         -defaults=false \
         -cxo-port=${PORT_CXO} \
         -cxo-rpc=false \
-        -sub-port=${PORT_SUB} \
-        -sub-addr="[::]:${PORT_SUB}" \
         -http-port=${PORT_HTTP} \
         -http-gui=${GUI} \
         &
@@ -196,12 +194,12 @@ DeleteSubscription() {
 # <<< CONTENT >>>
 
 NewBoard() {
-    if [[ $# -ne 3 ]] ; then
-        echo "3 arguments required"
+    if [[ $# -ne 2 ]] ; then
+        echo "2 arguments required"
         exit 1
     fi
 
-    PORT=$1 ; NAME=$2 ; PORT_SUB=$3
+    PORT=$1 ; NAME=$2
     
     pv "NODE '${PORT}': NEW BOARD '${NAME}'"
 
@@ -211,7 +209,6 @@ NewBoard() {
         -F "seed=${NAME}" \
         -F "name=Board ${NAME}" \
         -F "body=A board generated with seed '${NAME}'." \
-        -F "submission_addresses=[::]:${PORT_SUB}" \
         -sS "http://127.0.0.1:${PORT}/api/content/new_board" | jq
 }
 

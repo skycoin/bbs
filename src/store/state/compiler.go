@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
@@ -18,10 +19,12 @@ const (
 	LogPrefix = "COMPILER"
 )
 
+// CompilerConfig configure the Compiler.
 type CompilerConfig struct {
 	UpdateInterval *int // In seconds.
 }
 
+// Compiler compiles views for boards.
 type Compiler struct {
 	c *CompilerConfig
 	l *log.Logger
@@ -33,15 +36,16 @@ type Compiler struct {
 	boards map[cipher.PubKey]*BoardInstance
 	adders []views.Adder
 
-	newRoots chan *skyobject.Root
+	newRoots chan RootWrap
 	quit     chan struct{}
 	wg       sync.WaitGroup
 }
 
+// NewCompiler creates a new compiler.
 func NewCompiler(
 	config *CompilerConfig,
 	file *object.CXOFileManager,
-	newRoots chan *skyobject.Root,
+	newRoots chan RootWrap,
 	node *node.Node,
 	adders ...views.Adder,
 ) *Compiler {
@@ -59,6 +63,7 @@ func NewCompiler(
 	return compiler
 }
 
+// Close closes the compiler.
 func (c *Compiler) Close() {
 	for {
 		select {
@@ -81,10 +86,14 @@ func (c *Compiler) updateLoop() {
 	for {
 		select {
 		case <-ticker.C:
-			c.doMasterUpdate()
+			c.publishAllMasters()
 
-		case root := <-c.newRoots:
-			c.doRemoteUpdate(root)
+		case rootWrap := <-c.newRoots:
+			c.updateSingle(rootWrap.Root)
+			select {
+			case rootWrap.Done <- struct{}{}:
+			default:
+			}
 
 		case <-c.quit:
 			for _, bi := range c.boards {
@@ -95,7 +104,7 @@ func (c *Compiler) updateLoop() {
 	}
 }
 
-func (c *Compiler) doMasterUpdate() {
+func (c *Compiler) publishAllMasters() {
 	c.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		bi := c.ensureBoard(pk)
 
@@ -105,7 +114,7 @@ func (c *Compiler) doMasterUpdate() {
 	})
 }
 
-func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
+func (c *Compiler) updateSingle(root *skyobject.Root) {
 
 	isRemote := c.file.HasRemoteSub(root.Pub)
 	sk, isMaster := c.file.GetMasterSubSecKey(root.Pub)
@@ -120,7 +129,6 @@ func (c *Compiler) doRemoteUpdate(root *skyobject.Root) {
 	bi := c.ensureBoard(root.Pub)
 
 	if root.IsFull == false {
-		c.l.Println("NOT FULL!")
 		return
 	}
 
@@ -162,8 +170,19 @@ func (c *Compiler) GetBoard(pk cipher.PubKey) (*BoardInstance, error) {
 	return bi, nil
 }
 
-func (c *Compiler) NewRootsChan() chan *skyobject.Root {
-	return c.newRoots
+func (c *Compiler) UpdateBoard(root *skyobject.Root) {
+	c.newRoots <- RootWrap{Root: root}
+}
+
+func (c *Compiler) UpdateBoardWithContext(ctx context.Context, root *skyobject.Root) error {
+	done := make(chan struct{})
+	c.newRoots <- RootWrap{Root: root, Done: done}
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 /*

@@ -20,10 +20,22 @@
   version = "v1"
 
 [[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "f006c2ac4710855cf0f916dd6b77acf6b048dc6e"
+  version = "v1.0.3"
+
+[[projects]]
   branch = "master"
   name = "github.com/skycoin/cxo"
   packages = ["data","data/cxds","data/idxdb","node","node/gnet","node/log","node/msg","skyobject"]
   revision = "9575c31de22498959fb283e0afbad5118e54982a"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/skycoin/net"
+  packages = ["client","conn","factory","msg","server","skycoin-messenger/factory"]
+  revision = "a4a76570fa7f5c4847dc88f2908ff4ca1e9835b5"
 
 [[projects]]
   name = "github.com/skycoin/skycoin"
@@ -40,13 +52,13 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["pbkdf2"]
+  packages = ["pbkdf2","ssh/terminal"]
   revision = "81e90905daefcd6fd217b62423c0908922eadb30"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = ["unix","windows"]
   revision = "7ddbeae9ae08c6a06a59597f0c9edbc5ff2444ce"
 
 [[projects]]
@@ -58,6 +70,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f3d0615fbdd9b43bf240b403b61a877e49c589c83cd0515d0538cde98cdb2768"
+  inputs-digest = "dcceaaa84650d9c33cf080e8d41473164503a1bad361839d6834e2094549199d"
   solver-name = "gps-cdcl"
   solver-version = 1

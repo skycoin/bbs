@@ -114,12 +114,12 @@ func WrapTypef(e error, t int, f string, v ...interface{}) error {
 
 // Type returns the type of the error.
 func Type(e error) int {
-	switch e.(type) {
-	case *elem:
-		msg, typ := "", Unknown
-		e.(*elem).dig(&msg, &typ)
-		return typ
-	default:
+	v, ok := e.(*elem)
+	if !ok {
 		return Unknown
 	}
+
+	msg, typ := "", Unknown
+	v.dig(&msg, &typ)
+	return typ
 }

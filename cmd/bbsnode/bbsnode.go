@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/http"
-	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/session"
@@ -16,23 +15,29 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
+	"github.com/skycoin/bbs/src/msgs"
+	"time"
 )
 
 const (
-	defaultIPAddr          = "127.0.0.1"
 	defaultConfigSubDir    = ".skybbs"
 	defaultStaticSubDir    = "static/dist"
 	defaultDevStaticSubDir = "src/github.com/skycoin/bbs/static/dist"
 	defaultCXOPort         = 8998
 	defaultCXORPCPort      = 8997
-	defaultSubPort         = 6421
 	defaultHTTPPort        = 7410
 )
 
 var (
+	defaultMessengerAddresses = cli.StringSlice{
+		"messenger.skycoin.net:8080",
+	}
+	defaultDevMessengerAddresses = cli.StringSlice{
+		"127.0.0.1:8080",
+	}
 	devMode          = false
 	compilerInternal = 1
+	messengerReconnectInterval = time.Second * 3
 )
 
 // Config represents configuration for node.
@@ -45,8 +50,7 @@ type Config struct {
 	CXORPC     bool `json:"cxo_rpc"`                // Whether to enable CXO RPC.
 	CXORPCPort int  `json:"cxo_rpc_port,omitempty"` // Listening RPC port of CXO.
 
-	SubPort int    `json:"sub_port,omitempty"` // Content submission port of node.
-	SubAddr string `json:"sub_addr,omitempty"` // Content submission address of node.
+	MessengerAddresses cli.StringSlice `json:"messenger_addresses"` // Addresses of messenger servers.
 
 	HTTPPort   int    `json:"http_port"`              // Port to serve HTTP API/GUI.
 	HTTPGUI    bool   `json:"http_gui"`               // Whether to enable GUI.
@@ -65,8 +69,7 @@ func NewDefaultConfig() *Config {
 		CXOPort:    defaultCXOPort,
 		CXORPC:     false,
 		CXORPCPort: defaultCXORPCPort,
-		SubPort:    defaultSubPort,
-		SubAddr:    "", // -> Action: set as 'localhost:{Config.SubPort}'
+		MessengerAddresses: defaultMessengerAddresses,
 		HTTPPort:   defaultHTTPPort,
 		HTTPGUI:    true,
 		HTTPGUIDir: "", // --> Action: set as '$HOME/.skybbs/static'
@@ -90,13 +93,8 @@ func (c *Config) PostProcess() error {
 			return e
 		}
 	}
-	if c.Master {
-		if c.SubAddr == "" {
-			c.SubAddr = defaultIPAddr + ":" + strconv.Itoa(c.SubPort)
-		}
-	} else {
-		c.SubPort = 0
-		c.SubAddr = ""
+	if devMode {
+		c.MessengerAddresses = defaultDevMessengerAddresses
 	}
 	if c.HTTPGUI {
 		if c.HTTPGUIDir == "" {
@@ -146,8 +144,13 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 							CXORPCEnable: &c.CXORPC,
 							CXORPCPort:   &c.CXORPCPort,
 							Defaults:     &c.Defaults,
-						}, &state.CompilerConfig{
+						},
+						&state.CompilerConfig{
 							UpdateInterval: &compilerInternal,
+						},
+						&msgs.RelayConfig{
+							Addresses: c.MessengerAddresses,
+							ReconnectInterval: &messengerReconnectInterval,
 						},
 					),
 				},
@@ -156,18 +159,6 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		)
 		CatchError(e, "failed to start HTTP Server")
 		defer httpServer.Close()
-
-		rpcServer, e := rpc.NewServer(
-			&rpc.ServerConfig{
-				Port:   &c.SubPort,
-				Enable: &c.Master,
-			},
-			&rpc.Gateway{
-				CXO: httpServer.CXO(),
-			},
-		)
-		CatchError(e, "failed to start RPC Server")
-		defer rpcServer.Close()
 
 		if c.Browser {
 			address := fmt.Sprintf("http://127.0.0.1:%d", c.HTTPPort)
@@ -235,15 +226,10 @@ func main() {
 			Destination: &config.CXORPCPort,
 			Value:       config.CXORPCPort,
 		},
-		cli.IntFlag{
-			Name:        "sub-port",
-			Destination: &config.SubPort,
-			Value:       config.SubPort,
-		},
-		cli.StringFlag{
-			Name:        "sub-addr",
-			Destination: &config.SubAddr,
-		},
+		//cli.StringSliceFlag{
+		//	Name: "messenger-addresses",
+		//	Value: &config.MessengerAddresses,
+		//},
 		cli.IntFlag{
 			Name:        "http-port",
 			Destination: &config.HTTPPort,
