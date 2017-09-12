@@ -15,11 +15,9 @@ export class EditorDirective implements ControlValueAccessor {
   editor: any;
   toolbarOptions = [
     [{ 'header': [1, 2, 3, 4, 5, 6, false] }, { 'font': [] }],
-    ['bold', 'italic', 'underline', 'strike', { 'color': [] }, { 'background': [] }],
-    ['blockquote', 'code-block', 'link'],
-    [{ 'header': 1 }, { 'header': 2 }],
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'align': [] }],
-    [{ 'script': 'sub' }, { 'script': 'super' }],
+    ['bold', 'italic', 'underline', 'strike', { 'color': [] }, { 'background': [] }, { 'script': 'sub' }, { 'script': 'super' }],
+    ['blockquote', 'code-block', 'link', 'image'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'align': [] }]
   ];
   constructor(private el: ElementRef) {
     this.editor = new Quill(el.nativeElement, {
@@ -33,7 +31,15 @@ export class EditorDirective implements ControlValueAccessor {
         this.writeValue();
       }
     })
-
+    const toolbar = this.editor.getModule('toolbar');
+    toolbar.addHandler('image', (ev) => {
+      if (ev) {
+        const href = prompt('Enter the Image URL');
+        if (href) {
+          this.editor.insertEmbed(this.editor.getSelection(), 'image', href);
+        }
+      }
+    });
   }
   onChange = (html: string) => { };
 

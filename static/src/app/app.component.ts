@@ -3,8 +3,9 @@ import { ApiService, CommonService, Alert, LoadingService, Popup, FollowPageData
 import { FixedButtonComponent } from '../components';
 import { ToTopComponent } from '../components';
 import 'rxjs/add/operator/filter';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { bounceInAnimation, tabLeftAnimation, tabRightAnimation } from '../animations/common.animations';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/timer'
 
 @Component({
   selector: 'app-root',
@@ -35,8 +36,7 @@ export class AppComponent implements OnInit {
     public common: CommonService,
     private alert: Alert,
     private loading: LoadingService,
-    private pop: Popup,
-    private modal: NgbModal) {
+    private pop: Popup) {
   }
 
   ngOnInit() {
@@ -44,9 +44,10 @@ export class AppComponent implements OnInit {
     this.api.getStats().subscribe(stats => {
       this.isMasterNode = stats.node_is_master;
     });
-    this.pop.open(ToTopComponent, false);
+    Observable.timer(10).subscribe(() => {
+      this.pop.open(ToTopComponent, { isDialog: false });
+    });
     this.api.getSessionInfo().subscribe(info => {
-      console.log('user info:', info);
       if (info.okay) {
         if (info.data.session && info.data.logged_in) {
           this.isLogIn = info.data.logged_in;
@@ -167,7 +168,7 @@ export class AppComponent implements OnInit {
         this.userFollow = page.data.follow_page;
       }
     })
-    this.modal.open(content, { size: 'lg' });
+    this.pop.open(content);
   }
   @HostListener('window:scroll', ['$event'])
   windowScroll(event) {

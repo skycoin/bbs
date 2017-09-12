@@ -1,5 +1,6 @@
 import { Injectable, ComponentRef } from '@angular/core';
 import { PopupWindow } from './popup-window';
+import { PopupBackdrop } from './popup.backdrop';
 import { Router, NavigationStart } from '@angular/router';
 import 'rxjs/add/operator/filter';
 
@@ -7,7 +8,9 @@ import 'rxjs/add/operator/filter';
 export class PopupRef {
   _resolve: (result?: any) => void;
   _reject: (reason?: any) => void;
+  _contentRef: ComponentRef<any>;
   _windowRef: ComponentRef<PopupWindow>
+  _backdropRef: ComponentRef<PopupBackdrop>
   result: Promise<any>;
   constructor() {
     this.result = new Promise((resolve, reject) => {
@@ -17,7 +20,16 @@ export class PopupRef {
     this.result.then(null, () => { });
 
   }
-  getRef(ref: ComponentRef<PopupWindow>, router: Router, isAutoLeave = true) {
+  get componentInstance(): any {
+    if (this._contentRef.instance) {
+      return this._contentRef.instance;
+    }
+  }
+
+  // only needed to keep TS1.8 compatibility
+  set componentInstance(instance: any) { }
+  getRef(ref: ComponentRef<PopupWindow>,
+    backdropRef: ComponentRef<PopupBackdrop>, content: ComponentRef<any>, router: Router, isAutoLeave = true) {
     if (router) {
       if (isAutoLeave) {
         router.events.filter(ev => ev instanceof NavigationStart).subscribe(() => {
@@ -25,7 +37,9 @@ export class PopupRef {
         });
       }
     }
+    this._contentRef = content;
     this._windowRef = ref;
+    this._backdropRef = backdropRef;
     return this;
   }
   close(result?: any) {
@@ -37,7 +51,13 @@ export class PopupRef {
   private _removeModalElements() {
     const windowNativeEl = this._windowRef.location.nativeElement;
     windowNativeEl.parentNode.removeChild(windowNativeEl);
+    if (this._backdropRef) {
+      const backdropNativeEl = this._backdropRef.location.nativeElement;
+      backdropNativeEl.parentNode.removeChild(backdropNativeEl);
+      this._backdropRef.destroy();
+    }
     this._windowRef.destroy();
     this._windowRef = null;
+    this._backdropRef = null;
   }
 }

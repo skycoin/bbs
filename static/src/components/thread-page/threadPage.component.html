@@ -33,10 +33,9 @@
     </div>
   </div>
   <a class="noPosts text-center" href="javascript:void(0);" *ngIf="data?.data?.posts?.length <= 0" (click)="openReply(addPost)">New Post<i class="fa fa-hand-o-left" aria-hidden="true"></i></a>
-  <!--trackBy: item?.ref-->
-  <!--(data.posts | orderBy:sort)-->
+
   <div class="post-box">
-    <div class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.data?.posts | orderBy:sort);let i = index;trackBy:trackPosts"
+    <div #post class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.data?.posts | orderBy:sort);let i = index;trackBy:trackPosts"
       [@flyInOut]>
       <div class="content-box">
         <div class="card-block">
@@ -103,11 +102,11 @@
     <fa-button name="New Post" icon="fa-pencil" (click)="openReply(addPost)"></fa-button>
   </fab>
 </ng-template>
-<ng-template #addPost let-c="close" let-d="dismiss">
-  <div class="modal-box" [@bounceIn]>
+<ng-template #addPost let-c="close" >
+  <div class="pop-dialog pop-dialog-lg" [@bounceIn]>
     <div class="modal-header">
       <h4 class="modal-title">New Post</h4>
-      <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <button type="button" class="close" aria-label="Close" (click)="c(false)">
       <span aria-hidden="true">&times;</span>
     </button>
     </div>

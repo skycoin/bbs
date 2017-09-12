@@ -68,11 +68,33 @@
         padding: 1rem 1.5rem;
         overflow: hidden;
         .form-box {
+          position: relative;
           display: flex;
           justify-content: center;
           margin-bottom: 1rem;
           .input-label {
             margin-bottom: .25rem;
+          }
+          .auto-alias {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            ul {
+              list-style: none;
+              margin: 0;
+              padding: 0;
+              li{
+                cursor: pointer;
+                padding: .5rem;
+                &:hover {
+                  background-color: rgba(20, 196, 250, 0.1);
+                }
+              }
+            }
           }
         }
         .button {

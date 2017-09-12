@@ -3,7 +3,6 @@ import { NgModule } from '@angular/core';
 // import { HttpModule } from '@angular/http';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppComponent } from './app.component';
 import { ApiService, CommonService } from '../providers';
@@ -41,7 +40,6 @@ import { DialogModule } from '../providers/dialog/dialog.module';
     FormsModule,
     ReactiveFormsModule,
     AppRouterRoutingModule,
-    NgbModule.forRoot(),
     PopupModule.forRoot(),
     LoadingModule.forRoot(),
     AlertModule.forRoot(),

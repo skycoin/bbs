@@ -4,14 +4,21 @@ import { DialogOverlayComponent } from './dialog.overlay.component';
 
 @Injectable()
 export class DialogRef {
-
+  _resolve: (result?: any) => void;
+  _reject: (reason?: any) => void;
+  result: Promise<any>;
   constructor(private _contentRef: ComponentRef<DialogComponent>,
-    private _overlaytRef?: ComponentRef<DialogOverlayComponent>) { }
+    private _overlaytRef?: ComponentRef<DialogOverlayComponent>) {
+    this.result = new Promise((resolve, reject) => {
+      this._resolve = resolve;
+      this._reject = reject;
+    });
+    this.result.then(null, () => { });
+  }
 
-  close() {
-    if (this._contentRef) {
-      this._removeModalElements();
-    }
+  close(result?: any) {
+    this._resolve(result);
+    this._removeModalElements();
   }
   private _removeModalElements() {
     const contentNativeEl = this._contentRef.location.nativeElement;
