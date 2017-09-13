@@ -36,6 +36,13 @@ var MsgTypeStr = [...]string{
 	MsgResponse: "Response",
 }
 
+func (mt MsgType) String() string {
+	if int(mt) >= len(MsgTypeStr) {
+		return "Unknown"
+	}
+	return MsgTypeStr[mt]
+}
+
 type RelayConfig struct {
 	Addresses         []string
 	ReconnectInterval *time.Duration
@@ -154,7 +161,6 @@ func (r *Relay) send(toPK cipher.PubKey, t MsgType, d1 []byte) error {
 	errors := []error{}
 
 	d0 := []byte{byte(t)}
-	//d1 := encoder.Serialize(v)
 
 	r.factory.ForEachConn(func(conn *factory.Connection) {
 		if sent {
@@ -182,6 +188,8 @@ func (r *Relay) send(toPK cipher.PubKey, t MsgType, d1 []byte) error {
 }
 
 func (r *Relay) receiveMessage(msg *Message) error {
+	r.l.Printf("message received: type(%s) data_len(%d)",
+		msg.GetMsgType().String(), len(msg.GetData()))
 
 	switch msg.GetMsgType() {
 	case MsgNewThread:
@@ -316,7 +324,7 @@ func (r *Relay) sendRequest(ctx context.Context, toPK cipher.PubKey, mt MsgType,
 			if res.Okay {
 				return res.Seq, nil
 			} else {
-				return 0, boo.New(res.ErrTyp, res.ErrMsg)
+				return 0, boo.New(int(res.ErrTyp), res.ErrMsg)
 			}
 		}
 	}

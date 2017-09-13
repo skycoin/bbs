@@ -88,7 +88,7 @@ type Response struct {
 	Type   MsgType       // Message type.
 	Seq    uint64        // Root sequence that satisfies.
 	Okay   bool          // Whether successful.
-	ErrTyp int           // Type of error.
+	ErrTyp int64           // Type of error.
 	ErrMsg string        // Message of error.
 }
 
@@ -101,7 +101,7 @@ func NewResponse(msg *Message, goal uint64, e error) *Response {
 	}
 	if e != nil {
 		r.Okay = false
-		r.ErrTyp = boo.Type(e)
+		r.ErrTyp = int64(boo.Type(e))
 		r.ErrMsg = e.Error()
 	}
 	return r

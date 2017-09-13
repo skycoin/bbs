@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/bbs/src/misc/keys"
 )
 
 // NewThread triggers a request to add a new thread to the board.
@@ -187,10 +188,11 @@ func checkVote(vote *r0.Vote, h *pack.Headers) error {
 	return nil
 }
 
-func (bi *BoardInstance) ReplaceSubmissionKeys(keys []cipher.PubKey) (uint64, error) {
-	return bi.BoardAction(func(board *r0.Board) (bool, error) {
+func (bi *BoardInstance) ReplaceSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
+	bi.l.Println("replacing submission keys to:", keys.PubKeyArrayToString(pks))
+	return bi.EditBoard(func(board *r0.Board) (bool, error) {
 		data := r0.GetData(board)
-		data.SubKeys = keys
+		data.SubKeys = pks
 		r0.SetData(board, data)
 		return true, nil
 	})
@@ -198,12 +200,12 @@ func (bi *BoardInstance) ReplaceSubmissionKeys(keys []cipher.PubKey) (uint64, er
 
 func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 	var pks []cipher.PubKey
-	if _, e := bi.BoardAction(func(board *r0.Board) (bool, error) {
-		data := r0.GetData(board)
+	if e := bi.ViewBoard(func(board *r0.Board) (bool, error) {
+		pks = r0.GetData(board).SubKeys
 		bi.l.Println("submission public keys:", pks)
-		pks = data.SubKeys
 		return false, nil
 	}); e != nil {
+		bi.l.Println("error obtaining submission keys:", e)
 		return nil
 	}
 	return pks
@@ -214,8 +216,8 @@ func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 // an error on failure.
 type BoardAction func(board *r0.Board) (bool, error)
 
-// BoardAction triggers a board action.
-func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
+// EditBoard triggers a board action.
+func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 	var goalSeq uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
@@ -249,4 +251,26 @@ func (bi *BoardInstance) BoardAction(action BoardAction) (uint64, error) {
 		return pages.Save(p)
 	})
 	return goalSeq, e
+}
+
+func (bi *BoardInstance) ViewBoard(action BoardAction) error {
+	return bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		// Get root children.
+		pages, e := r0.GetPages(p, false, true, false, false)
+		if e != nil {
+			return e
+		}
+
+		// Get board.
+		board, e := pages.BoardPage.GetBoard()
+		if e != nil {
+			return e
+		}
+
+		// Do action to board.
+		if _, e := action(board); e != nil {
+			return e
+		}
+		return nil
+	})
 }

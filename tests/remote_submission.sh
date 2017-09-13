@@ -5,6 +5,15 @@
 
 source "include/include.sh"
 
+# Run a messenger server (ADDRESS).
+
+RunMS :8080
+
+# Wait for messenger server to start (assuming 5s is enough).
+
+pv2 "SLEEP 5s"
+sleep 5
+
 # Run some nodes (HTTP | CXO | GUI).
 
 RunNode 5410 5412 false

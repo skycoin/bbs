@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
+	"encoding/json"
 )
 
 // GetPubKey obtains the public key from string, avoiding panics.
@@ -58,4 +59,13 @@ func PubKeyToSlice(pk cipher.PubKey) []byte {
 		out[i] = v
 	}
 	return out
+}
+
+func PubKeyArrayToString(pks []cipher.PubKey) string {
+	pkStrs := make([]string, len(pks))
+	for i, pk := range pks {
+		pkStrs[i] = pk.Hex()
+	}
+	data, _ := json.Marshal(pkStrs)
+	return string(data)
 }

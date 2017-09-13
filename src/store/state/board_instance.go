@@ -248,6 +248,21 @@ func (bi *BoardInstance) EditPack(action PackAction) error {
 	return nil
 }
 
+// ViewPack views a pack.
+func (bi *BoardInstance) ViewPack(action PackAction) error {
+	bi.mux.Lock()
+	defer bi.mux.Unlock()
+
+	if bi.p == nil {
+		return ErrInstanceNotInitialized
+	}
+
+	if e := action(bi.p, bi.h); e != nil {
+		return e
+	}
+	return nil
+}
+
 // SetReceived set's the board as being received (however, not necessarily ready).
 func (bi *BoardInstance) SetReceived() {
 	bi.isReceived.Set()

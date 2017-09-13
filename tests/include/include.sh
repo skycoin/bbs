@@ -44,6 +44,21 @@ pv2 () {
     echo "[ • ] --- ((( ${1} ))) ---"
 }
 
+RunMS() {
+    if [[ $# -ne 1 ]] ; then
+        echo "1 argument required"
+        exit 1
+    fi
+
+    ADDRESS_MS=$1
+
+    pv "START MESSENGER SERVER: PORT_MS ${PORT_MS}..."
+
+    go run ${GOPATH}/src/github.com/skycoin/bbs/cmd/devsd/devsd.go \
+        -address=${ADDRESS_MS} \
+        &
+}
+
 RunNode() {
     if [[ $# -ne 3 ]] ; then
         echo "3 arguments required"
