@@ -9,8 +9,8 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"github.com/skycoin/skycoin/src/cipher"
-	"time"
 	"log"
+	"time"
 )
 
 type Access struct {

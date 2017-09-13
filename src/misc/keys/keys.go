@@ -2,9 +2,9 @@ package keys
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
-	"encoding/json"
 )
 
 // GetPubKey obtains the public key from string, avoiding panics.

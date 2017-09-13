@@ -233,9 +233,9 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/content/new_board",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewBoard(r.Context(), &object.NewBoardIO{
-				Seed:        r.FormValue("seed"),
-				Name:        r.FormValue("name"),
-				Body:        r.FormValue("body"),
+				Seed: r.FormValue("seed"),
+				Name: r.FormValue("name"),
+				Body: r.FormValue("body"),
 			}))
 		})
 

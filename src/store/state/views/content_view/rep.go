@@ -20,12 +20,12 @@ type IndexHash struct {
 */
 
 type BoardRep struct {
-	PubKey       cipher.PubKey
-	Name         string
-	Body         string
-	Created      int64
-	SubPubKeys   []cipher.PubKey
-	Threads      []IndexHash
+	PubKey     cipher.PubKey
+	Name       string
+	Body       string
+	Created    int64
+	SubPubKeys []cipher.PubKey
+	Threads    []IndexHash
 }
 
 func (r *BoardRep) Fill(pk cipher.PubKey, board *r0.Board) *BoardRep {
@@ -39,11 +39,11 @@ func (r *BoardRep) Fill(pk cipher.PubKey, board *r0.Board) *BoardRep {
 }
 
 type BoardRepView struct {
-	PubKey       string   `json:"public_key"`
-	Name         string   `json:"name"`
-	Body         string   `json:"body"`
-	Created      int64    `json:"created"`
-	ThreadCount  int      `json:"thread_count"`
+	PubKey      string `json:"public_key"`
+	Name        string `json:"name"`
+	Body        string `json:"body"`
+	Created     int64  `json:"created"`
+	ThreadCount int    `json:"thread_count"`
 }
 
 func (r *BoardRep) View() *BoardRepView {
@@ -51,11 +51,11 @@ func (r *BoardRep) View() *BoardRepView {
 		return nil
 	}
 	return &BoardRepView{
-		PubKey:       r.PubKey.Hex(),
-		Name:         r.Name,
-		Body:         r.Body,
-		Created:      r.Created,
-		ThreadCount:  len(r.Threads),
+		PubKey:      r.PubKey.Hex(),
+		Name:        r.Name,
+		Body:        r.Body,
+		Created:     r.Created,
+		ThreadCount: len(r.Threads),
 	}
 }
 

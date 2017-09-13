@@ -6,17 +6,17 @@ import (
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
-	"time"
 	"log"
+	"time"
 )
 
 // NewBoard represents io required to create a new board.
 type NewBoardIO struct {
-	Name        string          `bbs:"name"`
-	Body        string          `bbs:"body"`
-	Seed        string          `bbs:"bSeed"`
-	BoardPubKey cipher.PubKey   `bbs:"bpk"`
-	BoardSecKey cipher.SecKey   `bbs:"bsk"`
+	Name        string        `bbs:"name"`
+	Body        string        `bbs:"body"`
+	Seed        string        `bbs:"bSeed"`
+	BoardPubKey cipher.PubKey `bbs:"bpk"`
+	BoardSecKey cipher.SecKey `bbs:"bsk"`
 	Board       *r0.Board
 }
 

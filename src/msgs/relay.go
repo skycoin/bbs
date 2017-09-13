@@ -13,7 +13,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/misc/keys"
 )
 
 const (
@@ -31,9 +30,9 @@ const (
 
 var MsgTypeStr = [...]string{
 	MsgNewThread: "New Thread",
-	MsgNewPost: "New Post",
-	MsgNewVote: "New Vote",
-	MsgResponse: "Response",
+	MsgNewPost:   "New Post",
+	MsgNewVote:   "New Vote",
+	MsgResponse:  "Response",
 }
 
 func (mt MsgType) String() string {
@@ -54,7 +53,7 @@ type Relay struct {
 	factory    *factory.MessengerFactory
 	compiler   *state.Compiler
 	incomplete *Incomplete
-	in         chan *Message
+	in         chan *BBSMessage
 	quit       chan struct{}
 	wg         sync.WaitGroup
 }
@@ -65,7 +64,7 @@ func NewRelay(config *RelayConfig) *Relay {
 		l:          inform.NewLogger(true, os.Stdout, ReceiverPrefix),
 		factory:    factory.NewMessengerFactory(),
 		incomplete: NewIncomplete(),
-		in:         make(chan *Message),
+		in:         make(chan *BBSMessage),
 		quit:       make(chan struct{}),
 	}
 }
@@ -109,6 +108,7 @@ func (r *Relay) setup() error {
 			Reconnect:     true,
 			ReconnectWait: *r.c.ReconnectInterval,
 			OnConnected: func(conn *factory.Connection) {
+				r.l.Println("Connected!", conn.GetKey().Hex()[:5]+"...")
 				go func(wg *sync.WaitGroup, quit chan struct{}) {
 					wg.Add(1)
 					defer wg.Done()
@@ -119,17 +119,38 @@ func (r *Relay) setup() error {
 							return
 
 						case data, ok := <-conn.GetChanIn():
+
 							if !ok {
 								r.l.Printf("'%s' disconnected.",
 									conn.GetKey().Hex()[:5]+"...")
 								return
 							}
-							if msg, e := NewMessage(data); e != nil {
+
+							msg := Message(data)
+
+							if e := msg.Check(); e != nil {
 								r.l.Printf("'%s' skipping invalid message: %v",
 									conn.GetKey().Hex()[:5]+"...", e)
-							} else {
-								r.in <- msg
+								continue
 							}
+
+							sendMsg, e := msg.ToSendMessage()
+
+							if e != nil {
+								r.l.Printf("'%s' skipping invalid message: %v",
+									conn.GetKey().Hex()[:5]+"...", e)
+								continue
+							}
+
+							bbsMsg, e := sendMsg.ToBBSMessage()
+
+							if e != nil {
+								r.l.Printf("'%s' skipping invalid message: %v",
+									conn.GetKey().Hex()[:5]+"...", e)
+								continue
+							}
+
+							r.in <- bbsMsg
 						}
 					}
 				}(&r.wg, r.quit)
@@ -156,22 +177,23 @@ func (r *Relay) service() {
 	}
 }
 
-func (r *Relay) send(toPK cipher.PubKey, t MsgType, d1 []byte) error {
+func (r *Relay) send(toPK cipher.PubKey, t MsgType, body []byte) error {
 	sent := false
 	errors := []error{}
 
-	d0 := []byte{byte(t)}
+	out := append([]byte{byte(t)}, body...)
 
 	r.factory.ForEachConn(func(conn *factory.Connection) {
 		if sent {
 			return
 		}
-		out := append(append(d0, keys.PubKeyToSlice(conn.GetKey())...), d1...)
 		if e := conn.Send(toPK, out); e != nil {
 			r.l.Printf("'%s' send error: %v",
 				conn.GetKey().Hex()[:5]+"...", e)
 			errors = append(errors, e)
 		} else {
+			r.l.Printf("'%s' sent message: body_len(%d)",
+				conn.GetKey().Hex()[:5]+"...", len(body))
 			sent = true
 		}
 	})
@@ -187,24 +209,24 @@ func (r *Relay) send(toPK cipher.PubKey, t MsgType, d1 []byte) error {
 	return nil
 }
 
-func (r *Relay) receiveMessage(msg *Message) error {
-	r.l.Printf("message received: type(%s) data_len(%d)",
-		msg.GetMsgType().String(), len(msg.GetData()))
+func (r *Relay) receiveMessage(msg *BBSMessage) error {
+	r.l.Printf("message received: type(%s) body_len(%d)",
+		msg.GetMsgType().String(), len(msg.GetBody()))
 
 	switch msg.GetMsgType() {
 	case MsgNewThread:
 		goal, e := r.processNewThread(msg)
-		return r.send(msg.GetOutPK(), MsgResponse,
+		return r.send(msg.GetFromPubKey(), MsgResponse,
 			encoder.Serialize(NewResponse(msg, goal, e)))
 
 	case MsgNewPost:
 		goal, e := r.processNewPost(msg)
-		return r.send(msg.GetOutPK(), MsgResponse,
+		return r.send(msg.GetFromPubKey(), MsgResponse,
 			encoder.Serialize(NewResponse(msg, goal, e)))
 
 	case MsgNewVote:
 		goal, e := r.processNewVote(msg)
-		return r.send(msg.GetOutPK(), MsgResponse,
+		return r.send(msg.GetFromPubKey(), MsgResponse,
 			encoder.Serialize(NewResponse(msg, goal, e)))
 
 	case MsgResponse:
@@ -216,7 +238,7 @@ func (r *Relay) receiveMessage(msg *Message) error {
 	}
 }
 
-func (r *Relay) processNewThread(msg *Message) (uint64, error) {
+func (r *Relay) processNewThread(msg *BBSMessage) (uint64, error) {
 	thread, e := msg.ExtractThread()
 	if e != nil {
 		return 0, e
@@ -231,7 +253,7 @@ func (r *Relay) processNewThread(msg *Message) (uint64, error) {
 	return bi.NewThread(thread)
 }
 
-func (r *Relay) processNewPost(msg *Message) (uint64, error) {
+func (r *Relay) processNewPost(msg *BBSMessage) (uint64, error) {
 	post, e := msg.ExtractPost()
 	if e != nil {
 		return 0, e
@@ -246,7 +268,7 @@ func (r *Relay) processNewPost(msg *Message) (uint64, error) {
 	return bi.NewPost(post)
 }
 
-func (r *Relay) processNewVote(msg *Message) (uint64, error) {
+func (r *Relay) processNewVote(msg *BBSMessage) (uint64, error) {
 	vote, e := msg.ExtractVote()
 	if e != nil {
 		return 0, e
@@ -261,7 +283,7 @@ func (r *Relay) processNewVote(msg *Message) (uint64, error) {
 	return bi.NewVote(vote)
 }
 
-func (r *Relay) processResponse(msg *Message) error {
+func (r *Relay) processResponse(msg *BBSMessage) error {
 	res, e := msg.ExtractResponse()
 	if e != nil {
 		return e
@@ -290,7 +312,7 @@ func (r *Relay) multiSendRequest(ctx context.Context, toPKs []cipher.PubKey, mt 
 	var goal uint64
 	var e error
 	for i, pk := range toPKs {
-		ctxReq, _ :=  context.WithTimeout(ctx, time.Second * 10)
+		ctxReq, _ := context.WithTimeout(ctx, time.Second*10)
 		if goal, e = r.sendRequest(ctxReq, pk, mt, data); e != nil {
 			r.l.Printf(" - [%d] send request to '%s' failed with error: %v",
 				i, pk.Hex()[:5]+"...", e)

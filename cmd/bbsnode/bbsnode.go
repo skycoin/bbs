@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/http"
+	"github.com/skycoin/bbs/src/msgs"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/session"
@@ -15,7 +16,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"github.com/skycoin/bbs/src/msgs"
 	"time"
 )
 
@@ -35,8 +35,8 @@ var (
 	defaultDevMessengerAddresses = cli.StringSlice{
 		"127.0.0.1:8080",
 	}
-	devMode          = false
-	compilerInternal = 1
+	devMode                    = false
+	compilerInternal           = 1
 	messengerReconnectInterval = time.Second * 3
 )
 
@@ -63,18 +63,18 @@ type Config struct {
 // NewDefaultConfig returns a default configuration for BBS node.
 func NewDefaultConfig() *Config {
 	return &Config{
-		Master:     false, // Hosts submission address.
-		Memory:     false, // Save to disk.
-		ConfigDir:  "",    // --> Action: set as '$HOME/.skybbs'
-		CXOPort:    defaultCXOPort,
-		CXORPC:     false,
-		CXORPCPort: defaultCXORPCPort,
+		Master:             false, // Hosts submission address.
+		Memory:             false, // Save to disk.
+		ConfigDir:          "",    // --> Action: set as '$HOME/.skybbs'
+		CXOPort:            defaultCXOPort,
+		CXORPC:             false,
+		CXORPCPort:         defaultCXORPCPort,
 		MessengerAddresses: defaultMessengerAddresses,
-		HTTPPort:   defaultHTTPPort,
-		HTTPGUI:    true,
-		HTTPGUIDir: "", // --> Action: set as '$HOME/.skybbs/static'
-		Browser:    true,
-		Defaults:   true,
+		HTTPPort:           defaultHTTPPort,
+		HTTPGUI:            true,
+		HTTPGUIDir:         "", // --> Action: set as '$HOME/.skybbs/static'
+		Browser:            true,
+		Defaults:           true,
 	}
 }
 
@@ -149,7 +149,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 							UpdateInterval: &compilerInternal,
 						},
 						&msgs.RelayConfig{
-							Addresses: c.MessengerAddresses,
+							Addresses:         c.MessengerAddresses,
 							ReconnectInterval: &messengerReconnectInterval,
 						},
 					),
