@@ -69,3 +69,15 @@ func PubKeyArrayToString(pks []cipher.PubKey) string {
 	data, _ := json.Marshal(pkStrs)
 	return string(data)
 }
+
+func ComparePubKeyArrays(a, b []cipher.PubKey) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}

@@ -226,10 +226,10 @@ func main() {
 			Destination: &config.CXORPCPort,
 			Value:       config.CXORPCPort,
 		},
-		//cli.StringSliceFlag{
-		//	Name: "messenger-addresses",
-		//	Value: &config.MessengerAddresses,
-		//},
+		cli.StringSliceFlag{
+			Name: "messenger-addresses",
+			Value: &config.MessengerAddresses,
+		},
 		cli.IntFlag{
 			Name:        "http-port",
 			Destination: &config.HTTPPort,

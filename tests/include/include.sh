@@ -52,7 +52,7 @@ RunMS() {
 
     ADDRESS_MS=$1
 
-    pv "START MESSENGER SERVER: PORT_MS ${PORT_MS}..."
+    pv "START MESSENGER SERVER: PORT_MS ${ADDRESS_MS}..."
 
     go run ${GOPATH}/src/github.com/skycoin/bbs/cmd/devsd/devsd.go \
         -address=${ADDRESS_MS} \

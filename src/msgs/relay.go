@@ -48,24 +48,26 @@ type RelayConfig struct {
 }
 
 type Relay struct {
-	c          *RelayConfig
-	l          *log.Logger
-	factory    *factory.MessengerFactory
-	compiler   *state.Compiler
-	incomplete *Incomplete
-	in         chan *BBSMessage
-	quit       chan struct{}
-	wg         sync.WaitGroup
+	c           *RelayConfig
+	l           *log.Logger
+	factory     *factory.MessengerFactory
+	compiler    *state.Compiler
+	incomplete  *Incomplete
+	in          chan *BBSMessage
+	onConnected chan struct{}
+	quit        chan struct{}
+	wg          sync.WaitGroup
 }
 
 func NewRelay(config *RelayConfig) *Relay {
 	return &Relay{
-		c:          config,
-		l:          inform.NewLogger(true, os.Stdout, ReceiverPrefix),
-		factory:    factory.NewMessengerFactory(),
-		incomplete: NewIncomplete(),
-		in:         make(chan *BBSMessage),
-		quit:       make(chan struct{}),
+		c:           config,
+		l:           inform.NewLogger(true, os.Stdout, ReceiverPrefix),
+		factory:     factory.NewMessengerFactory(),
+		incomplete:  NewIncomplete(),
+		in:          make(chan *BBSMessage),
+		onConnected: make(chan struct{}),
+		quit:        make(chan struct{}),
 	}
 }
 
@@ -112,6 +114,8 @@ func (r *Relay) setup() error {
 				go func(wg *sync.WaitGroup, quit chan struct{}) {
 					wg.Add(1)
 					defer wg.Done()
+
+					r.onConnected<- struct{}{}
 
 					for {
 						select {
@@ -171,6 +175,11 @@ func (r *Relay) service() {
 
 		case in := <-r.in:
 			if e := r.receiveMessage(in); e != nil {
+				r.l.Println(e)
+			}
+
+		case <-r.onConnected:
+			if e := r.compiler.EnsureSubmissionKeys(r.GetKeys()); e != nil {
 				r.l.Println(e)
 			}
 		}
@@ -312,7 +321,7 @@ func (r *Relay) multiSendRequest(ctx context.Context, toPKs []cipher.PubKey, mt 
 	var goal uint64
 	var e error
 	for i, pk := range toPKs {
-		ctxReq, _ := context.WithTimeout(ctx, time.Second*10)
+		ctxReq, _ := context.WithTimeout(ctx, time.Second*30)
 		if goal, e = r.sendRequest(ctxReq, pk, mt, data); e != nil {
 			r.l.Printf(" - [%d] send request to '%s' failed with error: %v",
 				i, pk.Hex()[:5]+"...", e)

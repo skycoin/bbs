@@ -226,13 +226,13 @@ func (m *Manager) prepareFile() error {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
 		} else {
 			m.compiler.UpdateBoardWithContext(context.Background(), r)
-			bi, e := m.compiler.GetBoard(pk)
-			if e != nil {
-				m.l.Panicf("failed to get instance of board '%s'", pk.Hex()[:5]+"...")
-			}
-			if _, e := bi.ReplaceSubmissionKeys(m.relay.GetKeys()); e != nil {
-				m.l.Panicf("failed to edit instance of board '%s'", pk.Hex()[:5]+"...")
-			}
+			//bi, e := m.compiler.GetBoard(pk)
+			//if e != nil {
+			//	m.l.Panicf("failed to get instance of board '%s'", pk.Hex()[:5]+"...")
+			//}
+			//if _, e := bi.EnsureSubmissionKeys(m.relay.GetKeys()); e != nil {
+			//	m.l.Panicf("failed to edit instance of board '%s'", pk.Hex()[:5]+"...")
+			//}
 		}
 	}); e != nil {
 		return e
