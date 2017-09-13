@@ -2,6 +2,7 @@ package keys
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
 )
@@ -50,4 +51,21 @@ func GetHash(s string) (cipher.SHA256, error) {
 			"invalid reference")
 	}
 	return h, e
+}
+
+func PubKeyToSlice(pk cipher.PubKey) []byte {
+	out := make([]byte, 33)
+	for i, v := range [33]byte(pk) {
+		out[i] = v
+	}
+	return out
+}
+
+func PubKeyArrayToString(pks []cipher.PubKey) string {
+	pkStrs := make([]string, len(pks))
+	for i, pk := range pks {
+		pkStrs[i] = pk.Hex()
+	}
+	data, _ := json.Marshal(pkStrs)
+	return string(data)
 }

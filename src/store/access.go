@@ -2,16 +2,14 @@ package store
 
 import (
 	"context"
-	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"github.com/skycoin/skycoin/src/cipher"
+	"log"
 	"time"
 )
 
@@ -137,7 +135,7 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *object.BoardIO) (*S
 */
 
 func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
-	m, r, e := a.CXO.GetBoards()
+	m, r, e := a.CXO.GetBoards(ctx)
 	if e != nil {
 		return nil, e
 	}
@@ -145,7 +143,7 @@ func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
 }
 
 func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOutput, error) {
-	if e := in.Process(); e != nil {
+	if e := in.Process(a.CXO.Relay().GetKeys()); e != nil {
 		return nil, e
 	}
 	if e := a.CXO.NewBoard(in); e != nil {
@@ -172,91 +170,6 @@ func (a *Access) GetBoard(ctx context.Context, in *object.BoardIO) (*BoardOutput
 	}
 	bi, e := a.CXO.GetBoardInstance(in.PubKey)
 	if e != nil {
-		return nil, e
-	}
-	board, e := bi.Get(views.Content, content_view.Board)
-	if e != nil {
-		return nil, e
-	}
-	return getBoardOutput(board), nil
-}
-
-func (a *Access) AddSubmissionAddress(ctx context.Context, in *object.SubmissionIO) (*BoardOutput, error) {
-	if e := in.Process(); e != nil {
-		return nil, e
-	}
-	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
-	if e != nil {
-		return nil, e
-	}
-	if !bi.IsMaster() {
-		return nil, boo.Newf(boo.NotMaster,
-			"this node does not own board of public key '%s'",
-			in.BoardPubKeyStr)
-	}
-	goal, e := bi.BoardAction(func(board *r0.Board) (bool, error) {
-		data := r0.GetData(board)
-		for _, address := range data.SubAddresses {
-			if address == in.SubAddress {
-				return false, boo.Newf(boo.AlreadyExists,
-					"submission address '%s' already exists in board of public key '%s'",
-					in.SubAddress, board.R.Hex())
-			}
-		}
-		data.SubAddresses = append(
-			data.SubAddresses,
-			in.SubAddress,
-		)
-		r0.SetData(board, data)
-		return true, nil
-	})
-	if e != nil {
-		return nil, e
-	}
-	if e := bi.WaitSeq(ctx, goal); e != nil {
-		return nil, e
-	}
-	board, e := bi.Get(views.Content, content_view.Board)
-	if e != nil {
-		return nil, e
-	}
-	return getBoardOutput(board), nil
-}
-
-func (a *Access) RemoveSubmissionAddress(ctx context.Context, in *object.SubmissionIO) (*BoardOutput, error) {
-	if e := in.Process(); e != nil {
-		return nil, e
-	}
-	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
-	if e != nil {
-		return nil, e
-	}
-	if !bi.IsMaster() {
-		return nil, boo.Newf(boo.NotMaster,
-			"this node does not own board of public key '%s'",
-			in.BoardPubKeyStr)
-	}
-	goal, e := bi.BoardAction(func(board *r0.Board) (bool, error) {
-		data := r0.GetData(board)
-		for i, address := range data.SubAddresses {
-			if address == in.SubAddress {
-				// Deletion.
-				data.SubAddresses = append(
-					data.SubAddresses[:i],
-					data.SubAddresses[i+1:]...,
-				)
-				r0.SetData(board, data)
-				return true, nil
-			}
-		}
-		return false, boo.Newf(boo.NotFound,
-			"submission address '%s' not found in board with public key '%s'",
-			in.SubAddress, in.BoardPubKeyStr)
-	})
-	if e != nil {
-		return nil, e
-	}
-	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
 	board, e := bi.Get(views.Content, content_view.Board)
@@ -327,11 +240,8 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 			return nil, e
 		}
 	} else {
-		sa, e := bi.Get(views.Content, content_view.SubAddresses)
-		if e != nil {
-			return nil, e
-		}
-		goal, e = rpc.Send(ctx, sa, rpc.NewThread(in.Thread))
+		log.Println("NewThread: subs:", bi.GetSubmissionKeys())
+		goal, e = a.CXO.Relay().NewThread(ctx, bi.GetSubmissionKeys(), in.Thread)
 		if e != nil {
 			return nil, e
 		}
@@ -380,11 +290,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 			return nil, e
 		}
 	} else {
-		sa, e := bi.Get(views.Content, content_view.SubAddresses)
-		if e != nil {
-			return nil, e
-		}
-		goal, e = rpc.Send(ctx, sa, rpc.NewPost(in.Post))
+		goal, e = a.CXO.Relay().NewPost(ctx, bi.GetSubmissionKeys(), in.Post)
 		if e != nil {
 			return nil, e
 		}
@@ -435,11 +341,7 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 			return nil, e
 		}
 	} else {
-		sa, e := bi.Get(views.Content, content_view.SubAddresses)
-		if e != nil {
-			return nil, e
-		}
-		goal, e = rpc.Send(ctx, sa, rpc.NewVote(in.Vote))
+		goal, e = a.CXO.Relay().NewVote(ctx, bi.GetSubmissionKeys(), in.Vote)
 		if e != nil {
 			return nil, e
 		}
@@ -472,11 +374,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 			return nil, e
 		}
 	} else {
-		sa, e := bi.Get(views.Content, content_view.SubAddresses)
-		if e != nil {
-			return nil, e
-		}
-		goal, e = rpc.Send(ctx, sa, rpc.NewVote(in.Vote))
+		goal, e = a.CXO.Relay().NewVote(ctx, bi.GetSubmissionKeys(), in.Vote)
 		if e != nil {
 			return nil, e
 		}
@@ -508,11 +406,7 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 			return nil, e
 		}
 	} else {
-		sa, e := bi.Get(views.Content, content_view.SubAddresses)
-		if e != nil {
-			return nil, e
-		}
-		goal, e = rpc.Send(ctx, sa, rpc.NewVote(in.Vote))
+		goal, e = a.CXO.Relay().NewVote(ctx, bi.GetSubmissionKeys(), in.Vote)
 		if e != nil {
 			return nil, e
 		}

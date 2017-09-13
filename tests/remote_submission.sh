@@ -5,10 +5,19 @@
 
 source "include/include.sh"
 
-# Run some nodes (HTTP | SUB | CXO | GUI).
+# Run a messenger server (ADDRESS).
 
-RunNode 5410 5411 5412 false
-RunNode 7410 7411 7412 true
+RunMS :8080
+
+# Wait for messenger server to start (assuming 5s is enough).
+
+pv2 "SLEEP 5s"
+sleep 5
+
+# Run some nodes (HTTP | CXO | GUI).
+
+RunNode 5410 5412 false
+RunNode 7410 7412 true
 
 # Wait for nodes to start running (assuming 10s is enough).
 
@@ -27,9 +36,9 @@ done
 
 # Host some boards on the nodes (HTTP | SEED | SUB).
 
-NewBoard 5410 a 5411
-NewBoard 5410 b 5411
-NewBoard 7410 c 7411
+NewBoard 5410 a
+NewBoard 5410 b
+NewBoard 7410 c
 
 # Connect and subscribe.
 

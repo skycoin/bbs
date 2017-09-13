@@ -175,23 +175,23 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 		<<< ADMIN >>>
 	*/
 
-	// Adds a submission address to specified hosted board.
-	mux.HandleFunc("/api/admin/board/new_submission_address",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.AddSubmissionAddress(r.Context(), &object.SubmissionIO{
-				BoardPubKeyStr: r.FormValue("board_public_key"),
-				SubAddress:     r.FormValue("address"),
-			}))
-		})
+	//// Adds a submission address to specified hosted board.
+	//mux.HandleFunc("/api/admin/board/new_submission_address",
+	//	func(w http.ResponseWriter, r *http.Request) {
+	//		send(w)(g.Access.AddSubmissionAddress(r.Context(), &object.SubmissionIO{
+	//			BoardPubKeyStr: r.FormValue("board_public_key"),
+	//			SubAddress:     r.FormValue("address"),
+	//		}))
+	//	})
 
-	// Removes a submission address from specified hosted board.
-	mux.HandleFunc("/api/admin/board/delete_submission_address",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.RemoveSubmissionAddress(r.Context(), &object.SubmissionIO{
-				BoardPubKeyStr: r.FormValue("board_public_key"),
-				SubAddress:     r.FormValue("address"),
-			}))
-		})
+	//// Removes a submission address from specified hosted board.
+	//mux.HandleFunc("/api/admin/board/delete_submission_address",
+	//	func(w http.ResponseWriter, r *http.Request) {
+	//		send(w)(g.Access.RemoveSubmissionAddress(r.Context(), &object.SubmissionIO{
+	//			BoardPubKeyStr: r.FormValue("board_public_key"),
+	//			SubAddress:     r.FormValue("address"),
+	//		}))
+	//	})
 
 	//// Exports an entire board root to file.
 	//mux.HandleFunc("/api/admin/board/export",
@@ -233,10 +233,9 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/content/new_board",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.NewBoard(r.Context(), &object.NewBoardIO{
-				Seed:        r.FormValue("seed"),
-				Name:        r.FormValue("name"),
-				Body:        r.FormValue("body"),
-				SubAddrsStr: r.FormValue("submission_addresses"),
+				Seed: r.FormValue("seed"),
+				Name: r.FormValue("name"),
+				Body: r.FormValue("body"),
 			}))
 		})
 

@@ -9,7 +9,6 @@ const (
 	Board        = "Board"
 	BoardPage    = "BoardPage"
 	ThreadPage   = "ThreadPage"
-	SubAddresses = "SubAddresses"
 	ContentVotes = "ContentVotes"
 )
 
@@ -26,9 +25,6 @@ func (v *ContentView) Get(id string, a ...interface{}) (interface{}, error) {
 
 	case id == ThreadPage && len(a) == 1:
 		return v.getThreadPage(a[0].(*ThreadPageIn))
-
-	case id == SubAddresses:
-		return v.getSubAddresses()
 
 	case id == ContentVotes && len(a) == 1:
 		return v.getVotes(a[0].(*ContentVotesIn))
@@ -89,16 +85,6 @@ func (v *ContentView) getThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
 	}
 
 	return out, nil
-}
-
-func (v *ContentView) getSubAddresses() ([]string, error) {
-	sa := v.board.SubAddresses
-	if len(sa) == 0 {
-		return nil, boo.Newf(boo.NotFound,
-			"board of public key '%s' has no submission addresses",
-			v.board.PubKey)
-	}
-	return sa, nil
 }
 
 type ContentVotesIn struct {

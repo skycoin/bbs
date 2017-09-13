@@ -1,10 +1,12 @@
 package r0
 
+import "github.com/skycoin/skycoin/src/cipher"
+
 type ContentData struct {
-	Name         string              `json:"heading"`
-	Body         string              `json:"body"`
-	SubAddresses []string            `json:"submission_addresses,omitempty"`
-	Images       []*ContentImageData `json:"images,omitempty"`
+	Name    string              `json:"name,omitempty"`
+	Body    string              `json:"body,omitempty"`
+	SubKeys []cipher.PubKey     `json:"submission_keys,omitempty"`
+	Images  []*ContentImageData `json:"images,omitempty"`
 }
 
 type ContentImageData struct {

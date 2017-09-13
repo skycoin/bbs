@@ -1,8 +1,10 @@
 package cxo
 
 import (
+	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/msgs"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state"
@@ -51,13 +53,14 @@ type Manager struct {
 	file     *object.CXOFileManager
 	node     *node.Node
 	compiler *state.Compiler
+	relay    *msgs.Relay
 	wg       sync.WaitGroup
-	newRoots chan *skyobject.Root
+	newRoots chan state.RootWrap
 	quit     chan struct{}
 }
 
 // NewManager creates a new CXO manager.
-func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Manager {
+func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig, relayConfig *msgs.RelayConfig) *Manager {
 	manager := &Manager{
 		c: config,
 		l: inform.NewLogger(true, os.Stdout, LogPrefix),
@@ -65,7 +68,8 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 			Memory:   config.Memory,
 			Defaults: config.Defaults,
 		}),
-		newRoots: make(chan *skyobject.Root, 10),
+		relay:    msgs.NewRelay(relayConfig),
+		newRoots: make(chan state.RootWrap, 10),
 		quit:     make(chan struct{}),
 	}
 
@@ -80,6 +84,11 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 		views.AddContent(),
 		views.AddFollow(),
 	)
+
+	// Prepare messenger relay.
+	if e := manager.relay.Open(manager.compiler); e != nil {
+		manager.l.Panicln("failed to start CXO manager:", e)
+	}
 
 	// Prepare CXO file.
 	if e := manager.prepareFile(); e != nil {
@@ -106,6 +115,7 @@ func (m *Manager) Close() {
 		select {
 		case m.quit <- struct{}{}:
 		default:
+			m.relay.Close()
 			m.compiler.Close()
 			m.wg.Wait()
 			if e := m.node.Close(); e != nil {
@@ -115,6 +125,11 @@ func (m *Manager) Close() {
 			return
 		}
 	}
+}
+
+// Relay obtains the messenger relay.
+func (m *Manager) Relay() *msgs.Relay {
+	return m.relay
 }
 
 /*
@@ -157,12 +172,15 @@ func (m *Manager) prepareNode() error {
 	c.RemoteClose = false
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
 
+	c.OnRootReceived = func(c *node.Conn, root *skyobject.Root) {
+		m.l.Printf("Receiving board '%s'", root.Pub.Hex()[:5]+"...")
+		m.newRoots <- state.RootWrap{Root: root}
+	}
+
 	c.OnRootFilled = func(c *node.Conn, root *skyobject.Root) {
-		m.l.Printf("Received board '%s'", root.Hash.Hex()[:5]+"...")
-		select {
-		case m.newRoots <- root:
-		default:
-		}
+		m.l.Printf("Received filled board '%s'", root.Pub.Hex()[:5]+"...")
+		root.IsFull = true
+		m.newRoots <- state.RootWrap{Root: root}
 	}
 
 	// Service discovery / auto root sync.
@@ -207,7 +225,14 @@ func (m *Manager) prepareFile() error {
 		if r, e := m.node.Container().LastRoot(pk); e != nil {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
 		} else {
-			m.compiler.NewRootsChan() <- r
+			m.compiler.UpdateBoardWithContext(context.Background(), r)
+			bi, e := m.compiler.GetBoard(pk)
+			if e != nil {
+				m.l.Panicf("failed to get instance of board '%s'", pk.Hex()[:5]+"...")
+			}
+			if _, e := bi.ReplaceSubmissionKeys(m.relay.GetKeys()); e != nil {
+				m.l.Panicf("failed to edit instance of board '%s'", pk.Hex()[:5]+"...")
+			}
 		}
 	}); e != nil {
 		return e
@@ -217,7 +242,7 @@ func (m *Manager) prepareFile() error {
 		if r, e := m.node.Container().LastRoot(pk); e != nil {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
 		} else {
-			m.compiler.NewRootsChan() <- r
+			m.compiler.UpdateBoardWithContext(context.Background(), r)
 		}
 	}); e != nil {
 		return e
@@ -352,9 +377,6 @@ func (m *Manager) SubscribeMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
 		return e
 	}
 	m.subscribeNode(bpk)
-	//if e := m.compiler.InitBoard(false, bpk, bsk); e != nil {
-	//	return e
-	//}
 	return nil
 }
 
@@ -427,7 +449,7 @@ func (m *Manager) GetBoardInstance(bpk cipher.PubKey) (*state.BoardInstance, err
 	return m.compiler.GetBoard(bpk)
 }
 
-func (m *Manager) GetBoards() ([]interface{}, []interface{}, error) {
+func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, error) {
 
 	var masterOut []interface{}
 	m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
@@ -479,7 +501,7 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	if r, e := newBoard(m.node, in); e != nil {
 		return e
 	} else {
-		m.compiler.NewRootsChan() <- r
+		m.compiler.UpdateBoardWithContext(context.Background(), r)
 		return nil
 	}
 }

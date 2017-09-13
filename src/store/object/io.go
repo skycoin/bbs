@@ -2,26 +2,26 @@ package object
 
 import (
 	"encoding/json"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
+	"log"
 	"time"
-	"github.com/skycoin/bbs/src/misc/boo"
 )
 
 // NewBoard represents io required to create a new board.
 type NewBoardIO struct {
 	Name        string        `bbs:"name"`
 	Body        string        `bbs:"body"`
-	SubAddrsStr string        `bbs:"subAddrsStr"`
-	SubAddrs    []string      `bbs:"subAddrs"`
 	Seed        string        `bbs:"bSeed"`
 	BoardPubKey cipher.PubKey `bbs:"bpk"`
 	BoardSecKey cipher.SecKey `bbs:"bsk"`
 	Board       *r0.Board
 }
 
-func (a *NewBoardIO) Process() error {
+func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
+	log.Println("Processing board, got submissions pks:", subPKs)
 	if e := tag.Process(a); e != nil {
 		return e
 	}
@@ -29,9 +29,9 @@ func (a *NewBoardIO) Process() error {
 		Created: time.Now().UnixNano(),
 	}
 	r0.SetData(a.Board, &r0.ContentData{
-		Name:         a.Name,
-		Body:         a.Body,
-		SubAddresses: a.SubAddrs,
+		Name:    a.Name,
+		Body:    a.Body,
+		SubKeys: subPKs,
 	})
 	return nil
 }

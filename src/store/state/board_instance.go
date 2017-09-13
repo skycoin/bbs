@@ -33,7 +33,9 @@ type BoardInstance struct {
 	h   *pack.Headers
 	v   map[string]views.View
 
-	needUpdate typ.Bool
+	needPublish typ.Bool // Whether there are changes that need to be published.
+	isReceived  typ.Bool // Whether we have received this root.
+	isReady     typ.Bool // Whether we have received a full root.
 }
 
 // Init initiates the  the board instance.
@@ -64,11 +66,14 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	bi.mux.Lock()
 	defer bi.mux.Unlock()
 
+	bi.isReceived.Set()
+	bi.isReady.Set()
+
 	var (
-		master   = sk != cipher.SecKey{} // Whether this node owns the board.
-		ct       = bi.n.Container()      // CXO container.
-		pFlags   = skyobject.HashTableIndex     // Flags for unpacking root.
-		firstRun = false                 // Is the first time running update.
+		master   = sk != cipher.SecKey{}    // Whether this node owns the board.
+		ct       = bi.n.Container()         // CXO container.
+		pFlags   = skyobject.HashTableIndex // Flags for unpacking root.
+		firstRun = false                    // Is the first time running update.
 	)
 
 	// Preparation.
@@ -125,9 +130,9 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 // PublishChanges publishes changes to CXO.
 // (only if instance is initialised, changes were made, and the node owns the board.)
 func (bi *BoardInstance) PublishChanges() error {
-	defer bi.needUpdate.Clear()
+	defer bi.needPublish.Clear()
 
-	if bi.needUpdate.Value() == false {
+	if bi.needPublish.Value() == false {
 		return nil
 	}
 
@@ -236,9 +241,43 @@ func (bi *BoardInstance) EditPack(action PackAction) error {
 		return ErrNotEditable
 	}
 
-	bi.needUpdate.Set()
+	bi.needPublish.Set()
 	if e := action(bi.p, bi.h); e != nil {
 		return e
 	}
 	return nil
+}
+
+// ViewPack views a pack.
+func (bi *BoardInstance) ViewPack(action PackAction) error {
+	bi.mux.Lock()
+	defer bi.mux.Unlock()
+
+	if bi.p == nil {
+		return ErrInstanceNotInitialized
+	}
+
+	if e := action(bi.p, bi.h); e != nil {
+		return e
+	}
+	return nil
+}
+
+// SetReceived set's the board as being received (however, not necessarily ready).
+func (bi *BoardInstance) SetReceived() {
+	bi.isReceived.Set()
+}
+
+// IsReceived determines whether board has been received.
+func (bi *BoardInstance) IsReceived() bool {
+	v := bi.isReceived.Value()
+	//bi.l.Println("IsReceived:", v)
+	return v
+}
+
+// IsReady determines whether board is received and ready.
+func (bi *BoardInstance) IsReady() bool {
+	v := bi.isReady.Value()
+	//bi.l.Println("IsReady:", v)
+	return v
 }
