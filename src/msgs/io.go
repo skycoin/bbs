@@ -15,7 +15,7 @@ const (
 type Message []byte
 
 func (m Message) Check() error {
-	if len(m) < factory.MSG_HEADER_END+tLen {
+	if len(m) < factory.MSG_HEADER_END {
 		return boo.New(boo.InvalidRead,
 			"received data is of invalid length")
 	}
@@ -27,7 +27,7 @@ func (m Message) GetOP() uint {
 }
 
 func (m Message) ToSendMessage() (*SendMessage, error) {
-	if m.GetOP() == factory.OP_SEND && len(m) < factory.SEND_MSG_META_END {
+	if m.GetOP() != factory.OP_SEND || len(m) < factory.SEND_MSG_META_END {
 		return nil, boo.New(boo.InvalidRead, "not send message")
 	}
 	sm := SendMessage(m)

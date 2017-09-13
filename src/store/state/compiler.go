@@ -139,6 +139,18 @@ func (c *Compiler) updateSingle(root *skyobject.Root) {
 	bi.UpdateWithReceived(root, sk)
 }
 
+func (c *Compiler) EnsureSubmissionKeys(keys []cipher.PubKey) error {
+	return c.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
+		if bi, e := c.GetBoard(pk); e != nil {
+			c.l.Println(e)
+		} else {
+			if _, e := bi.EnsureSubmissionKeys(keys); e != nil {
+				c.l.Println(e)
+			}
+		}
+	})
+}
+
 func (c *Compiler) DeleteBoard(bpk cipher.PubKey) {
 	c.mux.Lock()
 	defer c.mux.Unlock()

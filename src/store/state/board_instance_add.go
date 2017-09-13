@@ -188,10 +188,13 @@ func checkVote(vote *r0.Vote, h *pack.Headers) error {
 	return nil
 }
 
-func (bi *BoardInstance) ReplaceSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
-	bi.l.Println("replacing submission keys to:", keys.PubKeyArrayToString(pks))
+func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
+	bi.l.Println("ensuring submission keys as:", keys.PubKeyArrayToString(pks))
 	return bi.EditBoard(func(board *r0.Board) (bool, error) {
 		data := r0.GetData(board)
+		if keys.ComparePubKeyArrays(data.SubKeys, pks) {
+			return false, nil
+		}
 		data.SubKeys = pks
 		r0.SetData(board, data)
 		return true, nil
@@ -202,7 +205,6 @@ func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 	var pks []cipher.PubKey
 	if e := bi.ViewBoard(func(board *r0.Board) (bool, error) {
 		pks = r0.GetData(board).SubKeys
-		bi.l.Println("submission public keys:", pks)
 		return false, nil
 	}); e != nil {
 		bi.l.Println("error obtaining submission keys:", e)
