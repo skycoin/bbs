@@ -40,7 +40,6 @@ type CXOFileManager struct {
 	hasChanges  bool // has changes.
 	masters     *typ.List
 	remotes     *typ.List
-	connections *typ.List
 }
 
 // NewCXOFileManager creates a new file manager with provided configuration.
@@ -50,7 +49,6 @@ func NewCXOFileManager(config *CXOFileManagerConfig) *CXOFileManager {
 		l:           inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
 		masters:     typ.NewList(),
 		remotes:     typ.NewList(),
-		connections: typ.NewList(),
 	}
 }
 
@@ -121,29 +119,6 @@ func (m *CXOFileManager) RemoveSub(pk cipher.PubKey) error {
 	return nil
 }
 
-// AddConnection adds a connection to file.
-func (m *CXOFileManager) AddConnection(address string) error {
-	defer m.lock()()
-
-	if m.connections.Append(address, address) == false {
-		return boo.Newf(boo.NotAllowed,
-			"failed to add connection '%s' to file", address)
-	}
-
-	m.tagChanges()
-	return nil
-}
-
-// RemoveConnection removes a connection from file.
-func (m *CXOFileManager) RemoveConnection(address string) error {
-	defer m.lock()()
-
-	m.connections.DelOfKey(address)
-
-	m.tagChanges()
-	return nil
-}
-
 // GetMasterSubs returns list of master subscriptions.
 func (m *CXOFileManager) GetMasterSubs() ([]*Subscription, error) {
 	defer m.lock()()
@@ -178,23 +153,6 @@ func (m *CXOFileManager) GetRemoteSubs() ([]*Subscription, error) {
 	return out, e
 }
 
-// GetConnections returns list of connections.
-func (m *CXOFileManager) GetConnections() ([]string, error) {
-	defer m.lock()()
-
-	out := make([]string, m.connections.Len())
-	e := m.connections.Range(typ.Ascending, func(i int, _, v interface{}) (bool, error) {
-		var ok bool
-		if out[i], ok = v.(string); !ok {
-			return false, boo.Newf(boo.Internal,
-				"failed to extract address from connections[%d]", i)
-		}
-		return false, nil
-	})
-
-	return out, e
-}
-
 // MasterSubsLen gets the number of master subscriptions in file.
 func (m *CXOFileManager) MasterSubsLen() int {
 	defer m.lock()()
@@ -205,12 +163,6 @@ func (m *CXOFileManager) MasterSubsLen() int {
 func (m *CXOFileManager) RemoteSubsLen() int {
 	defer m.lock()()
 	return m.remotes.Len()
-}
-
-// ConnectionsLen gets the number of connection addresses in file.
-func (m *CXOFileManager) ConnectionsLen() int {
-	defer m.lock()()
-	return m.connections.Len()
 }
 
 // MasterSubAction performs an action to master subscription.
@@ -244,23 +196,6 @@ func (m *CXOFileManager) RangeRemoteSubs(action RemoteSubAction) error {
 				"failed to extract key from remote_subscriptions[%d]", i)
 		}
 		action(pk)
-	}
-	return nil
-}
-
-// ConnectionAction performs an action on a connection.
-type ConnectionAction func(address string)
-
-// RangeConnections ranges all connections.
-func (m *CXOFileManager) RangeConnections(action ConnectionAction) error {
-	defer m.lock()()
-	for i, k := range m.connections.Keys() {
-		address, ok := k.(string)
-		if !ok {
-			return boo.Newf(boo.Internal,
-				"failed to extract key from connections[%d]", i)
-		}
-		action(address)
 	}
 	return nil
 }
@@ -317,10 +252,6 @@ func (m *CXOFileManager) load(path string) error {
 		} else if *m.c.Defaults {
 			// Load default.
 			m.l.Println("First Run - Loading defaults:")
-			for i, address := range defaultConnections {
-				m.l.Printf(" - [%d] Connection '%s'", i, address)
-				m.connections.Append(address, address)
-			}
 			for i, pkStr := range defaultSubscriptions {
 				pk, _ := keys.GetPubKey(pkStr)
 				m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
@@ -368,11 +299,6 @@ func (m *CXOFileManager) load(path string) error {
 		m.remotes.Append(pk, &Subscription{PK: pk})
 	}
 
-	// Range connections.
-	for _, address := range fileData.Connections {
-		m.connections.Append(address, address)
-	}
-
 	return nil
 }
 
@@ -388,12 +314,6 @@ func (m *CXOFileManager) save(path string) error {
 	fileData.RemoteSubs = make([]SubscriptionView, m.remotes.Len())
 	m.remotes.Range(typ.Ascending, func(i int, _, v interface{}) (bool, error) {
 		fileData.RemoteSubs[i] = v.(*Subscription).View()
-		return false, nil
-	})
-
-	fileData.Connections = make([]string, m.connections.Len())
-	m.connections.Range(typ.Ascending, func(i int, _, v interface{}) (bool, error) {
-		fileData.Connections[i] = v.(string)
 		return false, nil
 	})
 

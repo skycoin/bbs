@@ -138,6 +138,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 						&cxo.ManagerConfig{
 							Memory:       &c.Memory,
 							Config:       &c.ConfigDir,
+							MessengerAddresses: c.MessengerAddresses,
 							CXOPort:      &c.CXOPort,
 							CXORPCEnable: &c.CXORPC,
 							CXORPCPort:   &c.CXORPCPort,
@@ -225,7 +226,7 @@ func main() {
 			Value:       config.CXORPCPort,
 		},
 		cli.StringSliceFlag{
-			Name: "messenger-addresses",
+			Name:  "messenger-addresses",
 			Value: &config.MessengerAddresses,
 		},
 		cli.IntFlag{

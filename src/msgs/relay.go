@@ -115,7 +115,7 @@ func (r *Relay) setup() error {
 					wg.Add(1)
 					defer wg.Done()
 
-					r.onConnected<- struct{}{}
+					r.onConnected <- struct{}{}
 
 					for {
 						select {

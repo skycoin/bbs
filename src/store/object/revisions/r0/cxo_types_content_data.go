@@ -10,10 +10,11 @@ type ContentData struct {
 }
 
 type ContentImageData struct {
-	URL      string `json:"url"`
-	Name     string `json:"name"`
-	ThumbURL string `json:"thumbnail_url,omitempty"`
-	Size     int    `json:"size,omitempty"`
-	Height   int    `json:"height,omitempty"`
-	Width    int    `json:"width,omitempty"`
+	Name   string              `json:"name"`
+	Hash   string              `json:"hash"`
+	URL    string              `json:"url,omitempty"`
+	Size   int                 `json:"size,omitempty"`
+	Height int                 `json:"height,omitempty"`
+	Width  int                 `json:"width,omitempty"`
+	Thumbs []*ContentImageData `json:"thumbs,omitempty"`
 }
