@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"sync"
 	"errors"
+	"sync"
 )
 
 var (

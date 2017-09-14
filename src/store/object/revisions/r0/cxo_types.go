@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"sync"
+	"github.com/skycoin/bbs/src/store/object/transfer"
 )
 
 const (
@@ -108,6 +109,7 @@ type RootPage struct {
 	Typ string // Type of root.
 	Rev uint64 // Revision of root type.
 	Del bool   // Whether root is deleted.
+	Sum []byte // Summary of the root.
 }
 
 func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
@@ -121,6 +123,16 @@ func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
 		return nil, extRootChildErr(IndexRootPage)
 	}
 	return rp, nil
+}
+
+func (rp *RootPage) Export() (*transfer.RootPageRep, error) {
+	out := &transfer.RootPageRep{
+		Type:     rp.Typ,
+		Revision: rp.Rev,
+		Deleted:  rp.Del,
+		Summary:  transfer.RootPageSummary{},
+	}
+	return out, nil
 }
 
 /*
@@ -202,6 +214,23 @@ func (bp *BoardPage) AddThread(tRef skyobject.Ref) error {
 	return nil
 }
 
+func (bp *BoardPage) DumpBoard() (transfer.Board, error) {
+	return bp.GetBoard()
+}
+
+func (bp *BoardPage) DumpThreadPages() ([]transfer.ThreadPage, error) {
+	l, e := bp.Threads.Len()
+	if e != nil {
+		return nil, e
+	}
+	out := make([]transfer.ThreadPage, l)
+	e = bp.RangeThreadPages(func(i int, tp *ThreadPage) error {
+		out[i] = tp
+		return nil
+	})
+	return out, e
+}
+
 /*
 	<<< THREAD PAGE >>>
 */
@@ -268,6 +297,23 @@ func (tp *ThreadPage) Save(tpElem *skyobject.RefsElem) error {
 		return boo.WrapType(e, boo.Internal, "failed to save 'ThreadPage'")
 	}
 	return nil
+}
+
+func (tp *ThreadPage) DumpThread() (transfer.Thread, error) {
+	return tp.GetThread()
+}
+
+func (tp *ThreadPage) DumpPosts() ([]transfer.Post, error) {
+	l, e := tp.Posts.Len()
+	if e != nil {
+		return nil, e
+	}
+	out := make([]transfer.Post, l)
+	e = tp.RangePosts(func(i int, post *Post) error {
+		out[i] = post
+		return nil
+	})
+	return out, e
 }
 
 /*

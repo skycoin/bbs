@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/bbs/src/store/object/transfer"
 )
 
 type UsersOutput struct {
@@ -109,11 +110,11 @@ func getFollowPageOutput(v interface{}) *FollowPageOutput {
 }
 
 type ExportBoardOutput struct {
-	FilePath string      `json:"file_path"`
-	FileData *r0.ExpRoot `json:"file_data"`
+	FilePath string           `json:"file_path"`
+	FileData *transfer.RootRep `json:"file_data"`
 }
 
-func getExportBoardOutput(path string, root *r0.ExpRoot) *ExportBoardOutput {
+func getExportBoardOutput(path string, root *transfer.RootRep) *ExportBoardOutput {
 	return &ExportBoardOutput{
 		FilePath: path,
 		FileData: root,
