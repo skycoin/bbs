@@ -225,7 +225,7 @@ func main() {
 			Value:       config.CXORPCPort,
 		},
 		cli.StringSliceFlag{
-			Name: "messenger-addresses",
+			Name:  "messenger-addresses",
 			Value: &config.MessengerAddresses,
 		},
 		cli.IntFlag{

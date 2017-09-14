@@ -211,7 +211,6 @@ func (m *Manager) prepareFile() error {
 	if e := m.file.Load(m.filePath()); e != nil {
 		return e
 	}
-
 	if e := m.file.RangeConnections(func(address string) {
 		if _, e := m.connectNode(address); e != nil {
 			m.l.Println("prepareFile() Connection error:", e)
@@ -219,34 +218,24 @@ func (m *Manager) prepareFile() error {
 	}); e != nil {
 		return e
 	}
-
 	if e := m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		if r, e := m.node.Container().LastRoot(pk); e != nil {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
 		} else {
-			m.compiler.UpdateBoardWithContext(context.Background(), r)
-			//bi, e := m.compiler.GetBoard(pk)
-			//if e != nil {
-			//	m.l.Panicf("failed to get instance of board '%s'", pk.Hex()[:5]+"...")
-			//}
-			//if _, e := bi.EnsureSubmissionKeys(m.relay.GetKeys()); e != nil {
-			//	m.l.Panicf("failed to edit instance of board '%s'", pk.Hex()[:5]+"...")
-			//}
+			m.compiler.UpdateBoard(r)
 		}
 	}); e != nil {
 		return e
 	}
-
 	if e := m.file.RangeRemoteSubs(func(pk cipher.PubKey) {
 		if r, e := m.node.Container().LastRoot(pk); e != nil {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
 		} else {
-			m.compiler.UpdateBoardWithContext(context.Background(), r)
+			m.compiler.UpdateBoard(r)
 		}
 	}); e != nil {
 		return e
 	}
-
 	return nil
 }
 
