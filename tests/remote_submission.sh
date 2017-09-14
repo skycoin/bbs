@@ -42,7 +42,7 @@ NewBoard 7410 c
 
 # Connect and subscribe.
 
-NewConnection 7410 "[::]:5412"
+#NewConnection 7410 "[::]:5412"
 NewSubscription 7410 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b"
 NewSubscription 7410 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b"
 

@@ -38,6 +38,7 @@ const (
 type ManagerConfig struct {
 	Memory       *bool   // Whether to enable memory mode.
 	Defaults     *bool   // Whether to have default connection / subscription.
+	MessengerAddresses []string // Messenger addresses.
 	Config       *string // Configuration directory.
 	CXOPort      *int    // CXO listening port.
 	CXORPCEnable *bool   // Whether to enable CXO RPC.
@@ -146,7 +147,7 @@ func (m *Manager) prepareNode() error {
 
 	c.Skyobject.Log.Debug = true
 	c.Skyobject.Log.Pins = skyobject.PackSavePin // all
-	c.Skyobject.Log.Prefix = "[server cxo] "
+	c.Skyobject.Log.Prefix = "[CXO] "
 
 	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
 		t.Register(r0.RootPageName, r0.RootPage{})
@@ -166,6 +167,8 @@ func (m *Manager) prepareNode() error {
 	c.InMemoryDB = *m.c.Memory
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
 	c.EnableListener = true
+	c.PublicServer = true
+	c.DiscoveryAddresses = m.c.MessengerAddresses
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
 	c.EnableRPC = *m.c.CXORPCEnable
 	c.RemoteClose = false
@@ -211,13 +214,6 @@ func (m *Manager) prepareFile() error {
 	if e := m.file.Load(m.filePath()); e != nil {
 		return e
 	}
-	if e := m.file.RangeConnections(func(address string) {
-		if _, e := m.connectNode(address); e != nil {
-			m.l.Println("prepareFile() Connection error:", e)
-		}
-	}); e != nil {
-		return e
-	}
 	if e := m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		if r, e := m.node.Container().LastRoot(pk); e != nil {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
@@ -260,9 +256,6 @@ func (m *Manager) retryLoop() {
 			m.file.Save(m.filePath())
 			return
 		case <-ticker.C:
-			m.file.RangeConnections(func(address string) {
-				m.connectNode(address)
-			})
 			m.file.Save(m.filePath())
 		}
 	}
@@ -273,29 +266,18 @@ func (m *Manager) retryLoop() {
 */
 
 func (m *Manager) GetConnections() []r0.Connection {
-	i, out := 0, make([]r0.Connection, m.file.ConnectionsLen())
-	m.file.RangeConnections(func(address string) {
-		conn, state := m.node.Pool().Connection(address), ""
-		if conn == nil {
-			state = "DISCONNECTED"
-		} else {
-			state = conn.State().String()
-		}
+	connections := m.node.Connections()
+	out := make([]r0.Connection, len(connections))
+	for i, conn := range m.node.Connections() {
 		out[i] = r0.Connection{
-			Address: address,
-			State:   state,
+			Address: conn.Address(),
+			State: conn.Gnet().State().String(),
 		}
-		i += 1
-	})
+	}
 	return out
 }
 
 func (m *Manager) Connect(address string) error {
-
-	// Add to file first.
-	if e := m.file.AddConnection(address); e != nil {
-		return e
-	}
 	if _, e := m.connectNode(address); e != nil {
 		switch boo.Type(e) {
 		case boo.AlreadyExists:
@@ -323,9 +305,6 @@ func (m *Manager) connectNode(address string) (*gnet.Conn, error) {
 }
 
 func (m *Manager) Disconnect(address string) error {
-	if e := m.file.RemoveConnection(address); e != nil {
-		return e
-	}
 	if e := m.disconnectNode(address); e != nil {
 		return e
 	}
