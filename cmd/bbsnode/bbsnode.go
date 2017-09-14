@@ -63,7 +63,6 @@ type Config struct {
 // NewDefaultConfig returns a default configuration for BBS node.
 func NewDefaultConfig() *Config {
 	return &Config{
-		Master:             false, // Hosts submission address.
 		Memory:             false, // Save to disk.
 		ConfigDir:          "",    // --> Action: set as '$HOME/.skybbs'
 		CXOPort:            defaultCXOPort,
@@ -137,7 +136,6 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 					),
 					CXO: cxo.NewManager(
 						&cxo.ManagerConfig{
-							Master:       &c.Master,
 							Memory:       &c.Memory,
 							Config:       &c.ConfigDir,
 							CXOPort:      &c.CXOPort,
