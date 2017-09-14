@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"github.com/skycoin/skycoin/src/util/file"
+	"github.com/skycoin/bbs/src/store/object/transfer"
 )
 
 const (
@@ -36,13 +38,13 @@ const (
 
 // ManagerConfig represents the configuration for CXO Manager.
 type ManagerConfig struct {
-	Memory       *bool   // Whether to enable memory mode.
-	Defaults     *bool   // Whether to have default connection / subscription.
+	Memory             *bool    // Whether to enable memory mode.
+	Defaults           *bool    // Whether to have default connection / subscription.
 	MessengerAddresses []string // Messenger addresses.
-	Config       *string // Configuration directory.
-	CXOPort      *int    // CXO listening port.
-	CXORPCEnable *bool   // Whether to enable CXO RPC.
-	CXORPCPort   *int    // CXO RPC port.
+	Config             *string  // Configuration directory.
+	CXOPort            *int     // CXO listening port.
+	CXORPCEnable       *bool    // Whether to enable CXO RPC.
+	CXORPCPort         *int     // CXO RPC port.
 }
 
 // Manager manages interaction with CXO and storing/retrieving node configuration files.
@@ -271,7 +273,7 @@ func (m *Manager) GetConnections() []r0.Connection {
 	for i, conn := range m.node.Connections() {
 		out[i] = r0.Connection{
 			Address: conn.Address(),
-			State: conn.Gnet().State().String(),
+			State:   conn.Gnet().State().String(),
 		}
 	}
 	return out
@@ -504,24 +506,24 @@ func newBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 	<<< IMPORT / EXPORT >>>
 */
 
-//func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *r0.ExpRoot, error) {
-//	if *m.c.Memory {
-//		return "", nil, nil
-//	}
-//	bi, e := m.compiler.GetBoard(pk)
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	out, e := bi.Export()
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	path := m.exportPath(name)
-//	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
-//		return "", nil, e
-//	}
-//	return path, out, nil
-//}
+func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
+	if *m.c.Memory {
+		return "", nil, nil
+	}
+	bi, e := m.compiler.GetBoard(pk)
+	if e != nil {
+		return "", nil, e
+	}
+	out, e := bi.Export()
+	if e != nil {
+		return "", nil, e
+	}
+	path := m.exportPath(name)
+	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
+		return "", nil, e
+	}
+	return path, out, nil
+}
 
 //func (m *Manager) ExportAllMasters(prefix string) error {
 //	if *m.c.Memory {

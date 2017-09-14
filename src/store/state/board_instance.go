@@ -14,6 +14,8 @@ import (
 	"os"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/store/object/transfer"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 var (
@@ -270,14 +272,23 @@ func (bi *BoardInstance) SetReceived() {
 
 // IsReceived determines whether board has been received.
 func (bi *BoardInstance) IsReceived() bool {
-	v := bi.isReceived.Value()
-	//bi.l.Println("IsReceived:", v)
-	return v
+	return bi.isReceived.Value()
 }
 
 // IsReady determines whether board is received and ready.
 func (bi *BoardInstance) IsReady() bool {
-	v := bi.isReady.Value()
-	//bi.l.Println("IsReady:", v)
-	return v
+	return bi.isReady.Value()
+}
+
+// Export exports root to board json file.
+func (bi *BoardInstance) Export() (*transfer.RootRep, error) {
+	out := new(transfer.RootRep)
+	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		pages, e := r0.GetPages(p, true, true, false, false)
+		if e != nil {
+			return e
+		}
+		return out.Fill(pages.RootPage, pages.BoardPage)
+	})
+	return out, e
 }

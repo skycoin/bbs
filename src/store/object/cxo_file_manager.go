@@ -34,21 +34,21 @@ type CXOFileManagerConfig struct {
 // CXOFileManager manages the CXOFile.
 // This is a file containing saved connections and board keys.
 type CXOFileManager struct {
-	c           *CXOFileManagerConfig
-	l           *log.Logger
-	mux         sync.Mutex
-	hasChanges  bool // has changes.
-	masters     *typ.List
-	remotes     *typ.List
+	c          *CXOFileManagerConfig
+	l          *log.Logger
+	mux        sync.Mutex
+	hasChanges bool // has changes.
+	masters    *typ.List
+	remotes    *typ.List
 }
 
 // NewCXOFileManager creates a new file manager with provided configuration.
 func NewCXOFileManager(config *CXOFileManagerConfig) *CXOFileManager {
 	return &CXOFileManager{
-		c:           config,
-		l:           inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
-		masters:     typ.NewList(),
-		remotes:     typ.NewList(),
+		c:       config,
+		l:       inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
+		masters: typ.NewList(),
+		remotes: typ.NewList(),
 	}
 }
 

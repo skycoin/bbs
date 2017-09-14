@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
+	"github.com/skycoin/bbs/src/store/object/transfer"
 )
 
 type Content interface {
@@ -39,6 +40,17 @@ type Board struct {
 func (b *Board) GetRaw() []byte  { return b.Data }
 func (b *Board) SetRaw(v []byte) { b.Data = v }
 
+func (b *Board) Export() (*transfer.BoardRep, error) {
+	data := GetData(b)
+	out := &transfer.BoardRep{
+		Name: data.Name,
+		Body: data.Body,
+		Created: b.Created,
+		Tags: nil,
+	}
+	return out, nil
+}
+
 type Thread struct {
 	R       cipher.SHA256 `enc:"-" json:"-"`
 	OfBoard cipher.PubKey `json:",string"`
@@ -51,6 +63,17 @@ type Thread struct {
 func (t Thread) Verify() error    { return tag.Verify(&t) }
 func (t *Thread) GetRaw() []byte  { return t.Data }
 func (t *Thread) SetRaw(v []byte) { t.Data = v }
+
+func (t *Thread) Export() (*transfer.ThreadRep, error) {
+	data := GetData(t)
+	out := &transfer.ThreadRep{
+		Name: data.Name,
+		Body: data.Body,
+		Created: t.Created,
+		Creator: t.Creator.Hex(),
+	}
+	return out, nil
+}
 
 type Post struct {
 	R        cipher.SHA256 `enc:"-" json:"-"`
@@ -79,6 +102,18 @@ func GetPost(pElem *skyobject.RefsElem) (*Post, error) {
 func (p Post) Verify() error    { return tag.Verify(&p) }
 func (p *Post) GetRaw() []byte  { return p.Data }
 func (p *Post) SetRaw(v []byte) { p.Data = v }
+
+func (p *Post) Export() (*transfer.PostRep, error) {
+	data := GetData(p)
+	out := &transfer.PostRep{
+		OfPost: p.OfPost.Hex(),
+		Name: data.Name,
+		Body: data.Body,
+		Created: p.Created,
+		Creator: p.Creator.Hex(),
+	}
+	return out, nil
+}
 
 const (
 	UserVote = iota

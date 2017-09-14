@@ -14,7 +14,7 @@ type ExpRoot struct {
 func (r *ExpRoot) Fill(rp *RootPage, bp *BoardPage, up *UsersPage) error {
 	var e error
 
-	//r.RootPage = *rp
+	r.RootPage = *rp
 	if r.BoardPage, e = ExportBoardPage(bp); e != nil {
 		return e
 	}

@@ -136,13 +136,13 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 					),
 					CXO: cxo.NewManager(
 						&cxo.ManagerConfig{
-							Memory:       &c.Memory,
-							Config:       &c.ConfigDir,
+							Memory:             &c.Memory,
+							Config:             &c.ConfigDir,
 							MessengerAddresses: c.MessengerAddresses,
-							CXOPort:      &c.CXOPort,
-							CXORPCEnable: &c.CXORPC,
-							CXORPCPort:   &c.CXORPCPort,
-							Defaults:     &c.Defaults,
+							CXOPort:            &c.CXOPort,
+							CXORPCEnable:       &c.CXORPC,
+							CXORPCPort:         &c.CXORPCPort,
+							Defaults:           &c.Defaults,
 						},
 						&state.CompilerConfig{
 							UpdateInterval: &compilerInternal,
