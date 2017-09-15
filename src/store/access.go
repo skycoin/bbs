@@ -190,16 +190,16 @@ func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*Ex
 	return getExportBoardOutput(path, data), nil
 }
 
-//func (a *Access) ImportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
-//	if e := in.Process(); e != nil {
-//		return nil, e
-//	}
-//	path, out, e := a.CXO.ImportBoard(in.PubKey, in.Name)
-//	if e != nil {
-//		return nil, e
-//	}
-//	return getExportBoardOutput(path, out), nil
-//}
+func (a *Access) ImportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	path, out, e := a.CXO.ImportBoard(in.PubKey, in.Name)
+	if e != nil {
+		return nil, e
+	}
+	return getExportBoardOutput(path, out), nil
+}
 
 /*
 	<<< CONTENT >>>

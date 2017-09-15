@@ -125,14 +125,24 @@ func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
 	return rp, nil
 }
 
-func (rp *RootPage) Export() (*transfer.RootPageRep, error) {
+func (rp *RootPage) ToRep() (*transfer.RootPageRep, error) {
 	out := &transfer.RootPageRep{
 		Type:     rp.Typ,
 		Revision: rp.Rev,
 		Deleted:  rp.Del,
-		Summary:  transfer.RootPageSummary{},
+		Summary:  transfer.RootPageSummary{}, // TODO: Implement summary.
 	}
 	return out, nil
+}
+
+func (rp *RootPage) FromRep(rpRep *transfer.RootPageRep) error {
+	*rp = RootPage{
+		Typ: rpRep.Type,
+		Rev: rpRep.Revision,
+		Del: rpRep.Deleted,
+		Sum: nil, // TODO: Implement summary.
+	}
+	return nil
 }
 
 /*
@@ -214,11 +224,11 @@ func (bp *BoardPage) AddThread(tRef skyobject.Ref) error {
 	return nil
 }
 
-func (bp *BoardPage) DumpBoard() (transfer.Board, error) {
+func (bp *BoardPage) ExportBoard() (transfer.Board, error) {
 	return bp.GetBoard()
 }
 
-func (bp *BoardPage) DumpThreadPages() ([]transfer.ThreadPage, error) {
+func (bp *BoardPage) ExportThreadPages() ([]transfer.ThreadPage, error) {
 	l, e := bp.Threads.Len()
 	if e != nil {
 		return nil, e
@@ -229,6 +239,20 @@ func (bp *BoardPage) DumpThreadPages() ([]transfer.ThreadPage, error) {
 		return nil
 	})
 	return out, e
+}
+
+func (bp *BoardPage) ImportBoard(p *skyobject.Pack, b transfer.Board) error {
+	return bp.Board.SetValue(b)
+}
+
+func (bp *BoardPage) ImportThreadPages(p *skyobject.Pack, tps []transfer.ThreadPage) error {
+	bp.Threads.Clear()
+	for _, tp := range tps {
+		if e := bp.Threads.Append(tp); e != nil {
+			return e
+		}
+	}
+	return nil
 }
 
 /*
@@ -299,11 +323,11 @@ func (tp *ThreadPage) Save(tpElem *skyobject.RefsElem) error {
 	return nil
 }
 
-func (tp *ThreadPage) DumpThread() (transfer.Thread, error) {
+func (tp *ThreadPage) ExportThread() (transfer.Thread, error) {
 	return tp.GetThread()
 }
 
-func (tp *ThreadPage) DumpPosts() ([]transfer.Post, error) {
+func (tp *ThreadPage) ExportPosts() ([]transfer.Post, error) {
 	l, e := tp.Posts.Len()
 	if e != nil {
 		return nil, e
@@ -314,6 +338,20 @@ func (tp *ThreadPage) DumpPosts() ([]transfer.Post, error) {
 		return nil
 	})
 	return out, e
+}
+
+func (tp *ThreadPage) ImportThread(p *skyobject.Pack, t transfer.Thread) error {
+	return tp.Thread.SetValue(t)
+}
+
+func (tp *ThreadPage) ImportPosts(p *skyobject.Pack, ps []transfer.Post) error {
+	tp.Posts.Clear()
+	for _, p := range ps {
+		if e := tp.Posts.Append(p); e != nil {
+			return e
+		}
+	}
+	return nil
 }
 
 /*
@@ -623,6 +661,46 @@ type UserView struct {
 type Connection struct {
 	Address string `json:"address"`
 	State   string `json:"state"`
+}
+
+/*
+	<<< GENERATOR (IMPORT/EXPORT) >>>
+*/
+
+type Generator struct {
+	p *skyobject.Pack
+}
+
+func NewGenerator(p *skyobject.Pack) *Generator {
+	return &Generator{p:p}
+}
+
+func (g *Generator) Pack() *skyobject.Pack {
+	return g.p
+}
+
+func (g *Generator) NewRootPage() transfer.RootPage {
+	return new(RootPage)
+}
+
+func (g *Generator) NewBoardPage() transfer.BoardPage {
+	return new(BoardPage)
+}
+
+func (g *Generator) NewThreadPage() transfer.ThreadPage {
+	return new(ThreadPage)
+}
+
+func (g *Generator) NewBoard() transfer.Board {
+	return new(Board)
+}
+
+func (g *Generator) NewThread() transfer.Thread {
+	return new(Thread)
+}
+
+func (g *Generator) NewPost() transfer.Post {
+	return new(Post)
 }
 
 /*

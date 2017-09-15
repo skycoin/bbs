@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"github.com/skycoin/bbs/src/store/object/transfer"
+	"github.com/skycoin/bbs/src/misc/keys"
 )
 
 type Content interface {
@@ -21,7 +22,7 @@ func ToContent(v interface{}) Content {
 func GetData(c Content) *ContentData {
 	out := new(ContentData)
 	if e := json.Unmarshal(c.GetRaw(), out); e != nil {
-		log.Println("Error getting content data: ", e)
+		log.Println("error getting content data:", e)
 	}
 	return out
 }
@@ -40,7 +41,7 @@ type Board struct {
 func (b *Board) GetRaw() []byte  { return b.Data }
 func (b *Board) SetRaw(v []byte) { b.Data = v }
 
-func (b *Board) Export() (*transfer.BoardRep, error) {
+func (b *Board) ToRep() (*transfer.BoardRep, error) {
 	data := GetData(b)
 	out := &transfer.BoardRep{
 		Name: data.Name,
@@ -49,6 +50,15 @@ func (b *Board) Export() (*transfer.BoardRep, error) {
 		Tags: nil,
 	}
 	return out, nil
+}
+
+func (b *Board) FromRep(bRep *transfer.BoardRep) error {
+	SetData(b, &ContentData{
+		Name: bRep.Name,
+		Body: bRep.Body,
+	})
+	b.Created = bRep.Created
+	return nil
 }
 
 type Thread struct {
@@ -64,7 +74,7 @@ func (t Thread) Verify() error    { return tag.Verify(&t) }
 func (t *Thread) GetRaw() []byte  { return t.Data }
 func (t *Thread) SetRaw(v []byte) { t.Data = v }
 
-func (t *Thread) Export() (*transfer.ThreadRep, error) {
+func (t *Thread) ToRep() (*transfer.ThreadRep, error) {
 	data := GetData(t)
 	out := &transfer.ThreadRep{
 		Name: data.Name,
@@ -73,6 +83,17 @@ func (t *Thread) Export() (*transfer.ThreadRep, error) {
 		Creator: t.Creator.Hex(),
 	}
 	return out, nil
+}
+
+func (t *Thread) FromRep(tRep *transfer.ThreadRep) error {
+	SetData(t, &ContentData{
+		Name: tRep.Name,
+		Body: tRep.Body,
+	})
+	t.Created = tRep.Created
+	var e error
+	t.Creator, e = keys.GetPubKey(tRep.Creator)
+	return e
 }
 
 type Post struct {
@@ -103,7 +124,7 @@ func (p Post) Verify() error    { return tag.Verify(&p) }
 func (p *Post) GetRaw() []byte  { return p.Data }
 func (p *Post) SetRaw(v []byte) { p.Data = v }
 
-func (p *Post) Export() (*transfer.PostRep, error) {
+func (p *Post) ToRep() (*transfer.PostRep, error) {
 	data := GetData(p)
 	out := &transfer.PostRep{
 		OfPost: p.OfPost.Hex(),
@@ -113,6 +134,22 @@ func (p *Post) Export() (*transfer.PostRep, error) {
 		Creator: p.Creator.Hex(),
 	}
 	return out, nil
+}
+
+func (p *Post) FromRep(pRep *transfer.PostRep) error {
+	SetData(p, &ContentData{
+		Name: pRep.Name,
+		Body: pRep.Body,
+	})
+	p.Created = pRep.Created
+	var e error
+	if p.OfPost, e = keys.GetHash(pRep.OfPost); e != nil {
+		return e
+	}
+	if p.Creator, e = keys.GetPubKey(pRep.Creator); e != nil {
+		return e
+	}
+	return nil
 }
 
 const (
