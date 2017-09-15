@@ -540,28 +540,28 @@ func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *transfer.
 //	})
 //}
 //
-//func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *r0.ExpRoot, error) {
-//	if *m.c.Memory {
-//		return "", nil, nil
-//	}
-//
-//	path := m.exportPath(name)
-//	out := new(r0.ExpRoot)
-//	if e := file.LoadJSON(path, out); e != nil {
-//		return "", nil, e
-//	}
-//
-//	_, has := m.file.GetMasterSubSecKey(pk)
-//	if !has {
-//		return "", nil, boo.Newf(boo.NotAuthorised,
-//			"this node is not the master of board of public key '%s'", pk.Hex())
-//	}
-//	bi, e := m.compiler.GetBoard(pk)
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	if e := bi.Import(out); e != nil {
-//		return "", nil, e
-//	}
-//	return path, out, nil
-//}
+func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
+	if *m.c.Memory {
+		return "", nil, nil
+	}
+
+	path := m.exportPath(name)
+	out := new(transfer.RootRep)
+	if e := file.LoadJSON(path, out); e != nil {
+		return "", nil, e
+	}
+
+	_, has := m.file.GetMasterSubSecKey(pk)
+	if !has {
+		return "", nil, boo.Newf(boo.NotAuthorised,
+			"this node is not the master of board of public key '%s'", pk.Hex())
+	}
+	bi, e := m.compiler.GetBoard(pk)
+	if e != nil {
+		return "", nil, e
+	}
+	if e := bi.Import(out); e != nil {
+		return "", nil, e
+	}
+	return path, out, nil
+}

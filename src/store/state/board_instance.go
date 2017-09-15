@@ -132,11 +132,11 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 // PublishChanges publishes changes to CXO.
 // (only if instance is initialised, changes were made, and the node owns the board.)
 func (bi *BoardInstance) PublishChanges() error {
-	defer bi.needPublish.Clear()
 
 	if bi.needPublish.Value() == false {
 		return nil
 	}
+	defer bi.needPublish.Clear()
 
 	bi.mux.Lock()
 	defer bi.mux.Unlock()
@@ -291,4 +291,11 @@ func (bi *BoardInstance) Export() (*transfer.RootRep, error) {
 		return out.Fill(pages.RootPage, pages.BoardPage)
 	})
 	return out, e
+}
+
+// Import imports board json file data to root.
+func (bi *BoardInstance) Import(rep *transfer.RootRep) error {
+	return bi.EditPack(func(p *skyobject.Pack, _ *pack.Headers) error {
+		return rep.Dump(r0.NewGenerator(p))
+	})
 }

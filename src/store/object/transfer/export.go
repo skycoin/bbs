@@ -1,28 +1,49 @@
 package transfer
 
+import "github.com/skycoin/cxo/skyobject"
+
+type Generator interface {
+	Pack() *skyobject.Pack
+	NewRootPage() RootPage
+	NewBoardPage() BoardPage
+	NewThreadPage() ThreadPage
+	NewBoard() Board
+	NewThread() Thread
+	NewPost() Post
+}
+
 type RootPage interface {
-	Export() (*RootPageRep, error)
+	ToRep() (*RootPageRep, error)
+	FromRep(rpRep *RootPageRep) error
 }
 
 type BoardPage interface {
-	DumpBoard() (Board, error)
-	DumpThreadPages() ([]ThreadPage, error)
+	ExportBoard() (Board, error)
+	ExportThreadPages() ([]ThreadPage, error)
+
+	ImportBoard(p *skyobject.Pack, b Board) error
+	ImportThreadPages(p *skyobject.Pack, tps []ThreadPage) error
 }
 
 type ThreadPage interface {
-	DumpThread() (Thread, error)
-	DumpPosts() ([]Post, error)
+	ExportThread() (Thread, error)
+	ExportPosts() ([]Post, error)
+
+	ImportThread(p *skyobject.Pack, t Thread) error
+	ImportPosts(p *skyobject.Pack, ps []Post) error
 }
 
 type Board interface {
-	Export() (*BoardRep, error)
+	ToRep() (*BoardRep, error)
+	FromRep(bRep *BoardRep) error
 }
 
 type Thread interface {
-	Export() (*ThreadRep, error)
+	ToRep() (*ThreadRep, error)
+	FromRep(tRep *ThreadRep) error
 }
 
 type Post interface {
-	Export() (*PostRep, error)
+	ToRep() (*PostRep, error)
+	FromRep(pRep *PostRep) error
 }
-
