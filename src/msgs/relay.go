@@ -252,12 +252,13 @@ func (r *Relay) processNewThread(msg *BBSMessage) (uint64, error) {
 	if e != nil {
 		return 0, e
 	}
-	bi, e := r.compiler.GetBoard(thread.OfBoard)
+	tOfBoard := thread.GetData().GetOfBoard()
+	bi, e := r.compiler.GetBoard(tOfBoard)
 	if e != nil {
 		return 0, e
 	}
 	if !bi.IsMaster() {
-		return 0, notMasterErr(thread.OfBoard)
+		return 0, notMasterErr(tOfBoard)
 	}
 	return bi.NewThread(thread)
 }
@@ -267,12 +268,13 @@ func (r *Relay) processNewPost(msg *BBSMessage) (uint64, error) {
 	if e != nil {
 		return 0, e
 	}
-	bi, e := r.compiler.GetBoard(post.OfBoard)
+	pOfBoard := post.GetData().GetOfBoard()
+	bi, e := r.compiler.GetBoard(pOfBoard)
 	if e != nil {
 		return 0, e
 	}
 	if !bi.IsMaster() {
-		return 0, notMasterErr(post.OfBoard)
+		return 0, notMasterErr(pOfBoard)
 	}
 	return bi.NewPost(post)
 }

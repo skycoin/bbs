@@ -8,6 +8,7 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"time"
+	"github.com/skycoin/bbs/src/misc/keys"
 )
 
 // NewBoard represents io required to create a new board.
@@ -25,13 +26,12 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Board = &r0.Board{
+	a.Board = new(r0.Board)
+	a.Board.SetData(&r0.BoardData{
+		Name: a.Name,
+		Body: a.Body,
 		Created: time.Now().UnixNano(),
-	}
-	r0.SetData(a.Board, &r0.ContentData{
-		Name:    a.Name,
-		Body:    a.Body,
-		SubKeys: subPKs,
+		SubKeys: keys.PubKeyArrayToStringArray(subPKs),
 	})
 	return nil
 }
@@ -49,14 +49,13 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Thread = &r0.Thread{
-		OfBoard: a.BoardPubKey,
-		Created: time.Now().UnixNano(),
-		Creator: upk,
-	}
-	r0.SetData(a.Thread, &r0.ContentData{
+	a.Thread = new(r0.Thread)
+	a.Thread.SetData(&r0.ThreadData{
+		OfBoard: a.BoardPubKey.Hex(),
 		Name: a.Name,
 		Body: a.Body,
+		Created: time.Now().UnixNano(),
+		Creator: upk.Hex(),
 	})
 	tag.Sign(a.Thread, upk, usk)
 	return nil
@@ -72,7 +71,7 @@ type NewPostIO struct {
 	Name           string        `bbs:"name"`
 	Body           string        `bbs:"body"`
 	ImagesStr      string
-	Images         []*r0.ContentImageData
+	Images         []*r0.ImageData
 	Post           *r0.Post
 }
 
@@ -80,22 +79,21 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Post = &r0.Post{
-		OfBoard:  a.BoardPubKey,
-		OfThread: a.ThreadRef,
-		OfPost:   a.PostRef,
-		Created:  time.Now().UnixNano(),
-		Creator:  upk,
-	}
 	if a.ImagesStr != "" {
 		if e := json.Unmarshal([]byte(a.ImagesStr), &a.Images); e != nil {
 			return boo.WrapType(e, boo.InvalidInput, "failed to read 'images' form value")
 		}
 	}
-	r0.SetData(a.Post, &r0.ContentData{
-		Name:   a.Name,
-		Body:   a.Body,
+	a.Post = new(r0.Post)
+	a.Post.SetData(&r0.PostData{
+		OfBoard:  a.BoardPubKey.Hex(),
+		OfThread: a.ThreadRef.Hex(),
+		OfPost:   a.PostRef.Hex(),
+		Name: a.Name,
+		Body: a.Body,
 		Images: a.Images,
+		Created:  time.Now().UnixNano(),
+		Creator:  upk.Hex(),
 	})
 	tag.Sign(a.Post, upk, usk)
 	return nil

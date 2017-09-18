@@ -3,11 +3,11 @@ package r0
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"sync"
-	"github.com/skycoin/bbs/src/store/object/transfer"
 )
 
 const (
@@ -672,7 +672,7 @@ type Generator struct {
 }
 
 func NewGenerator(p *skyobject.Pack) *Generator {
-	return &Generator{p:p}
+	return &Generator{p: p}
 }
 
 func (g *Generator) Pack() *skyobject.Pack {

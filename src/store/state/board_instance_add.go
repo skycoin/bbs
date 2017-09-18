@@ -12,7 +12,7 @@ import (
 // NewThread triggers a request to add a new thread to the board.
 // Returns sequence of root in which thread is to be available, or error on failure.
 func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
-	if e := thread.Verify(); e != nil {
+	if e := thread.Verify(thread.GetData().GetCreator()); e != nil {
 		return 0, e
 	}
 
@@ -57,7 +57,13 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 // NewPost triggers a request to add a new post to the board.
 // Returns sequence of root in which post is to be available, or error on failure.
 func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
-	if e := post.Verify(); e != nil {
+	// Get post data.
+	pData := post.GetData()
+	pOfThread := pData.GetOfThread()
+	pCreator := pData.GetCreator()
+
+	// Verify.
+	if e := post.Verify(pCreator); e != nil {
 		return 0, e
 	}
 
@@ -71,10 +77,10 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		pRef := p.Ref(post)
 
 		// Ensure thread exists.
-		tpHash, has := h.GetThreadPageHash(post.OfThread)
+		tpHash, has := h.GetThreadPageHash(pOfThread)
 		if !has {
 			return boo.Newf(boo.NotFound,
-				"thread of hash '%s' not found", post.OfThread)
+				"thread of hash '%s' not found", pData.OfThread)
 		}
 
 		// Get root pages.
@@ -96,7 +102,7 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		}
 
 		// Modify headers.
-		h.SetThread(post.OfThread, tpRef.Hash)
+		h.SetThread(pOfThread, tpRef.Hash)
 
 		// Add post to diff.
 		if e := pages.DiffPage.Add(post); e != nil {
@@ -191,12 +197,12 @@ func checkVote(vote *r0.Vote, h *pack.Headers) error {
 func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
 	bi.l.Println("ensuring submission keys as:", keys.PubKeyArrayToString(pks))
 	return bi.EditBoard(func(board *r0.Board) (bool, error) {
-		data := r0.GetData(board)
-		if keys.ComparePubKeyArrays(data.SubKeys, pks) {
+		data := board.GetData()
+		if keys.ComparePubKeyArrays(data.GetSubKeys(), pks) {
 			return false, nil
 		}
-		data.SubKeys = pks
-		r0.SetData(board, data)
+		data.SetSubKeys(pks)
+		board.SetData(data)
 		return true, nil
 	})
 }
@@ -204,7 +210,7 @@ func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, erro
 func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 	var pks []cipher.PubKey
 	if e := bi.ViewBoard(func(board *r0.Board) (bool, error) {
-		pks = r0.GetData(board).SubKeys
+		pks = board.GetData().GetSubKeys()
 		return false, nil
 	}); e != nil {
 		bi.l.Println("error obtaining submission keys:", e)

@@ -24,16 +24,16 @@ type BoardRep struct {
 	Name       string
 	Body       string
 	Created    int64
-	SubPubKeys []cipher.PubKey
+	SubPubKeys []string
 	Threads    []IndexHash
 }
 
 func (r *BoardRep) Fill(pk cipher.PubKey, board *r0.Board) *BoardRep {
-	data := r0.GetData(board)
+	data := board.GetData()
 	r.PubKey = pk
 	r.Name = data.Name
 	r.Body = data.Body
-	r.Created = board.Created
+	r.Created = data.Created
 	r.SubPubKeys = data.SubKeys
 	return r
 }
@@ -73,12 +73,12 @@ type ThreadRep struct {
 }
 
 func (r *ThreadRep) FillThread(thread *r0.Thread) *ThreadRep {
-	data := r0.GetData(thread)
+	data := thread.GetData()
 	r.Ref = thread.R
 	r.Name = data.Name
 	r.Body = data.Body
-	r.Created = thread.Created
-	r.Creator = thread.Creator
+	r.Created = data.Created
+	r.Creator = data.GetCreator()
 	return r
 }
 
@@ -88,12 +88,12 @@ func (r *ThreadRep) FillThreadPage(tPage *r0.ThreadPage) *ThreadRep {
 		log.Println("ThreadRep.FillThreadPage() Error:", e)
 		return nil
 	}
-	data := r0.GetData(t)
+	data := t.GetData()
 	r.Ref = t.R
 	r.Name = data.Name
 	r.Body = data.Body
-	r.Created = t.Created
-	r.Creator = t.Creator
+	r.Created = data.Created
+	r.Creator = data.GetCreator()
 	return r
 }
 
@@ -132,32 +132,32 @@ type PostRep struct {
 	Ref     cipher.SHA256
 	Name    string
 	Body    string
-	Images  []*r0.ContentImageData
+	Images  []*r0.ImageData
 	Created int64
 	Creator cipher.PubKey
 }
 
 func (r *PostRep) Fill(post *r0.Post) *PostRep {
-	data := r0.GetData(post)
+	data := post.GetData()
 	r.Ref = post.R
 	r.Name = data.Name
 	r.Body = data.Body
 	r.Images = data.Images
-	r.Created = post.Created
-	r.Creator = post.Creator
+	r.Created = data.Created
+	r.Creator = data.GetCreator()
 	return r
 }
 
 type PostRepView struct {
-	Seq     int                    `json:"seq"`
-	Ref     string                 `json:"ref"`
-	Type    string                 `json:"type"`
-	Name    string                 `json:"name"`
-	Body    string                 `json:"body"`
-	Images  []*r0.ContentImageData `json:"images,omitempty"`
-	Created int64                  `json:"created"`
-	Creator string                 `json:"creator"`
-	Votes   *VoteRepView           `json:"votes,omitempty"`
+	Seq     int             `json:"seq"`
+	Ref     string          `json:"ref"`
+	Type    string          `json:"type"`
+	Name    string          `json:"name"`
+	Body    string          `json:"body"`
+	Images  []*r0.ImageData `json:"images,omitempty"`
+	Created int64           `json:"created"`
+	Creator string          `json:"creator"`
+	Votes   *VoteRepView    `json:"votes,omitempty"`
 }
 
 func (r *PostRep) View(i int, votes *VoteRepView) *PostRepView {

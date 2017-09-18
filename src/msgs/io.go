@@ -87,7 +87,7 @@ func (m *BBSMessage) ExtractThread() (*r0.Thread, error) {
 		return nil, boo.WrapType(e, boo.InvalidRead,
 			"failed to deserialize thread data")
 	}
-	if e := v.Verify(); e != nil {
+	if e := v.Verify(v.GetData().GetCreator()); e != nil {
 		return nil, e
 	}
 	return v, nil
@@ -99,7 +99,7 @@ func (m *BBSMessage) ExtractPost() (*r0.Post, error) {
 		return nil, boo.WrapType(e, boo.InvalidRead,
 			"failed to deserialize post data")
 	}
-	if e := v.Verify(); e != nil {
+	if e := v.Verify(v.GetData().GetCreator()); e != nil {
 		return nil, e
 	}
 	return v, nil

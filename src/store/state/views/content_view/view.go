@@ -95,7 +95,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 	}
 
 	for _, post := range changes.NewPosts {
-		if ofThread, ok := v.tMap[post.OfThread]; !ok {
+		if ofThread, ok := v.tMap[post.GetData().GetOfThread()]; !ok {
 			log.Println("thread not found")
 			continue
 		} else {
