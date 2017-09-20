@@ -1,6 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'variables';
+@import './common.scss';
 @import '../node_modules/bootstrap/scss/bootstrap';
 @import '../node_modules/font-awesome/scss/font-awesome';
 html,
@@ -25,13 +26,15 @@ body {
     padding: 0;
   }
 }
-.input-box{
+
+.input-box {
   padding: .5rem 1rem;
-  .fa-refresh{
+  .fa-refresh {
     cursor: pointer;
     margin-top: 1rem;
   }
 }
+
 .overlay {
   position: fixed;
   left: 0;
@@ -281,4 +284,47 @@ $bgColor: white) {
 
 .fa-sort-desc {
   transform: translateY(-2px);
+}
+
+.tooltip-top[aria-label],
+.tooltip-normal[aria-label] {
+  position: relative;
+  &:after {
+    content: attr(aria-label);
+    display: none;
+    position: absolute;
+    pointer-events: none;
+    padding: .75rem 1rem;
+    line-height: .75rem;
+    white-space: nowrap;
+    text-decoration: none;
+    text-indent: 0;
+    overflow: visible;
+    font-size: .9em;
+    font-weight: normal;
+    color: #fff; // text-shadow: 1px 0 1px #888;
+    background-color: rgba(27, 31, 35, 0.8);
+    border-radius: 2px;
+    box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: $tooltip-index;
+  }
+
+  &:hover:after,
+  &:focus:after {
+    display: block;
+  }
+}
+
+.tooltip-top[aria-label] {
+  &:after {
+    bottom: 150%;
+    right: -100%;
+  }
+}
+
+.tooltip[aria-label] {
+  &:after {
+    top: 110%;
+    left: 10%;
+  }
 }

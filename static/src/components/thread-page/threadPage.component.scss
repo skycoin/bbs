@@ -1,9 +1,5 @@
 @import "../../common.scss";
-
 app-threadpage {
-  .post-or-thread-title {
-    width: 15rem;
-  }
   .fr-emoticon-img {
     display: inline-block;
     background-repeat: no-repeat;
@@ -63,7 +59,6 @@ app-threadpage {
           }
           .author-name {
             color: #636363;
-            max-width: 6rem;
           }
         }
       }
@@ -137,13 +132,15 @@ app-threadpage {
     .card-block {
       .content {
         .post-title-box {
+          border-bottom: 1px solid $light-solid-color;
+          padding-bottom: .25rem;
+          margin-bottom: 1rem;
           .title-content-box {
             .creator,
             .time {
               font-size: .9rem;
             }
             .creator {
-              max-width: 8rem;
               color: #000;
               display: inline-block;
               &:hover {
@@ -151,11 +148,8 @@ app-threadpage {
               }
             }
             .time {
-              vertical-align: super;
               color: #999;
-              cursor: pointer; // &:hover {
-              //   text-decoration: underline;
-              // }
+              cursor: pointer;
               &::before {
                 content: '\00B7';
                 padding-right: 5px;

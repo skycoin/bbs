@@ -7,7 +7,7 @@
             <i class="fa fa-user fa-3x" aria-hidden="true"></i>
         </a>
         <div class="info-box">
-          <small class="single-line author-name " title="{{data?.data?.thread?.creator}}">{{data?.data?.thread?.creator}}</small>
+          <a href="javascript:void(0);" class="author-name tooltip-normal" [attr.aria-label]="data?.data?.thread?.creator">{{data?.data?.thread?.creator | cutText}}</a>
           <small class="text-muted">
           replies
           <span class="replies">{{data?.data?.thread?.post_count}}</span> &nbsp;• &nbsp;
@@ -18,7 +18,7 @@
       <hr>
       <div class="card-block">
         <div class="content">
-          <h5 class="single-line post-or-thread-title">{{data?.data?.thread?.name}}</h5>
+          <h5 class="post-or-thread-title">{{data?.data?.thread?.name}}</h5>
           <p class="break-line text-muted body">{{data?.data?.thread?.body}}</p>
         </div>
       </div>
@@ -38,7 +38,7 @@
           <div class="content">
             <div class="row post-title-box">
               <div class="col-10 title-content-box">
-                <a href="javascript:void(0);" class="single-line creator">{{item?.creator}}</a>
+                <a href="javascript:void(0);" class="creator tooltip-normal" [attr.aria-label]="item?.creator">{{item?.creator | cutText}}</a>
                 <small class="time">{{item?.created / 1000000 | date:'M/d/y H:m'}}</small>
                 <!-- <div class="overlay" *ngIf="item?.creatorMenu" (click)="showUserMenu(item,$event)"></div>
                 <div class="card user-info-menu" *ngIf="item?.creatorMenu">
@@ -60,7 +60,7 @@
                 </i>
               </div>
             </div>
-            <h6 class="single-line post-or-thread-title">{{item?.name}}</h6>
+            <h6 class="post-or-thread-title tooltip-normal" [attr.aria-label]="item?.name">{{item?.name}}</h6>
             <p class="text-muted break-line" [innerHTML]="item?.body | safeHtml"></p>
             <div class="card-block" *ngIf="item?.votes?.up_votes?.count || item?.votes?.down_votes?.count">
               <chip color="#e84737" icon="fa-sort-asc" text="up vote" [count]="item?.votes?.up_votes?.count" (click)="addPostVote('+1',item,$event)"></chip>

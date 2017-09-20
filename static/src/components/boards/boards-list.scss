@@ -60,13 +60,11 @@ app-boardslist {
         margin-bottom: 1rem;
       }
       .title {
-        max-width: 5rem;
         color: #000;
         font-weight: 500;
         display: inline-block;
       }
       .time {
-        vertical-align: super;
         font-size: .75rem; // text-decoration: underline;
         color: #999;
         &::before {

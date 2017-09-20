@@ -9,3 +9,6 @@ $link-black: rgba(0, 0, 0, 0.6);
 @mixin boxShaow() {
   box-shadow: 0 0.3rem 0.5rem rgba(0, 0, 0, 0.2);
 }
+
+// Z-index
+$tooltip-index: 1010;

@@ -10,7 +10,7 @@
       <div class="card-block">
         <div class="row card-top">
           <div class="col">
-            <a href="javascript:void(0);" class="title">{{thread.name}}</a>
+            <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="thread?.name">{{thread?.name | cutText}}</a>
             <small class="time">{{thread?.created / 1000000 | date: 'M/d/y H:m'}}</small>
           </div>
         </div>
