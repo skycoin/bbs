@@ -6,7 +6,7 @@
         <div class="row card-top">
           <div class="col-9">
             <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="board?.name">{{board?.name | cutText}}</a>
-            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:m'}}</small>
+            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small>
           </div>
           <div class="col-3">
             <p class="text-right action">
@@ -37,7 +37,7 @@
         <div class="row card-top">
           <div class="col-9">
             <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="board?.name">{{board?.name | cutText}}</a>
-            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:m'}}</small>
+            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small>
           </div>
           <div class="col-3">
             <p class="text-right action">

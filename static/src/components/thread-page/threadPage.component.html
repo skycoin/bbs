@@ -11,7 +11,7 @@
           <small class="text-muted">
           replies
           <span class="replies">{{data?.data?.thread?.post_count}}</span> &nbsp;• &nbsp;
-          created &nbsp;<span>{{data?.data?.thread?.created / 1000000 | date:'M/d/y H:m'}}</span>
+          created &nbsp;<span>{{data?.data?.thread?.created / 1000000 | date:'M/d/y H:mm'}}</span>
         </small>
         </div>
       </div>
@@ -39,7 +39,7 @@
             <div class="row post-title-box">
               <div class="col-10 title-content-box">
                 <a href="javascript:void(0);" class="creator tooltip-normal" [attr.aria-label]="item?.creator">{{item?.creator | cutText}}</a>
-                <small class="time">{{item?.created / 1000000 | date:'M/d/y H:m'}}</small>
+                <small class="time">{{item?.created / 1000000 | date:'M/d/y H:mm'}}</small>
                 <!-- <div class="overlay" *ngIf="item?.creatorMenu" (click)="showUserMenu(item,$event)"></div>
                 <div class="card user-info-menu" *ngIf="item?.creatorMenu">
                     <div class="card-body">
