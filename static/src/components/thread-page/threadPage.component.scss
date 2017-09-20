@@ -23,7 +23,6 @@ app-threadpage {
   }
   .card {
     @include boxShaow;
-    @include radius-0;
     flex-direction: row;
     .vote-box {
       width: 5%;

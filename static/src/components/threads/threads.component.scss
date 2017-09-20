@@ -16,12 +16,20 @@ app-threads {
   }
   .threads {
     .card {
+      overflow: hidden;
       cursor: pointer;
       margin: 1rem 0;
-      @include radius-0;
       @include boxShaow;
       &:active {
         box-shadow: none;
+      }
+      .card-block {
+        padding: .75rem;
+        .card-top {
+          border-bottom: 1px solid $light-solid-color;
+          padding-bottom: .25rem;
+          margin-bottom: 1rem;
+        }
       }
       .title {
         color: #000;

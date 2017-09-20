@@ -10,7 +10,6 @@ app-boardslist {
       margin: .75rem 0;
       transition: .15s;
       overflow: hidden;
-      border-radius: 0;
       @include boxShaow;
       &:active {
         box-shadow: none;

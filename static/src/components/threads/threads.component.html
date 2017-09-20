@@ -7,13 +7,14 @@
   </div>
   <div class="container">
     <div class="card" (click)="open(thread?.ref)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
-      <div class="card-body">
-        <div>
-          <a href="javascript:void(0);" class="title">{{thread.name}}</a>
-          <small class="time">{{thread?.created / 1000000 | date: 'M/d/y H:m'}}</small>
+      <div class="card-block">
+        <div class="row card-top">
+          <div class="col">
+            <a href="javascript:void(0);" class="title">{{thread.name}}</a>
+            <small class="time">{{thread?.created / 1000000 | date: 'M/d/y H:m'}}</small>
+          </div>
         </div>
         <p class="margin-0 text-muted block-with-text">{{thread?.body}}</p>
-        <!-- <p class="margin-0 text-right created underline"><small>{{thread?.created / 1000000 | date: 'medium'}}</small></p> -->
       </div>
     </div>
     <h5 class="not-found" *ngIf="threads?.length == 0">No Threads Found</h5>
