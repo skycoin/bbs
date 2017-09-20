@@ -254,8 +254,6 @@ export class ThreadPageComponent implements OnInit {
                 this.data.data.posts = res.data.posts;
                 this.alert.success({ content: 'Added successfully' });
                 this.loading.close();
-                setTimeout(() => {
-                }, 1000);
               }
             });
           }
