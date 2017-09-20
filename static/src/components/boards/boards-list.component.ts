@@ -148,7 +148,13 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
       })
     })
   }
-
+  copy(ev) {
+    if (ev) {
+      this.alert.success({ content: 'Copy Successful' });
+    } else {
+      this.alert.error({ content: 'Copy Failed' });
+    }
+  }
   delAddress(ev: Event, key: string, address: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();

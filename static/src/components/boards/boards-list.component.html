@@ -3,7 +3,7 @@
     <div class="card" (click)="openThreads($event,board.public_key)" *ngFor="let board of (boards | orderBy: sort);let i = index;trackBy: trackBoards"
       [@flyInOut]>
       <div class="card-block">
-        <div class="row">
+        <div class="row card-top">
           <div class="col-9">
             <a href="javascript:void(0);" class="single-line title">{{board?.name}}</a>
             <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:m'}}</small>
@@ -34,18 +34,18 @@
             </p>
           </div>
         </div> -->
-        <div class="row">
-            <div class="col-9">
-              <a href="javascript:void(0);" class="single-line title">{{board?.name}}</a>
-              <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:m'}}</small>
-            </div>
-            <div class="col-3">
-              <p class="text-right action">
-                <a href="javascript:void(0);" (click)="delBoard($event,board?.public_key)"><i class="fa fa-trash" aria-hidden="true" aria-label="subscribe"></i></a>
-                <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
-              </p>
-            </div>
+        <div class="row card-top">
+          <div class="col-9">
+            <a href="javascript:void(0);" class="single-line title">{{board?.name}}</a>
+            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:m'}}</small>
           </div>
+          <div class="col-3">
+            <p class="text-right action">
+              <a href="javascript:void(0);" (click)="delBoard($event,board?.public_key)"><i class="fa fa-trash" aria-hidden="true" aria-label="subscribe"></i></a>
+              <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
+            </p>
+          </div>
+        </div>
         <p class="description block-with-text" [innerHTML]="board?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
         <!-- <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p> -->
       </div>
@@ -61,6 +61,7 @@
   <fab>
     <fa-button name="New Board" icon="fa-th-large" (click)="openAdd(add)"></fa-button>
     <fa-button name="New Subscription" icon="fa-heart" (click)="subscribe(subscribeBox)"></fa-button>
+    <!-- <fa-button name="Import Board" icon="fa-folder-open" (click)="subscribe(subscribeBox)"></fa-button> -->
   </fab>
 </ng-template>
 
@@ -170,7 +171,7 @@
         </div>
         <div class="thread-item">
           <h5>Public Key</h5>
-          <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="common.copy($event)"></i></span>
+          <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="copy($event)"></i></span>
         </div>
         <div class="thread-item">
           <h5>Rpc Submission Url</h5>

@@ -1,3 +1,4 @@
+@import "../../common.scss";
 app-threads {
   // width: 100vw;
   .jumbotron {
@@ -16,7 +17,12 @@ app-threads {
   .threads {
     .card {
       cursor: pointer;
-      margin: .5rem 0;
+      margin: 1rem 0;
+      @include radius-0;
+      @include boxShaow;
+      &:active {
+        box-shadow: none;
+      }
       .title {
         color: #000;
         font-weight: 500;
