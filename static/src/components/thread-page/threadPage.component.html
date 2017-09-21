@@ -64,8 +64,8 @@
   </div>
 </div>
 <ng-template #fab>
-  <fab>
-    <fa-button name="New Post" icon="fa-pencil" (click)="openReply(addPost)"></fa-button>
+  <fab (click)="openReply(addPost)" [showAnimation]="false" [icon]="'fa-commenting'">
+    <!-- <fa-button name="New Post" icon="fa-pencil" (click)="openReply(addPost)"></fa-button> -->
   </fab>
 </ng-template>
 <ng-template #addPost let-c="close">
