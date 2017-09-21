@@ -1,5 +1,5 @@
-import { Component, OnInit, ViewChild, HostListener } from '@angular/core';
-import { ApiService, CommonService, Alert, LoadingService, Popup, FollowPageDataInfo, FollowPage } from '../providers';
+import { Component, OnInit, ViewChild, HostListener, QueryList, ViewChildren, ElementRef, Renderer } from '@angular/core';
+import { ApiService, CommonService, Alert, LoadingService, Popup, FollowPageDataInfo, FollowPage, User } from '../providers';
 import { FixedButtonComponent } from '../components';
 import { ToTopComponent } from '../components';
 import 'rxjs/add/operator/filter';
@@ -15,6 +15,7 @@ import 'rxjs/add/observable/timer'
 })
 export class AppComponent implements OnInit {
   @ViewChild(FixedButtonComponent) fb: FixedButtonComponent;
+  @ViewChildren('aliasItem') aliasItems: QueryList<ElementRef>;
   public title = 'app';
   public name = '';
   public isMasterNode = false;
@@ -29,17 +30,25 @@ export class AppComponent implements OnInit {
   boardKey = '';
   loginBox = true;
   registerBox = false;
-
+  _orginAutoAilas: Array<User>;
+  autoAilas: Array<User>;
+  showAilas = false;
+  autoAliasIndex = -1;
   userFollow: FollowPageDataInfo = {};
   constructor(
     private api: ApiService,
     public common: CommonService,
     private alert: Alert,
     private loading: LoadingService,
-    private pop: Popup) {
+    private pop: Popup,
+    private render: Renderer) {
   }
 
   ngOnInit() {
+    this.api.getAllUser().subscribe(res => {
+      this.autoAilas = res.data.users;
+      this._orginAutoAilas = this.autoAilas;
+    })
     this.common.fb = this.fb;
     this.api.getStats().subscribe(stats => {
       this.isMasterNode = stats.node_is_master;
@@ -57,7 +66,13 @@ export class AppComponent implements OnInit {
       }
     })
   }
-
+  selectAlias(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.alias = ev.target['textContent'];
+    this.showAilas = false;
+  }
   switchTab(tab: string) {
     switch (tab) {
       case 'login':
@@ -67,11 +82,73 @@ export class AppComponent implements OnInit {
       case 'register':
         this.loginBox = false;
         this.registerBox = true;
-
         break;
       default:
         break;
     }
+  }
+  onKeyUp(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    const items = this.aliasItems['_results'];
+    const length = this.aliasItems.length - 1;
+    switch (ev['keyCode']) {
+      case 13:
+        if (!this.showAilas) {
+          this.login();
+        } else {
+          this.alias = items[this.autoAliasIndex].nativeElement.textContent;
+          this.showAilas = false;
+          this.autoAliasIndex = -1;
+        }
+        break;
+      case 38:
+        if (this.autoAliasIndex <= -1) {
+          this.render.setElementClass(this.aliasItems.last.nativeElement, 'active-alias', true);
+          this.autoAliasIndex = length;
+        } else {
+          this.render.setElementClass(items[this.autoAliasIndex].nativeElement, 'active-alias', false);
+          if (this.autoAliasIndex <= 0) {
+            this.autoAliasIndex = length;
+          } else {
+            this.autoAliasIndex -= 1;
+          }
+          this.render.setElementClass(items[this.autoAliasIndex].nativeElement, 'active-alias', true);
+        }
+        items[0].nativeElement.parentNode.parentNode.parentNode.scrollTop = this.autoAliasIndex * items[0].nativeElement.clientHeight
+        break;
+      case 40:
+        if (this.autoAliasIndex <= -1) {
+          this.render.setElementClass(this.aliasItems.first.nativeElement, 'active-alias', true);
+          this.autoAliasIndex = 0;
+        } else {
+          this.render.setElementClass(items[this.autoAliasIndex].nativeElement, 'active-alias', false);
+          if (this.autoAliasIndex >= length) {
+            this.autoAliasIndex = 0;
+          } else {
+            this.autoAliasIndex += 1;
+          }
+          this.render.setElementClass(items[this.autoAliasIndex].nativeElement, 'active-alias', true);
+        }
+        items[0].nativeElement.parentNode.parentNode.parentNode.scrollTop = this.autoAliasIndex * items[0].nativeElement.clientHeight
+        break;
+      default:
+        this.showAilas = true;
+        this.autoAilas = this._orginAutoAilas;
+        this.filterAlias();
+        break;
+    }
+  }
+  filterAlias() {
+    const tmp: Array<User> = [];
+    this.autoAilas.forEach(el => {
+      if (el.alias.indexOf(this.alias) > -1) {
+        tmp.push(el);
+      }
+    })
+    this.autoAilas = tmp;
+    // return this.autoAilas.filter()
   }
 
   userAction(ev: Event) {
@@ -88,16 +165,16 @@ export class AppComponent implements OnInit {
       this.alias = '';
       this.seed = '';
       this.showLoginBox = true;
+      setTimeout(() => {
+        this.showAilas = true;
+      }, 300)
       this.loginBox = true;
       this.registerBox = false;
     } else {
       this.showUserMenu();
     }
   }
-  login(ev: Event) {
-    ev.stopImmediatePropagation();
-    ev.stopPropagation();
-    ev.preventDefault();
+  login() {
     if (!this.alias) {
       this.alert.error({ content: 'The alias can not empty!' });
       return;

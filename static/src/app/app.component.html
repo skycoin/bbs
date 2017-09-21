@@ -19,13 +19,13 @@
         <div class="login-box" *ngIf="loginBox" [@tabLeft]>
           <h6>Login to your account</h6>
           <div class="form-box">
-            <input type="text" class="text-input input-border-bottom" (keyup.enter)="login($event)" [focus]="loginBox" [(ngModel)]="alias"
+            <input type="text" class="text-input input-border-bottom" (keyup)="onKeyUp($event)" [focus]="loginBox" [(ngModel)]="alias"
               placeholder="Input Your Alias">
-            <!-- <div class="auto-alias">
+            <div class="auto-alias" *ngIf="showAilas">
               <ul>
-                <li>1</li>
+                <li *ngFor="let user of autoAilas" (click)="selectAlias($event)"><a #aliasItem href="javascript:void(0);">{{user?.alias}}</a></li>
               </ul>
-            </div> -->
+            </div>
           </div>
           <p class="text-right">
             <button class="button" style="background-color:#1abc9c;color:#fff;" (click)="login($event)">Submit</button>
