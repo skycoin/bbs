@@ -54,6 +54,7 @@ export class UserlistComponent implements OnInit {
             console.log('user:', res);
             if (res.okay) {
               this.userlist = res.data.users;
+              this.alert.success({ content: 'Added Successfully' });
             }
           });
         }
