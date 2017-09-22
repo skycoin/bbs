@@ -1,5 +1,5 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation } from '@angular/core';
-import { CommonService, ApiService, Connnections, Connnection, Popup } from '../../providers';
+import { CommonService, ApiService, Connnections, Connnection, Popup, Alert } from '../../providers';
 import { slideInLeftAnimation } from '../../animations/router.animations';
 import { bounceInAnimation } from '../../animations/common.animations';
 import { AlertComponent } from '../../components/alert/alert.component';
@@ -19,7 +19,8 @@ export class ConnectionComponent implements OnInit {
 
   constructor(
     private api: ApiService,
-    private pop: Popup) {
+    private pop: Popup,
+    private alert: Alert) {
   }
 
   ngOnInit() {
@@ -33,7 +34,7 @@ export class ConnectionComponent implements OnInit {
     this.pop.open(content).result.then((result) => {
       if (result) {
         if (!this.addUrl) {
-          // this.common.showAlert('The link can not be empty', 'danger', 3000);
+          this.alert.error({ content: 'The link can not be empty' });
           return;
         }
         const data = new FormData();
@@ -41,6 +42,7 @@ export class ConnectionComponent implements OnInit {
         this.api.newConnection(data).subscribe((conns: Connnections) => {
           if (conns.okay) {
             this.list = conns.data.connections;
+            this.alert.success({ content: 'Added Successfully' });
           }
         })
       }

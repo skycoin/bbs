@@ -166,6 +166,7 @@ export class AppComponent implements OnInit {
       this.seed = '';
       this.showLoginBox = true;
       setTimeout(() => {
+        this.autoAilas = this._orginAutoAilas;
         this.showAilas = true;
       }, 300)
       this.loginBox = true;

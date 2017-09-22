@@ -28,8 +28,6 @@
       </div>
     </div>
   </div>
-  <a class="noPosts text-center" href="javascript:void(0);" *ngIf="data?.data?.posts?.length <= 0" (click)="openReply(addPost)">New Post<i class="fa fa-hand-o-left" aria-hidden="true"></i></a>
-
   <div class="post-box">
     <div #post class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.data?.posts | orderBy:sort);let i = index;trackBy:trackPosts"
       [@flyInOut]>
@@ -64,8 +62,8 @@
   </div>
 </div>
 <ng-template #fab>
-  <fab (click)="openReply(addPost)" [showAnimation]="false" [icon]="'fa-commenting'">
-    <!-- <fa-button name="New Post" icon="fa-pencil" (click)="openReply(addPost)"></fa-button> -->
+  <fab>
+    <fa-button name="New Post" icon="fa-pencil" (click)="openReply(addPost)"></fa-button>
   </fab>
 </ng-template>
 <ng-template #addPost let-c="close">
