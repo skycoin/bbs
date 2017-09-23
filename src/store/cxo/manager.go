@@ -232,6 +232,9 @@ func (m *Manager) prepareFile() error {
 		return e
 	}
 	if e := m.file.RangeRemoteSubs(func(pk cipher.PubKey) {
+		if e := m.subscribeNode(pk); e != nil {
+			m.l.Println("prepareFile() subscribeNode() failed with error:", e)
+		}
 		if r, e := m.node.Container().LastRoot(pk); e != nil {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
 		} else {
