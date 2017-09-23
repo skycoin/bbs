@@ -3,33 +3,41 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/skycoin/bbs/src/access"
-	"github.com/skycoin/bbs/src/access/btp"
 	"github.com/skycoin/bbs/src/http"
+	"github.com/skycoin/bbs/src/msgs"
 	"github.com/skycoin/bbs/src/store"
+	"github.com/skycoin/bbs/src/store/cxo"
+	"github.com/skycoin/bbs/src/store/session"
+	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/skycoin/src/util/browser"
 	"github.com/skycoin/skycoin/src/util/file"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
+	"time"
 )
 
 const (
-	defaultIPAddr          = "127.0.0.1"
 	defaultConfigSubDir    = ".skybbs"
 	defaultStaticSubDir    = "static/dist"
 	defaultDevStaticSubDir = "src/github.com/skycoin/bbs/static/dist"
 	defaultCXOPort         = 8998
-	defaultCXOROCPort      = 8997
-	defaultSubPort         = 6421
+	defaultCXORPCPort      = 8997
 	defaultHTTPPort        = 7410
 )
 
 var (
-	devMode  = false
-	testMode = false
+	defaultMessengerAddresses = cli.StringSlice{
+		"messenger.skycoin.net:8080",
+	}
+	defaultDevMessengerAddresses = cli.StringSlice{
+		"127.0.0.1:8080",
+	}
+	devMode                    = false
+	compilerInternal           = 1
+	messengerReconnectInterval = time.Second * 3
 )
 
 // Config represents configuration for node.
@@ -42,31 +50,30 @@ type Config struct {
 	CXORPC     bool `json:"cxo_rpc"`                // Whether to enable CXO RPC.
 	CXORPCPort int  `json:"cxo_rpc_port,omitempty"` // Listening RPC port of CXO.
 
-	SubPort int    `json:"sub_port,omitempty"` // Content submission port of node.
-	SubAddr string `json:"sub_addr,omitempty"` // Content submission address of node.
+	MessengerAddresses cli.StringSlice `json:"messenger_addresses"` // Addresses of messenger servers.
 
 	HTTPPort   int    `json:"http_port"`              // Port to serve HTTP API/GUI.
 	HTTPGUI    bool   `json:"http_gui"`               // Whether to enable GUI.
 	HTTPGUIDir string `json:"http_gui_dir,omitempty"` // Full path of GUI static files.
 
-	Browser bool `json:"browser"` // Whether to open browser on GUI start.
+	Browser  bool `json:"browser"`  // Whether to open browser on GUI start.
+	Defaults bool `json:"defaults"` // Whether to have default connections/subscriptions.
 }
 
 // NewDefaultConfig returns a default configuration for BBS node.
 func NewDefaultConfig() *Config {
 	return &Config{
-		Master:     false, // Not master.
-		Memory:     false, // Save to disk.
-		ConfigDir:  "",    // --> Action: set as '$HOME/.skybbs'
-		CXOPort:    defaultCXOPort,
-		CXORPC:     true,
-		CXORPCPort: defaultCXOROCPort,
-		SubPort:    defaultSubPort,
-		SubAddr:    "", // -> Action: set as 'localhost:{Config.SubPort}'
-		HTTPPort:   defaultHTTPPort,
-		HTTPGUI:    true,
-		HTTPGUIDir: "", // --> Action: set as '$HOME/.skybbs/static'
-		Browser:    true,
+		Memory:             false, // Save to disk.
+		ConfigDir:          "",    // --> Action: set as '$HOME/.skybbs'
+		CXOPort:            defaultCXOPort,
+		CXORPC:             false,
+		CXORPCPort:         defaultCXORPCPort,
+		MessengerAddresses: defaultMessengerAddresses,
+		HTTPPort:           defaultHTTPPort,
+		HTTPGUI:            true,
+		HTTPGUIDir:         "", // --> Action: set as '$HOME/.skybbs/static'
+		Browser:            true,
+		Defaults:           true,
 	}
 }
 
@@ -85,20 +92,15 @@ func (c *Config) PostProcess() error {
 			return e
 		}
 	}
-	if c.Master {
-		if c.SubAddr == "" {
-			c.SubAddr = defaultIPAddr + ":" + strconv.Itoa(c.SubPort)
-		}
-	} else {
-		c.SubPort = 0
-		c.SubAddr = ""
+	if devMode {
+		c.MessengerAddresses = defaultDevMessengerAddresses
 	}
 	if c.HTTPGUI {
 		if c.HTTPGUIDir == "" {
 			if devMode {
 				c.HTTPGUIDir = filepath.Join(os.Getenv("GOPATH"), defaultDevStaticSubDir)
 			} else {
-				c.HTTPGUIDir = filepath.Join(os.Getenv("GOPATH"), defaultStaticSubDir)
+				c.HTTPGUIDir = defaultStaticSubDir
 			}
 		}
 	} else {
@@ -118,46 +120,52 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		quit := CatchInterrupt()
 		defer log.Println("Goodbye.")
 
-		stateSaver := access.NewStateSaver()
-		defer stateSaver.Close()
-
-		cxoConfig := &store.CXOConfig{
-			Master:       &c.Master,
-			TestMode:     &testMode,
-			MemoryMode:   &c.Memory,
-			ConfigDir:    &c.ConfigDir,
-			CXOPort:      &c.CXOPort,
-			CXORPCEnable: &c.CXORPC,
-			CXORPCPort:   &c.CXORPCPort,
-		}
-
-		cxo, e := store.NewCXO(cxoConfig, stateSaver.Update)
-		CatchError(e, "failed to create cxo")
-		defer cxo.Close()
-
-		boardAccessorConfig := &btp.BoardAccessorConfig{
-			MemoryMode: &c.Memory,
-			ConfigDir:  &c.ConfigDir,
-		}
-
-		boardAccessor := btp.NewBoardAccessor(boardAccessorConfig, cxo, stateSaver)
-		defer boardAccessor.Close()
-
-		httpGateway := &http.Gateway{
-			BoardAccessor: boardAccessor,
-			CXO:           cxo,
-			Quit:          quit,
-		}
-
-		httpServerConfig := &http.ServerConfig{
-			Port:      &c.HTTPPort,
-			StaticDir: &c.HTTPGUIDir,
-			EnableGUI: &c.HTTPGUI,
-		}
-
-		httpServer, e := http.NewServer(httpServerConfig, httpGateway)
-		CatchError(e, "failed to create HTTP Server")
+		httpServer, e := http.NewServer(
+			&http.ServerConfig{
+				Port:      &c.HTTPPort,
+				StaticDir: &c.HTTPGUIDir,
+				EnableGUI: &c.HTTPGUI,
+			},
+			&http.Gateway{
+				Access: &store.Access{
+					Session: session.NewManager(
+						&session.ManagerConfig{
+							MemoryMode: &c.Memory,
+							ConfigDir:  &c.ConfigDir,
+						},
+					),
+					CXO: cxo.NewManager(
+						&cxo.ManagerConfig{
+							Memory:             &c.Memory,
+							Config:             &c.ConfigDir,
+							MessengerAddresses: c.MessengerAddresses,
+							CXOPort:            &c.CXOPort,
+							CXORPCEnable:       &c.CXORPC,
+							CXORPCPort:         &c.CXORPCPort,
+							Defaults:           &c.Defaults,
+						},
+						&state.CompilerConfig{
+							UpdateInterval: &compilerInternal,
+						},
+						&msgs.RelayConfig{
+							Addresses:         c.MessengerAddresses,
+							ReconnectInterval: &messengerReconnectInterval,
+						},
+					),
+				},
+				Quit: quit,
+			},
+		)
+		CatchError(e, "failed to start HTTP Server")
 		defer httpServer.Close()
+
+		if c.Browser {
+			address := fmt.Sprintf("http://127.0.0.1:%d", c.HTTPPort)
+			log.Println("Opening browser at address:", address)
+			if e := browser.Open(address); e != nil {
+				log.Println("Error on browser open:", e)
+			}
+		}
 
 		<-quit
 		return nil
@@ -188,6 +196,10 @@ func main() {
 	config := NewDefaultConfig()
 	flags := []cli.Flag{
 		cli.BoolFlag{
+			Name:        "dev",
+			Destination: &devMode,
+		},
+		cli.BoolFlag{
 			Name:        "master",
 			Destination: &config.Master,
 		},
@@ -213,14 +225,9 @@ func main() {
 			Destination: &config.CXORPCPort,
 			Value:       config.CXORPCPort,
 		},
-		cli.IntFlag{
-			Name:        "sub-port",
-			Destination: &config.SubPort,
-			Value:       config.SubPort,
-		},
-		cli.StringFlag{
-			Name:        "sub-addr",
-			Destination: &config.SubAddr,
+		cli.StringSliceFlag{
+			Name:  "messenger-addresses",
+			Value: &config.MessengerAddresses,
 		},
 		cli.IntFlag{
 			Name:        "http-port",
@@ -235,22 +242,14 @@ func main() {
 			Name:        "http-gui-dir",
 			Destination: &config.HTTPGUIDir,
 		},
+		cli.BoolTFlag{
+			Name:        "defaults",
+			Destination: &config.Defaults,
+		},
 	}
 	app := cli.NewApp()
 	app.Name = "Skycoin BBS Node"
 	app.Usage = "Runs a Skycoin BBS Node"
-	app.Commands = cli.Commands{
-		{
-			Name:  "dev, d",
-			Usage: "Run node in development mode",
-			Flags: flags,
-			Before: cli.BeforeFunc(func(_ *cli.Context) error {
-				devMode = true
-				return nil
-			}),
-			Action: config.GenerateAction(),
-		},
-	}
 	app.Flags = flags
 	app.Action = config.GenerateAction()
 	if e := app.Run(os.Args); e != nil {

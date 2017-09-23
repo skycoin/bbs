@@ -1,65 +1,81 @@
-<div class="user-list container">
-  <p class="d-flex justify-content-end"><button type="button" class="btn btn-sm btn-primary" (click)="openAdd(addBox)">New Master</button></p>
-  <table class="table table_fixed table-hover">
-    <thead>
-      <tr>
-        <th scope="col" width="40%">Name</th>
-        <th scope="col" width="40%">Public Key</th>
-        <th scope="col" width="20%" class="more"><i class="fa fa-ellipsis-h"></i></th>
-      </tr>
-    </thead>
-    <tbody>
-      <!--trackBy:user.public_key-->
-      <tr *ngFor="let user of userlist;">
-        <td class="single-line" title="{{user.alias}}"><span *ngIf="user?.master" class="badge badge-pill badge-info">Master</span>{{user?.alias}}</td>
-        <td class="single-line" title="{{user.public_key}}">{{user?.public_key}}</td>
-        <td class="more">
-          <a href="javascript:void(0);" class="edit" (click)="openEdit(editBox,user.public_key)"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-          <a href="javascript:void(0);" class="del" (click)="remove($event,user.public_key)"><i class="fa fa-trash" aria-hidden="true"></i></a>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+<div class="container">
+  <p class="d-flex justify-content-end"><button type="button" class="btn btn-primary" (click)="openAdd(addBox)">New User</button></p>
+  <div class="list-box">
+    <div class="row user-item user-item-header" *ngIf="userlist?.length > 0">
+      <div class="col-10">
+        Alias
+      </div>
+      <div class="col-2 text-center">
+        <i class="fa fa-ellipsis-h" aria-hidden="true"></i>
+      </div>
+    </div>
+    <div class="row user-item" *ngFor="let user of userlist;trackBy:trackUsers">
+      <div class="col-10">
+        {{user?.alias}}
+      </div>
+      <div class="col-2 text-center">
+        <a href="javascript:void(0);" class="del" (click)="delUser($event,user?.alias)"><i class="fa fa-trash" aria-hidden="true"></i></a>
+      </div>
+    </div>
+  </div>
+  <h3 class="not-found" *ngIf="userlist?.length <= 0">
+    <p><i class="fa fa-exclamation-circle fa-2x" aria-hidden="true"></i></p>
+    <p class="hint-text"> No Users Found</p>
+  </h3>
 </div>
 
 
-<ng-template #addBox let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">New Master</h4>
-    <button type="button" class="close" aria-label="Close" (click)="c(false)">
+<ng-template #addBox let-c="close">
+  <div class="pop-dialog" [@bounceIn]>
+    <div class="modal-header">
+      <h4 class="modal-title">New Master</h4>
+      <button type="button" class="close" aria-label="Close" (click)="c(false)">
         <span aria-hidden="true">&times;</span>
       </button>
-  </div>
-  <div class="modal-body">
-    <form [formGroup]="addForm" novalidate>
-      <div class="form-group">
-        <label for="alias">Alias</label>
-        <input type="text" class="form-control " placeholder="alias" id="alias" formControlName="alias">
-      </div>
-      <div class="form-group">
-        <label for="seed">Seed</label>
-        <input type="text" class="form-control " placeholder="seed" id="seed" formControlName="seed">
-      </div>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
-    <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="addForm" novalidate>
+        <div class="input-box">
+          <label for="alias">Alias</label>
+          <div class="row">
+            <input type="text" class="form-control col" placeholder="Username" aria-label="alias" id="alias" formControlName="alias">
+          </div>
+        </div>
+        <div class="input-box">
+          <label for="seed">Seed</label>
+          <div class="row">
+            <input type="text" class="form-control col-11" placeholder="Username" aria-label="Seed" id="seed" formControlName="seed">
+            <div class="col p-0"><i class="fa fa-refresh" aria-hidden="true" (click)="getSeed($event)"></i></div>
+          </div>
+        </div>
+        <!-- <div class="form-group">
+          <label for="seed">Seed</label>
+          <input type="text" class="form-control " placeholder="seed" id="seed" formControlName="seed">
+        </div> -->
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+      <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
   </div>
 </ng-template>
 
-<ng-template #editBox let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">Edit</h4>
-    <button type="button" class="close" aria-label="Close" (click)="c(false)">
+<ng-template #editBox let-c="close">
+  <div class="pop-dialog" [@bounceIn]>
+    <div class="modal-header">
+      <h4 class="modal-title">Edit</h4>
+      <button type="button" class="close" aria-label="Close" (click)="c(false)">
         <span aria-hidden="true">&times;</span>
       </button>
-  </div>
-  <div class="modal-body">
-    <input [(ngModel)]="editName" type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
-    <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
+    <div class="modal-body">
+      <input [(ngModel)]="editName" type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+      <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
   </div>
 </ng-template>

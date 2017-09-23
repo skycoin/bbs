@@ -1,0 +1,97 @@
+<div class="threads">
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="display-5">{{board?.name}}</h1>
+      <p class="lead break-line" [innerHTML]="board?.body"></p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="card" (click)="open(thread?.ref)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
+      <div class="card-block">
+        <div class="row card-top">
+          <div class="col">
+            <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="thread?.name">{{thread?.name | cutText}}</a>
+            <small class="time">{{thread?.created / 1000000 | date: 'M/d/y H:mm'}}</small>
+          </div>
+        </div>
+        <p class="margin-0 text-muted block-with-text">{{thread?.body}}</p>
+      </div>
+    </div>
+    <h5 class="not-found" *ngIf="threads?.length == 0">No Threads Found</h5>
+  </div>
+</div>
+
+<ng-template #fab>
+  <fab>
+    <fa-button name="New Thread" icon="fa-th-large" (click)="openAdd(add)"></fa-button>
+  </fab>
+</ng-template>
+
+
+<!--Info Box-->
+<ng-template #infoBox let-c="close">
+  <div class="pop-dialog" [@bounceIn]>
+    <div class="card">
+      <div class="card-header">
+        Thread Info
+      </div>
+      <div class="card-block">
+        <p class="thread-item">Name: <span>{{tmpThread.name}}</span></p>
+        <p class="thread-item">Description: <span>{{tmpThread.description}}</span></p>
+        <p class="thread-item">Master Board: <span>{{tmpThread.master_board}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.master_board" (onClip)="common.copy($event)"></i></span></p>
+        <p class="thread-item">Ref: <span>{{tmpThread.ref}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.ref" (onClip)="common.copy($event)"></i></span></p>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<!--Add Thread-->
+<ng-template #add let-c="close">
+  <div class="pop-dialog" [@bounceIn]>
+    <div class="modal-header">
+      <h4 class="modal-title">New Thread</h4>
+      <button type="button" class="close" aria-label="Close" (click)="c(false)">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="addForm" novalidate>
+        <div class="form-group">
+          <label for="name">Thread name</label>
+          <input type="text" class="form-control" placeholder="name" id="name" formControlName="name">
+        </div>
+        <div class="form-group">
+          <label for="body">Thread Body</label>
+          <textarea class="form-control" rows="3" id="body" formControlName="body"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+      <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+    </div>
+  </div>
+</ng-template>
+
+<!--Import Box-->
+<ng-template #importBox let-c="close">
+  <div class="modal-header">
+    <h4 class="modal-title">Import Thread</h4>
+    <button type="button" class="close" aria-label="Close" (click)="c(false)">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label for="toBoard">Destination board</label>
+      <select class="form-control" id="toBoard" [(ngModel)]="importBoardKey" placeholder="Choose to move">
+        <option *ngFor="let board of importBoards" value="{{board.public_key}}">{{board.name}}</option>
+    </select>
+      <!--<input type="text" class="form-control" placeholder="toBoard" id="toBoard">-->
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-info" (click)="c(false)">cancel</button>
+    <button type="button" class="btn btn-success" (click)="c(true)">submit</button>
+  </div>
+</ng-template>

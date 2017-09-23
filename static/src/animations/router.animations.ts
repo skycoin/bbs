@@ -5,21 +5,18 @@ export const slideInLeftAnimation: AnimationEntryMetadata =
   trigger('routeAnimation', [
     state('*',
       style({
-        opacity: 1,
-        transform: 'translateX(0)'
+        opacity: 1
       })
     ),
     transition(':enter', [
       style({
-        opacity: 0,
-        transform: 'translateX(-100%)'
+        opacity: 0
       }),
       animate('0.3s ease-in')
     ]),
     transition(':leave', [
       animate('0.3s ease-out', style({
-        opacity: 0,
-        transform: 'translateX(100%)'
+        opacity: 0
       }))
     ])
   ]);

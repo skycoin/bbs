@@ -1,0 +1,28 @@
+package msg
+
+const (
+	MSG_OP_SIZE  = 1
+	MSG_SEQ_SIZE = 4
+
+	MSG_HEADER_BEGIN = 0
+	MSG_OP_BEGIN
+	MSG_OP_END = MSG_OP_BEGIN + MSG_OP_SIZE
+	MSG_SEQ_BEGIN
+	MSG_SEQ_END = MSG_SEQ_BEGIN + MSG_SEQ_SIZE
+
+	MSG_HEADER_END
+)
+
+const (
+	OP_REG = iota
+	OP_SEND
+	OP_ACK
+	OP_SIZE
+)
+
+const (
+	PUSH_ACK = iota
+	PUSH_REG
+	PUSH_MSG
+	PUSH_SIZE
+)

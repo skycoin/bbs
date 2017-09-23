@@ -1,0 +1,908 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Skycoin BBS v0.2",
+		"_postman_id": "a78885d6-0d37-6050-cf6e-bc10e5522baf",
+		"description": "API for rewrite of Skycoin BBS.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Connections",
+			"description": "Endpoints regarding connections to external BBS nodes.",
+			"item": [
+				{
+					"name": "Get All Connections",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Obtains all addresses this node is configured to connect to, and whether the connection is active."
+					},
+					"response": []
+				},
+				{
+					"name": "New Connection",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "address",
+									"value": "gewngkjvbalrhvbaerv",
+									"description": "Address of external node to connet to.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Connects to external node of address."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Connection",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/connections/delete",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "address",
+									"value": "34.204.161.180:8210",
+									"description": "Address of remote node to disconnect from.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Disconnects from external node of address."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Node",
+			"description": "Endpoints regarding the current BBS Node.",
+			"item": [
+				{
+					"name": "Node Stats",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/node/stats",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Test Board",
+									"description": "Name of the board.",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "This is a test board.",
+									"description": "Description of the board.",
+									"type": "text"
+								},
+								{
+									"key": "seed",
+									"value": " these are words to generate a seed",
+									"description": "Seed to generate public/secret key pair.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Obtains information regarding the current BBS node."
+					},
+					"response": []
+				},
+				{
+					"name": "Quit Node",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/node/quit",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Exits the node."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Session",
+			"description": "",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/users/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Obtains a list of avaliable users."
+					},
+					"response": []
+				},
+				{
+					"name": "New User",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/users/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "seed",
+									"value": "d",
+									"description": "Used for generating public/private key pair for user.",
+									"type": "text"
+								},
+								{
+									"key": "alias",
+									"value": "angular4",
+									"description": "A unique identifier for the user.",
+									"type": "text"
+								},
+								{
+									"key": "",
+									"value": "",
+									"description": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Creates a new user."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/users/delete",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "alias",
+									"value": "superman111",
+									"description": "Alias of user to delete.",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/login",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "alias",
+									"value": "angular4",
+									"description": "User's alias to login.",
+									"type": "text"
+								},
+								{
+									"key": "",
+									"value": "",
+									"description": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Decrypts the specified user file and logs the user in."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/logout",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Logs a user out."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Session Info",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/session/get_info",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Obtains session information and whether we are logged in."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscriptions",
+			"description": "Regarding subscriptions to boards (master and non-master). Although you cannot \"unsubscribe\" from a master board.",
+			"item": [
+				{
+					"name": "Get All Subscriptions",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/subscriptions/get_all",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Obtains all subscriptions of boards (master and non-master)."
+					},
+					"response": []
+				},
+				{
+					"name": "New Subscription",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/subscriptions/new",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "public_key",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+									"description": "Public key of board to subscribe to.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Subscribes to non-master board."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Subscription",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/subscriptions/delete",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "public_key",
+									"value": "0307487579530169373549decbed46899cce3388dd1ef7c7289442d598e224d661",
+									"description": "Public key of board to unsubscribe to.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Unsubscribes from non-master board."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tools",
+			"description": "",
+			"item": [
+				{
+					"name": "New Seed",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/tools/new_seed",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Generates a new random seed."
+					},
+					"response": []
+				},
+				{
+					"name": "New Key Pair",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/tools/new_key_pair",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "seed",
+									"value": "c",
+									"description": "Seed to generate key pair with. If left empty, a random key pair will be generated.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Generates a public/private key pair from seed (if provided). Otherwise a random key pair will be generated."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Content",
+			"description": "Regarding submission of boards, threads, posts and votes.",
+			"item": [
+				{
+					"name": "Get Boards",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_boards",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Gets a list of all boards."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Board",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_board",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Board's public key.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Get's a single board's info view. Does not list threads."
+					},
+					"response": []
+				},
+				{
+					"name": "New Board",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/new_board",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "seed",
+									"value": "a",
+									"description": "Seed to generate public/private key pair of the board.",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Test Board",
+									"description": "Name given to the board.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is a test board.",
+									"description": "Description given to the board.",
+									"type": "text"
+								},
+								{
+									"key": "submission_addresses",
+									"value": "",
+									"description": "Submission addresses separated by commas (optional).",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Creates a new board."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Board",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/delete_board",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to delete.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Deletes a master board that's hosted on this node."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Board Page",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_board_page",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+									"description": "Public key of board.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Gets a view of a board with threads."
+					},
+					"response": []
+				},
+				{
+					"name": "New Thread",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/new_thread",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+									"description": "Public key of board to submit thread.",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Test Thread",
+									"description": "Name of thread to submit.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is a test thread.",
+									"description": "Text body of thread to submit.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Creates a new thread on board of public key. If node does not own the board, a request to the board's submission addresses is initiated via RPC."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Thread Page",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/get_thread_page",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+									"description": "Public key of board where thread belongs.",
+									"type": "text"
+								},
+								{
+									"key": "thread_ref",
+									"value": "fcef784bf16a1c62206b6230f5c1d88137bd3641d63087e9fe80cedf4e536d9f",
+									"description": "Reference of thread.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Gets a view of a thread of specified board."
+					},
+					"response": []
+				},
+				{
+					"name": "New Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/new_post",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+									"description": "Public key of board where post should belong.",
+									"type": "text"
+								},
+								{
+									"key": "thread_ref",
+									"value": "fcef784bf16a1c62206b6230f5c1d88137bd3641d63087e9fe80cedf4e536d9f",
+									"description": "Reference of thread where post should belong.",
+									"type": "text"
+								},
+								{
+									"key": "post_ref",
+									"value": "",
+									"description": "(Optional, not yet implemented) Include if this post is reply of another post.",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Test Image Post",
+									"description": "Name of post.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is a test image post.",
+									"description": "Body of post.",
+									"type": "text"
+								},
+								{
+									"key": "images",
+									"value": "[{\"url\":\"https://i.imgur.com/ASFEeYi.jpg\",\"name\":\"Skywire Miner\",\"thumbnail_url\":\"https://i.imgur.com/ASFEeYim.jpg\",\"size\":5,\"height\":5,\"width\":3}]",
+									"description": "Json objects representing images (Optional, can leave blank).",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Add a new post to specified board and thread. (Can also be a reply to another post)"
+					},
+					"response": []
+				},
+				{
+					"name": "New Image Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/content/new_image_post",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "02112526d8a5ff8082403afbe45e91ca88c1acaa4d5dbecf6b38db276e9cab239d",
+									"description": "Public key of board where post should belong.",
+									"type": "text"
+								},
+								{
+									"key": "thread_ref",
+									"value": "9d8555d62e2ed6aa9235896ad3b8bf9507565b454c5810c6fe35bb6155befbda",
+									"description": "Reference of thread where post should belong.",
+									"type": "text"
+								},
+								{
+									"key": "post_ref",
+									"value": "",
+									"description": "(Optional, not yet implemented) Include if this post is reply of another post.",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Image Post",
+									"description": "Name of post.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is an image post.",
+									"description": "Body of post.",
+									"type": "text"
+								},
+								{
+									"key": "image_url",
+									"value": "http://i.imgur.com/q62LNBE.jpg",
+									"description": "Url of image.",
+									"type": "text"
+								},
+								{
+									"key": "image_thumbnail_url",
+									"value": "http://i.imgur.com/q62LNBEm.jpg",
+									"description": "Url of thumbnail (Optional).",
+									"type": "text"
+								},
+								{
+									"key": "image_size",
+									"value": "10",
+									"description": "Size of image (Optional).",
+									"type": "text"
+								},
+								{
+									"key": "image_height",
+									"value": "5",
+									"description": "Height of image (Optional).",
+									"type": "text"
+								},
+								{
+									"key": "image_width",
+									"value": "4",
+									"description": "Width of image (Optional).",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Add a new image post to specified board and thread. (Can also be a reply to another post)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"description": "Folder for admin actions.",
+			"item": [
+				{
+					"name": "Add Submission Address",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/admin/board/new_submission_address",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to add submission address to.",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "[::]:6421",
+									"description": "Submission address to add.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Adds a submission address to specified board."
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Submission Address",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/admin/board/delete_submission_address",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to remove submission address to.",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "[::]:6421",
+									"description": "Submission address to remove.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Removes a submission address from specified board."
+					},
+					"response": []
+				},
+				{
+					"name": "Export Board",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/admin/board/export",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "02583824104ab7b8e51291f60e86270f9fd41f0ffa5153d8188d1eb9ec51f31606",
+									"description": "Public key of board to export.",
+									"type": "text"
+								},
+								{
+									"key": "file_name",
+									"value": "test0",
+									"description": "Name of file to export to.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Exports a board to json file."
+					},
+					"response": []
+				},
+				{
+					"name": "Import Board",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/admin/board/import",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "02179a6f243ce9db915a129631c7f75b15331be4c60a78f23e9f6c27ae1ac11aed",
+									"description": "Public key of board to import file to.",
+									"type": "text"
+								},
+								{
+									"key": "file_name",
+									"value": "test0",
+									"description": "Name of file to import board from.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Imports a board from json file."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Votes",
+			"description": "Regards adding and viewing votes.",
+			"item": [
+				{
+					"name": "Vote User",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/votes/vote_user",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to submit vote for user.",
+									"type": "text"
+								},
+								{
+									"key": "user_public_key",
+									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+									"description": "Public key of user to vote in.",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "-1",
+									"description": "Mode of vote (+1 : follow) (0 : neutral) (-1 : avoid).",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "awesome",
+									"description": "(Optional) tag field for some optional text.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Records a vote for a user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Follow Page",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/votes/get_follow_page",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board to extract user's follow page from.",
+									"type": "text"
+								},
+								{
+									"key": "user_public_key",
+									"value": "038614395bdbd7e443fe6baabc95f68d548b0038a9ddce06191249bef75000617f",
+									"description": "User's public key to extract follow page from.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Gets a view that represents a user's follow/avoid page of other users."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote Thread",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/votes/vote_thread",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board in which thread originates.",
+									"type": "text"
+								},
+								{
+									"key": "thread_ref",
+									"value": "85730e1dfab35b22275061fe8f72ff2a42d0915d80047225b1aa4bf58ff308ac",
+									"description": "Reference of thread to vote on.",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "-1",
+									"description": "Mode of vote (+1 : affirm) (0 : neutral) (-1 : disaffirm).",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "no",
+									"description": "(Optional) tag field for some optional text.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Votes on specified thread."
+					},
+					"response": []
+				},
+				{
+					"name": "Vote Post",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/votes/vote_post",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "board_public_key",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "Public key of board in which post originates.",
+									"type": "text"
+								},
+								{
+									"key": "post_ref",
+									"value": "d32af6e01b0fd3958f023269e37edd0c94c58f0c64e1f56648e0f41f88722db4",
+									"description": "Reference of post to vote on.",
+									"type": "text"
+								},
+								{
+									"key": "mode",
+									"value": "-1",
+									"description": "Mode of vote (+1 : affirm) (0 : neutral) (-1 : disaffirm).",
+									"type": "text"
+								},
+								{
+									"key": "tag",
+									"value": "spam",
+									"description": "(Optional) tag field for some optional text.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Submits a vote for specified post."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

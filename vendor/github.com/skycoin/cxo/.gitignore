@@ -1,0 +1,62 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
+*.exe
+*.test
+*.prof
+
+node_modules/
+
+.idea
+gui/static/dev/
+
+# coverage
+
+cover.out
+cover.html
+
+# any *.out file
+
+*.out
+
+# executables
+
+cmd/cxocli/cxocli
+cmd/cxod/cxod
+
+intro/pass_through/server/server
+intro/pass_through/pipe/pipe
+intro/pass_through/client/client
+intro/cxtweet/cxtweet
+
+# tests directory
+
+node/test/
+
+# suffix for ignore files and directories temporary 
+
+*.go.ignore
+
+*.db
+*.db.cxds
+*.db.idx
+
+

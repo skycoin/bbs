@@ -2,17 +2,20 @@ package http
 
 import (
 	"fmt"
+	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/cxo"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
 const (
+	logPrefix     = "HTTPSERVER"
 	localhost     = "127.0.0.1"
 	indexFileName = "index.html"
 )
@@ -26,27 +29,29 @@ type ServerConfig struct {
 
 // Server represents an HTTP Server that serves static files and JSON api.
 type Server struct {
-	config *ServerConfig
-	l      net.Listener
-	mux    *http.ServeMux
-	api    *Gateway
-	quit   chan struct{}
+	c    *ServerConfig
+	l    *log.Logger
+	net  net.Listener
+	mux  *http.ServeMux
+	api  *Gateway
+	quit chan struct{}
 }
 
 // NewServer creates a new server.
 func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 	server := &Server{
-		config: config,
-		mux:    http.NewServeMux(),
-		api:    api,
-		quit:   make(chan struct{}),
+		c:    config,
+		l:    inform.NewLogger(true, os.Stdout, logPrefix),
+		mux:  http.NewServeMux(),
+		api:  api,
+		quit: make(chan struct{}),
 	}
 	var e error
 	if *config.StaticDir, e = filepath.Abs(*config.StaticDir); e != nil {
 		return nil, e
 	}
 	host := fmt.Sprintf("%s:%d", localhost, *config.Port)
-	if server.l, e = net.Listen("tcp", host); e != nil {
+	if server.net, e = net.Listen("tcp", host); e != nil {
 		return nil, e
 	}
 	if e := server.prepareMux(); e != nil {
@@ -58,7 +63,7 @@ func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 
 func (s *Server) serve() {
 	for {
-		if e := http.Serve(s.l, s.mux); e != nil {
+		if e := http.Serve(s.net, s.mux); e != nil {
 			select {
 			case <-s.quit:
 				return
@@ -71,42 +76,43 @@ func (s *Server) serve() {
 }
 
 func (s *Server) prepareMux() error {
-	if *s.config.EnableGUI {
+	if *s.c.EnableGUI {
 		if e := s.prepareStatic(); e != nil {
 			return e
 		}
 	}
-	return s.api.prepare(s.mux)
+	return s.api.host(s.mux)
 }
 
 func (s *Server) prepareStatic() error {
+	appLoc := *s.c.StaticDir
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data, e := ioutil.ReadFile(path.Join(*s.config.StaticDir, indexFileName))
-		if e != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(e.Error()))
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write(data)
+		page := path.Join(appLoc, "index.html")
+		http.ServeFile(w, r, page)
 	})
 
-	return filepath.Walk(*s.config.StaticDir, func(path string, info os.FileInfo, e error) error {
-		if info == nil || info.IsDir() {
-			return nil
+	fInfos, _ := ioutil.ReadDir(appLoc)
+	for _, fInfo := range fInfos {
+		route := fmt.Sprintf("/%s", fInfo.Name())
+		if fInfo.IsDir() {
+			route += "/"
 		}
-		httpPath := strings.TrimPrefix(path, *s.config.StaticDir)
-		s.mux.HandleFunc(httpPath, func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path)
-		})
-		return nil
-	})
+		s.mux.Handle(route, http.FileServer(http.Dir(appLoc)))
+	}
+	return nil
 }
 
+// CXO obtains the CXO.
+func (s *Server) CXO() *cxo.Manager {
+	return s.api.Access.CXO
+}
+
+// Close quits the http server.
 func (s *Server) Close() {
 	if s.quit != nil {
+		s.CXO().Close()
 		close(s.quit)
-		s.l.Close()
-		s.l = nil
+		s.net.Close()
+		s.net = nil
 	}
 }

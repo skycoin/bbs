@@ -1,0 +1,29 @@
+to-top {
+  position: fixed;
+  bottom: 1%;
+  right: 1%;
+  display: block;
+  width: 3.5rem;
+  height: 3.5rem;
+  .to-top {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    background-color: #ffda00;
+    border-radius: 50%;
+    box-shadow: 0 0.3rem 0.4rem hsla(0, 0%, 0%, 0.3);
+    text-decoration: none;
+    &:hover {
+      .fa {
+        padding-bottom: 1.25rem; // transform: translateY(-20%);
+      }
+    }
+    .fa {
+      margin: auto;
+      font-size: 1.5rem;
+      color: #000;
+      transition: padding-bottom .15s;
+      padding-bottom: .5rem; // transform: translateY(-10%);
+    }
+  }
+}

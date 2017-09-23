@@ -1,0 +1,60 @@
+@import "../../common.scss";
+app-threads {
+  // width: 100vw;
+  .jumbotron {
+    @media (min-width: 576px) {
+      padding: 2rem;
+    }
+    position: relative;
+    border-radius: 0;
+    background: hsla(0, 0%, 100%, .3);
+    overflow: hidden;
+    .lead {
+      font-size: 1rem;
+      font-weight: normal;
+    }
+  }
+  .threads {
+    .card {
+      overflow: hidden;
+      cursor: pointer;
+      margin: 1rem 0;
+      @include boxShaow;
+      &:active {
+        box-shadow: none;
+      }
+      .card-block {
+        padding: .75rem;
+        .card-top {
+          border-bottom: 1px solid $light-solid-color;
+          padding-bottom: .25rem;
+          margin-bottom: 1rem;
+        }
+      }
+      .title {
+        color: #000;
+        font-weight: 500;
+      }
+      .time {
+        color: #999;
+        &::before {
+          content: '\00B7';
+          padding-right: 5px;
+          font-size: 1rem;
+          font-weight: bolder;
+          text-decoration: none;
+        }
+      }
+      .card-block {
+        .description {
+          margin: 0;
+        }
+        .card-text {
+          .btn {
+            margin: 0 .5rem;
+          }
+        }
+      }
+    }
+  }
+}

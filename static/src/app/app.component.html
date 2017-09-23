@@ -1,14 +1,66 @@
-<nav class="navbar navbar-toggleable-md bg-faded fixed-top navbar-inverse bg-primary">
-  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo02"
-    aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon test-toggler-icon"></span>
-  </button>
-  <a class="navbar-brand" href="#" title="BBS">
-    <img src="../assets/logo.svg" width="140" height="30" alt="bbs">
+<nav class="navbar navbar-expand-lg fixed-top navbar-dark" [ngClass]="navBarBg">
+  <a class="navbar-brand" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" title="BBS">
+    <img src="../assets/logo.svg" width="170.74" height="30" alt="bbs">
   </a>
-
-  <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
-    <ul class="navbar-nav mr-auto mt-2 mt-md-0">
+  <div class="overlay" *ngIf="showLoginBox" (click)="userAction($event)"></div>
+  <div class="login-register-box" *ngIf="showLoginBox">
+    <div class="box">
+      <div class="header">
+        <a href="javascript:void(0);" class="button login-button" (click)="switchTab('login')">
+          <div class="active" *ngIf="loginBox"></div>
+          <span>Login</span>
+        </a>
+        <a href="javascript:void(0);" class="button register-button" (click)="switchTab('register')">
+          <div class="active" *ngIf="registerBox"></div>
+          <span>Register</span>
+        </a>
+      </div>
+      <div class="content">
+        <div class="login-box" *ngIf="loginBox" [@tabLeft]>
+          <h6>Login to your account</h6>
+          <div class="form-box">
+            <input type="text" class="text-input input-border-bottom" (keyup)="onKeyUp($event)" [focus]="loginBox" [(ngModel)]="alias"
+              placeholder="Input Your Alias">
+            <div class="auto-alias" *ngIf="showAilas">
+              <ul>
+                <li *ngFor="let user of autoAilas" (click)="selectAlias($event)"><a #aliasItem href="javascript:void(0);">{{user?.alias}}</a></li>
+              </ul>
+            </div>
+          </div>
+          <p class="text-right">
+            <button class="button" style="background-color:#1abc9c;color:#fff;" (click)="login($event)">Submit</button>
+          </p>
+        </div>
+        <div class="register-box" *ngIf="registerBox" [@tabRight]>
+          <h6>Create a account</h6>
+          <div class="form-box">
+            <input type="text" class="text-input input-border-bottom" (keyup.enter)="register($event)" [focus]="registerBox" [(ngModel)]="alias"
+              placeholder="Input Your Alias">
+          </div>
+          <p class="text-right">
+            <button class="button" style="background-color:#e67e22;color:#fff;" (click)="register($event)">Submit</button>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+      aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    <a class="use-status-box small-status-box" href="javascript:void(0);" (click)="userAction($event)">
+        <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
+        <div class="pop-box" *ngIf="userMenu">
+            <ul>
+    <li><a href="javascript:void(0);" (click)="logout($event)">Follow Page</a></li>
+    <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
+    </ul>
+  </div>
+  </a>
+  </div>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
       <li class="nav-item">
         <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Boards<span class="sr-only">(current)</span></a>
       </li>
@@ -18,26 +70,52 @@
       <li class="nav-item">
         <a class="nav-link" routerLink="/conn" routerLinkActive="active">Connections</a>
       </li>
-
-      <li class="nav-item">
-        <a class="nav-name nav-link" routerLink="/user" routerLinkActive="active"><i class="fa fa-user" aria-hidden="true"></i>{{name}}</a>
-      </li>
     </ul>
-    <span class="navbar-text">
-     <a class="nav-node nav-link" href="javascript:void(0);" *ngIf="isMasterNode">Master Node</a>
-     <a class="nav-node nav-link" href="javascript:void(0);" *ngIf="!isMasterNode">Client Node</a>
-    </span>
+  </div>
+  <a class="use-status-box big-status-box" href="javascript:void(0);" (click)="userAction($event)">
+    <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>{{userName}}
+
+    <div class="pop-box" *ngIf="userMenu">
+      <ul>
+  <li><a href="javascript:void(0);" (click)="openFollow($event,page)">Follow Page</a></li>
+  <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
+  </ul>
+  </div>
+  </a>
+  <div class="nav-overlay"></div>
+  <div class="overlay" *ngIf="userMenu" (click)="userAction($event)">
   </div>
 </nav>
 <router-outlet></router-outlet>
-<app-loading></app-loading>
-<app-fixed-button></app-fixed-button>
-<button class="top-btn btn btn-primary " *ngIf="common.topBtn" (click)="common.scrollToTop()">
-  <div class="top"></div>
-  <span>top</span>
-</button>
-<div class="app-pop container">
-  <ngb-alert type="{{common.alertType}}" *ngIf="common.alert" (click)="common.alert = false">
-    {{common.alertMessage}}
-  </ngb-alert>
-</div>
+<ng-template #page let-c="close">
+  <div class="pop-dialog" [@bounceIn]>
+    <div class="modal-header">
+      <h5 class="modal-title" id="exampleModalLongTitle">Follow Page</h5>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" (click)="c(false)">
+            <span aria-hidden="true">&times;</span>
+          </button>
+    </div>
+    <div class="modal-body">
+      <p class="text-center follow-hint" *ngIf="userFollow?.following?.length <= 0 && userFollow?.avoiding?.length <= 0">No Found Following/Avoiding User</p>
+      <div *ngIf="userFollow?.following?.length > 0">
+        <h6 class="follow-title">Following</h6>
+        <div class="row">
+          <div class="col-md-3 text-center" *ngFor="let following of userFollow?.following">
+            <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
+            <p class="single-line" title="{{following.user_public_key}}">{{following.user_public_key}}</p>
+          </div>
+        </div>
+
+      </div>
+      <div *ngIf="userFollow?.avoiding?.length > 0">
+        <h6 class="follow-title">Avoiding</h6>
+        <div class="row">
+          <div class="col-md-3 text-center" *ngFor="let avoiding of userFollow?.avoiding">
+            <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
+            <p class="single-line" title="{{avoiding.user_public_key}}">{{avoiding.user_public_key}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

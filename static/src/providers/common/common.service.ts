@@ -1,29 +1,68 @@
-import { Http, Response } from '@angular/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import 'rxjs/add/observable/throw';
-import 'rxjs/add/operator/filter';
 import { Observable } from 'rxjs/Observable';
-import { LoadingComponent, FixedButtonComponent } from '../../components';
+import { FixedButtonComponent } from '../../components';
+import { Alert } from '../alert/alert.service';
+import { LoadingService } from '../loading/loading.service';
 
 @Injectable()
 export class CommonService {
-  public alertType = 'info';
-  public alertMessage = 'test alert';
-  public alert = false;
-  public topBtn = false;
   public fb: FixedButtonComponent = null;
-  public loading: LoadingComponent = null;
-  // public sortBy = 'desc';
-  constructor(private http: Http) {
+  constructor(private http: HttpClient, private alert: Alert, private loading: LoadingService) {
   }
 
-  handleError(error: Response) {
-    if (this.loading) {
-      this.loading.close();
+
+
+  replaceURL(str: string) {
+    let start = -1;
+    let end = -1;
+    start = str.indexOf('https://');
+    if (start <= -1) {
+      start = str.indexOf('http://');
     }
-    console.error('Error:', error.json() || 'Server error', 'danger');
-    this.showAlert((error.json() instanceof Object ? 'Server error' : error.json()) || 'Server error', 'danger', 3000);
-    return Observable.throw(error.json() || 'Server error');
+    if (start <= -1) {
+      return str;
+    }
+    end = str.indexOf('.', start + 1);
+    end = str.indexOf(' ', end + 1)
+    const result = str.substring(start, end);
+    return str.substring(0, start) + `<a href="${result}">${result}</a>` + str.substring(end);
+  }
+
+  replaceHtmlEnter(str: string) {
+    return this.replaceStr(str, '\n', ' <br>');
+  }
+  replaceAt(str: string, start, end: number, replacement: string) {
+    return str.substr(0, start) + replacement + str.substr(end);
+  }
+  replaceStr(str, seachStr, replaceStr: string) {
+    if (str.length <= 0) {
+      return str;
+    }
+    let pos = str.indexOf(seachStr);
+    while (pos !== -1) {
+      str = this.replaceAt(str, pos, pos + 1, replaceStr);
+      pos = str.indexOf(seachStr, pos + 1);
+    }
+    return str;
+  }
+  stringToHex(str) {
+    const arr = [];
+    for (let i = 0; i < str.length; i++) {
+      arr[i] = ('00' + str.charCodeAt(i).toString(16)).slice(-4);
+    }
+    return '\\u' + arr.join('\\u');
+  }
+  handleError(errorResponse: HttpErrorResponse) {
+    const json = errorResponse.error ? errorResponse.error.error : undefined;
+    this.alert.error(
+      {
+        title: json ? json.title : errorResponse.statusText,
+        content: json ? json.details : errorResponse.message
+      });
+    this.loading.close();
+    return Observable.throw(json ? json.details : errorResponse.message);
   }
 
   handleGet(url: string) {
@@ -31,8 +70,7 @@ export class CommonService {
       return Observable.throw('The connection is empty');
     }
     return this.http.get(url)
-      .filter((res: Response) => res.status === 200)
-      .map((res: Response) => res.json()).catch(err => this.handleError(err));
+      .catch(err => this.handleError(err));
   }
 
   handlePost(url: string, data: FormData) {
@@ -40,63 +78,7 @@ export class CommonService {
       return Observable.throw('Parameters and connections can not be empty');
     }
     return this.http.post(url, data)
-      .filter((res: Response) => res.status === 200)
-      .map((res: Response) => res.json()).catch(err => this.handleError(err));
+      .catch(err => this.handleError(err));
   }
 
-  copy(ev) {
-    if (ev) {
-      this.showSucceedAlert('Copy Successful');
-    } else {
-      this.showErrorAlert('Copy Failed');
-    }
-  }
-
-  /**
-   * Show Error Alert
-   * @param message Error Text
-   * @param timeout
-   */
-  showErrorAlert(message: string, timeout: number = 3000) {
-    this.showAlert(message, 'danger', timeout);
-  }
-  showWarningAlert(message: string, timeout: number = 3000) {
-    this.showAlert(message, 'warning', timeout);
-  }
-  showSucceedAlert(message: string, timeout: number = 3000) {
-    this.showAlert(message, 'success', timeout);
-  }
-
-  showAlert(message: string, type?: string, timeout?: number) {
-    this.alert = false;
-    this.alertMessage = message;
-    if (type) {
-      this.alertType = type;
-    }
-    if (timeout > 0) {
-      setTimeout(() => {
-        this.alert = false;
-      }, timeout);
-    }
-    this.alert = true;
-  }
-
-  /**
-   * Show Or Hide Top Button
-   * @param multiple Take the maximum percentage
-   */
-  showOrHideToTopBtn() {
-    const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
-    const max = document.documentElement.scrollHeight;
-    const clientHeight = document.documentElement.clientHeight;
-    if (pos > max - (max - clientHeight)) {
-      this.topBtn = true;
-    } else if (pos <= clientHeight) {
-      this.topBtn = false;
-    }
-  }
-
-  scrollToTop() {
-    window.scrollTo(0, 0);
-  }
 }
