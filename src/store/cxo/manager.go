@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/msgs"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
@@ -15,6 +16,7 @@ import (
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/util/file"
 	"io/ioutil"
 	log2 "log"
 	"os"
@@ -23,13 +25,11 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"github.com/skycoin/skycoin/src/util/file"
-	"github.com/skycoin/bbs/src/store/object/transfer"
 )
 
 const (
 	LogPrefix     = "CXO"
-	SubDir        = "cxo"
+	SubDir        = "cxo_r1"
 	FileName      = "bbs.json"
 	ExportSubDir  = "exports"
 	ExportFileExt = ".export"
@@ -99,10 +99,16 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig, rel
 
 	// Init directories.
 	if !*config.Memory {
-		e := os.MkdirAll(
-			path.Join(*config.Config, SubDir, ExportSubDir),
-			os.FileMode(0700))
-		if e != nil {
+		if e := os.MkdirAll(
+			path.Join(*config.Config, SubDir),
+			os.FileMode(0700),
+		); e != nil {
+			manager.l.Panicln(e)
+		}
+		if e := os.MkdirAll(
+			path.Join(*config.Config, ExportSubDir),
+			os.FileMode(0700),
+		); e != nil {
 			manager.l.Panicln(e)
 		}
 	}
@@ -242,7 +248,7 @@ func (m *Manager) filePath() string {
 }
 
 func (m *Manager) exportPath(name string) string {
-	return path.Join(*m.c.Config, SubDir, ExportSubDir, name+ExportFileExt)
+	return path.Join(*m.c.Config, ExportSubDir, name+ExportFileExt)
 }
 
 func (m *Manager) retryLoop() {
@@ -525,21 +531,6 @@ func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *transfer.
 	return path, out, nil
 }
 
-//func (m *Manager) ExportAllMasters(prefix string) error {
-//	if *m.c.Memory {
-//		return nil
-//	}
-//	return m.file.RangeMasterSubs(func(pk cipher.PubKey, _ cipher.SecKey) {
-//		m.l.Printf("Exporting master '%s' ...",
-//			pk.Hex()[:5]+"...")
-//		if path, _, e := m.ExportBoard(pk, prefix+"."+pk.Hex()); e != nil {
-//			m.l.Println(" - FAILED, Error:", e)
-//		} else {
-//			m.l.Printf(" - SAVED TO '%s'.", path)
-//		}
-//	})
-//}
-//
 func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
 	if *m.c.Memory {
 		return "", nil, nil

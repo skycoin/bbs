@@ -3,108 +3,91 @@ package r0
 import (
 	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/tag"
+	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
-	"github.com/skycoin/bbs/src/store/object/transfer"
-	"github.com/skycoin/bbs/src/misc/keys"
 )
 
-type Content interface {
-	GetRaw() []byte
-	SetRaw(v []byte)
-}
-
-func ToContent(v interface{}) Content {
-	return v.(Content)
-}
-
-func GetData(c Content) *ContentData {
-	out := new(ContentData)
-	if e := json.Unmarshal(c.GetRaw(), out); e != nil {
-		log.Println("error getting content data:", e)
-	}
-	return out
-}
-
-func SetData(c Content, v *ContentData) {
-	data, _ := json.Marshal(v)
-	c.SetRaw(data)
-}
-
 type Board struct {
-	R       cipher.PubKey `enc:"-" json:"-"`
-	Data    []byte
-	Created int64
+	R   cipher.PubKey `enc:"-" json:"-"`
+	Raw []byte
 }
 
-func (b *Board) GetRaw() []byte  { return b.Data }
-func (b *Board) SetRaw(v []byte) { b.Data = v }
+func (b *Board) GetData() *BoardData {
+	data := new(BoardData)
+	jsonUnmarshal(b.Raw, data)
+	return data
+}
+
+func (b *Board) SetData(data *BoardData) {
+	b.Raw = jsonMarshal(data)
+}
 
 func (b *Board) ToRep() (*transfer.BoardRep, error) {
-	data := GetData(b)
-	out := &transfer.BoardRep{
-		Name: data.Name,
-		Body: data.Body,
-		Created: b.Created,
-		Tags: nil,
-	}
-	return out, nil
+	data := b.GetData()
+	return &transfer.BoardRep{
+		Name:    data.Name,
+		Body:    data.Body,
+		Created: data.Created,
+		Tags:    data.Tags,
+	}, nil
 }
 
 func (b *Board) FromRep(bRep *transfer.BoardRep) error {
-	SetData(b, &ContentData{
-		Name: bRep.Name,
-		Body: bRep.Body,
+	b.SetData(&BoardData{
+		Name:    bRep.Name,
+		Body:    bRep.Body,
+		Created: bRep.Created,
+		Tags:    bRep.Tags,
 	})
-	b.Created = bRep.Created
 	return nil
 }
 
 type Thread struct {
-	R       cipher.SHA256 `enc:"-" json:"-"`
-	OfBoard cipher.PubKey `json:",string"`
-	Data    []byte
-	Created int64         `verify:"time"`
-	Creator cipher.PubKey `verify:"upk"`
-	Sig     cipher.Sig    `verify:"sig"`
+	R   cipher.SHA256 `enc:"-" json:"-"`
+	Raw []byte
+	Sig cipher.Sig `verify:"sig"`
 }
 
-func (t Thread) Verify() error    { return tag.Verify(&t) }
-func (t *Thread) GetRaw() []byte  { return t.Data }
-func (t *Thread) SetRaw(v []byte) { t.Data = v }
+func (t Thread) Verify(creator cipher.PubKey) error {
+	return tag.Verify(&t, creator)
+}
+
+func (t *Thread) GetData() *ThreadData {
+	data := new(ThreadData)
+	jsonUnmarshal(t.Raw, data)
+	return data
+}
+
+func (t *Thread) SetData(data *ThreadData) {
+	t.Raw = jsonMarshal(data)
+}
 
 func (t *Thread) ToRep() (*transfer.ThreadRep, error) {
-	data := GetData(t)
-	out := &transfer.ThreadRep{
-		Name: data.Name,
-		Body: data.Body,
-		Created: t.Created,
-		Creator: t.Creator.Hex(),
-	}
-	return out, nil
+	data := t.GetData()
+	return &transfer.ThreadRep{
+		Name:    data.Name,
+		Body:    data.Body,
+		Created: data.Created,
+		Creator: data.Creator,
+	}, nil
 }
 
 func (t *Thread) FromRep(tRep *transfer.ThreadRep) error {
-	SetData(t, &ContentData{
-		Name: tRep.Name,
-		Body: tRep.Body,
+	t.SetData(&ThreadData{
+		Name:    tRep.Name,
+		Body:    tRep.Body,
+		Creator: tRep.Creator,
+		Created: tRep.Created,
 	})
-	t.Created = tRep.Created
-	var e error
-	t.Creator, e = keys.GetPubKey(tRep.Creator)
-	return e
+	return nil
 }
 
 type Post struct {
-	R        cipher.SHA256 `enc:"-" json:"-"`
-	OfBoard  cipher.PubKey `json:",string"`
-	OfThread cipher.SHA256 `json:",string"`
-	OfPost   cipher.SHA256 `json:",string"` // Can be empty.
-	Data     []byte
-	Created  int64         `verify:"time"`
-	Creator  cipher.PubKey `verify:"upk"`
-	Sig      cipher.Sig    `verify:"sig"`
+	R   cipher.SHA256 `enc:"-" json:"-"`
+	Raw []byte
+	Sig cipher.Sig `verify:"sig"`
 }
 
 func GetPost(pElem *skyobject.RefsElem) (*Post, error) {
@@ -120,35 +103,39 @@ func GetPost(pElem *skyobject.RefsElem) (*Post, error) {
 	return p, nil
 }
 
-func (p Post) Verify() error    { return tag.Verify(&p) }
-func (p *Post) GetRaw() []byte  { return p.Data }
-func (p *Post) SetRaw(v []byte) { p.Data = v }
+func (p Post) Verify(creator cipher.PubKey) error {
+	return tag.Verify(&p, creator)
+}
+
+func (p *Post) GetData() *PostData {
+	data := new(PostData)
+	jsonUnmarshal(p.Raw, data)
+	return data
+}
+
+func (p *Post) SetData(data *PostData) {
+	p.Raw = jsonMarshal(data)
+}
 
 func (p *Post) ToRep() (*transfer.PostRep, error) {
-	data := GetData(p)
-	out := &transfer.PostRep{
-		OfPost: p.OfPost.Hex(),
-		Name: data.Name,
-		Body: data.Body,
-		Created: p.Created,
-		Creator: p.Creator.Hex(),
-	}
-	return out, nil
+	data := p.GetData()
+	return &transfer.PostRep{
+		OfPost:  data.OfPost,
+		Name:    data.Name,
+		Body:    data.Body,
+		Created: data.Created,
+		Creator: data.Creator,
+	}, nil
 }
 
 func (p *Post) FromRep(pRep *transfer.PostRep) error {
-	SetData(p, &ContentData{
-		Name: pRep.Name,
-		Body: pRep.Body,
+	p.SetData(&PostData{
+		OfPost:  pRep.OfPost,
+		Name:    pRep.Name,
+		Body:    pRep.Body,
+		Created: pRep.Created,
+		Creator: pRep.Creator,
 	})
-	p.Created = pRep.Created
-	var e error
-	if p.OfPost, e = keys.GetHash(pRep.OfPost); e != nil {
-		return e
-	}
-	if p.Creator, e = keys.GetPubKey(pRep.Creator); e != nil {
-		return e
-	}
 	return nil
 }
 
@@ -205,4 +192,40 @@ func (v *Vote) GetType() int {
 		return PostVote
 	}
 	return UnknownVoteType
+}
+
+/*
+	<<< BOARD SUMMARY WRAP >>>
+*/
+
+type BoardSummaryWrap struct {
+	PubKey cipher.PubKey `verify:"upk"`
+	Raw    []byte
+	Sig    cipher.Sig `verify:"sig"`
+}
+
+func (bsw *BoardSummaryWrap) Sign(pk cipher.PubKey, sk cipher.SecKey) {
+	tag.Sign(bsw, pk, sk)
+}
+
+func (bsw BoardSummaryWrap) Verify() error {
+	return tag.Verify(&bsw)
+}
+
+/*
+	<<< HELPER FUNCTIONS >>>
+*/
+
+func jsonUnmarshal(raw []byte, v interface{}) {
+	if e := json.Unmarshal(raw, v); e != nil {
+		log.Println("json unmarshal error:", e)
+	}
+}
+
+func jsonMarshal(v interface{}) []byte {
+	data, e := json.Marshal(v)
+	if e != nil {
+		log.Println("json marshal error:", e)
+	}
+	return data
 }

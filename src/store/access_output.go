@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/bbs/src/store/object/transfer"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 type UsersOutput struct {
@@ -110,7 +110,7 @@ func getFollowPageOutput(v interface{}) *FollowPageOutput {
 }
 
 type ExportBoardOutput struct {
-	FilePath string           `json:"file_path"`
+	FilePath string            `json:"file_path"`
 	FileData *transfer.RootRep `json:"file_data"`
 }
 

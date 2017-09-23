@@ -70,6 +70,14 @@ func PubKeyArrayToString(pks []cipher.PubKey) string {
 	return string(data)
 }
 
+func PubKeyArrayToStringArray(pks []cipher.PubKey) []string {
+	out := make([]string, len(pks))
+	for i, pk := range pks {
+		out[i] = pk.Hex()
+	}
+	return out
+}
+
 func ComparePubKeyArrays(a, b []cipher.PubKey) bool {
 	if len(a) != len(b) {
 		return false

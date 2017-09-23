@@ -81,31 +81,31 @@ func (m *BBSMessage) GetBody() []byte {
 	return m.SendMessage[factory.SEND_MSG_META_END+tLen:]
 }
 
-func (m *BBSMessage) ExtractThread() (*r0.Thread, error) {
+func (m *BBSMessage) ExtractContentThread() (*r0.Thread, error) {
 	v := new(r0.Thread)
 	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
 		return nil, boo.WrapType(e, boo.InvalidRead,
 			"failed to deserialize thread data")
 	}
-	if e := v.Verify(); e != nil {
+	if e := v.Verify(v.GetData().GetCreator()); e != nil {
 		return nil, e
 	}
 	return v, nil
 }
 
-func (m *BBSMessage) ExtractPost() (*r0.Post, error) {
+func (m *BBSMessage) ExtractContentPost() (*r0.Post, error) {
 	v := new(r0.Post)
 	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
 		return nil, boo.WrapType(e, boo.InvalidRead,
 			"failed to deserialize post data")
 	}
-	if e := v.Verify(); e != nil {
+	if e := v.Verify(v.GetData().GetCreator()); e != nil {
 		return nil, e
 	}
 	return v, nil
 }
 
-func (m *BBSMessage) ExtractVote() (*r0.Vote, error) {
+func (m *BBSMessage) ExtractContentVote() (*r0.Vote, error) {
 	v := new(r0.Vote)
 	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
 		return nil, boo.WrapType(e, boo.InvalidRead,
@@ -117,15 +117,23 @@ func (m *BBSMessage) ExtractVote() (*r0.Vote, error) {
 	return v, nil
 }
 
-func (m *BBSMessage) ExtractResponse() (*BBSResponse, error) {
-	v := new(BBSResponse)
+func (m *BBSMessage) ExtractNewContentResponse() (*NewContentResponse, error) {
+	v := new(NewContentResponse)
 	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
 		return nil, e
 	}
 	return v, nil
 }
 
-type BBSResponse struct {
+func (m *BBSMessage) ExtractDiscovererMsg() (*DiscovererMsg, error) {
+	v := new(DiscovererMsg)
+	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
+		return nil, e
+	}
+	return v, nil
+}
+
+type NewContentResponse struct {
 	Hash   cipher.SHA256 // Hash of entire message.
 	Type   MsgType       // Message type.
 	Seq    uint64        // Root sequence that satisfies.
@@ -134,8 +142,8 @@ type BBSResponse struct {
 	ErrMsg string        // Message of error.
 }
 
-func NewResponse(msg *BBSMessage, goal uint64, e error) *BBSResponse {
-	r := &BBSResponse{
+func GenerateNewContentResponse(msg *BBSMessage, goal uint64, e error) *NewContentResponse {
+	r := &NewContentResponse{
 		Hash: cipher.SumSHA256(msg.GetBody()),
 		Type: msg.GetMsgType(),
 		Seq:  goal,

@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
@@ -139,6 +140,8 @@ func (c *Compiler) updateSingle(root *skyobject.Root) {
 	bi.UpdateWithReceived(root, sk)
 }
 
+// EnsureSubmissionKeys ranges through masters and ensures that their specified
+// submission public keys are as specified.
 func (c *Compiler) EnsureSubmissionKeys(keys []cipher.PubKey) error {
 	return c.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		if bi, e := c.GetBoard(pk); e != nil {
@@ -195,6 +198,27 @@ func (c *Compiler) UpdateBoardWithContext(ctx context.Context, root *skyobject.R
 	case <-ctx.Done():
 		return ctx.Err()
 	}
+}
+
+func (c *Compiler) GetMasterSummaries() []*r0.BoardSummaryWrap {
+	var out []*r0.BoardSummaryWrap
+	c.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
+		if bi, e := c.GetBoard(pk); e != nil {
+			c.l.Println(e)
+		} else {
+			summary, e := bi.GetSummary(pk, sk)
+			if e != nil {
+				c.l.Println(e)
+				return
+			}
+			out = append(out, summary)
+		}
+	})
+	return out
+}
+
+func (c *Compiler) RangeMasterSubs(action object.MasterSubAction) error {
+	return c.file.RangeMasterSubs(action)
 }
 
 /*
