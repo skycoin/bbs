@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/typ"
@@ -9,6 +10,7 @@ import (
 	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views"
+	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -202,6 +204,21 @@ func (bi *BoardInstance) GetSeq() uint64 {
 		return bi.p.Root().Seq
 	}
 	return uint64(0)
+}
+
+// GetSummary returns the board's summary in encoded json and signed with board's public key.
+func (bi *BoardInstance) GetSummary(pk cipher.PubKey, sk cipher.SecKey) (*r0.BoardSummaryWrap, error) {
+	v, e := bi.Get(views.Content, content_view.Board)
+	if e != nil {
+		return nil, e
+	}
+	raw, e := json.Marshal(v)
+	if e != nil {
+		return nil, e
+	}
+	out := &r0.BoardSummaryWrap{Raw: raw}
+	out.Sign(pk, sk)
+	return out, nil
 }
 
 // WaitSeq waits until sequence reaches or surpassed the goal.

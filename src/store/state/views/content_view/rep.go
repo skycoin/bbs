@@ -24,6 +24,7 @@ type BoardRep struct {
 	Name       string
 	Body       string
 	Created    int64
+	Tags       []string
 	SubPubKeys []string
 	Threads    []IndexHash
 }
@@ -34,16 +35,18 @@ func (r *BoardRep) Fill(pk cipher.PubKey, board *r0.Board) *BoardRep {
 	r.Name = data.Name
 	r.Body = data.Body
 	r.Created = data.Created
+	r.Tags = data.Tags
 	r.SubPubKeys = data.SubKeys
 	return r
 }
 
 type BoardRepView struct {
-	PubKey      string `json:"public_key"`
-	Name        string `json:"name"`
-	Body        string `json:"body"`
-	Created     int64  `json:"created"`
-	ThreadCount int    `json:"thread_count"`
+	PubKey      string   `json:"public_key"`
+	Name        string   `json:"name"`
+	Body        string   `json:"body"`
+	Created     int64    `json:"created"`
+	Tags        []string `json:"tags"`
+	ThreadCount int      `json:"thread_count"`
 }
 
 func (r *BoardRep) View() *BoardRepView {
@@ -55,6 +58,7 @@ func (r *BoardRep) View() *BoardRepView {
 		Name:        r.Name,
 		Body:        r.Body,
 		Created:     r.Created,
+		Tags:        r.Tags,
 		ThreadCount: len(r.Threads),
 	}
 }

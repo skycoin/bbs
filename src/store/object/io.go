@@ -3,12 +3,12 @@ package object
 import (
 	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"time"
-	"github.com/skycoin/bbs/src/misc/keys"
 )
 
 // NewBoard represents io required to create a new board.
@@ -28,8 +28,8 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 	}
 	a.Board = new(r0.Board)
 	a.Board.SetData(&r0.BoardData{
-		Name: a.Name,
-		Body: a.Body,
+		Name:    a.Name,
+		Body:    a.Body,
 		Created: time.Now().UnixNano(),
 		SubKeys: keys.PubKeyArrayToStringArray(subPKs),
 	})
@@ -52,8 +52,8 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	a.Thread = new(r0.Thread)
 	a.Thread.SetData(&r0.ThreadData{
 		OfBoard: a.BoardPubKey.Hex(),
-		Name: a.Name,
-		Body: a.Body,
+		Name:    a.Name,
+		Body:    a.Body,
 		Created: time.Now().UnixNano(),
 		Creator: upk.Hex(),
 	})
@@ -89,9 +89,9 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		OfBoard:  a.BoardPubKey.Hex(),
 		OfThread: a.ThreadRef.Hex(),
 		OfPost:   a.PostRef.Hex(),
-		Name: a.Name,
-		Body: a.Body,
-		Images: a.Images,
+		Name:     a.Name,
+		Body:     a.Body,
+		Images:   a.Images,
 		Created:  time.Now().UnixNano(),
 		Creator:  upk.Hex(),
 	})

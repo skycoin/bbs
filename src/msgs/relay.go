@@ -17,22 +17,28 @@ import (
 
 const (
 	ReceiverPrefix = "MSGRECEIVER"
+	ServiceName    = "skycoin_bbs"
 )
 
 type MsgType byte
 
 const (
+	// New Content.
 	MsgNewThread MsgType = iota << 0
 	MsgNewPost
 	MsgNewVote
-	MsgResponse
+	MsgNewContentResponse
+
+	// Ask Boards.
+	MsgDiscoverer
 )
 
 var MsgTypeStr = [...]string{
-	MsgNewThread: "New Thread",
-	MsgNewPost:   "New Post",
-	MsgNewVote:   "New Vote",
-	MsgResponse:  "Response",
+	MsgNewThread:          "New Thread",
+	MsgNewPost:            "New Post",
+	MsgNewVote:            "New Vote",
+	MsgNewContentResponse: "New Content Response",
+	MsgDiscoverer:         "Boards Discoverer",
 }
 
 func (mt MsgType) String() string {
@@ -105,12 +111,27 @@ func (r *Relay) setup() error {
 		return boo.New(boo.InvalidInput,
 			"no messenger addresses provided")
 	}
+
 	for _, address := range r.c.Addresses {
 		r.factory.ConnectWithConfig(address, &factory.ConnConfig{
 			Reconnect:     true,
 			ReconnectWait: *r.c.ReconnectInterval,
+			FindServiceNodesByAttributesCallback: func(resp *factory.QueryByAttrsResp) {
+				subKeys := resp.Result[ServiceName]
+				r.l.Printf("SERVICES OF '%s' : %v", ServiceName, subKeys)
+			},
 			OnConnected: func(conn *factory.Connection) {
 				r.l.Println("Connected!", conn.GetKey().Hex()[:5]+"...")
+
+				if e := conn.OfferService(ServiceName); e != nil {
+					r.l.Printf("failed to offer service '%s'", ServiceName)
+				}
+
+				// TODO: Create a waiting function that wraps this.
+				if e := conn.FindServiceNodesByAttributes(ServiceName); e != nil {
+					r.l.Printf("failed to find services of '%s'", ServiceName)
+				}
+
 				go func(wg *sync.WaitGroup, quit chan struct{}) {
 					wg.Add(1)
 					defer wg.Done()
@@ -225,20 +246,20 @@ func (r *Relay) receiveMessage(msg *BBSMessage) error {
 	switch msg.GetMsgType() {
 	case MsgNewThread:
 		goal, e := r.processNewThread(msg)
-		return r.send(msg.GetFromPubKey(), MsgResponse,
-			encoder.Serialize(NewResponse(msg, goal, e)))
+		return r.send(msg.GetFromPubKey(), MsgNewContentResponse,
+			encoder.Serialize(GenerateNewContentResponse(msg, goal, e)))
 
 	case MsgNewPost:
 		goal, e := r.processNewPost(msg)
-		return r.send(msg.GetFromPubKey(), MsgResponse,
-			encoder.Serialize(NewResponse(msg, goal, e)))
+		return r.send(msg.GetFromPubKey(), MsgNewContentResponse,
+			encoder.Serialize(GenerateNewContentResponse(msg, goal, e)))
 
 	case MsgNewVote:
 		goal, e := r.processNewVote(msg)
-		return r.send(msg.GetFromPubKey(), MsgResponse,
-			encoder.Serialize(NewResponse(msg, goal, e)))
+		return r.send(msg.GetFromPubKey(), MsgNewContentResponse,
+			encoder.Serialize(GenerateNewContentResponse(msg, goal, e)))
 
-	case MsgResponse:
+	case MsgNewContentResponse:
 		return r.processResponse(msg)
 
 	default:
@@ -248,7 +269,7 @@ func (r *Relay) receiveMessage(msg *BBSMessage) error {
 }
 
 func (r *Relay) processNewThread(msg *BBSMessage) (uint64, error) {
-	thread, e := msg.ExtractThread()
+	thread, e := msg.ExtractContentThread()
 	if e != nil {
 		return 0, e
 	}
@@ -264,7 +285,7 @@ func (r *Relay) processNewThread(msg *BBSMessage) (uint64, error) {
 }
 
 func (r *Relay) processNewPost(msg *BBSMessage) (uint64, error) {
-	post, e := msg.ExtractPost()
+	post, e := msg.ExtractContentPost()
 	if e != nil {
 		return 0, e
 	}
@@ -280,7 +301,7 @@ func (r *Relay) processNewPost(msg *BBSMessage) (uint64, error) {
 }
 
 func (r *Relay) processNewVote(msg *BBSMessage) (uint64, error) {
-	vote, e := msg.ExtractVote()
+	vote, e := msg.ExtractContentVote()
 	if e != nil {
 		return 0, e
 	}
@@ -295,7 +316,7 @@ func (r *Relay) processNewVote(msg *BBSMessage) (uint64, error) {
 }
 
 func (r *Relay) processResponse(msg *BBSMessage) error {
-	res, e := msg.ExtractResponse()
+	res, e := msg.ExtractNewContentResponse()
 	if e != nil {
 		return e
 	}

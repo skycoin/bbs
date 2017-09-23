@@ -1,8 +1,8 @@
 package r0
 
 import (
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 )
 

@@ -195,6 +195,24 @@ func (v *Vote) GetType() int {
 }
 
 /*
+	<<< BOARD SUMMARY WRAP >>>
+*/
+
+type BoardSummaryWrap struct {
+	PubKey cipher.PubKey `verify:"upk"`
+	Raw    []byte
+	Sig    cipher.Sig `verify:"sig"`
+}
+
+func (bsw *BoardSummaryWrap) Sign(pk cipher.PubKey, sk cipher.SecKey) {
+	tag.Sign(bsw, pk, sk)
+}
+
+func (bsw BoardSummaryWrap) Verify() error {
+	return tag.Verify(&bsw)
+}
+
+/*
 	<<< HELPER FUNCTIONS >>>
 */
 

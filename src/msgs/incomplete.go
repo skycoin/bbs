@@ -7,29 +7,29 @@ import (
 )
 
 type Elem struct {
-	res *BBSResponse
+	res *NewContentResponse
 	e   error
 }
 
 type Incomplete struct {
 	mux   sync.Mutex
-	store map[cipher.SHA256]chan *BBSResponse
+	store map[cipher.SHA256]chan *NewContentResponse
 }
 
 func NewIncomplete() *Incomplete {
 	return &Incomplete{
-		store: make(map[cipher.SHA256]chan *BBSResponse),
+		store: make(map[cipher.SHA256]chan *NewContentResponse),
 	}
 }
 
-func (i *Incomplete) Add(hash cipher.SHA256) (chan *BBSResponse, error) {
+func (i *Incomplete) Add(hash cipher.SHA256) (chan *NewContentResponse, error) {
 	i.mux.Lock()
 	defer i.mux.Unlock()
 	if _, has := i.store[hash]; has {
 		return nil, boo.Newf(boo.AlreadyExists,
 			"request %s already exists", hash.Hex())
 	}
-	out := make(chan *BBSResponse, 1)
+	out := make(chan *NewContentResponse, 1)
 	i.store[hash] = out
 	return out, nil
 }
@@ -43,7 +43,7 @@ func (i *Incomplete) Remove(hash cipher.SHA256) {
 	}
 }
 
-func (i *Incomplete) Satisfy(res *BBSResponse) {
+func (i *Incomplete) Satisfy(res *NewContentResponse) {
 	// TODO: return error "nothing to satisfy"
 	i.mux.Lock()
 	defer i.mux.Unlock()

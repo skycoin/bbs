@@ -99,10 +99,16 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig, rel
 
 	// Init directories.
 	if !*config.Memory {
-		e := os.MkdirAll(
-			path.Join(*config.Config, SubDir, ExportSubDir),
-			os.FileMode(0700))
-		if e != nil {
+		if e := os.MkdirAll(
+			path.Join(*config.Config, SubDir),
+			os.FileMode(0700),
+		); e != nil {
+			manager.l.Panicln(e)
+		}
+		if e := os.MkdirAll(
+			path.Join(*config.Config, ExportSubDir),
+			os.FileMode(0700),
+		); e != nil {
 			manager.l.Panicln(e)
 		}
 	}
@@ -242,7 +248,7 @@ func (m *Manager) filePath() string {
 }
 
 func (m *Manager) exportPath(name string) string {
-	return path.Join(*m.c.Config, SubDir, ExportSubDir, name+ExportFileExt)
+	return path.Join(*m.c.Config, ExportSubDir, name+ExportFileExt)
 }
 
 func (m *Manager) retryLoop() {
