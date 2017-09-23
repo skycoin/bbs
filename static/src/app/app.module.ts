@@ -24,7 +24,7 @@ import {
   ToTopComponent,
   ChipComponent,
 } from '../components';
-import { SafeHTMLPipe, OrderByPipe, RepalcePipe } from '../pipes';
+import { SafeHTMLPipe, OrderByPipe, RepalcePipe, CutTextPipe } from '../pipes';
 import { ClipDirective, EditorDirective, FocusDirective } from '../directives/index';
 import { PopupModule } from '../providers/popup/popup.module';
 import { LoadingModule } from '../providers/loading/loading.module';
@@ -63,6 +63,7 @@ import { DialogModule } from '../providers/dialog/dialog.module';
     SafeHTMLPipe,
     OrderByPipe,
     RepalcePipe,
+    CutTextPipe,
     // Directives
     ClipDirective,
     EditorDirective,

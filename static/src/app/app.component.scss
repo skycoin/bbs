@@ -66,7 +66,6 @@
       .content {
         position: relative;
         padding: 1rem 1.5rem;
-        overflow: hidden;
         .form-box {
           position: relative;
           display: flex;
@@ -80,17 +79,26 @@
             top: 100%;
             left: 0;
             right: 0;
+            max-height: 20rem;
+            overflow-x: hidden;
+            overflow-y: auto;
             background-color: #fff;
             box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.5);
-            overflow: hidden;
             ul {
               list-style: none;
               margin: 0;
               padding: 0;
-              li{
-                cursor: pointer;
-                padding: .5rem;
-                &:hover {
+              li {
+                a {
+                  display: block;
+                  padding: .5rem;
+                  color: #000;
+                  &:hover {
+                    text-decoration: none;
+                    background-color: rgba(20, 196, 250, 0.1);
+                  }
+                }
+                .active-alias {
                   background-color: rgba(20, 196, 250, 0.1);
                 }
               }
@@ -192,6 +200,7 @@
     color: #fff;
     &:hover {
       text-decoration: underline;
+      opacity: .9;
     }
   }
   .active {

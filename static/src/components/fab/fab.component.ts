@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, Input } from '@angular/core';
 import { flyInOutAnimation, rotate45Animation } from './fab.animations';
 
 @Component({
@@ -10,19 +10,20 @@ import { flyInOutAnimation, rotate45Animation } from './fab.animations';
 })
 
 export class FabComponent implements OnInit {
+  @Input() showAnimation = true;
+  @Input() icon = 'fa-plus'
   isShow = false;
   fabAnimation = 'inactive';
   constructor() { }
   ngOnInit() {
   }
-  open(ev: Event) {
-    ev.stopImmediatePropagation();
-    ev.stopPropagation();
-    ev.preventDefault();
+  open() {
     this.close();
   }
   close() {
-    this.isShow = !this.isShow;
-    this.fabAnimation = this.fabAnimation === 'inactive' ? 'active' : 'inactive';
+    if (this.showAnimation) {
+      this.isShow = !this.isShow;
+      this.fabAnimation = this.fabAnimation === 'inactive' ? 'active' : 'inactive';
+    }
   }
 }

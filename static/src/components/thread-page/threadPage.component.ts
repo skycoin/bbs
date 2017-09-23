@@ -234,31 +234,36 @@ export class ThreadPageComponent implements OnInit {
     })
   }
   openReply(content) {
-    this.postForm.reset();
-    this.pop.open(content).result.then((result) => {
-      if (result) {
-        if (!this.postForm.valid) {
-          this.alert.error({ content: 'title and content can not be empty' });
-          return;
-        }
-        const data = new FormData();
-        data.append('board_public_key', this.boardKey);
-        data.append('thread_ref', this.threadKey);
-        data.append('name', this.postForm.get('name').value);
-        data.append('body', this.postForm.get('body').value);
-        this.loading.start();
-        this.api.newPost(data).subscribe((res: ThreadPage) => {
-          if (res.okay) {
-            this.data.data.posts = res.data.posts;
-            this.alert.success({ content: 'Added successfully' });
-            this.loading.close();
-            setTimeout(() => {
-            }, 1000);
+    this.api.getSessionInfo().subscribe(info => {
+      if (info.data.logged_in) {
+        this.postForm.reset();
+        this.pop.open(content).result.then((result) => {
+          if (result) {
+            if (!this.postForm.valid) {
+              this.alert.error({ content: 'title and content can not be empty' });
+              return;
+            }
+            const data = new FormData();
+            data.append('board_public_key', this.boardKey);
+            data.append('thread_ref', this.threadKey);
+            data.append('name', this.postForm.get('name').value);
+            data.append('body', this.postForm.get('body').value);
+            this.loading.start();
+            this.api.newPost(data).subscribe((res: ThreadPage) => {
+              if (res.okay) {
+                this.data.data.posts = res.data.posts;
+                this.alert.success({ content: 'Added successfully' });
+                this.loading.close();
+              }
+            });
           }
+        }, err => {
         });
+      } else {
+        this.alert.warning({ content: 'Please Login at first' });
       }
-    }, err => {
     });
+
 
   }
   PostAuthorMenu(post: Post, ev: Event) {

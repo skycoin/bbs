@@ -1,3 +1,4 @@
+@import "../../common.scss";
 app-threadpage {
   .fr-emoticon-img {
     display: inline-block;
@@ -17,6 +18,7 @@ app-threadpage {
     }
   }
   .card {
+    @include boxShaow;
     flex-direction: row;
     .vote-box {
       width: 5%;
@@ -57,7 +59,6 @@ app-threadpage {
           }
           .author-name {
             color: #636363;
-            max-width: 6rem;
           }
         }
       }
@@ -71,7 +72,7 @@ app-threadpage {
         }
       }
       .content {
-        @media (max-width:992px) {
+        @media (max-width: 992px) {
           margin-bottom: 1rem;
         }
         .body {
@@ -116,7 +117,11 @@ app-threadpage {
     &:focus {
       outline: none;
     }
+    &:hover {
+      color: $red-dark;
+    }
     font-size: 1.5rem;
+    margin: 1.5rem 0;
     outline: none;
     display: block;
     color: #fff;
@@ -126,20 +131,37 @@ app-threadpage {
     margin: .8rem 0;
     .card-block {
       .content {
-        .title-box {
-          width: 100%;
-          .title,
-          .other {
-            float: left;
+        .post-title-box {
+          border-bottom: 1px solid $light-solid-color;
+          padding-bottom: .25rem;
+          margin-bottom: 1rem;
+          .title-content-box {
+            .creator,
+            .time {
+              font-size: .9rem;
+            }
+            .creator {
+              color: #000;
+              display: inline-block;
+              &:hover {
+                text-decoration: none;
+              }
+            }
+            .time {
+              color: #999;
+              cursor: pointer;
+              &::before {
+                content: '\00B7';
+                padding-right: 5px;
+                font-size: 1rem;
+                font-weight: bolder;
+                text-decoration: none;
+              }
+            }
           }
-          .title {
-            width: 80%;
-          }
           .other {
-            display: inline-block;
-            width: 20%;
-            text-align: right;
             .fa {
+              color: rgba(0, 0, 0, 0.2);
               cursor: pointer;
               position: relative;
               user-select: none;

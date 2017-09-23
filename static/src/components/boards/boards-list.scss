@@ -1,55 +1,79 @@
+@import "../../common.scss";
 app-boardslist {
   display: block;
-  width: 100%; // width: 100vw;
-  .btn-box {}
-  .card {
-    position: relative;
-    cursor: pointer;
-    margin: .75rem 0;
-    transition: .15s;
-    overflow: hidden;
-    &:hover {
-      box-shadow: 0.1rem 0.2rem 1rem hsla(0, 0%, 0%, 0.2);
-    }
-    .remote-tag {
-      position: absolute;
-      width: 5rem;
-      bottom: .4rem;
-      left: -1rem;
-      padding-right: 8px;
-      text-align: center;
-      font-size: 12px;
-      color: #fff;
-      background-color: red;
-      box-shadow: 0.1rem 0.1rem 0.3rem rgba(0, 0, 0, 0.2), 0.1rem -0.1rem 0.3rem rgba(0, 0, 0, 0.2);
-      transform: rotate(35deg);
-      z-index: 99;
-    }
-    .card-block {
-      padding: .75rem;
-      a {
-        outline: none;
+  width: 100%;
+  .container {
+    // board item style
+    .card {
+      position: relative;
+      cursor: pointer;
+      margin: .75rem 0;
+      transition: .15s;
+      overflow: hidden;
+      @include boxShaow;
+      &:active {
+        box-shadow: none;
       }
-      .name,
-      .action {
-        float: left;
-        width: 50%;
+      .remote-tag {
+        position: absolute;
+        width: 5rem;
+        bottom: .4rem;
+        left: -1rem;
+        padding-right: 8px;
+        text-align: center;
+        font-size: 12px;
+        color: #fff;
+        background-color: red;
+        box-shadow: 0.1rem 0.1rem 0.3rem rgba(0, 0, 0, 0.2), 0.1rem -0.1rem 0.3rem rgba(0, 0, 0, 0.2);
+        transform: rotate(35deg);
+        z-index: 99;
       }
-      .action {
-        font-size: 1rem;
-      }
-      .description,
-      .created {
-        clear: both;
-        color: #999;
-      }
-      .created {
-        small {
-          text-decoration: underline;
+      .card-block {
+        padding: .75rem;
+        .action {
+          font-size: 1rem;
+          a {
+            color: $link-black;
+            outline: none;
+            &:hover {
+              opacity: .5;
+            }
+          }
+        }
+        .description,
+        .created {
+          clear: both;
+          color: #999;
+        }
+        .created {
+          small {
+            text-decoration: underline;
+          }
+        }
+        p {
+          margin: 0;
         }
       }
-      p {
-        margin: 0;
+      .card-top {
+        border-bottom: 1px solid $light-solid-color;
+        padding-bottom: .25rem;
+        margin-bottom: 1rem;
+      }
+      .title {
+        color: #000;
+        font-weight: 500;
+        display: inline-block;
+      }
+      .time {
+        font-size: .75rem; // text-decoration: underline;
+        color: #999;
+        &::before {
+          content: '\00B7';
+          padding-right: 5px;
+          font-size: 1rem;
+          font-weight: bolder;
+          text-decoration: none;
+        }
       }
     }
   }

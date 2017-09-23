@@ -3,18 +3,18 @@
     <div class="container">
       <h1 class="display-5">{{board?.name}}</h1>
       <p class="lead break-line" [innerHTML]="board?.body"></p>
-      <!-- <hr class="my-4"> -->
-      <!-- <p class="lead text-right">
-        <a class="btn btn-primary btn-lg" href="javascript:void(0);" role="button" (click)="openAdd(content)">New Thread</a>
-      </p> -->
     </div>
   </div>
   <div class="container">
     <div class="card" (click)="open(thread?.ref)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
-      <div class="card-body">
-        <h5>{{thread.name}}</h5>
+      <div class="card-block">
+        <div class="row card-top">
+          <div class="col">
+            <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="thread?.name">{{thread?.name | cutText}}</a>
+            <small class="time">{{thread?.created / 1000000 | date: 'M/d/y H:mm'}}</small>
+          </div>
+        </div>
         <p class="margin-0 text-muted block-with-text">{{thread?.body}}</p>
-        <p class="margin-0 text-right created underline"><small>{{thread?.created / 1000000 | date: 'medium'}}</small></p>
       </div>
     </div>
     <h5 class="not-found" *ngIf="threads?.length == 0">No Threads Found</h5>

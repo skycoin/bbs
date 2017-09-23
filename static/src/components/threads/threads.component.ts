@@ -100,7 +100,6 @@ export class ThreadsComponent implements OnInit {
             data.append('body', this.common.replaceHtmlEnter(this.addForm.get('body').value));
             data.append('name', this.addForm.get('name').value);
             this.api.newThread(data).subscribe(threadRes => {
-              console.log('thread:', threadRes);
               this.threads = threadRes.data.threads;
               this.alert.success({ content: 'Added successfully' });
             });

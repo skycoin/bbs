@@ -3,30 +3,51 @@
     <div class="card" (click)="openThreads($event,board.public_key)" *ngFor="let board of (boards | orderBy: sort);let i = index;trackBy: trackBoards"
       [@flyInOut]>
       <div class="card-block">
-        <div>
-          <h5 class="single-line name">{{board?.name}}</h5>
-          <p class="text-right action">
-            <a href="javascript:void(0);" (click)="delBoard($event,board?.public_key)"><i class="fa fa-trash" aria-hidden="true" aria-label="subscribe"></i></a>
-            <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
-          </p>
+        <div class="row card-top">
+          <div class="col-9">
+            <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="board?.name">{{board?.name | cutText}}</a>
+            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small>
+          </div>
+          <div class="col-3">
+            <p class="text-right action">
+              <a href="javascript:void(0);" (click)="delBoard($event,board?.public_key)"><i class="fa fa-trash" aria-hidden="true" aria-label="subscribe"></i></a>
+              <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
+            </p>
+          </div>
         </div>
         <p class="description block-with-text" [innerHTML]="board?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
-        <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p>
+        <!-- <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p> -->
       </div>
     </div>
     <div class="card" (click)="openThreads($event,board.public_key)" *ngFor="let board of (remoteBoards | orderBy: sort);let i = index;trackBy: trackBoards"
       [@flyInOut]>
       <div class="remote-tag">Remote</div>
       <div class="card-block">
-        <div>
-          <h5 class="single-line name">{{board?.name}}</h5>
-          <p class="text-right action">
-            <a href="javascript:void(0);" (click)="delSubscribe(board?.public_key,$event)"><i class="fa fa-chain-broken" aria-hidden="true" aria-label="subscribe"></i></a>
-            <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
-          </p>
+        <!-- <div class="row">
+          <div class="col">
+            <h5 class="single-line name">{{board?.name}}</h5>
+          </div>
+          <div class="col">
+            <p class="text-right action">
+              <a href="javascript:void(0);" (click)="delSubscribe(board?.public_key,$event)"><i class="fa fa-chain-broken" aria-hidden="true" aria-label="subscribe"></i></a>
+              <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
+            </p>
+          </div>
+        </div> -->
+        <div class="row card-top">
+          <div class="col-9">
+            <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="board?.name">{{board?.name | cutText}}</a>
+            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small>
+          </div>
+          <div class="col-3">
+            <p class="text-right action">
+              <a href="javascript:void(0);" (click)="delSubscribe(board?.public_key,$event)"><i class="fa fa-chain-broken" aria-hidden="true" aria-label="subscribe"></i></a>
+              <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
+            </p>
+          </div>
         </div>
         <p class="description block-with-text" [innerHTML]="board?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
-        <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p>
+        <!-- <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p> -->
       </div>
     </div>
     <h5 class="not-found" *ngIf="boards?.length === 0 && remoteBoards?.length === 0">
@@ -40,6 +61,7 @@
   <fab>
     <fa-button name="New Board" icon="fa-th-large" (click)="openAdd(add)"></fa-button>
     <fa-button name="New Subscription" icon="fa-heart" (click)="subscribe(subscribeBox)"></fa-button>
+    <!-- <fa-button name="Import Board" icon="fa-folder-open" (click)="subscribe(subscribeBox)"></fa-button> -->
   </fab>
 </ng-template>
 
@@ -91,10 +113,10 @@
           <label for="seed">Board seed</label>
           <textarea class="form-control" rows="3" id="seed" style="resize:none" formControlName="seed"></textarea>
         </div>
-        <div class="form-group">
+        <!-- <div class="form-group">
           <label for="submission_addresses">Rpc Submission Url (optional)</label>
           <textarea class="form-control" rows="3" id="addresses" formControlName="submission_addresses" placeholder='(Optional) Submission addresses separated by commas ","'></textarea>
-        </div>
+        </div> -->
         <!-- <div class="form-group">
               <label for="connections">Connections (optional)</label>
               <textarea class="form-control" rows="3" id="addresses" formControlName="connections" placeholder='(Optional) Connections separated by commas ","'></textarea>
@@ -149,7 +171,7 @@
         </div>
         <div class="thread-item">
           <h5>Public Key</h5>
-          <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="common.copy($event)"></i></span>
+          <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="copy($event)"></i></span>
         </div>
         <div class="thread-item">
           <h5>Rpc Submission Url</h5>

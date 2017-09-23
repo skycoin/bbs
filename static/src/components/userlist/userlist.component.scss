@@ -1,7 +1,14 @@
+@import "../../common.scss";
 app-userlist {
   overflow-x: hidden;
   .list-box {
     margin-bottom: 2rem;
+    .fa {
+      color: $link-black;
+      &:hover {
+        opacity: .8;
+      }
+    }
     .user-item-header {
       color: #999;
       cursor: default !important;
@@ -19,7 +26,7 @@ app-userlist {
       transition: all .25s;
       cursor: pointer;
       &:hover {
-        transform: translateY(-0.1rem) scale(1.03);
+        transform: translateY(-0.1rem) scale(1.01);
         box-shadow: 0.1rem 0.1rem 1rem rgba(0, 0, 0, 0.3);
       }
       &:first-child {
