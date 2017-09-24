@@ -59,6 +59,7 @@ type Relay struct {
 	factory     *factory.MessengerFactory
 	compiler    *state.Compiler
 	incomplete  *Incomplete
+	discoverer  *BoardDiscoverer
 	in          chan *BBSMessage
 	onConnected chan struct{}
 	quit        chan struct{}
@@ -82,6 +83,7 @@ func (r *Relay) Open(compiler *state.Compiler) error {
 	if e := r.setup(); e != nil {
 		r.l.Panicln("failed to setup 'Relay':", e)
 	}
+	r.discoverer = NewBoardDiscoverer(r.send, r.compiler.RangeMasterSubs)
 	go r.service()
 	return nil
 }
@@ -117,8 +119,10 @@ func (r *Relay) setup() error {
 			Reconnect:     true,
 			ReconnectWait: *r.c.ReconnectInterval,
 			FindServiceNodesByAttributesCallback: func(resp *factory.QueryByAttrsResp) {
-				subKeys := resp.Result[ServiceName]
-				r.l.Printf("SERVICES OF '%s' : %v", ServiceName, subKeys)
+				for i, pk := range resp.Result[ServiceName] {
+					r.l.Printf(" - [%d] found service node '%s'.", i, pk.Hex()[:5]+"...")
+					r.discoverer.AddNode(pk)
+				}
 			},
 			OnConnected: func(conn *factory.Connection) {
 				r.l.Println("Connected!", conn.GetKey().Hex()[:5]+"...")
@@ -189,6 +193,10 @@ func (r *Relay) service() {
 	r.wg.Add(1)
 	defer r.wg.Done()
 
+	nodeInterval := time.Minute
+	nodeRefreshTicker := time.NewTicker(nodeInterval)
+	defer nodeRefreshTicker.Stop()
+
 	for {
 		select {
 		case <-r.quit:
@@ -198,6 +206,18 @@ func (r *Relay) service() {
 			if e := r.receiveMessage(in); e != nil {
 				r.l.Println(e)
 			}
+
+		case <-nodeRefreshTicker.C:
+			r.discoverer.ClearNodes()
+			r.factory.ForEachConn(func(conn *factory.Connection) {
+				if e := conn.FindServiceNodesByAttributes(ServiceName); e != nil {
+					r.l.Printf("failed to find services of '%s'", ServiceName)
+				}
+			})
+			go func() {
+				time.Sleep(nodeInterval/2)
+				r.discoverer.SendAsk()
+			}()
 
 		case <-r.onConnected:
 			if e := r.compiler.EnsureSubmissionKeys(r.GetKeys()); e != nil {
@@ -261,6 +281,14 @@ func (r *Relay) receiveMessage(msg *BBSMessage) error {
 
 	case MsgNewContentResponse:
 		return r.processResponse(msg)
+
+	case MsgDiscoverer:
+		if out, e := msg.ExtractDiscovererMsg(); e != nil {
+			return e
+		} else {
+			r.discoverer.Process(msg.GetFromPubKey(), out)
+			return nil
+		}
 
 	default:
 		return boo.Newf(boo.NotAllowed, "unknown message type '%v'",
@@ -334,6 +362,10 @@ func (r *Relay) NewPost(ctx context.Context, toPKs []cipher.PubKey, post *r0.Pos
 
 func (r *Relay) NewVote(ctx context.Context, toPKs []cipher.PubKey, vote *r0.Vote) (uint64, error) {
 	return r.multiSendRequest(ctx, toPKs, MsgNewVote, encoder.Serialize(vote))
+}
+
+func (r *Relay) GetBoards() []string {
+	return r.discoverer.GetBoards()
 }
 
 func (r *Relay) multiSendRequest(ctx context.Context, toPKs []cipher.PubKey, mt MsgType, data []byte) (uint64, error) {
