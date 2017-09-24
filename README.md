@@ -11,41 +11,39 @@ Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) 
 
 ## Building Skycoin BBS
 
-First ensure that `go`, `npm`, `yarn`, `zip` and `ng` are installed and the `GOPATH` environment variable is set.
+### Dependencies
 
-#### Manually
+#### [golang](https://golang.org/doc/install)
 
-To get the source code, dependencies and build BBS Node:
+Ensure that the `GOPATH` environmental variable is set.
+
+#### [npm](https://www.npmjs.com/get-npm)
+
+#### [yarn](https://yarnpkg.com/en/docs/install)
+**Installation instructions**
 ```bash
-go get github.com/skycoin/bbs/cmd/bbsnode
+# Add repository.
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+
+# Install.
+sudo apt-get update && sudo apt-get install yarn
 ```
 
-To build the static files:
+#### [ng](https://github.com/angular/angular-cli)
+**Installation instructions**
 ```bash
-# Enter static directory.
-cd $GOPATH/src/github.com/skycoin/bbs/static
-
-# Install latest angular cli.
-npm install -g @angular/cli@latest
-
-# Install dependencies.
-yarn install
-
-# Build.
-ng build
+npm install -g @angular/cli
 ```
 
-The executables will be in `$GOPATH/bin`. Note that for serving static files in `$GOPATH/src/github.com/skycoin/bbs/static`, the `-dev` flag needs to be set.
+### Via Makefile
 
-#### Via Package Script
+Ensure all dependencies are satisfied before using.
 
-Optionally, you can then package BBS Node by running bash script provided: `pkg/package.sh`.
 ```bash
-cd $GOPATH/src/github.com/skycoin/bbs/pkg
-
-bash package.sh
+# Get list of commands.
+make help
 ```
-Built binaries and static files will be located in `pkg/build/` folder.
 
 ## Running Skycoin BBS
 
@@ -64,8 +62,6 @@ Skycoin BBS Node is a single binary executable that can be ran with the followin
 * `-cxo-rpc` (default: `false`) Whether to enable CXO RPC Port (for admin control).
 
 * `-cxo-rpc-port` (default: `8997`) Port used for CXO RPC (if enabled).
-
-* `-sub-port` (default: `6421`) Port used to receive content submission to hosted boards (if node is master).
 
 * `-http-port` (default: `7410`) Port to serve JSON API and GUI.
 
