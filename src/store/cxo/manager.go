@@ -508,6 +508,12 @@ func newBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 }
 
 /*
+	<<< ADMIN >>>
+*/
+
+//func (m *Manager) GetObject(hash cipher.SHA256)
+
+/*
 	<<< DISCOVERER >>>
 */
 
