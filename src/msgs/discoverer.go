@@ -249,6 +249,15 @@ func (bd *BoardDiscoverer) Process(fromNode cipher.PubKey, msg *DiscovererMsg) {
 	}
 }
 
+// GetBoards.
+func (bd *BoardDiscoverer) GetBoards() []string {
+	var out []string
+	bd.boards.Range(func(key cipher.PubKey) {
+		out = append(out, key.Hex())
+	})
+	return out
+}
+
 func (bd *BoardDiscoverer) getTimeStamp() int64 {
 	bd.tsMux.RLock()
 	defer bd.tsMux.RUnlock()

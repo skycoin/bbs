@@ -201,6 +201,10 @@ func (a *Access) ImportBoard(ctx context.Context, in *object.ExportBoardIO) (*Ex
 	return getExportBoardOutput(path, out), nil
 }
 
+func (a *Access) GetDiscoveredBoards(ctx context.Context) ([]string, error) {
+	return a.CXO.GetDiscoveredBoards(), nil
+}
+
 /*
 	<<< CONTENT >>>
 */
