@@ -199,6 +199,12 @@ func (m *Manager) prepareNode() error {
 		}
 	}
 
+	//c.OnCloseConnection = func(c *node.Conn) {
+	//	go func() {
+	//		m.node.UpdateServiceDiscovery()
+	//	}()
+	//}
+
 	var e error
 	if m.node, e = node.NewNode(c); e != nil {
 		return e

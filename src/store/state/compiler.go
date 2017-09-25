@@ -124,12 +124,10 @@ func (c *Compiler) updateSingle(root *skyobject.Root) {
 		return
 	}
 
-	c.l.Println("Compiling '%s'", root.Pub.Hex()[:5]+"...")
-	c.l.Printf("remote(%v) master(%v)", isRemote, isMaster)
-
 	bi := c.ensureBoard(root.Pub)
 
 	if root.IsFull == false {
+		c.l.Printf("received root '%s' is not full, returning.", root.Pub.Hex()[:5]+"...")
 		return
 	}
 
@@ -137,6 +135,7 @@ func (c *Compiler) updateSingle(root *skyobject.Root) {
 		return
 	}
 
+	c.l.Printf("compiling '%s' : remote(%v) master(%v)", root.Pub.Hex()[:5]+"...", isRemote, isMaster)
 	bi.UpdateWithReceived(root, sk)
 }
 
