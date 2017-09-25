@@ -193,17 +193,6 @@ func (m *Manager) prepareNode() error {
 		m.newRoots <- state.RootWrap{Root: root}
 	}
 
-	// Service discovery / auto root sync.
-	c.OnSubscribeRemote = func(c *node.Conn, bpk cipher.PubKey) error {
-		m.l.Printf("Found board '(%s) %s'", c.Address(), bpk.Hex()[:5]+"...")
-		if e := c.Node().AddFeed(bpk); e != nil {
-			m.l.Println(" - Failed to relay feed:", e)
-		} else {
-			m.l.Println(" - Feed relayed.")
-		}
-		return nil
-	}
-
 	c.OnCreateConnection = func(c *node.Conn) {
 		for _, pk := range m.node.Feeds() {
 			c.Subscribe(pk)
