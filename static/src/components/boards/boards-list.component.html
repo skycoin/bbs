@@ -174,12 +174,6 @@
           <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="copy($event)"></i></span>
         </div>
         <div class="thread-item">
-          <h5>Rpc Submission Url</h5>
-          <span class="text-muted">
-          <li class="info-address-li" *ngFor="let address of tmpBoard?.submission_addresses">{{address}}<i class="fa fa-times address-close" aria-hidden="true" (click)="delAddress($event,tmpBoard?.public_key,address)"></i></li>
-          <li class="info-address-li add-li" (click)="addAddress(addressBox,tmpBoard?.public_key)">Add...</li></span>
-        </div>
-        <div class="thread-item">
           <h5>Created</h5> <span class="text-muted">{{tmpBoard?.created / 1000000 | date: 'medium'}}</span>
         </div>
       </div>
