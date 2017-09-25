@@ -70,6 +70,8 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	bi.mux.Lock()
 	defer bi.mux.Unlock()
 
+	bi.l.Printf("TRIGGERED: UpdateWithReceived()")
+
 	bi.isReceived.Set()
 	bi.isReady.Set()
 
@@ -98,11 +100,17 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 
 		var e error
 		if bi.p, e = ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk); e != nil {
+			bi.l.Println(" - root unpack failed with error:", e)
 			return e
+		} else {
+			bi.l.Println(" - root unpack succeeded.")
 		}
 
 		if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
+			bi.l.Println(" - failed to generate new headers:", e)
 			return e
+		} else {
+			bi.l.Println(" - new headers successfully generated.")
 		}
 
 		if firstRun {

@@ -199,6 +199,12 @@ func (m *Manager) prepareNode() error {
 		}
 	}
 
+	//c.OnCloseConnection = func(c *node.Conn) {
+	//	go func() {
+	//		m.node.UpdateServiceDiscovery()
+	//	}()
+	//}
+
 	var e error
 	if m.node, e = node.NewNode(c); e != nil {
 		return e
@@ -375,10 +381,6 @@ func (m *Manager) subscribeNode(bpk cipher.PubKey) error {
 	return nil
 }
 
-/*
-	<<< UNSUBSCRIBE >>>
-*/
-
 func (m *Manager) UnsubscribeRemote(bpk cipher.PubKey) error {
 	if m.file.HasRemoteSub(bpk) {
 		if e := m.file.RemoveSub(bpk); e != nil {
@@ -498,6 +500,20 @@ func newBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 	pack.Close()
 
 	return node.Container().LastRoot(in.BoardPubKey)
+}
+
+/*
+	<<< ADMIN >>>
+*/
+
+//func (m *Manager) GetObject(hash cipher.SHA256)
+
+/*
+	<<< DISCOVERER >>>
+*/
+
+func (m *Manager) GetDiscoveredBoards() ([]string) {
+	return m.relay.GetBoards()
 }
 
 /*
