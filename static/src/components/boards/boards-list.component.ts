@@ -28,10 +28,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   subscribeForm = new FormGroup({
     board: new FormControl('', Validators.required),
   });
-  addressForm = new FormGroup({
-    ip: new FormControl(''),
-    port: new FormControl('', Validators.required),
-  });
   addForm = new FormGroup({
     name: new FormControl('', Validators.required),
     body: new FormControl('', Validators.required),
@@ -76,35 +72,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  addAddress(content: any, key: string) {
-    this.addressForm.reset();
-    if (key === '') {
-      this.alert.error({ content: 'The Key can not be empty!!!' });
-      return;
-    }
-    this.pop.open(content).result.then((reslut) => {
-      if (reslut) {
-        if (!this.addressForm.valid) {
-          this.alert.error({ content: 'The Port Or Url can not be empty!!!' });
-          return;
-        }
-        const data = new FormData();
-        data.append('board_public_key', key);
-        let ip = this.addressForm.get('ip').value;
-        if (ip === '' || !ip) {
-          ip = '[::]:'
-        } else {
-          ip = ip + ':';
-        }
-        data.append('address', ip + this.addressForm.get('port').value);
-        this.loading.start();
-        this.api.newSubmissionAddress(data).subscribe(res => {
-          this.tmpBoard.submission_addresses = res.data.board.submission_addresses;
-          this.loading.close();
-        });
-      }
-    });
-  }
   openURL(ev: Event) {
     ev.preventDefault();
     ev.stopImmediatePropagation();
