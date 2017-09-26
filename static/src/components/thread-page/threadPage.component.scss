@@ -150,6 +150,7 @@ app-threadpage {
             .time {
               color: #999;
               cursor: pointer;
+              margin-left: .5rem;
               &::before {
                 content: '\00B7';
                 padding-right: 5px;

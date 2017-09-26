@@ -7,7 +7,7 @@
             <i class="fa fa-user fa-3x" aria-hidden="true"></i>
         </a>
         <div class="info-box">
-          <a href="javascript:void(0);" class="author-name tooltip-normal" [attr.aria-label]="data?.data?.thread?.creator">{{data?.data?.thread?.creator | cutText}}</a>
+          <a href="javascript:void(0);" class="author-name tooltip-normal break-line" [attr.aria-label]="data?.data?.thread?.creator">{{data?.data?.thread?.creator}}</a>
           <small class="text-muted">
           replies
           <span class="replies">{{data?.data?.thread?.post_count}}</span> &nbsp;• &nbsp;
@@ -36,8 +36,7 @@
           <div class="content">
             <div class="row post-title-box">
               <div class="col-10 title-content-box">
-                <a href="javascript:void(0);" class="creator tooltip-normal" [attr.aria-label]="item?.creator">{{item?.creator | cutText}}</a>
-                <small class="time">{{item?.created / 1000000 | date:'M/d/y H:mm'}}</small>
+                <a href="javascript:void(0);" class="creator tooltip-normal break-line" [attr.aria-label]="item?.creator">{{item?.creator}}<small class="time">{{item?.created / 1000000 | date:'M/d/y H:mm'}}</small></a>
               </div>
               <div class="col text-right other">
                 <i class="fa fa-chevron-down" aria-hidden="true" (click)="Menu($event,item)">

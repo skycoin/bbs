@@ -34,9 +34,13 @@ app-threads {
       .title {
         color: #000;
         font-weight: 500;
+        &:hover {
+          text-decoration: none;
+        }
       }
       .time {
         color: #999;
+        margin-left: .5rem;
         &::before {
           content: '\00B7';
           padding-right: 5px;

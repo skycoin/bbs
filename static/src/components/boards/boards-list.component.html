@@ -5,8 +5,8 @@
       <div class="card-block">
         <div class="row card-top">
           <div class="col-9">
-            <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="board?.name">{{board?.name | cutText}}</a>
-            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small>
+            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="board?.name">{{board?.name}} <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
+
           </div>
           <div class="col-3">
             <p class="text-right action">
@@ -23,21 +23,10 @@
       [@flyInOut]>
       <div class="remote-tag">Remote</div>
       <div class="card-block">
-        <!-- <div class="row">
-          <div class="col">
-            <h5 class="single-line name">{{board?.name}}</h5>
-          </div>
-          <div class="col">
-            <p class="text-right action">
-              <a href="javascript:void(0);" (click)="delSubscribe(board?.public_key,$event)"><i class="fa fa-chain-broken" aria-hidden="true" aria-label="subscribe"></i></a>
-              <a href="javascript:void(0);" (click)="openInfo($event,board,info)"><i class="fa fa-info"></i></a>
-            </p>
-          </div>
-        </div> -->
         <div class="row card-top">
           <div class="col-9">
-            <a href="javascript:void(0);" class="title tooltip-normal" [attr.aria-label]="board?.name">{{board?.name | cutText}}</a>
-            <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small>
+            <a href="javascript:void(0);" class="title tooltip-normal  break-line" [attr.aria-label]="board?.name">{{board?.name}}<small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
+
           </div>
           <div class="col-3">
             <p class="text-right action">

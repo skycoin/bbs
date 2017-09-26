@@ -1,5 +1,9 @@
+<div class="container" style="padding:0">
+  <p class="d-flex justify-content-end">
+    <button type="button" class="btn btn-primary" (click)="openAdd(addBox)">Join</button>
+  </p>
+</div>
 <div class="container">
-  <p class="d-flex justify-content-end"><button type="button" class="btn btn-primary" (click)="openAdd(addBox)">New User</button></p>
   <div class="list-box">
     <div class="row user-item user-item-header" *ngIf="userlist?.length > 0">
       <div class="col-10">
