@@ -13,34 +13,6 @@ Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) 
 
 Detailed building instructions for static files can be found in [static/README.md](https://github.com/skycoin/bbs/blob/master/static/README.md).
 
-#### Dependencies
-
-**Node Package Manager** (https://www.npmjs.com/)
-
-```bash
-# Install package from apt.
-sudo apt install npm
-
-# Update npm version to latest.
-sudo npm install -g npm@latest
-```
-
-**Yarn** (https://yarnpkg.com/en/)
-
-```bash
-# Add repository.
-curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-
-# Install.
-sudo apt-get update && sudo apt-get install yarn
-```
-
-**Angular CLI** (https://github.com/angular/angular-cli)
-
-```bash
-npm install -g @angular/cli
-```
 
 ## Running BBS Node
 
