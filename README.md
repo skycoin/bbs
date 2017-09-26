@@ -7,7 +7,7 @@ Skycoin BBS is a next generation decentralised social network (BBS stands for [B
 
 Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) (CXO) to store and synchronise data between nodes.
 
-[![Skycoin BBS Showcase 4 - YouTube](https://i.ytimg.com/vi/Oue3WVkmGh4/0.jpg)](https://youtu.be/Oue3WVkmGh4)
+[![Skycoin BBS Showcase 4 - YouTube](https://i.ytimg.com/vi/6ZqwgefYauU/0.jpg)](https://youtu.be/6ZqwgefYauU)
 
 ## Building Static Files
 
