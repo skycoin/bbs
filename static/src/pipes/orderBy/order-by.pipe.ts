@@ -9,6 +9,9 @@ export class OrderByPipe implements PipeTransform {
     if (!values || values.length < 1) {
       return [];
     }
+    if (!values[0]) {
+      return [];
+    }
     if (!values[0].created) {
       return values;
     }
