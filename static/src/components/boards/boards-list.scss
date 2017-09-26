@@ -63,10 +63,14 @@ app-boardslist {
         color: #000;
         font-weight: 500;
         display: inline-block;
+        &:hover {
+          text-decoration: none;
+        }
       }
       .time {
         font-size: .75rem; // text-decoration: underline;
         color: #999;
+        margin-left: .5rem;
         &::before {
           content: '\00B7';
           padding-right: 5px;

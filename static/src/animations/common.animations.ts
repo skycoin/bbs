@@ -31,13 +31,12 @@ export const tabLeftAnimation: AnimationEntryMetadata =
     state('in', style({ transform: 'translateX(0)' })),
     transition('void => *', [
       style({
-        opacity: 0,
-        transform: 'translateX(-100%)'
+        transform: 'translateX(-15%)'
       }),
-      animate(250)
+      animate(100)
     ]),
     transition('* => void', [
-      animate(0, style({ transform: 'translateX(100%)' }))
+      animate(0, style({ transform: 'translateX(15%)' }))
     ])
   ])
 export const tabRightAnimation: AnimationEntryMetadata =
@@ -45,13 +44,12 @@ export const tabRightAnimation: AnimationEntryMetadata =
     state('in', style({ transform: 'translateX(0)' })),
     transition('void => *', [
       style({
-        opacity: 0,
-        transform: 'translateX(100%)'
+        transform: 'translateX(15%)'
       }),
-      animate(250)
+      animate(100)
     ]),
     transition('* => void', [
-      animate(0, style({ transform: 'translateX(-100%)' }))
+      animate(0, style({ transform: 'translateX(-15%)' }))
     ])
   ])
 
