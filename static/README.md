@@ -1,6 +1,8 @@
 # Skycoin BBS Web UI
 The user interface of Skycoin BBS is represented via a locally served website. In the future, users will no longer need to run a full BBS node to access/submit content to boards. And instead, nodes will host public websites.
 
+The project contains both the source (src) and target (dist) files of this web interface.
+
 ## Prerequisites
 
 The project have dependencies that require Node 6.9.0 or higher, together
