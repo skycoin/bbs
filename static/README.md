@@ -3,7 +3,7 @@ The user interface of Skycoin BBS is represented via a locally served website. I
 
 ## Prerequisites
 
-Both the CLI and generated project have dependencies that require Node 6.9.0 or higher, together
+The project have dependencies that require Node 6.9.0 or higher, together
 with NPM 3 or higher.
 
 ## Installation
