@@ -9,18 +9,24 @@ Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) 
 
 [![Skycoin BBS Showcase 4 - YouTube](https://i.ytimg.com/vi/Oue3WVkmGh4/0.jpg)](https://youtu.be/Oue3WVkmGh4)
 
-## Building Skycoin BBS
+## Building Static Files
 
-### Dependencies
+Detailed building instructions for static files can be found in [static/README.md](https://github.com/skycoin/bbs/blob/master/static/README.md).
 
-#### [golang](https://golang.org/doc/install)
+#### Dependencies
 
-Ensure that the `GOPATH` environmental variable is set.
+**Node Package Manager** (https://www.npmjs.com/)
 
-#### [npm](https://www.npmjs.com/get-npm)
+```bash
+# Install package from apt.
+sudo apt install npm
 
-#### [yarn](https://yarnpkg.com/en/docs/install)
-**Installation instructions**
+# Update npm version to latest.
+sudo npm install -g npm@latest
+```
+
+**Yarn** (https://yarnpkg.com/en/)
+
 ```bash
 # Add repository.
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
@@ -30,24 +36,29 @@ echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/source
 sudo apt-get update && sudo apt-get install yarn
 ```
 
-#### [ng](https://github.com/angular/angular-cli)
-**Installation instructions**
+**Angular CLI** (https://github.com/angular/angular-cli)
+
 ```bash
 npm install -g @angular/cli
 ```
 
-### Via Makefile
+## Running BBS Node
 
-Ensure all dependencies are satisfied before using.
+#### Dependencies
+
+**Go Programming Language** (https://golang.org/doc/install)
+
+After installation, ensure that the `GOPATH` environmental variable is set.
+
+#### Via bash script
+
+The script `run.sh` is provided to run BBS, serving static files in `static.dist`.
 
 ```bash
-# Get list of commands.
-make help
+bash run.sh
 ```
 
-## Running Skycoin BBS
-
-Skycoin BBS Node is a single binary executable that can be ran with the following flags:
+The following flags can be used:
 
 * `-dev` (default: `false`) Serves GUI static files from Skycoin BBS location in `$GOPATH`.
 
