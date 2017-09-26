@@ -1,6 +1,6 @@
 <div class="container" style="padding:0">
   <p class="d-flex justify-content-end">
-    <button type="button" class="btn btn-primary" (click)="openAdd(addBox)">Join</button>
+    <button type="button" class="btn btn-primary" (click)="openAdd(addBox)">create identity</button>
   </p>
 </div>
 <div class="container">
@@ -32,7 +32,7 @@
 <ng-template #addBox let-c="close">
   <div class="pop-dialog" [@bounceIn]>
     <div class="modal-header">
-      <h4 class="modal-title">New Master</h4>
+      <h4 class="modal-title">Create Identity</h4>
       <button type="button" class="close" aria-label="Close" (click)="c(false)">
         <span aria-hidden="true">&times;</span>
       </button>

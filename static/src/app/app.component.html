@@ -12,7 +12,7 @@
         </a>
         <a href="javascript:void(0);" class="button register-button" (click)="switchTab('register')">
           <div class="active" *ngIf="registerBox"></div>
-          <span>Join</span>
+          <span>Create</span>
         </a>
       </div>
       <div class="content">
@@ -32,7 +32,7 @@
           </p>
         </div>
         <div class="register-box" *ngIf="registerBox" [@tabRight]>
-          <h6>Create a account</h6>
+          <h6>Create an identity</h6>
           <div class="form-box">
             <input type="text" class="text-input input-border-bottom" (keyup.enter)="register($event)" [focus]="registerBox" [(ngModel)]="alias"
               placeholder="Input Your Alias">
