@@ -25,18 +25,6 @@ func TestBoardInstance_NewThread(t *testing.T) {
 		)
 		threadsWG.Add(threadCount)
 
-		for i := 0; i < threadCount; i++ {
-			actionAddThread := func(i int) {
-				goal := addThread(t, bi, i, []byte(userSeed))
-				threadsChan <- []uint64{uint64(i), goal}
-			}
-			if i%2 == 0 {
-				go actionAddThread(i)
-			} else {
-				actionAddThread(i)
-			}
-		}
-
 		go func() {
 			for {
 				select {
@@ -49,6 +37,18 @@ func TestBoardInstance_NewThread(t *testing.T) {
 				}
 			}
 		}()
+
+		for i := 0; i < threadCount; i++ {
+			actionAddThread := func(i int) {
+				goal := addThread(t, bi, i, []byte(userSeed))
+				threadsChan <- []uint64{uint64(i), goal}
+			}
+			if i%2 == 0 {
+				go actionAddThread(i)
+			} else {
+				actionAddThread(i)
+			}
+		}
 
 		threadsWG.Wait()
 		threadsDone <- struct{}{}
@@ -74,11 +74,37 @@ func TestBoardInstance_NewThread(t *testing.T) {
 			postCount   = 20
 		)
 
-		for i := 0; i < threadCount; i++ {
-			for j := 0; j < postCount; j++ {
-				//goal := addThread(t, bi, i, []byte(userSeed))
+		var wg sync.WaitGroup
 
+		for i := 0; i < threadCount; i++ {
+			addThread(t, bi, i, []byte(userSeed))
+
+			threadList := obtainThreadList(t, bi)
+			tHash := threadList[len(threadList)-1]
+
+			for j := 0; j < postCount; j++ {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					addPost(t, bi, tHash, j, []byte(userSeed))
+				}()
+			}
+
+			if e := bi.PublishChanges(); e != nil {
+				t.Fatal("failed to publish changes:", e)
+			}
+
+			if i%2 == 0 {
+				for j := postCount; j < postCount+postCount; j++ {
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						addPost(t, bi, tHash, j, []byte(userSeed))
+					}()
+				}
 			}
 		}
+
+		wg.Wait()
 	})
 }

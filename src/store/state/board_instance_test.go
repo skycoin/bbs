@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"log"
 )
 
 const (
@@ -77,7 +78,14 @@ func initInstance(t *testing.T, seed string) (*BoardInstance, func()) {
 func obtainBoardPubKey(t *testing.T, bi *BoardInstance) cipher.PubKey {
 	var pk cipher.PubKey
 	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
-		pk = p.Root().Pub
+		if p == nil {
+			log.Println("*skyobject.Pack is empty")
+		}
+		root := p.Root()
+		if root == nil {
+			log.Println("*skyobject.Root is empty")
+		}
+		pk = root.Pub
 		return nil
 	})
 	if e != nil {
