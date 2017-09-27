@@ -9,6 +9,7 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/object"
 	"fmt"
+	"github.com/skycoin/bbs/src/store/state/pack"
 )
 
 const (
@@ -70,6 +71,41 @@ func initInstance(t *testing.T, seed string) (*BoardInstance, func()) {
 		bi.Close()
 		n.Close()
 	}
+}
+
+func obtainBoardPubKey(t *testing.T, bi *BoardInstance) cipher.PubKey {
+	var pk cipher.PubKey
+	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		pk = p.Root().Pub
+		return nil
+	})
+	if e != nil {
+		t.Fatal("failed to view pack:", e)
+	}
+	return pk
+}
+
+func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
+	bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		return nil
+	})
+	return nil
+}
+
+func addThread(t *testing.T, bi *BoardInstance, index int, userSeed []byte) uint64 {
+	in := &object.NewThreadIO{
+		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
+		Name: fmt.Sprintf("Thread %d", index),
+		Body: fmt.Sprintf("A test thread created of index %d.", index),
+	}
+	if e := in.Process(cipher.GenerateDeterministicKeyPair(userSeed)); e != nil {
+		t.Fatal("failed to process new thread input:", e)
+	}
+	goal, e := bi.NewThread(in.Thread)
+	if e != nil {
+		t.Fatal("failed to create new thread:", e)
+	}
+	return goal
 }
 
 func TestBoardInstance_Init(t *testing.T) {

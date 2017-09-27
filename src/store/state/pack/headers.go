@@ -17,10 +17,10 @@ type Headers struct {
 	changes *r0.Changes
 
 	tMux    sync.Mutex
-	threads map[cipher.SHA256]cipher.SHA256
+	threads map[cipher.SHA256]cipher.SHA256 // key(thread hash), value(thread page hash)
 
 	uMux  sync.Mutex
-	users map[cipher.PubKey]cipher.SHA256
+	users map[cipher.PubKey]cipher.SHA256 // key(user's public key), value(user's page hash)
 }
 
 func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
@@ -112,3 +112,7 @@ func (h *Headers) SetThread(tRef, tpRef cipher.SHA256) {
 
 	h.threads[tRef] = tpRef
 }
+
+type RangeThreadFunc func(tHash, tpHash cipher.SHA256)
+
+func (h *Headers) RangeThreads()
