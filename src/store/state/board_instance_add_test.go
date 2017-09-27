@@ -3,6 +3,9 @@ package state
 import (
 	"testing"
 	"sync"
+	"time"
+	"math/rand"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 func TestBoardInstance_NewThread(t *testing.T) {
@@ -11,10 +14,10 @@ func TestBoardInstance_NewThread(t *testing.T) {
 		userSeed = "b" // Seed for user generation.
 	)
 
-	bi, close := initInstance(t, boardSeed)
-	defer close()
+	bi, quit := initInstance(t, boardSeed)
+	defer quit()
 
-	t.Run("ADD_THREADS", func(t *testing.T) {
+	t.Run("add threads", func(t *testing.T) {
 		const (
 			threadCount = 30 // Number of threads to create.
 		)
@@ -68,7 +71,7 @@ func TestBoardInstance_NewThread(t *testing.T) {
 		}
 	})
 
-	t.Run("ADD_THREAD_AND_POST", func(t *testing.T) {
+	t.Run("add threads with posts", func(t *testing.T) {
 		const (
 			threadCount = 30
 			postCount   = 20
@@ -104,6 +107,82 @@ func TestBoardInstance_NewThread(t *testing.T) {
 				}
 			}
 		}
+
+		wg.Wait()
+	})
+
+	t.Run("add content while modifying board", func(t *testing.T) {
+		const (
+			threadCount = 30
+			postCount = 100
+			maxSubPKCount = 5
+		)
+
+		var wg sync.WaitGroup
+		publishLoopBegin := make(chan struct{})
+		quitChan := make(chan struct{})
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-publishLoopBegin
+			ticker := time.NewTicker(time.Millisecond * 100)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					if e := bi.PublishChanges(); e != nil {
+						t.Fatal("failed to publish changes:", e)
+					}
+				case <-quitChan:
+					return
+				}
+			}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < threadCount; i++ {
+				addThread(t, bi, i, []byte{byte(i)})
+				time.Sleep(time.Millisecond * 50)
+			}
+			if e := bi.PublishChanges(); e != nil {
+				t.Fatal("failed to publish changes:", e)
+			}
+			publishLoopBegin <- struct{}{}
+			for i := 0; i < postCount; i++ {
+				threads := obtainThreadList(t, bi)
+				threadIndex := rand.Intn(int(len(threads)))
+				addPost(t, bi, threads[threadIndex], i, []byte{byte(i)})
+			}
+			quitChan <- struct{}{}
+			quitChan <- struct{}{}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			ticker := time.NewTicker(time.Millisecond * 100)
+			defer ticker.Stop()
+
+			for {
+				select {
+				case <-quitChan:
+					return
+				case <-ticker.C:
+					pkCount := rand.Intn(maxSubPKCount)
+					pks := make([]cipher.PubKey, pkCount)
+					for i := 0; i < pkCount; i++ {
+						pks[i], _ = cipher.GenerateKeyPair()
+					}
+					if _, e := bi.EnsureSubmissionKeys(pks); e != nil {
+						t.Fatal("failed to change board submission keys:", e)
+					}
+				}
+			}
+		}()
 
 		wg.Wait()
 	})
