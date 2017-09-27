@@ -140,7 +140,8 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 }
 
 // PublishChanges publishes changes to CXO.
-// (only if instance is initialised, changes were made, and the node owns the board.)
+// Only use if instance is initialised, changes were made, and the node owns the board.
+// Should be triggered by compiler based on an interval.
 func (bi *BoardInstance) PublishChanges() error {
 
 	if bi.needPublish.Value() == false {
