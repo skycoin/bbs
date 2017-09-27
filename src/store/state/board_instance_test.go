@@ -10,6 +10,7 @@ import (
 	"github.com/skycoin/bbs/src/store/object"
 	"fmt"
 	"github.com/skycoin/bbs/src/store/state/pack"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 const (
@@ -86,17 +87,28 @@ func obtainBoardPubKey(t *testing.T, bi *BoardInstance) cipher.PubKey {
 }
 
 func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
+	var threads []cipher.SHA256
 	bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
-		return nil
+		pages, e := r0.GetPages(p, false, true)
+		if e != nil {
+			return e
+		}
+		threads = make([]cipher.SHA256, pages.BoardPage.GetThreadCount())
+		return pages.BoardPage.RangeThreadPages(
+			func(i int, tp *r0.ThreadPage) error {
+				threads[i] = tp.Thread.Hash
+				return nil
+			},
+		)
 	})
-	return nil
+	return threads
 }
 
-func addThread(t *testing.T, bi *BoardInstance, index int, userSeed []byte) uint64 {
+func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte) uint64 {
 	in := &object.NewThreadIO{
 		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
-		Name: fmt.Sprintf("Thread %d", index),
-		Body: fmt.Sprintf("A test thread created of index %d.", index),
+		Name: fmt.Sprintf("Thread %d", threadIndex),
+		Body: fmt.Sprintf("A test thread created of index %d.", threadIndex),
 	}
 	if e := in.Process(cipher.GenerateDeterministicKeyPair(userSeed)); e != nil {
 		t.Fatal("failed to process new thread input:", e)
@@ -104,6 +116,23 @@ func addThread(t *testing.T, bi *BoardInstance, index int, userSeed []byte) uint
 	goal, e := bi.NewThread(in.Thread)
 	if e != nil {
 		t.Fatal("failed to create new thread:", e)
+	}
+	return goal
+}
+
+func addPost(t *testing.T, bi *BoardInstance, threadHash cipher.SHA256, postIndex int, userSeed []byte) uint64 {
+	in := &object.NewPostIO{
+		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
+		ThreadRefStr: threadHash.Hex(),
+		Name: fmt.Sprintf("Post %d", postIndex),
+		Body: fmt.Sprintf("A test post created of index %d.", postIndex),
+	}
+	if e := in.Process(cipher.GenerateDeterministicKeyPair(userSeed)); e != nil {
+		t.Fatal("failed to process new post input:", e)
+	}
+	goal, e := bi.NewPost(in.Post)
+	if e != nil {
+		t.Fatal("failed to create new post:", e)
 	}
 	return goal
 }
