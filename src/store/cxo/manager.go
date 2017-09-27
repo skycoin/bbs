@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/store/cxo/setup"
 )
 
 const (
@@ -157,19 +158,9 @@ func (m *Manager) prepareNode() error {
 	c.Skyobject.Log.Pins = skyobject.PackSavePin // all
 	c.Skyobject.Log.Prefix = "[CXO] "
 
-	c.Skyobject.Registry = skyobject.NewRegistry(func(t *skyobject.Reg) {
-		t.Register(r0.RootPageName, r0.RootPage{})
-		t.Register(r0.BoardPageName, r0.BoardPage{})
-		t.Register(r0.ThreadPageName, r0.ThreadPage{})
-		t.Register(r0.DiffPageName, r0.DiffPage{})
-		t.Register(r0.UsersPageName, r0.UsersPage{})
-		t.Register(r0.UserActivityPageName, r0.UserActivityPage{})
-		t.Register(r0.BoardName, r0.Board{})
-		t.Register(r0.ThreadName, r0.Thread{})
-		t.Register(r0.PostName, r0.Post{})
-		t.Register(r0.VoteName, r0.Vote{})
-		t.Register(r0.UserName, r0.User{})
-	})
+	// CXO schema are registered here.
+	c.Skyobject.Registry = skyobject.NewRegistry(
+		setup.PrepareRegistry)
 
 	//c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
@@ -183,12 +174,13 @@ func (m *Manager) prepareNode() error {
 	c.RPCAddress = "[::]:" + strconv.Itoa(*m.c.CXORPCPort)
 
 	c.OnRootReceived = func(c *node.Conn, root *skyobject.Root) {
-		m.l.Printf("Receiving board '%s'", root.Pub.Hex()[:5]+"...")
+		m.l.Printf("Receiving board '%s' (NOT FILLED)", root.Pub.Hex()[:5]+"...")
+		root.IsFull = false
 		m.newRoots <- state.RootWrap{Root: root}
 	}
 
 	c.OnRootFilled = func(c *node.Conn, root *skyobject.Root) {
-		m.l.Printf("Received filled board '%s'", root.Pub.Hex()[:5]+"...")
+		m.l.Printf("Receiving board '%s' (FILLED)", root.Pub.Hex()[:5]+"...")
 		root.IsFull = true
 		m.newRoots <- state.RootWrap{Root: root}
 	}
@@ -460,44 +452,12 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	}
 	m.subscribeNode(in.BoardPubKey)
 
-	if r, e := newBoard(m.node, in); e != nil {
+	if r, e := setup.NewBoard(m.node, in); e != nil {
 		return e
 	} else {
 		m.compiler.UpdateBoardWithContext(context.Background(), r)
 		return nil
 	}
-}
-
-func newBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
-	pack, e := node.Container().NewRoot(
-		in.BoardPubKey,
-		in.BoardSecKey,
-		skyobject.HashTableIndex|skyobject.EntireTree,
-		node.Container().CoreRegistry().Types(),
-	)
-	if e != nil {
-		return nil, e
-	}
-
-	pack.Append(
-		&r0.RootPage{
-			Typ: r0.RootTypeBoard,
-			Rev: 0,
-			Del: false,
-		},
-		&r0.BoardPage{
-			Board: pack.Ref(in.Board),
-		},
-		&r0.DiffPage{},
-		&r0.UsersPage{},
-	)
-	if e := pack.Save(); e != nil {
-		return nil, e
-	}
-	node.Publish(pack.Root())
-	pack.Close()
-
-	return node.Container().LastRoot(in.BoardPubKey)
 }
 
 /*
