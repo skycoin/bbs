@@ -113,6 +113,18 @@ func (h *Headers) SetThread(tRef, tpRef cipher.SHA256) {
 	h.threads[tRef] = tpRef
 }
 
-type RangeThreadFunc func(tHash, tpHash cipher.SHA256)
+// RangeThreadFunc is the function used to range the threads.
+// Quits range on error.
+type RangeThreadFunc func(tHash, tpHash cipher.SHA256) error
 
-func (h *Headers) RangeThreads()
+func (h *Headers) RangeThreads(action RangeThreadFunc) error {
+	h.tMux.Lock()
+	defer h.tMux.Unlock()
+
+	for tHash, tpHash := range h.threads {
+		if e := action(tHash, tpHash); e != nil {
+			return e
+		}
+	}
+	return nil
+}
