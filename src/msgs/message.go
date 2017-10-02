@@ -81,39 +81,13 @@ func (m *BBSMessage) GetBody() []byte {
 	return m.SendMessage[factory.SEND_MSG_META_END+tLen:]
 }
 
-func (m *BBSMessage) ExtractContentThread() (*r0.Thread, error) {
-	v := new(r0.Thread)
+func (m *BBSMessage) ExtractContent() (*r0.Content, error) {
+	v := new(r0.Content)
 	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
 		return nil, boo.WrapType(e, boo.InvalidRead,
-			"failed to deserialize thread data")
+			"failed to deserialize content data")
 	}
-	if e := v.Verify(v.GetData().GetCreator()); e != nil {
-		return nil, e
-	}
-	return v, nil
-}
-
-func (m *BBSMessage) ExtractContentPost() (*r0.Post, error) {
-	v := new(r0.Post)
-	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
-		return nil, boo.WrapType(e, boo.InvalidRead,
-			"failed to deserialize post data")
-	}
-	if e := v.Verify(v.GetData().GetCreator()); e != nil {
-		return nil, e
-	}
-	return v, nil
-}
-
-func (m *BBSMessage) ExtractContentVote() (*r0.Vote, error) {
-	v := new(r0.Vote)
-	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
-		return nil, boo.WrapType(e, boo.InvalidRead,
-			"failed to deserialize vote data")
-	}
-	if e := v.Verify(); e != nil {
-		return nil, e
-	}
+	// TODO: Verify data? maybe.
 	return v, nil
 }
 

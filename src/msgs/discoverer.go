@@ -1,16 +1,16 @@
 package msgs
 
 import (
-	"github.com/skycoin/skycoin/src/cipher"
-	"sync"
-	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"time"
-	"github.com/skycoin/skycoin/src/cipher/encoder"
-	"github.com/skycoin/bbs/src/store/object"
-	"log"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/misc/tag"
+	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
+	"log"
 	"os"
+	"sync"
+	"time"
 )
 
 // pkMap stores public keys in order and avoids duplicates.
@@ -140,7 +140,7 @@ func (b DiscoveredBoard) Verify(ts int64) error {
 type DiscovererMsg struct {
 	Type      DiscovererType
 	TimeStamp int64
-	Boards []DiscoveredBoard
+	Boards    []DiscoveredBoard
 }
 
 // Add adds a Board to 'DiscovererMsg.Boards'. This is only relevant if
@@ -182,16 +182,16 @@ type BoardDiscoverer struct {
 	doRange RangeFunc
 
 	tsMux sync.RWMutex
-	ts int64
+	ts    int64
 }
 
 // NewBoardDiscoverer creates a new BoardDiscoverer.
 func NewBoardDiscoverer(doSend SendFunc, doRange RangeFunc) *BoardDiscoverer {
 	return &BoardDiscoverer{
-		l: inform.NewLogger(true, os.Stdout, "BOARD_DISCOVERER"),
-		nodes:  newPKMap(),
-		boards: newPKMap(),
-		doSend: doSend,
+		l:       inform.NewLogger(true, os.Stdout, "BOARD_DISCOVERER"),
+		nodes:   newPKMap(),
+		boards:  newPKMap(),
+		doSend:  doSend,
 		doRange: doRange,
 	}
 }
@@ -211,7 +211,7 @@ func (bd *BoardDiscoverer) SendAsk() {
 
 	bd.ts = int64(time.Now().UnixNano())
 	outMsg := &DiscovererMsg{
-		Type: DiscovererAsk,
+		Type:      DiscovererAsk,
 		TimeStamp: bd.ts,
 	}
 
@@ -224,7 +224,7 @@ func (bd *BoardDiscoverer) SendAsk() {
 func (bd *BoardDiscoverer) SendResponse(nodeKey cipher.PubKey, ts int64) {
 
 	respMsg := &DiscovererMsg{
-		Type: DiscovererResponse,
+		Type:      DiscovererResponse,
 		TimeStamp: ts,
 	}
 

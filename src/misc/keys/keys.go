@@ -53,6 +53,16 @@ func GetHash(s string) (cipher.SHA256, error) {
 	return h, e
 }
 
+// GetSig obtains a signature from hex string.
+func GetSig(s string) (cipher.Sig, error) {
+	sig, e := cipher.SigFromHex(s)
+	if e != nil {
+		return cipher.Sig{}, boo.WrapType(e, boo.InvalidInput,
+			"invalid sig string")
+	}
+	return sig, nil
+}
+
 func PubKeyToSlice(pk cipher.PubKey) []byte {
 	out := make([]byte, 33)
 	for i, v := range [33]byte(pk) {

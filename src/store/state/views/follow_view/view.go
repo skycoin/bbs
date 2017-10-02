@@ -5,17 +5,16 @@ import (
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/skycoin/src/cipher"
 )
 
 type FollowView struct {
-	uMap map[cipher.PubKey]*FollowRep
+	uMap map[string]*FollowRep // key(user public key), value(rep)
 }
 
 func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 
 	// Init map.
-	v.uMap = make(map[cipher.PubKey]*FollowRep)
+	v.uMap = make(map[string]*FollowRep)
 
 	// Get pages.
 	pages, e := r0.GetPages(pack, false, false, false, true)
@@ -23,21 +22,23 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		return e
 	}
 
-	return pages.UsersPage.RangeUserActivityPages(func(i int, uap *r0.UserActivityPage) error {
-		return uap.RangeVoteActions(func(j int, vote *r0.Vote) error {
+	return pages.UsersPage.RangeUserProfiles(func(i int, profile *r0.UserProfile) error {
+		return profile.RangeSubmissions(func(i int, c *r0.Content) error {
+			cHeader := c.GetHeader()
 
-			// Only parse if vote is of user.
-			if vote.GetType() == r0.UserVote {
+			// Only parse if content is user vote.
+			if cHeader.Type == r0.V5UserVoteType {
+				cBody := c.ToUserVote().GetBody()
 
-				// Ensure creator's follow page exists.
-				followRef, has := v.uMap[vote.Creator]
-				if !has {
-					followRef = NewFollowRep(vote.Creator)
-					v.uMap[vote.Creator] = followRef
+				// Ensure creator's profile exists.
+				followRep, ok := v.uMap[cHeader.PK]
+				if !ok {
+					followRep = NewFollowRep(cHeader.PK)
+					v.uMap[cHeader.PK] = followRep
 				}
 
 				// Add stuff.
-				followRef.Set(vote.OfUser, vote.Mode, vote.Tag)
+				followRep.Set(cBody.Creator, cBody.Value, cBody.Tag)
 			}
 
 			return nil
@@ -47,21 +48,22 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 
 func (v *FollowView) Update(pack *skyobject.Pack, headers *pack.Headers) error {
 
-	for _, vote := range headers.GetChanges().NewVotes {
+	for _, c := range headers.GetChanges().New {
+		cHeader := c.GetHeader()
 
-		// Only parse if vote is of user.
-		if vote.GetType() == r0.UserVote {
+		// Only parse if content is user type.
+		if cHeader.Type == r0.V5UserVoteType {
+			cBody := c.ToUserVote().GetBody()
 
-			// Ensure creator's follow page exists.
-			followRef, has := v.uMap[vote.Creator]
-			if !has {
-				followRef = NewFollowRep(vote.Creator)
-				v.uMap[vote.Creator] = followRef
+			// Ensure creator's profile exists.
+			followRep, ok := v.uMap[cHeader.PK]
+			if !ok {
+				followRep = NewFollowRep(cHeader.PK)
+				v.uMap[cHeader.PK] = followRep
 			}
 
 			// Add stuff.
-			followRef.Set(vote.OfUser, vote.Mode, vote.Tag)
-
+			followRep.Set(cBody.Creator, cBody.Value, cBody.Tag)
 		}
 	}
 
@@ -73,12 +75,12 @@ const (
 )
 
 func (v *FollowView) Get(id string, a ...interface{}) (interface{}, error) {
-	upk := a[0].(cipher.PubKey)
+	upk := a[0].(string)
 	switch {
 	case id == FollowPage && len(a) == 1:
 		fr, has := v.uMap[upk]
 		if !has {
-			return &FollowRepView{UserPubKey: upk.Hex()}, nil
+			return &FollowRepView{UserPubKey: upk}, nil
 		}
 		return fr.View(), nil
 

@@ -11,17 +11,13 @@ import (
 )
 
 const (
-	RootPageName         = "bbs.r0.RootPage"
-	BoardPageName        = "bbs.r0.BoardPage"
-	ThreadPageName       = "bbs.r0.ThreadPage"
-	DiffPageName         = "bbs.r0.DiffPage"
-	UsersPageName        = "bbs.r0.UsersPage"
-	UserActivityPageName = "bbs.r0.UserActivityPage"
-	BoardName            = "bbs.r0.Board"
-	ThreadName           = "bbs.r0.Thread"
-	PostName             = "bbs.r0.Post"
-	VoteName             = "bbs.r0.Vote"
-	UserName             = "bbs.r0.User"
+	RootPageName    = "bbs.r0.RootPage"
+	BoardPageName   = "bbs.r0.BoardPage"
+	ThreadPageName  = "bbs.r0.ThreadPage"
+	DiffPageName    = "bbs.r0.DiffPage"
+	UsersPageName   = "bbs.r0.UsersPage"
+	UserProfileName = "bbs.r0.UserProfile"
+	ContentName     = "bbs.r0.Content"
 )
 
 const (
@@ -150,7 +146,7 @@ func (rp *RootPage) FromRep(rpRep *transfer.RootPageRep) error {
 */
 
 type BoardPage struct {
-	Board   skyobject.Ref  `skyobject:"schema=bbs.r0.Board"`
+	Board   skyobject.Ref  `skyobject:"schema=bbs.r0.Content"`
 	Threads skyobject.Refs `skyobject:"schema=bbs.r0.ThreadPage"`
 }
 
@@ -174,15 +170,11 @@ func (bp *BoardPage) Save(p *skyobject.Pack) error {
 }
 
 func (bp *BoardPage) GetBoard() (*Board, error) {
-	bVal, e := bp.Board.Value()
+	c, e := GetContentFromRef(&bp.Board)
 	if e != nil {
-		return nil, valueErr(e, &bp.Board)
+		return nil, e
 	}
-	b, ok := bVal.(*Board)
-	if !ok {
-		return nil, extErr(&bp.Board)
-	}
-	return b, nil
+	return c.ToBoard(), nil
 }
 
 func (bp *BoardPage) GetThreadCount() int {
@@ -225,7 +217,7 @@ func (bp *BoardPage) AddThread(tRef skyobject.Ref) error {
 }
 
 func (bp *BoardPage) ExportBoard() (transfer.Board, error) {
-	return bp.GetBoard()
+	return nil, nil
 }
 
 func (bp *BoardPage) ExportThreadPages() ([]transfer.ThreadPage, error) {
@@ -260,8 +252,8 @@ func (bp *BoardPage) ImportThreadPages(p *skyobject.Pack, tps []transfer.ThreadP
 */
 
 type ThreadPage struct {
-	Thread skyobject.Ref  `skyobject:"schema=bbs.r0.Thread"`
-	Posts  skyobject.Refs `skyobject:"schema=bbs.r0.Post"`
+	Thread skyobject.Ref  `skyobject:"schema=bbs.r0.Content"`
+	Posts  skyobject.Refs `skyobject:"schema=bbs.r0.Content"`
 }
 
 func GetThreadPage(tpElem *skyobject.RefsElem) (*ThreadPage, error) {
@@ -277,16 +269,11 @@ func GetThreadPage(tpElem *skyobject.RefsElem) (*ThreadPage, error) {
 }
 
 func (tp *ThreadPage) GetThread() (*Thread, error) {
-	tVal, e := tp.Thread.Value()
+	c, e := GetContentFromRef(&tp.Thread)
 	if e != nil {
-		return nil, valueErr(e, &tp.Thread)
+		return nil, e
 	}
-	t, ok := tVal.(*Thread)
-	if !ok {
-		return nil, extErr(&tp.Thread)
-	}
-	t.R = tp.Thread.Hash
-	return t, nil
+	return c.ToThread(), nil
 }
 
 func (tp *ThreadPage) GetPostCount() int {
@@ -309,7 +296,7 @@ func (tp *ThreadPage) AddPost(postHash cipher.SHA256, post *Post) error {
 		return boo.Newf(boo.AlreadyExists,
 			"post of hash '%s' already exists in 'ThreadPage.Posts'", postHash.Hex())
 	}
-	if e := tp.Posts.Append(post); e != nil {
+	if e := tp.Posts.Append(post.Content); e != nil {
 		return boo.WrapTypef(e, boo.Internal,
 			"failed to append %v to 'ThreadPage.Posts'", post)
 	}
@@ -324,20 +311,11 @@ func (tp *ThreadPage) Save(tpElem *skyobject.RefsElem) error {
 }
 
 func (tp *ThreadPage) ExportThread() (transfer.Thread, error) {
-	return tp.GetThread()
+	return nil, nil
 }
 
 func (tp *ThreadPage) ExportPosts() ([]transfer.Post, error) {
-	l, e := tp.Posts.Len()
-	if e != nil {
-		return nil, e
-	}
-	out := make([]transfer.Post, l)
-	e = tp.RangePosts(func(i int, post *Post) error {
-		out[i] = post
-		return nil
-	})
-	return out, e
+	return nil, nil
 }
 
 func (tp *ThreadPage) ImportThread(p *skyobject.Pack, t transfer.Thread) error {
@@ -359,9 +337,7 @@ func (tp *ThreadPage) ImportPosts(p *skyobject.Pack, ps []transfer.Post) error {
 */
 
 type DiffPage struct {
-	Threads skyobject.Refs `skyobject:"schema=bbs.r0.Thread"`
-	Posts   skyobject.Refs `skyobject:"schema=bbs.r0.Post"`
-	Votes   skyobject.Refs `skyobject:"schema=bbs.r0.Vote"`
+	Submissions skyobject.Refs `skyobject:"schema=bbs.r0.Content"`
 }
 
 func GetDiffPage(p *skyobject.Pack) (*DiffPage, error) {
@@ -383,99 +359,33 @@ func (dp *DiffPage) Save(p *skyobject.Pack) error {
 	return nil
 }
 
-func (dp *DiffPage) Add(v interface{}) error {
-	switch v.(type) {
-	case *Thread:
-		if e := dp.Threads.Append(v); e != nil {
-			return boo.Newf(boo.Internal,
-				"failed to append %v to 'DiffPage.Threads'", v)
-		}
-	case *Post:
-		if e := dp.Posts.Append(v); e != nil {
-			return boo.Newf(boo.Internal,
-				"failed to append %v to 'DiffPage.Posts'", v)
-		}
-	case *Vote:
-		if e := dp.Votes.Append(v); e != nil {
-			return boo.Newf(boo.Internal,
-				"failed to append %v to 'DiffPage.Votes'", v)
-		}
-	default:
+func (dp *DiffPage) Add(c *Content) error {
+	if e := dp.Submissions.Append(c); e != nil {
 		return boo.Newf(boo.Internal,
-			"failed to add object of type %T to 'DiffPage'", v)
+			"failed to append %v to 'DiffPage.Submissions'", c)
 	}
 	return nil
 }
 
-func (dp *DiffPage) GetThreadOfIndex(i int) (*Thread, error) {
-	tElem, e := dp.Threads.RefByIndex(i)
+func (dp *DiffPage) GetOfIndex(i int) (*Content, error) {
+	cElem, e := dp.Submissions.RefByIndex(i)
 	if e != nil {
-		return nil, refByIndexErr(e, i, "DiffPage.Threads")
+		return nil, refByIndexErr(e, i, "DiffPage.Submissions")
 	}
-	tVal, e := tElem.Value()
-	if e != nil {
-		return nil, elemValueErr(e, tElem)
-	}
-	t, ok := tVal.(*Thread)
-	if !ok {
-		return nil, elemExtErr(tElem)
-	}
-	t.R = tElem.Hash
-	return t, nil
-}
-
-func (dp *DiffPage) GetPostOfIndex(i int) (*Post, error) {
-	pElem, e := dp.Posts.RefByIndex(i)
-	if e != nil {
-		return nil, refByIndexErr(e, i, "DiffPage.Posts")
-	}
-	pVal, e := pElem.Value()
-	if e != nil {
-		return nil, elemValueErr(e, pElem)
-	}
-	p, ok := pVal.(*Post)
-	if !ok {
-		return nil, elemExtErr(pElem)
-	}
-	p.R = pElem.Hash
-	return p, nil
-}
-
-func (dp *DiffPage) GetVoteOfIndex(i int) (*Vote, error) {
-	vElem, e := dp.Votes.RefByIndex(i)
-	if e != nil {
-		return nil, refByIndexErr(e, i, "DiffPage.Votes")
-	}
-	vVal, e := vElem.Value()
-	if e != nil {
-		return nil, elemValueErr(e, vElem)
-	}
-	v, ok := vVal.(*Vote)
-	if !ok {
-		return nil, elemExtErr(vElem)
-	}
-	return v, nil
+	return GetContentFromElem(cElem)
 }
 
 type Changes struct {
 	NeedReset bool
-
-	ThreadCount int
-	PostCount   int
-	VoteCount   int
-
-	NewThreads []*Thread
-	NewPosts   []*Post
-	NewVotes   []*Vote
+	Total     int
+	New       []*Content
 }
 
 func (dp *DiffPage) GetChanges(oldC *Changes) (*Changes, error) {
 	newC := new(Changes)
 
 	// Get counts.
-	newC.ThreadCount, _ = dp.Threads.Len()
-	newC.PostCount, _ = dp.Posts.Len()
-	newC.VoteCount, _ = dp.Votes.Len()
+	newC.Total, _ = dp.Submissions.Len()
 
 	// Return if no old changes.
 	if oldC == nil {
@@ -483,53 +393,25 @@ func (dp *DiffPage) GetChanges(oldC *Changes) (*Changes, error) {
 	}
 
 	// Check if reset needed.
-	switch {
-	case
-		oldC.ThreadCount > newC.ThreadCount,
-		oldC.PostCount > newC.PostCount,
-		oldC.VoteCount > newC.VoteCount:
-
+	if oldC.Total > newC.Total {
 		newC.NeedReset = true
 		return newC, nil
-
-	default:
 	}
 
 	// Get content.
-	if oldC.ThreadCount < newC.ThreadCount {
-		newC.NewThreads = make([]*Thread, newC.ThreadCount-oldC.ThreadCount)
-		for i := oldC.ThreadCount; i < newC.ThreadCount; i++ {
+	if oldC.Total < newC.Total {
+		newC.New = make([]*Content, newC.Total-oldC.Total)
+		for i := oldC.Total; i < newC.Total; i++ {
 			var e error
-			newC.NewThreads[i-oldC.ThreadCount], e = dp.GetThreadOfIndex(i)
+			newC.New[i-oldC.Total], e = dp.GetOfIndex(i)
 			if e != nil {
 				return nil, e
 			}
 		}
 	}
-	if oldC.PostCount < newC.PostCount {
-		newC.NewPosts = make([]*Post, newC.PostCount-oldC.PostCount)
-		for i := oldC.PostCount; i < newC.PostCount; i++ {
-			var e error
-			newC.NewPosts[i-oldC.PostCount], e = dp.GetPostOfIndex(i)
-			if e != nil {
-				return nil, e
-			}
-		}
-	}
-	if oldC.VoteCount < newC.VoteCount {
-		newC.NewVotes = make([]*Vote, newC.VoteCount-oldC.VoteCount)
-		for i := oldC.VoteCount; i < newC.VoteCount; i++ {
-			var e error
-			newC.NewVotes[i-oldC.VoteCount], e = dp.GetVoteOfIndex(i)
-			if e != nil {
-				return nil, e
-			}
-		}
-	}
-	fmt.Printf("\t- (CHANGES) threads: %d(+%d), posts: %d(+%d), votes: %d(+%d)\n",
-		newC.ThreadCount, len(newC.NewThreads),
-		newC.PostCount, len(newC.NewPosts),
-		newC.VoteCount, len(newC.NewVotes))
+	fmt.Printf("\t- (CHANGES) content: %d(+%d)\n",
+		newC.Total, len(newC.New))
+
 	return newC, nil
 }
 
@@ -538,7 +420,7 @@ func (dp *DiffPage) GetChanges(oldC *Changes) (*Changes, error) {
 */
 
 type UsersPage struct {
-	Users skyobject.Refs `skyobject:"schema=bbs.r0.UserActivityPage"`
+	Users skyobject.Refs `skyobject:"schema=bbs.r0.UserProfile"`
 }
 
 func GetUsersPage(p *skyobject.Pack) (*UsersPage, error) {
@@ -560,15 +442,15 @@ func (up *UsersPage) Save(p *skyobject.Pack) error {
 	return nil
 }
 
-func (up *UsersPage) NewUserActivityPage(upk cipher.PubKey) (cipher.SHA256, error) {
-	ua := &UserActivityPage{PubKey: upk}
+func (up *UsersPage) NewUserProfile(upk string) (cipher.SHA256, error) {
+	ua := &UserProfile{PubKey: upk}
 	if e := up.Users.Append(ua); e != nil {
 		return cipher.SHA256{}, appendErr(e, ua, "UsersPage.Users")
 	}
 	return cipher.SumSHA256(encoder.Serialize(ua)), nil
 }
 
-func (up *UsersPage) AddUserActivity(uapHash cipher.SHA256, v interface{}) (cipher.SHA256, error) {
+func (up *UsersPage) AddUserSubmission(uapHash cipher.SHA256, c *Content) (cipher.SHA256, error) {
 	uapElem, e := up.Users.RefByHash(uapHash)
 	if e != nil {
 		return cipher.SHA256{}, refByHashErr(e, uapHash, "Users")
@@ -577,14 +459,8 @@ func (up *UsersPage) AddUserActivity(uapHash cipher.SHA256, v interface{}) (ciph
 	if e != nil {
 		return cipher.SHA256{}, e
 	}
-	switch v.(type) {
-	case *Vote:
-		if e := uap.VoteActions.Append(v); e != nil {
-			return cipher.SHA256{}, appendErr(e, v, "UsersPage.VoteActions")
-		}
-	default:
-		return cipher.SHA256{}, boo.Newf(boo.NotAllowed,
-			"invalid type '%T' provided", v)
+	if e := uap.Submissions.Append(c); e != nil {
+		return cipher.SHA256{}, appendErr(e, c, "UsersPage.Submissions")
 	}
 
 	// Save.
@@ -595,7 +471,7 @@ func (up *UsersPage) AddUserActivity(uapHash cipher.SHA256, v interface{}) (ciph
 	return uapElem.Hash, nil
 }
 
-func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivityPage) error) error {
+func (up *UsersPage) RangeUserProfiles(action func(i int, uap *UserProfile) error) error {
 	return up.Users.Ascend(func(i int, uapElem *skyobject.RefsElem) error {
 		uap, e := GetUserActivityPage(uapElem)
 		if e != nil {
@@ -606,21 +482,21 @@ func (up *UsersPage) RangeUserActivityPages(action func(i int, uap *UserActivity
 }
 
 /*
-	<<< USER ACTIVITY PAGE >>>
+	<<< USER PROFILE >>>
 */
 
-type UserActivityPage struct {
+type UserProfile struct {
 	R           cipher.SHA256 `enc:"-"`
-	PubKey      cipher.PubKey
-	VoteActions skyobject.Refs `skyobject:"schema=bbs.r0.Vote"`
+	PubKey      string
+	Submissions skyobject.Refs `skyobject:"schema=bbs.r0.Content"`
 }
 
-func GetUserActivityPage(uapElem *skyobject.RefsElem) (*UserActivityPage, error) {
+func GetUserActivityPage(uapElem *skyobject.RefsElem) (*UserProfile, error) {
 	uapVal, e := uapElem.Value()
 	if e != nil {
 		return nil, elemValueErr(e, uapElem)
 	}
-	uap, ok := uapVal.(*UserActivityPage)
+	uap, ok := uapVal.(*UserProfile)
 	if !ok {
 		return nil, elemExtErr(uapElem)
 	}
@@ -628,9 +504,9 @@ func GetUserActivityPage(uapElem *skyobject.RefsElem) (*UserActivityPage, error)
 	return uap, nil
 }
 
-func (uap *UserActivityPage) RangeVoteActions(action func(i int, vote *Vote) error) error {
-	return uap.VoteActions.Ascend(func(i int, vElem *skyobject.RefsElem) error {
-		vote, e := GetVote(vElem)
+func (uap *UserProfile) RangeSubmissions(action func(i int, c *Content) error) error {
+	return uap.Submissions.Ascend(func(i int, vElem *skyobject.RefsElem) error {
+		vote, e := GetContentFromElem(vElem)
 		if e != nil {
 			return e
 		}
@@ -692,15 +568,15 @@ func (g *Generator) NewThreadPage() transfer.ThreadPage {
 }
 
 func (g *Generator) NewBoard() transfer.Board {
-	return new(Board)
+	return nil // new(Board)
 }
 
 func (g *Generator) NewThread() transfer.Thread {
-	return new(Thread)
+	return nil // new(Thread)
 }
 
 func (g *Generator) NewPost() transfer.Post {
-	return new(Post)
+	return nil // new(Post)
 }
 
 /*

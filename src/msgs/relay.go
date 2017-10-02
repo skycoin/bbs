@@ -17,16 +17,14 @@ import (
 
 const (
 	ReceiverPrefix = "MSGRECEIVER"
-	ServiceName    = "skycoin_bbs"
+	ServiceName    = "skycoin_bbs_v5"
 )
 
 type MsgType byte
 
 const (
 	// New Content.
-	MsgNewThread MsgType = iota << 0
-	MsgNewPost
-	MsgNewVote
+	MsgNewContent MsgType = iota << 0
 	MsgNewContentResponse
 
 	// Ask Boards.
@@ -34,9 +32,7 @@ const (
 )
 
 var MsgTypeStr = [...]string{
-	MsgNewThread:          "New Thread",
-	MsgNewPost:            "New Post",
-	MsgNewVote:            "New Vote",
+	MsgNewContent:         "New Content",
 	MsgNewContentResponse: "New Content Response",
 	MsgDiscoverer:         "Boards Discoverer",
 }
@@ -54,11 +50,11 @@ type RelayConfig struct {
 }
 
 type Relay struct {
-	c           *RelayConfig
-	l           *log.Logger
-	factory     *factory.MessengerFactory
-	compiler    *state.Compiler
-	incomplete  *Incomplete
+	c          *RelayConfig
+	l          *log.Logger
+	factory    *factory.MessengerFactory
+	compiler   *state.Compiler
+	incomplete *Incomplete
 	//discoverer  *BoardDiscoverer
 	in          chan *BBSMessage
 	onConnected chan struct{}
@@ -208,16 +204,16 @@ func (r *Relay) service() {
 			}
 
 		//case <-nodeRefreshTicker.C:
-			//r.discoverer.ClearNodes()
-			//r.factory.ForEachConn(func(conn *factory.Connection) {
-			//	if e := conn.FindServiceNodesByAttributes(ServiceName); e != nil {
-			//		r.l.Printf("failed to find services of '%s'", ServiceName)
-			//	}
-			//})
-			//go func() {
-			//	time.Sleep(nodeInterval/2)
-				//r.discoverer.SendAsk()
-			//}()
+		//r.discoverer.ClearNodes()
+		//r.factory.ForEachConn(func(conn *factory.Connection) {
+		//	if e := conn.FindServiceNodesByAttributes(ServiceName); e != nil {
+		//		r.l.Printf("failed to find services of '%s'", ServiceName)
+		//	}
+		//})
+		//go func() {
+		//	time.Sleep(nodeInterval/2)
+		//r.discoverer.SendAsk()
+		//}()
 
 		case <-r.onConnected:
 			if e := r.compiler.EnsureSubmissionKeys(r.GetKeys()); e != nil {
@@ -264,18 +260,9 @@ func (r *Relay) receiveMessage(msg *BBSMessage) error {
 		msg.GetMsgType().String(), len(msg.GetBody()))
 
 	switch msg.GetMsgType() {
-	case MsgNewThread:
-		goal, e := r.processNewThread(msg)
-		return r.send(msg.GetFromPubKey(), MsgNewContentResponse,
-			encoder.Serialize(GenerateNewContentResponse(msg, goal, e)))
 
-	case MsgNewPost:
-		goal, e := r.processNewPost(msg)
-		return r.send(msg.GetFromPubKey(), MsgNewContentResponse,
-			encoder.Serialize(GenerateNewContentResponse(msg, goal, e)))
-
-	case MsgNewVote:
-		goal, e := r.processNewVote(msg)
+	case MsgNewContent:
+		goal, e := r.processNewContent(msg)
 		return r.send(msg.GetFromPubKey(), MsgNewContentResponse,
 			encoder.Serialize(GenerateNewContentResponse(msg, goal, e)))
 
@@ -296,51 +283,44 @@ func (r *Relay) receiveMessage(msg *BBSMessage) error {
 	}
 }
 
-func (r *Relay) processNewThread(msg *BBSMessage) (uint64, error) {
-	thread, e := msg.ExtractContentThread()
+func (r *Relay) processNewContent(msg *BBSMessage) (uint64, error) {
+	content, e := msg.ExtractContent()
 	if e != nil {
 		return 0, e
 	}
-	tOfBoard := thread.GetData().GetOfBoard()
-	bi, e := r.compiler.GetBoard(tOfBoard)
+	basic, e := content.Verify()
 	if e != nil {
 		return 0, e
 	}
-	if !bi.IsMaster() {
-		return 0, notMasterErr(tOfBoard)
+	bpk, e := basic.GetOfBoard()
+	if e != nil {
+		return 0, e
 	}
-	return bi.NewThread(thread)
-}
+	bi, e := r.compiler.GetBoard(bpk)
+	if e != nil {
+		return 0, e
+	}
+	switch content.GetHeader().Type {
 
-func (r *Relay) processNewPost(msg *BBSMessage) (uint64, error) {
-	post, e := msg.ExtractContentPost()
-	if e != nil {
-		return 0, e
-	}
-	pOfBoard := post.GetData().GetOfBoard()
-	bi, e := r.compiler.GetBoard(pOfBoard)
-	if e != nil {
-		return 0, e
-	}
-	if !bi.IsMaster() {
-		return 0, notMasterErr(pOfBoard)
-	}
-	return bi.NewPost(post)
-}
+	case r0.V5ThreadType:
+		return bi.NewThread(content.ToThread())
 
-func (r *Relay) processNewVote(msg *BBSMessage) (uint64, error) {
-	vote, e := msg.ExtractContentVote()
-	if e != nil {
-		return 0, e
+	case r0.V5PostType:
+		return bi.NewPost(content.ToPost())
+
+	case r0.V5ThreadVoteType:
+		return bi.NewThreadVote(content.ToThreadVote())
+
+	case r0.V5PostVoteType:
+		return bi.NewPostVote(content.ToPostVote())
+
+	case r0.V5UserVoteType:
+		return bi.NewUserVote(content.ToUserVote())
+
+	default:
+		return 0, boo.Newf(boo.InvalidInput, "invalid content type '%s'",
+			content.GetHeader().Type)
 	}
-	bi, e := r.compiler.GetBoard(vote.OfBoard)
-	if e != nil {
-		return 0, e
-	}
-	if !bi.IsMaster() {
-		return 0, notMasterErr(vote.OfBoard)
-	}
-	return bi.NewVote(vote)
 }
 
 func (r *Relay) processResponse(msg *BBSMessage) error {
@@ -352,16 +332,8 @@ func (r *Relay) processResponse(msg *BBSMessage) error {
 	return nil
 }
 
-func (r *Relay) NewThread(ctx context.Context, toPKs []cipher.PubKey, thread *r0.Thread) (uint64, error) {
-	return r.multiSendRequest(ctx, toPKs, MsgNewThread, encoder.Serialize(thread))
-}
-
-func (r *Relay) NewPost(ctx context.Context, toPKs []cipher.PubKey, post *r0.Post) (uint64, error) {
-	return r.multiSendRequest(ctx, toPKs, MsgNewPost, encoder.Serialize(post))
-}
-
-func (r *Relay) NewVote(ctx context.Context, toPKs []cipher.PubKey, vote *r0.Vote) (uint64, error) {
-	return r.multiSendRequest(ctx, toPKs, MsgNewVote, encoder.Serialize(vote))
+func (r *Relay) NewContent(ctx context.Context, toPKs []cipher.PubKey, content *r0.Content) (uint64, error) {
+	return r.multiSendRequest(ctx, toPKs, MsgNewContent, encoder.Serialize(content))
 }
 
 func (r *Relay) GetBoards() []string {

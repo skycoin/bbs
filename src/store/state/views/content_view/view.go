@@ -5,16 +5,27 @@ import (
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"log"
 	"sync"
 )
 
+type indexPage struct {
+	Board   string
+	Threads []string            // Board threads.
+	Posts   map[string][]string // Key: thread hashes, Value: post hash array.
+}
+
+func newIndexPage() *indexPage {
+	return &indexPage{
+		Posts: make(map[string][]string),
+	}
+}
+
 type ContentView struct {
 	sync.Mutex
-	board *BoardRep
-	tMap  map[cipher.SHA256]*ThreadRep
-	pMap  map[cipher.SHA256]*PostRep
-	vMap  map[cipher.SHA256]*VotesRep
+	pk cipher.PubKey
+	i  *indexPage
+	c  map[string]*r0.ContentRep
+	v  map[string]*VotesRep
 }
 
 func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
@@ -26,39 +37,44 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		return e
 	}
 
+	v.pk = pack.Root().Pub
+	v.i = newIndexPage()
+	v.c = make(map[string]*r0.ContentRep)
+	v.v = make(map[string]*VotesRep)
+
 	// Set board.
 	board, e := pages.BoardPage.GetBoard()
 	if e != nil {
 		return e
 	}
-	v.board = new(BoardRep).Fill(pages.PK, board)
-	v.board.Threads = make([]IndexHash, pages.BoardPage.GetThreadCount())
+	v.i.Board = board.GetHeader().Hash
+	v.c[v.i.Board] = board.ToRep()
 
-	v.tMap = make(map[cipher.SHA256]*ThreadRep)
-	v.pMap = make(map[cipher.SHA256]*PostRep)
-	v.vMap = make(map[cipher.SHA256]*VotesRep)
+	v.i.Threads = make([]string, pages.BoardPage.GetThreadCount())
 
 	// Fill threads and posts.
 	e = pages.BoardPage.RangeThreadPages(func(i int, tp *r0.ThreadPage) error {
-		v.board.Threads[i] = IndexHash{h: tp.Thread.Hash, i: i}
 
-		threadRep := new(ThreadRep).FillThreadPage(tp)
+		thread, e := tp.GetThread()
+		if e != nil {
+			return e
+		}
+		threadHash := thread.GetHeader().Hash
+
+		v.i.Threads[i] = threadHash
+		v.c[threadHash] = thread.ToRep()
 
 		// Fill posts.
-		threadRep.Posts = make([]IndexHash, tp.GetPostCount())
-
+		postHashes := make([]string, tp.GetPostCount())
 		e = tp.RangePosts(func(i int, post *r0.Post) error {
-			threadRep.Posts[i] = IndexHash{h: post.R, i: i}
-			v.pMap[post.R] = new(PostRep).Fill(post)
+			postHashes[i] = post.GetHeader().Hash
+			v.c[postHashes[i]] = post.ToRep()
 			return nil
 		})
 		if e != nil {
 			return e
 		}
-
-		// Add thread rep to map.
-		v.tMap[tp.Thread.Hash] = threadRep
-
+		v.i.Posts[threadHash] = postHashes
 		return nil
 	})
 
@@ -66,9 +82,9 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		return e
 	}
 
-	return pages.UsersPage.RangeUserActivityPages(func(_ int, uap *r0.UserActivityPage) error {
-		return uap.RangeVoteActions(func(_ int, vote *r0.Vote) error {
-			return v.processVote(vote)
+	return pages.UsersPage.RangeUserProfiles(func(_ int, uap *r0.UserProfile) error {
+		return uap.RangeSubmissions(func(_ int, c *r0.Content) error {
+			return v.processVote(c)
 		})
 	})
 }
@@ -81,64 +97,69 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 	if e != nil {
 		return e
 	}
-	bRaw, e := pages.BoardPage.GetBoard()
+	board, e := pages.BoardPage.GetBoard()
 	if e != nil {
 		return e
 	}
-	v.board.Fill(pages.PK, bRaw)
+	delete(v.c, v.i.Board)
+	v.i.Board = board.GetHeader().Hash
+	v.c[v.i.Board] = board.ToRep()
 
 	changes := headers.GetChanges()
 
-	for _, thread := range changes.NewThreads {
-		v.board.Threads = append(v.board.Threads, IndexHash{h: thread.R, i: len(v.board.Threads)})
-		v.tMap[thread.R] = new(ThreadRep).FillThread(thread)
-	}
+	for _, content := range changes.New {
+		header := content.GetHeader()
+		switch header.Type {
+		case r0.V5ThreadType:
+			thread := content.ToThread()
+			v.i.Threads = append(v.i.Threads, header.Hash)
+			v.c[header.Hash] = thread.ToRep()
 
-	for _, post := range changes.NewPosts {
-		if ofThread, ok := v.tMap[post.GetData().GetOfThread()]; !ok {
-			log.Println("thread not found")
-			continue
-		} else {
-			ofThread.Posts = append(ofThread.Posts, IndexHash{h: post.R, i: len(ofThread.Posts)})
+		case r0.V5PostType:
+			post := content.ToPost()
+			postBody := post.GetBody()
+			posts, _ := v.i.Posts[postBody.OfThread]
+			v.i.Posts[postBody.OfThread] = append(posts, header.Hash)
+			v.c[header.Hash] = post.ToRep()
+
+		case r0.V5ThreadVoteType, r0.V5PostVoteType:
+			v.processVote(content)
 		}
-		v.pMap[post.R] = new(PostRep).Fill(post)
 	}
-
-	for _, vote := range changes.NewVotes {
-		v.processVote(vote)
-	}
-
 	return nil
 }
 
-func (v *ContentView) processVote(vote *r0.Vote) error {
-	var cHash cipher.SHA256
+func (v *ContentView) processVote(c *r0.Content) error {
+	var cHash string
+	var cType r0.ContentType
 
 	// Only if vote is for post or thread.
-	switch vote.GetType() {
-	case r0.UserVote, r0.UnknownVoteType:
+	switch c.GetHeader().Type {
+	case r0.V5ThreadVoteType:
+		if v.c[c.ToThreadVote().GetBody().OfThread] == nil {
+			return nil
+		}
+		cHash = c.GetHeader().Hash
+		cType = r0.V5ThreadVoteType
+	case r0.V5PostVoteType:
+		if v.c[c.ToPostVote().GetBody().OfPost] == nil {
+			return nil
+		}
+		cHash = c.GetHeader().Hash
+		cType = r0.V5PostVoteType
+	case r0.V5UserVoteType:
 		return nil
-
-	case r0.ThreadVote:
-		if v.tMap[vote.OfThread] == nil {
-			return nil
-		}
-		cHash = vote.OfThread
-
-	case r0.PostVote:
-		if v.pMap[vote.OfPost] == nil {
-			return nil
-		}
-		cHash = vote.OfPost
+	default:
+		return nil
 	}
 
 	// Add to votes map.
-	voteRep, has := v.vMap[cHash]
+	voteRep, has := v.v[cHash]
 	if !has {
-		voteRep = new(VotesRep).Fill(cHash)
-		v.vMap[cHash] = voteRep
+		voteRep = new(VotesRep).Fill(cType, cHash)
+		v.v[cHash] = voteRep
 	}
-	voteRep.Add(vote)
+	voteRep.Add(c)
 
 	return nil
 }

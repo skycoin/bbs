@@ -2,7 +2,7 @@ package content_view
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 const (
@@ -35,61 +35,66 @@ func (v *ContentView) Get(id string, a ...interface{}) (interface{}, error) {
 	}
 }
 
-func (v *ContentView) getBoard() (*BoardRepView, error) {
-	return v.board.View(), nil
+func (v *ContentView) getBoard() (*r0.ContentRep, error) {
+	return v.c[v.i.Board], nil
 }
 
 type BoardPageIn struct {
-	Perspective cipher.PubKey
+	Perspective string
 }
 
 type BoardPageOut struct {
-	Board   *BoardRepView    `json:"board"`
-	Threads []*ThreadRepView `json:"threads"`
+	Board   *r0.ContentRep   `json:"board"`
+	Threads []*r0.ContentRep `json:"threads"`
 }
 
 func (v *ContentView) getBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
 	out := new(BoardPageOut)
-	out.Board = v.board.View()
-	out.Threads = make([]*ThreadRepView, len(v.board.Threads))
-	for i, tHash := range v.board.Threads {
-		out.Threads[i] = v.tMap[tHash.h].View(tHash.i, v.vMap[tHash.h].View(in.Perspective))
+	out.Board = v.c[v.i.Board]
+	out.Threads = make([]*r0.ContentRep, len(v.i.Threads))
+	for i, tHash := range v.i.Threads {
+		out.Threads[i] = v.c[tHash]
+		out.Threads[i].Votes = v.v[tHash].View(in.Perspective)
 	}
 	return out, nil
 }
 
 type ThreadPageIn struct {
-	Perspective cipher.PubKey
-	ThreadHash  cipher.SHA256
+	Perspective string
+	ThreadHash  string
 }
 
 type ThreadPageOut struct {
-	Board  *BoardRepView  `json:"board"`
-	Thread *ThreadRepView `json:"thread"`
-	Posts  []*PostRepView `json:"posts"`
+	Board  *r0.ContentRep   `json:"board"`
+	Thread *r0.ContentRep   `json:"thread"`
+	Posts  []*r0.ContentRep `json:"posts"`
 }
 
 func (v *ContentView) getThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
 	out := new(ThreadPageOut)
-	out.Board = v.board.View()
+	out.Board = v.c[v.i.Board]
+	out.Thread = v.c[in.ThreadHash]
 
-	threadRep := v.tMap[in.ThreadHash]
+	if out.Thread == nil {
+		return nil, boo.Newf(boo.NotFound,
+			"thread of hash '%s' is not found in board '%s'",
+			in.ThreadHash, v.pk.Hex())
+	}
+	out.Thread.Votes = v.v[in.ThreadHash].View(in.Perspective)
 
-	if threadRep != nil {
-		out.Thread = threadRep.View(0, v.vMap[in.ThreadHash].View(in.Perspective))
-
-		out.Posts = make([]*PostRepView, len(threadRep.Posts))
-		for i, pHash := range threadRep.Posts {
-			out.Posts[i] = v.pMap[pHash.h].View(pHash.i, v.vMap[pHash.h].View(in.Perspective))
-		}
+	postHashes := v.i.Posts[in.ThreadHash]
+	out.Posts = make([]*r0.ContentRep, len(postHashes))
+	for i, pHash := range postHashes {
+		out.Posts[i] = v.c[pHash]
+		out.Posts[i].Votes = v.v[pHash].View(in.Perspective)
 	}
 
 	return out, nil
 }
 
 type ContentVotesIn struct {
-	Perspective cipher.PubKey
-	ContentHash cipher.SHA256
+	Perspective string
+	ContentHash string
 }
 
 type ContentVotesOut struct {
@@ -98,6 +103,6 @@ type ContentVotesOut struct {
 
 func (v *ContentView) getVotes(in *ContentVotesIn) (*ContentVotesOut, error) {
 	out := new(ContentVotesOut)
-	out.Votes = v.vMap[in.ContentHash].View(in.Perspective)
+	out.Votes = v.v[in.ContentHash].View(in.Perspective)
 	return out, nil
 }

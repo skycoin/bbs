@@ -1,27 +1,25 @@
 package follow_view
 
-import "github.com/skycoin/skycoin/src/cipher"
-
 type UserRep struct {
 	UserPubKey string `json:"user_public_key"`
 	Tag        string `json:"tag"`
 }
 
 type FollowRep struct {
-	UserPubKey string                     `json:"user_public_key"`
-	Following  map[cipher.PubKey]*UserRep `json:"following"`
-	Avoiding   map[cipher.PubKey]*UserRep `json:"avoiding"`
+	UserPubKey string              `json:"user_public_key"`
+	Following  map[string]*UserRep `json:"following"` // key(user public key)
+	Avoiding   map[string]*UserRep `json:"avoiding"`  // key(user public key)
 }
 
-func NewFollowRep(upk cipher.PubKey) *FollowRep {
+func NewFollowRep(upk string) *FollowRep {
 	return &FollowRep{
-		UserPubKey: upk.Hex(),
-		Following:  make(map[cipher.PubKey]*UserRep),
-		Avoiding:   make(map[cipher.PubKey]*UserRep),
+		UserPubKey: upk,
+		Following:  make(map[string]*UserRep),
+		Avoiding:   make(map[string]*UserRep),
 	}
 }
 
-func (r *FollowRep) Set(upk cipher.PubKey, mode int8, tag []byte) {
+func (r *FollowRep) Set(upk string, mode int, tag string) {
 	// Remove existing.
 	delete(r.Following, upk)
 	delete(r.Avoiding, upk)
@@ -30,13 +28,13 @@ func (r *FollowRep) Set(upk cipher.PubKey, mode int8, tag []byte) {
 	switch mode {
 	case +1:
 		r.Following[upk] = &UserRep{
-			UserPubKey: upk.Hex(),
-			Tag:        string(tag),
+			UserPubKey: upk,
+			Tag:        tag,
 		}
 	case -1:
 		r.Avoiding[upk] = &UserRep{
-			UserPubKey: upk.Hex(),
-			Tag:        string(tag),
+			UserPubKey: upk,
+			Tag:        tag,
 		}
 	}
 }

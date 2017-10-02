@@ -27,7 +27,7 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 		return e
 	}
 	a.Board = new(r0.Board)
-	a.Board.SetData(&r0.BoardData{
+	a.Board.Fill(a.BoardPubKey, &r0.BoardData{
 		Name:    a.Name,
 		Body:    a.Body,
 		Created: time.Now().UnixNano(),
@@ -50,14 +50,26 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		return e
 	}
 	a.Thread = new(r0.Thread)
-	a.Thread.SetData(&r0.ThreadData{
+
+	tData := &r0.ThreadData{
 		OfBoard: a.BoardPubKey.Hex(),
 		Name:    a.Name,
 		Body:    a.Body,
 		Created: time.Now().UnixNano(),
 		Creator: upk.Hex(),
-	})
-	tag.Sign(a.Thread, upk, usk)
+	}
+	tDataRaw, e := json.Marshal(tData)
+	if e != nil {
+		return e
+	}
+	tSig := cipher.SignHash(cipher.SumSHA256(tDataRaw), usk)
+
+	transport, e := r0.NewThreadTransport(tDataRaw, tSig, nil)
+	if e != nil {
+		return e
+	}
+
+	a.Thread.Fill(transport)
 	return nil
 }
 
@@ -85,7 +97,8 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		}
 	}
 	a.Post = new(r0.Post)
-	a.Post.SetData(&r0.PostData{
+
+	pData := &r0.PostData{
 		OfBoard:  a.BoardPubKey.Hex(),
 		OfThread: a.ThreadRef.Hex(),
 		OfPost:   a.PostRef.Hex(),
@@ -94,8 +107,19 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		Images:   a.Images,
 		Created:  time.Now().UnixNano(),
 		Creator:  upk.Hex(),
-	})
-	tag.Sign(a.Post, upk, usk)
+	}
+	pDataRaw, e := json.Marshal(pData)
+	if e != nil {
+		return e
+	}
+	pSig := cipher.SignHash(cipher.SumSHA256(pDataRaw), usk)
+
+	transport, e := r0.NewPostTransport(pDataRaw, pSig, nil)
+	if e != nil {
+		return e
+	}
+
+	a.Post.Fill(transport)
 	return nil
 }
 
@@ -195,22 +219,37 @@ type UserVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *r0.Vote
+	Vote           *r0.UserVote
 }
 
 func (a *UserVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = &r0.Vote{
-		OfBoard: a.BoardPubKey,
-		OfUser:  a.UserPubKey,
-		Mode:    a.Mode,
-		Tag:     a.Tag,
-		Created: time.Now().UnixNano(),
-		Creator: upk,
+	a.Vote = new(r0.UserVote)
+
+	vData := &r0.UserVoteData{
+		VoteData: r0.VoteData{
+			OfBoard: a.BoardPubKeyStr,
+			Value:   int(a.Mode),
+			Tag:     string(a.Tag),
+			Created: time.Now().UnixNano(),
+			Creator: upk.Hex(),
+		},
+		OfUser: a.UserPubKeyStr,
 	}
-	tag.Sign(a.Vote, upk, usk)
+	vDataRaw, e := json.Marshal(vData)
+	if e != nil {
+		return e
+	}
+	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), usk)
+
+	transport, e := r0.NewUserVoteTransport(vDataRaw, vSig, nil)
+	if e != nil {
+		return e
+	}
+
+	a.Vote.Fill(transport)
 	return nil
 }
 
@@ -223,22 +262,37 @@ type ThreadVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *r0.Vote
+	Vote           *r0.ThreadVote
 }
 
 func (a *ThreadVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = &r0.Vote{
-		OfBoard:  a.BoardPubKey,
-		OfThread: a.ThreadRef,
-		Mode:     a.Mode,
-		Tag:      a.Tag,
-		Created:  time.Now().UnixNano(),
-		Creator:  upk,
+	a.Vote = new(r0.ThreadVote)
+
+	vData := &r0.ThreadVoteData{
+		VoteData: r0.VoteData{
+			OfBoard: a.BoardPubKeyStr,
+			Value:   int(a.Mode),
+			Tag:     string(a.Tag),
+			Created: time.Now().UnixNano(),
+			Creator: upk.Hex(),
+		},
+		OfThread: a.ThreadRefStr,
 	}
-	tag.Sign(a.Vote, upk, usk)
+	vDataRaw, e := json.Marshal(vData)
+	if e != nil {
+		return e
+	}
+	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), usk)
+
+	transport, e := r0.NewThreadVoteTransport(vDataRaw, vSig, nil)
+	if e != nil {
+		return e
+	}
+
+	a.Vote.Fill(transport)
 	return nil
 }
 
@@ -251,22 +305,37 @@ type PostVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *r0.Vote
+	Vote           *r0.PostVote
 }
 
 func (a *PostVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = &r0.Vote{
-		OfBoard: a.BoardPubKey,
-		OfPost:  a.PostRef,
-		Mode:    a.Mode,
-		Tag:     a.Tag,
-		Created: time.Now().UnixNano(),
-		Creator: upk,
+	a.Vote = new(r0.PostVote)
+
+	vData := &r0.PostVoteData{
+		VoteData: r0.VoteData{
+			OfBoard: a.BoardPubKeyStr,
+			Value:   int(a.Mode),
+			Tag:     string(a.Tag),
+			Created: time.Now().UnixNano(),
+			Creator: upk.Hex(),
+		},
+		OfPost: a.PostRefStr,
 	}
-	tag.Sign(a.Vote, upk, usk)
+	vDataRaw, e := json.Marshal(vData)
+	if e != nil {
+		return e
+	}
+	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), usk)
+
+	transport, e := r0.NewPostVoteTransport(vDataRaw, vSig, nil)
+	if e != nil {
+		return e
+	}
+
+	a.Vote.Fill(transport)
 	return nil
 }
 

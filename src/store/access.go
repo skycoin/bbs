@@ -8,7 +8,6 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
-	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"time"
 )
@@ -210,9 +209,9 @@ func (a *Access) GetDiscoveredBoards(ctx context.Context) ([]string, error) {
 */
 
 func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interface{}, error) {
-	var perspective cipher.PubKey
+	var perspective string
 	if uf, _ := a.Session.GetCurrentFile(); uf != nil {
-		perspective = uf.User.PubKey
+		perspective = uf.User.PubKey.Hex()
 	}
 	if e := in.Process(); e != nil {
 		return nil, e
@@ -245,7 +244,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 		}
 	} else {
 		log.Println("NewThread: subs:", bi.GetSubmissionKeys())
-		goal, e = a.CXO.Relay().NewThread(ctx, bi.GetSubmissionKeys(), in.Thread)
+		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Thread.Content)
 		if e != nil {
 			return nil, e
 		}
@@ -254,14 +253,14 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
-		Perspective: uf.User.PubKey,
+		Perspective: uf.User.PubKey.Hex(),
 	})
 }
 
 func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interface{}, error) {
-	var perspective cipher.PubKey
+	var perspective string
 	if uf, _ := a.Session.GetCurrentFile(); uf != nil {
-		perspective = uf.User.PubKey
+		perspective = uf.User.PubKey.Hex()
 	}
 	if e := in.Process(); e != nil {
 		return nil, e
@@ -272,7 +271,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interf
 	}
 	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
 		Perspective: perspective,
-		ThreadHash:  in.ThreadRef,
+		ThreadHash:  in.ThreadRefStr,
 	})
 }
 
@@ -294,7 +293,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 			return nil, e
 		}
 	} else {
-		goal, e = a.CXO.Relay().NewPost(ctx, bi.GetSubmissionKeys(), in.Post)
+		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Post.Content)
 		if e != nil {
 			return nil, e
 		}
@@ -303,8 +302,8 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
-		Perspective: uf.User.PubKey,
-		ThreadHash:  in.ThreadRef,
+		Perspective: uf.User.PubKey.Hex(),
+		ThreadHash:  in.ThreadRefStr,
 	})
 }
 
@@ -341,11 +340,11 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 	}
 	var goal uint64
 	if bi.IsMaster() {
-		if goal, e = bi.NewVote(in.Vote); e != nil {
+		if goal, e = bi.NewUserVote(in.Vote); e != nil {
 			return nil, e
 		}
 	} else {
-		goal, e = a.CXO.Relay().NewVote(ctx, bi.GetSubmissionKeys(), in.Vote)
+		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Vote.Content)
 		if e != nil {
 			return nil, e
 		}
@@ -374,11 +373,11 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 	}
 	var goal uint64
 	if bi.IsMaster() {
-		if goal, e = bi.NewVote(in.Vote); e != nil {
+		if goal, e = bi.NewThreadVote(in.Vote); e != nil {
 			return nil, e
 		}
 	} else {
-		goal, e = a.CXO.Relay().NewVote(ctx, bi.GetSubmissionKeys(), in.Vote)
+		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Vote.Content)
 		if e != nil {
 			return nil, e
 		}
@@ -387,8 +386,8 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
-		Perspective: uf.User.PubKey,
-		ContentHash: in.ThreadRef,
+		Perspective: uf.User.PubKey.Hex(),
+		ContentHash: in.ThreadRefStr,
 	})
 }
 
@@ -406,11 +405,11 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 	}
 	var goal uint64
 	if bi.IsMaster() {
-		if goal, e = bi.NewVote(in.Vote); e != nil {
+		if goal, e = bi.NewPostVote(in.Vote); e != nil {
 			return nil, e
 		}
 	} else {
-		goal, e = a.CXO.Relay().NewVote(ctx, bi.GetSubmissionKeys(), in.Vote)
+		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Vote.Content)
 		if e != nil {
 			return nil, e
 		}
@@ -419,7 +418,7 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
-		Perspective: uf.User.PubKey,
-		ContentHash: in.PostRef,
+		Perspective: uf.User.PubKey.Hex(),
+		ContentHash: in.PostRefStr,
 	})
 }

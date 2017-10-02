@@ -12,9 +12,6 @@ import (
 // NewThread triggers a request to add a new thread to the board.
 // Returns sequence of root in which thread is to be available, or error on failure.
 func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
-	if e := thread.Verify(thread.GetData().GetCreator()); e != nil {
-		return 0, e
-	}
 
 	var goalSeq uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
@@ -23,10 +20,10 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get thread ref.
-		tRef := p.Ref(thread)
+		tRef := p.Ref(thread.Content)
 
 		// Ensure thread does not exist.
-		if _, has := h.GetThreadPageHash(tRef.Hash); has {
+		if _, has := h.GetThreadPageHash(thread.GetHeader().Hash); has {
 			return boo.Newf(boo.AlreadyExists,
 				"Thread of ref %s already exists", tRef.String())
 		}
@@ -43,7 +40,7 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 		}
 
 		// Add thread to diff page.
-		if e := pages.DiffPage.Add(thread); e != nil {
+		if e := pages.DiffPage.Add(thread.Content); e != nil {
 			return e
 		}
 
@@ -57,15 +54,7 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 // NewPost triggers a request to add a new post to the board.
 // Returns sequence of root in which post is to be available, or error on failure.
 func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
-	// Get post data.
-	pData := post.GetData()
-	pOfThread := pData.GetOfThread()
-	pCreator := pData.GetCreator()
-
-	// Verify.
-	if e := post.Verify(pCreator); e != nil {
-		return 0, e
-	}
+	pBody := post.GetBody()
 
 	var goalSeq uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
@@ -74,13 +63,13 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get post ref.
-		pRef := p.Ref(post)
+		pRef := p.Ref(post.Content)
 
 		// Ensure thread exists.
-		tpHash, has := h.GetThreadPageHash(pOfThread)
+		tpHash, has := h.GetThreadPageHash(pBody.OfThread)
 		if !has {
 			return boo.Newf(boo.NotFound,
-				"thread of hash '%s' not found", pData.OfThread)
+				"thread of hash '%s' not found", pBody.OfThread)
 		}
 
 		// Get root pages.
@@ -102,10 +91,10 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		}
 
 		// Modify headers.
-		h.SetThread(pOfThread, tpRef.Hash)
+		h.SetThread(pBody.OfThread, tpRef.Hash)
 
 		// Add post to diff.
-		if e := pages.DiffPage.Add(post); e != nil {
+		if e := pages.DiffPage.Add(post.Content); e != nil {
 			return e
 		}
 
@@ -116,80 +105,66 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 	return goalSeq, e
 }
 
-// NewVote triggers a request to add a new vote to the board.
-// Returns sequence of root in which vote is to be available, or error on failure.
-func (bi *BoardInstance) NewVote(vote *r0.Vote) (uint64, error) {
-	if e := vote.Verify(); e != nil {
-		return 0, e
-	}
+func (bi *BoardInstance) NewThreadVote(threadVote *r0.ThreadVote) (uint64, error) {
+	tvBody := threadVote.GetBody()
 
 	var goalSeq uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Check vote.
-		if e := checkVote(vote, h); e != nil {
-			return e
+		if _, ok := h.GetThreadPageHash(tvBody.OfThread); !ok {
+			return boo.Newf(boo.NotFound,
+				"thread of hash '%s' is not found", tvBody.OfThread)
 		}
 
-		// Set goal seq.
-		goalSeq = p.Root().Seq + 1
-
-		// Get root children pages.
-		pages, e := r0.GetPages(p, false, false, true, true)
-		if e != nil {
-			return e
-		}
-
-		// Get users page. Create user activity page if not exist.
-		uapHash, has := h.GetUserActivityPageHash(vote.Creator)
-		if !has {
-			uapHash, e = pages.UsersPage.NewUserActivityPage(vote.Creator)
-			if e != nil {
-				return e
-			}
-			h.SetUser(vote.Creator, uapHash)
-		}
-
-		// Add vote to appropriate user activity page.
-		if uapHashNew, e := pages.UsersPage.AddUserActivity(uapHash, vote); e != nil {
-			return e
-		} else {
-			h.SetUser(vote.Creator, uapHashNew)
-		}
-
-		// Add vote to diff page.
-		if e := pages.DiffPage.Add(vote); e != nil {
-			return e
-		}
-
-		// Save changes.
-		return pages.Save(p)
+		return addVoteToProfile(p, h, threadVote.Content, tvBody.Creator)
 	})
-
 	return goalSeq, e
 }
 
-func checkVote(vote *r0.Vote, h *pack.Headers) error {
-	switch vote.GetType() {
-	case r0.UserVote:
-		// TODO.
+func (bi *BoardInstance) NewPostVote(postVote *r0.PostVote) (uint64, error) {
+	pvBody := postVote.GetBody()
 
-	case r0.ThreadVote:
-		_, ok := h.GetThreadPageHash(vote.OfThread)
-		if !ok {
-			return boo.Newf(boo.NotFound,
-				"thread of hash '%s' is not found",
-				vote.OfThread.Hex())
-		}
+	var goalSeq uint64
+	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		return addVoteToProfile(p, h, postVote.Content, pvBody.Creator)
+	})
+	return goalSeq, e
+}
 
-	case r0.PostVote:
-		// TODO.
+func (bi *BoardInstance) NewUserVote(userVote *r0.UserVote) (uint64, error) {
+	uvBody := userVote.GetBody()
 
-	default:
-		return boo.Newf(boo.NotAllowed,
-			"invalid vote type of '%s'",
-			r0.VoteString[r0.UnknownVoteType])
+	var goalSeq uint64
+	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		return addVoteToProfile(p, h, userVote.Content, uvBody.Creator)
+	})
+	return goalSeq, e
+}
+
+func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *r0.Content, creator string) error {
+
+	// Get root children pages.
+	pages, e := r0.GetPages(p, false, false, true, true)
+	if e != nil {
+		return e
 	}
+
+	// Get profile page (create if not exist).
+	profileHash, ok := h.GetUserProfileHash(creator)
+	if !ok {
+		if profileHash, e = pages.UsersPage.NewUserProfile(creator); e != nil {
+			return e
+		}
+		h.SetUser(creator, profileHash)
+	}
+
+	// Add vote to appropriate user profile.
+	newProfileHash, e := pages.UsersPage.AddUserSubmission(profileHash, content)
+	if e != nil {
+		return e
+	}
+	h.SetUser(creator, newProfileHash)
 
 	return nil
 }
@@ -197,12 +172,12 @@ func checkVote(vote *r0.Vote, h *pack.Headers) error {
 func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
 	bi.l.Println("ensuring submission keys as:", keys.PubKeyArrayToString(pks))
 	return bi.EditBoard(func(board *r0.Board) (bool, error) {
-		data := board.GetData()
-		if keys.ComparePubKeyArrays(data.GetSubKeys(), pks) {
+		body := board.GetBody()
+		if keys.ComparePubKeyArrays(body.GetSubKeys(), pks) {
 			return false, nil
 		}
-		data.SetSubKeys(pks)
-		board.SetData(data)
+		body.SetSubKeys(pks)
+		board.SetBody(body)
 		return true, nil
 	})
 }
@@ -210,7 +185,7 @@ func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, erro
 func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 	var pks []cipher.PubKey
 	if e := bi.ViewBoard(func(board *r0.Board) (bool, error) {
-		pks = board.GetData().GetSubKeys()
+		pks = board.GetBody().GetSubKeys()
 		return false, nil
 	}); e != nil {
 		bi.l.Println("error obtaining submission keys:", e)
@@ -252,7 +227,7 @@ func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 		}
 
 		// Save changes.
-		if e := pages.BoardPage.Board.SetValue(board); e != nil {
+		if e := pages.BoardPage.Board.SetValue(board.Content); e != nil {
 			return e
 		}
 

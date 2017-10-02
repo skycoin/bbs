@@ -17,10 +17,10 @@ type Headers struct {
 	changes *r0.Changes
 
 	tMux    sync.Mutex
-	threads map[cipher.SHA256]cipher.SHA256 // key(thread hash), value(thread page hash)
+	threads map[string]cipher.SHA256 // key(thread content hash), value(thread page hash)
 
 	uMux  sync.Mutex
-	users map[cipher.PubKey]cipher.SHA256 // key(user's public key), value(user's page hash)
+	users map[string]cipher.SHA256 // key(user's public key), value(user profile hash)
 }
 
 func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
@@ -29,8 +29,8 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 			"invalid root")
 	}
 	headers := &Headers{
-		threads: make(map[cipher.SHA256]cipher.SHA256),
-		users:   make(map[cipher.PubKey]cipher.SHA256),
+		threads: make(map[string]cipher.SHA256),
+		users:   make(map[string]cipher.SHA256),
 	}
 
 	// Get required root children.
@@ -45,7 +45,11 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 		if e != nil {
 			return e
 		}
-		headers.threads[tp.Thread.Hash] = tpElem.Hash
+		t, e := tp.GetThread()
+		if e != nil {
+			return e
+		}
+		headers.threads[t.GetHeader().Hash] = tpElem.Hash
 		return nil
 	})
 	if e != nil {
@@ -86,36 +90,36 @@ func (h *Headers) GetChanges() *r0.Changes {
 	return h.changes
 }
 
-func (h *Headers) GetThreadPageHash(threadHash cipher.SHA256) (cipher.SHA256, bool) {
+func (h *Headers) GetThreadPageHash(threadHash string) (cipher.SHA256, bool) {
 	h.tMux.Lock()
 	defer h.tMux.Unlock()
 	tpHash, has := h.threads[threadHash]
 	return tpHash, has
 }
 
-func (h *Headers) GetUserActivityPageHash(UserPubKey cipher.PubKey) (cipher.SHA256, bool) {
+func (h *Headers) GetUserProfileHash(UserPubKey string) (cipher.SHA256, bool) {
 	h.uMux.Lock()
 	defer h.uMux.Unlock()
 	uapHash, has := h.users[UserPubKey]
 	return uapHash, has
 }
 
-func (h *Headers) SetUser(upk cipher.PubKey, uapHash cipher.SHA256) {
+func (h *Headers) SetUser(upk string, profileHash cipher.SHA256) {
 	h.uMux.Lock()
 	defer h.uMux.Unlock()
-	h.users[upk] = uapHash
+	h.users[upk] = profileHash
 }
 
-func (h *Headers) SetThread(tRef, tpRef cipher.SHA256) {
+func (h *Headers) SetThread(threadHash string, tpRef cipher.SHA256) {
 	h.tMux.Lock()
 	defer h.tMux.Unlock()
 
-	h.threads[tRef] = tpRef
+	h.threads[threadHash] = tpRef
 }
 
 // RangeThreadFunc is the function used to range the threads.
 // Quits range on error.
-type RangeThreadFunc func(tHash, tpHash cipher.SHA256) error
+type RangeThreadFunc func(threadHash string, tpHash cipher.SHA256) error
 
 func (h *Headers) RangeThreads(action RangeThreadFunc) error {
 	h.tMux.Lock()

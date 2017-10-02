@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/msgs"
+	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/object/transfer"
@@ -25,12 +26,11 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/store/cxo/setup"
 )
 
 const (
 	LogPrefix     = "CXO"
-	SubDir        = "cxo_r1"
+	SubDir        = "cxo_v5"
 	FileName      = "bbs.json"
 	ExportSubDir  = "exports"
 	ExportFileExt = ".export"
@@ -345,29 +345,8 @@ func (m *Manager) SubscribeMaster(bpk cipher.PubKey, bsk cipher.SecKey) error {
 
 func (m *Manager) subscribeNode(bpk cipher.PubKey) error {
 	if e := m.node.AddFeed(bpk); e != nil {
-		return boo.WrapType(e, boo.Internal,
-			"failed to add feed")
+		return boo.WrapType(e, boo.Internal, "failed to add feed")
 	}
-	m.l.Printf("Subscribing to feed '%s'...", bpk.Hex()[:5]+"...")
-	connections, count := m.node.Connections(), 0
-	for _, conn := range connections {
-		if e := conn.Subscribe(bpk); e != nil {
-			switch e {
-			case node.ErrSubscriptionRejected:
-				m.l.Printf(" - '%s' rejected feed '%s'",
-					conn.Address(), bpk.Hex()[:5]+"...")
-			default:
-				return boo.WrapType(e, boo.Internal,
-					"failed to subscribe")
-			}
-		} else {
-			count += 1
-			m.l.Printf(" - '%s' accepted feed '%s'",
-				conn.Address(), bpk.Hex()[:5]+"...")
-		}
-	}
-	m.l.Printf("Feed '%s' accepted on %d/%d connections",
-		bpk.Hex()[:5]+"...", count, len(connections))
 	return nil
 }
 
@@ -470,7 +449,7 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	<<< DISCOVERER >>>
 */
 
-func (m *Manager) GetDiscoveredBoards() ([]string) {
+func (m *Manager) GetDiscoveredBoards() []string {
 	return m.relay.GetBoards()
 }
 

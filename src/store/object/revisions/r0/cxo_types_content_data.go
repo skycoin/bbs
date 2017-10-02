@@ -112,3 +112,66 @@ type ImageData struct {
 	Width  int          `json:"width,omitempty"`
 	Thumbs []*ImageData `json:"thumbs,omitempty"`
 }
+
+type VoteData struct {
+	OfBoard string `json:"of_board"` // Public key of board in which vote belongs.
+	Value   int    `json:"value"`    // +1, 0, -1.
+	Tag     string `json:"tag"`      // Added tag of vote.
+	Created int64  `json:"created"`  // Time of creation (unix time in ns).
+	Creator string `json:"creator"`  // Public key of creator (in hex).
+}
+
+func (vd *VoteData) GetOfBoard() cipher.PubKey {
+	pk, e := keys.GetPubKey(vd.OfBoard)
+	if e != nil {
+		log.Println("failed to get 'of_board' from vote:", e)
+	}
+	return pk
+}
+
+func (vd *VoteData) GetCreator() cipher.PubKey {
+	pk, e := keys.GetPubKey(vd.Creator)
+	if e != nil {
+		log.Println("failed to get 'creator' of vote:", e)
+	}
+	return pk
+}
+
+type ThreadVoteData struct {
+	OfThread string `json:"of_thread"` // Hash of thread.
+	VoteData
+}
+
+func (tvd *ThreadVoteData) GetOfThread() cipher.SHA256 {
+	hash, e := keys.GetHash(tvd.OfThread)
+	if e != nil {
+		log.Println("failed to get 'of_thread' from vote:", e)
+	}
+	return hash
+}
+
+type PostVoteData struct {
+	OfPost string `json:"of_post"` // Hash of post.
+	VoteData
+}
+
+func (pvd *PostVoteData) GetOfPost() cipher.SHA256 {
+	hash, e := keys.GetHash(pvd.OfPost)
+	if e != nil {
+		log.Println("failed to get 'of_post' from vote:", e)
+	}
+	return hash
+}
+
+type UserVoteData struct {
+	OfUser string `json:"of_user"` // Public key of user.
+	VoteData
+}
+
+func (uvd *UserVoteData) GetOfUser() cipher.PubKey {
+	pk, e := keys.GetPubKey(uvd.OfUser)
+	if e != nil {
+		log.Println("failed to get 'of_user' from vote:", e)
+	}
+	return pk
+}
