@@ -166,7 +166,12 @@ func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *r0.Content, c
 	}
 	h.SetUser(creator, newProfileHash)
 
-	return nil
+	// Add to diff.
+	if e := pages.DiffPage.Add(content); e != nil {
+		return e
+	}
+
+	return pages.Save(p)
 }
 
 func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {

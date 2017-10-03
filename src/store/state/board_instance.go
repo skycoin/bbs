@@ -158,14 +158,14 @@ func (bi *BoardInstance) PublishChanges() error {
 
 	// Update CXO.
 	if e := bi.p.Save(); e != nil {
-		return e
+		return boo.WrapType(e, boo.Internal, "failed to save in cxo db")
 	}
 	bi.n.Publish(bi.p.Root())
 
 	// Update headers.
 	var e error
 	if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
-		return e
+		return boo.WrapType(e, boo.Internal, "failed to generate new headers")
 	}
 
 	// Update views.

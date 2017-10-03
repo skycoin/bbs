@@ -6,6 +6,8 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
+	"fmt"
+	"log"
 )
 
 type indexPage struct {
@@ -50,6 +52,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.i.Board = board.GetHeader().Hash
 	v.c[v.i.Board] = board.ToRep()
 
+	log.Printf("INITIATING THREADS : count(%d)", pages.BoardPage.GetThreadCount())
 	v.i.Threads = make([]string, pages.BoardPage.GetThreadCount())
 
 	// Fill threads and posts.
@@ -64,14 +67,22 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		v.i.Threads[i] = threadHash
 		v.c[threadHash] = thread.ToRep()
 
+		log.Printf("\t- [%d] THREAD : hash(%s) post_count(%d)",
+			i, threadHash, tp.GetPostCount())
+
 		// Fill posts.
 		postHashes := make([]string, tp.GetPostCount())
 		e = tp.RangePosts(func(i int, post *r0.Post) error {
+
+			log.Printf("\t\t- [%d] POST : hash(%s)",
+				i, post.GetHeader().Hash)
+
 			postHashes[i] = post.GetHeader().Hash
 			v.c[postHashes[i]] = post.ToRep()
 			return nil
 		})
 		if e != nil {
+			log.Println("\t\t- Range post error:", e)
 			return e
 		}
 		v.i.Posts[threadHash] = postHashes
@@ -82,8 +93,19 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		return e
 	}
 
-	return pages.UsersPage.RangeUserProfiles(func(_ int, uap *r0.UserProfile) error {
-		return uap.RangeSubmissions(func(_ int, c *r0.Content) error {
+	log.Printf("INITIATING VOTES FROM USER PROFILES : user_count(%d)",
+		pages.UsersPage.GetUsersLen())
+
+	return pages.UsersPage.RangeUserProfiles(func(i int, uap *r0.UserProfile) error {
+
+		log.Printf("\t- [%d] USER : pk(%s) submission_count(%d)",
+			i, uap.PubKey, uap.GetSubmissionsLen())
+
+		return uap.RangeSubmissions(func(i int, c *r0.Content) error {
+
+			log.Printf("\t\t- [%d] SUBMISSION : type(%s) hash(%s)",
+				i, c.GetHeader().Type, c.GetHeader().Hash)
+
 			return v.processVote(c)
 		})
 	})
@@ -136,20 +158,18 @@ func (v *ContentView) processVote(c *r0.Content) error {
 	// Only if vote is for post or thread.
 	switch c.GetHeader().Type {
 	case r0.V5ThreadVoteType:
-		if v.c[c.ToThreadVote().GetBody().OfThread] == nil {
-			return nil
-		}
-		cHash = c.GetHeader().Hash
+		cHash = c.ToThreadVote().GetBody().OfThread
 		cType = r0.V5ThreadVoteType
+
 	case r0.V5PostVoteType:
-		if v.c[c.ToPostVote().GetBody().OfPost] == nil {
-			return nil
-		}
-		cHash = c.GetHeader().Hash
+		cHash = c.ToPostVote().GetBody().OfPost
 		cType = r0.V5PostVoteType
-	case r0.V5UserVoteType:
-		return nil
+
 	default:
+		return nil
+	}
+
+	if v.c[cHash] == nil {
 		return nil
 	}
 
@@ -160,6 +180,8 @@ func (v *ContentView) processVote(c *r0.Content) error {
 		v.v[cHash] = voteRep
 	}
 	voteRep.Add(c)
+	fmt.Println("  >>> VOTE REPRESENTATION:", cHash)
+	fmt.Println(voteRep.String())
 
 	return nil
 }

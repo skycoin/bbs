@@ -2,6 +2,7 @@ package content_view
 
 import (
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"encoding/json"
 )
 
 /*
@@ -15,6 +16,11 @@ type VotesRep struct {
 	Votes     map[string]*r0.Content // Key: pk string, Value: vote.
 	UpCount   int
 	DownCount int
+}
+
+func (r *VotesRep) String() string {
+	raw, _ := json.MarshalIndent(r, "", "    ")
+	return string(raw)
 }
 
 func (r *VotesRep) GetValue(c *r0.Content) int {
