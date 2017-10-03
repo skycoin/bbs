@@ -139,6 +139,7 @@ func (c *Content) ToUserVote() *UserVote {
 }
 
 type ContentRep struct {
+	PubKey string `json:"public_key,omitempty"`
 	Header *ContentHeaderData `json:"header,omitempty"`
 	Body   interface{}        `json:"body,omitempty"`
 	Votes  interface{}        `json:"votes,omitempty"`
@@ -157,9 +158,9 @@ const (
 
 type ContentHeaderData struct {
 	Type ContentType `json:"type"` // Content type and version.
-	Hash string      `json:"hash"` // Hash of body.
-	PK   string      `json:"pk"`   // Public key.
-	Sig  string      `json:"sig"`  // Signature of body.
+	Hash string      `json:"hash,omitempty"` // Hash of body.
+	PK   string      `json:"pk,omitempty"`   // Public key.
+	Sig  string      `json:"sig,omitempty"`  // Signature of body.
 }
 
 func (h *ContentHeaderData) GetHash() cipher.SHA256 {
@@ -203,8 +204,9 @@ func (b *Board) GetBody() *BoardData {
 	return data
 }
 
-func (b *Board) ToRep() *ContentRep {
+func (b *Board) ToRep(pk cipher.PubKey) *ContentRep {
 	return &ContentRep{
+		PubKey: pk.Hex(),
 		Header: b.GetHeader(),
 		Body:   b.GetBody(),
 	}
@@ -215,8 +217,6 @@ func (b *Board) Fill(bpk cipher.PubKey, data *BoardData) {
 	b.SetBody(data)
 	b.SetHeader(&ContentHeaderData{
 		Type: V5BoardType,
-		Hash: cipher.SumSHA256(b.Body).Hex(),
-		PK:   bpk.Hex(),
 	})
 }
 

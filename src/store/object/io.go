@@ -32,6 +32,7 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 		Body:    a.Body,
 		Created: time.Now().UnixNano(),
 		SubKeys: keys.PubKeyArrayToStringArray(subPKs),
+		Tags: []string{},
 	})
 	return nil
 }
