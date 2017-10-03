@@ -111,6 +111,9 @@ func (bi *BoardInstance) NewThreadVote(threadVote *r0.ThreadVote) (uint64, error
 	var goalSeq uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
+		// Set goal seq.
+		goalSeq = p.Root().Seq + 1
+
 		// Check vote.
 		if _, ok := h.GetThreadPageHash(tvBody.OfThread); !ok {
 			return boo.Newf(boo.NotFound,
@@ -127,6 +130,10 @@ func (bi *BoardInstance) NewPostVote(postVote *r0.PostVote) (uint64, error) {
 
 	var goalSeq uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+
+		// Set goal seq.
+		goalSeq = p.Root().Seq + 1
+
 		return addVoteToProfile(p, h, postVote.Content, pvBody.Creator)
 	})
 	return goalSeq, e
@@ -137,6 +144,10 @@ func (bi *BoardInstance) NewUserVote(userVote *r0.UserVote) (uint64, error) {
 
 	var goalSeq uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+
+		// Set goal seq.
+		goalSeq = p.Root().Seq + 1
+
 		return addVoteToProfile(p, h, userVote.Content, uvBody.Creator)
 	})
 	return goalSeq, e

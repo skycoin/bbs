@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"fmt"
 	"encoding/json"
+	"log"
 )
 
 const (
@@ -107,6 +108,11 @@ func (v *ContentView) getVotes(in *ContentVotesIn) (*ContentVotesOut, error) {
 	out := new(ContentVotesOut)
 	raw, _ := json.MarshalIndent(in, "", "    ")
 	fmt.Println("<<< GET VOTES : INPUT >>>", string(raw))
+
+	if _, ok := v.v[in.ContentHash]; !ok {
+		log.Println("DOES NOT HAVE VOTES FOR CONTENT:", in.ContentHash)
+	}
+
 	out.Votes = v.v[in.ContentHash].View(in.Perspective)
 	return out, nil
 }
