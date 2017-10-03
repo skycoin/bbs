@@ -50,7 +50,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		return e
 	}
 	v.i.Board = board.GetHeader().Hash
-	v.c[v.i.Board] = board.ToRep()
+	v.c[v.i.Board] = board.ToRep(v.pk)
 
 	log.Printf("INITIATING THREADS : count(%d)", pages.BoardPage.GetThreadCount())
 	v.i.Threads = make([]string, pages.BoardPage.GetThreadCount())
@@ -125,7 +125,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 	}
 	delete(v.c, v.i.Board)
 	v.i.Board = board.GetHeader().Hash
-	v.c[v.i.Board] = board.ToRep()
+	v.c[v.i.Board] = board.ToRep(v.pk)
 
 	changes := headers.GetChanges()
 
