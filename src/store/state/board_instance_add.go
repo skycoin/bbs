@@ -171,7 +171,7 @@ func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *r0.Content, c
 		return e
 	}
 
-	return nil
+	return pages.Save(p)
 }
 
 func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {

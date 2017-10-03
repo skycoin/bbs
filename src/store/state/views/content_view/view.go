@@ -93,8 +93,19 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		return e
 	}
 
-	return pages.UsersPage.RangeUserProfiles(func(_ int, uap *r0.UserProfile) error {
-		return uap.RangeSubmissions(func(_ int, c *r0.Content) error {
+	log.Printf("INITIATING VOTES FROM USER PROFILES : user_count(%d)",
+		pages.UsersPage.GetUsersLen())
+
+	return pages.UsersPage.RangeUserProfiles(func(i int, uap *r0.UserProfile) error {
+
+		log.Printf("\t- [%d] USER : pk(%s) submission_count(%d)",
+			i, uap.PubKey, uap.GetSubmissionsLen())
+
+		return uap.RangeSubmissions(func(i int, c *r0.Content) error {
+
+			log.Printf("\t\t- [%d] SUBMISSION : type(%s) hash(%s)",
+				i, c.GetHeader().Type, c.GetHeader().Hash)
+
 			return v.processVote(c)
 		})
 	})

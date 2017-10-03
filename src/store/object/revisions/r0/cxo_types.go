@@ -435,6 +435,11 @@ func GetUsersPage(p *skyobject.Pack) (*UsersPage, error) {
 	return up, nil
 }
 
+func (up *UsersPage) GetUsersLen() int {
+	l, _ := up.Users.Len()
+	return l
+}
+
 func (up *UsersPage) Save(p *skyobject.Pack) error {
 	if e := p.SetRefByIndex(IndexUsersPage, up); e != nil {
 		return saveRootChildErr(e, IndexUsersPage)
@@ -502,6 +507,11 @@ func GetUserActivityPage(uapElem *skyobject.RefsElem) (*UserProfile, error) {
 	}
 	uap.R = uapElem.Hash
 	return uap, nil
+}
+
+func (uap *UserProfile) GetSubmissionsLen() int {
+	l, _ := uap.Submissions.Len()
+	return l
 }
 
 func (uap *UserProfile) RangeSubmissions(action func(i int, c *Content) error) error {
