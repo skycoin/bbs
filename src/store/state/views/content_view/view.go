@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
+	"fmt"
 )
 
 type indexPage struct {
@@ -136,20 +137,18 @@ func (v *ContentView) processVote(c *r0.Content) error {
 	// Only if vote is for post or thread.
 	switch c.GetHeader().Type {
 	case r0.V5ThreadVoteType:
-		if v.c[c.ToThreadVote().GetBody().OfThread] == nil {
-			return nil
-		}
-		cHash = c.GetHeader().Hash
+		cHash = c.ToThreadVote().GetBody().OfThread
 		cType = r0.V5ThreadVoteType
+
 	case r0.V5PostVoteType:
-		if v.c[c.ToPostVote().GetBody().OfPost] == nil {
-			return nil
-		}
-		cHash = c.GetHeader().Hash
+		cHash = c.ToPostVote().GetBody().OfPost
 		cType = r0.V5PostVoteType
-	case r0.V5UserVoteType:
-		return nil
+
 	default:
+		return nil
+	}
+
+	if v.c[cHash] == nil {
 		return nil
 	}
 
@@ -160,6 +159,8 @@ func (v *ContentView) processVote(c *r0.Content) error {
 		v.v[cHash] = voteRep
 	}
 	voteRep.Add(c)
+	fmt.Println("  >>> VOTE REPRESENTATION:", cHash)
+	fmt.Println(voteRep.String())
 
 	return nil
 }

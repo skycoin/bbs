@@ -3,6 +3,8 @@ package content_view
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"fmt"
+	"encoding/json"
 )
 
 const (
@@ -103,6 +105,8 @@ type ContentVotesOut struct {
 
 func (v *ContentView) getVotes(in *ContentVotesIn) (*ContentVotesOut, error) {
 	out := new(ContentVotesOut)
+	raw, _ := json.MarshalIndent(in, "", "    ")
+	fmt.Println("<<< GET VOTES : INPUT >>>", string(raw))
 	out.Votes = v.v[in.ContentHash].View(in.Perspective)
 	return out, nil
 }

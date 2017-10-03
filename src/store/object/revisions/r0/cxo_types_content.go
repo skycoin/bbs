@@ -35,6 +35,18 @@ type Content struct {
 	Body   []byte // Contains actual content.
 }
 
+func (c *Content) String() string {
+	data := struct {
+		Header string
+		Body   string
+	}{
+		Header: string(c.Header),
+		Body:   string(c.Body),
+	}
+	raw, _ := json.MarshalIndent(data, "", "    ")
+	return string(raw)
+}
+
 func (c *Content) Verify() (*BasicBody, error) {
 	b, e := newBasicBody(c.Body)
 	if e != nil {
