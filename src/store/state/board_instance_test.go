@@ -42,7 +42,7 @@ func prepareBoard(t *testing.T, n *node.Node, seed string) (cipher.PubKey, ciphe
 		Name: fmt.Sprintf("Board of seed '%s'", seed),
 		Body: fmt.Sprintf("A test board created with seed '%s'.", seed),
 	}
-	if e := in.Process(nil); e != nil {
+	if e := in.Process([]cipher.PubKey{}); e != nil {
 		t.Fatal("failed to process new board input:", e)
 	}
 	if e := n.AddFeed(in.BoardPubKey); e != nil {
@@ -55,7 +55,7 @@ func prepareBoard(t *testing.T, n *node.Node, seed string) (cipher.PubKey, ciphe
 	return in.BoardPubKey, in.BoardSecKey, out
 }
 
-func prepareInstance(t *testing.T, n *node.Node, pk cipher.PubKey) *BoardInstance {
+func prepareInstance(_ *testing.T, n *node.Node, pk cipher.PubKey) *BoardInstance {
 	return new(BoardInstance).Init(n, pk, views.AddContent(), views.AddFollow())
 }
 
@@ -103,7 +103,11 @@ func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 		threads = make([]cipher.SHA256, pages.BoardPage.GetThreadCount())
 		return pages.BoardPage.RangeThreadPages(
 			func(i int, tp *r0.ThreadPage) error {
-				threads[i] = tp.Thread.Hash
+				thread, e := tp.GetThread()
+				if e != nil {
+					t.Fatal("failed to extract thread:", e)
+				}
+				threads[i] = thread.GetHeader().GetHash()
 				return nil
 			},
 		)
@@ -111,7 +115,7 @@ func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 	return threads
 }
 
-func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte) uint64 {
+func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte) (cipher.SHA256, uint64) {
 	in := &object.NewThreadIO{
 		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
 		Name:           fmt.Sprintf("Thread %d", threadIndex),
@@ -124,7 +128,8 @@ func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte
 	if e != nil {
 		t.Fatal("failed to create new thread:", e)
 	}
-	return goal
+
+	return cipher.SumSHA256(in.Thread.Body), goal
 }
 
 func addPost(t *testing.T, bi *BoardInstance, threadHash cipher.SHA256, postIndex int, userSeed []byte) uint64 {

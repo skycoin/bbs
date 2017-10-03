@@ -43,7 +43,7 @@ func TestBoardInstance_NewThread(t *testing.T) {
 
 		for i := 0; i < threadCount; i++ {
 			actionAddThread := func(i int) {
-				goal := addThread(t, bi, i, []byte(userSeed))
+				_, goal := addThread(t, bi, i, []byte(userSeed))
 				threadsChan <- []uint64{uint64(i), goal}
 			}
 			if i%2 == 0 {
@@ -80,10 +80,7 @@ func TestBoardInstance_NewThread(t *testing.T) {
 		var wg sync.WaitGroup
 
 		for i := 0; i < threadCount; i++ {
-			addThread(t, bi, i, []byte(userSeed))
-
-			threadList := obtainThreadList(t, bi)
-			tHash := threadList[len(threadList)-1]
+			tHash, _ := addThread(t, bi, i, []byte(userSeed))
 
 			for j := 0; j < postCount; j++ {
 				wg.Add(1)
