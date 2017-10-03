@@ -252,12 +252,11 @@ func GetPost(pElem *skyobject.RefsElem) (*Post, error) {
 	if e != nil {
 		return nil, elemValueErr(e, pElem)
 	}
-	p, ok := pVal.(*Post)
+	p, ok := pVal.(*Content)
 	if !ok {
 		return nil, elemExtErr(pElem)
 	}
-	//p.R = pElem.Hash
-	return p, nil
+	return p.ToPost(), nil
 }
 
 func (p *Post) GetBody() *PostData {

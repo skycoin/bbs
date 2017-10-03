@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
 	"fmt"
+	"log"
 )
 
 type indexPage struct {
@@ -51,6 +52,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.i.Board = board.GetHeader().Hash
 	v.c[v.i.Board] = board.ToRep()
 
+	log.Printf("INITIATING THREADS : count(%d)", pages.BoardPage.GetThreadCount())
 	v.i.Threads = make([]string, pages.BoardPage.GetThreadCount())
 
 	// Fill threads and posts.
@@ -65,14 +67,22 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		v.i.Threads[i] = threadHash
 		v.c[threadHash] = thread.ToRep()
 
+		log.Printf("\t- [%d] THREAD : hash(%s) post_count(%d)",
+			i, threadHash, tp.GetPostCount())
+
 		// Fill posts.
 		postHashes := make([]string, tp.GetPostCount())
 		e = tp.RangePosts(func(i int, post *r0.Post) error {
+
+			log.Printf("\t\t- [%d] POST : hash(%s)",
+				i, post.GetHeader().Hash)
+
 			postHashes[i] = post.GetHeader().Hash
 			v.c[postHashes[i]] = post.ToRep()
 			return nil
 		})
 		if e != nil {
+			log.Println("\t\t- Range post error:", e)
 			return e
 		}
 		v.i.Posts[threadHash] = postHashes

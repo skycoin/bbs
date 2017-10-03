@@ -291,10 +291,10 @@ func (tp *ThreadPage) RangePosts(action func(i int, post *Post) error) error {
 	})
 }
 
-func (tp *ThreadPage) AddPost(postHash cipher.SHA256, post *Post) error {
-	if elem, _ := tp.Posts.RefByHash(postHash); elem != nil {
+func (tp *ThreadPage) AddPost(cxoPostHash cipher.SHA256, post *Post) error {
+	if elem, _ := tp.Posts.RefByHash(cxoPostHash); elem != nil {
 		return boo.Newf(boo.AlreadyExists,
-			"post of hash '%s' already exists in 'ThreadPage.Posts'", postHash.Hex())
+			"post of hash '%s' already exists in 'ThreadPage.Posts'", cxoPostHash.Hex())
 	}
 	if e := tp.Posts.Append(post.Content); e != nil {
 		return boo.WrapTypef(e, boo.Internal,

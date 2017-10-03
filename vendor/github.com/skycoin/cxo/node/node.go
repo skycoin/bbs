@@ -836,15 +836,7 @@ func (s *Node) delFeed(pk cipher.PubKey) (ok bool) {
 	return
 }
 
-// UpdateServiceDiscovery manually forces a service discovery update.
-func (s *Node) UpdateServiceDiscovery() {
-	s.fmx.Lock()
-	defer s.fmx.Unlock()
-
-	updateServiceDiscovery(s)
-}
-
-// needs to be performed under 'fmx' lock
+// perform it under 'fmx' lock
 func updateServiceDiscovery(n *Node) {
 	if n.discovery != nil {
 		feeds := make([]cipher.PubKey, 0, len(n.feeds))
