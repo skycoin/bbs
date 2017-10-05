@@ -8,18 +8,19 @@ The project contains both the source (src) and target (dist) files of this web i
 The project have dependencies that require Node 6.9.0 or higher, together
 with NPM 3 or higher.
 
-## Installation
+#### Updating npm
 
+You may need to run this with `sudo`.
 
-### node and git
-You'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer.
+```bash
+npm install npm@latest -g
+```
 
-### ng
+#### Updating/Installing ng
 
 ```bash
 npm install -g @angular/cli
 ```
-
 
 ## Run
 From your command line:
