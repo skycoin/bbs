@@ -139,7 +139,7 @@ func (c *Content) ToUserVote() *UserVote {
 }
 
 type ContentRep struct {
-	PubKey string `json:"public_key,omitempty"`
+	PubKey string             `json:"public_key,omitempty"`
 	Header *ContentHeaderData `json:"header,omitempty"`
 	Body   interface{}        `json:"body,omitempty"`
 	Votes  interface{}        `json:"votes,omitempty"`
@@ -157,7 +157,7 @@ const (
 )
 
 type ContentHeaderData struct {
-	Type ContentType `json:"type"` // Content type and version.
+	Type ContentType `json:"type"`           // Content type and version.
 	Hash string      `json:"hash,omitempty"` // Hash of body.
 	PK   string      `json:"pk,omitempty"`   // Public key.
 	Sig  string      `json:"sig,omitempty"`  // Signature of body.
@@ -237,10 +237,11 @@ func (t *Thread) ToRep() *ContentRep {
 	}
 }
 
-func (t *Thread) Fill(tt *ThreadTransport) {
+func (t *Thread) Fill(tt *ThreadTransport) *Thread {
 	t.Content = new(Content)
 	t.SetBodyRaw(tt.raw)
-	t.SetHeader(tt.header)
+	t.SetHeader(tt.Header)
+	return t
 }
 
 type Post struct {
@@ -272,10 +273,11 @@ func (p *Post) ToRep() *ContentRep {
 	}
 }
 
-func (p *Post) Fill(pt *PostTransport) {
+func (p *Post) Fill(pt *PostTransport) *Post {
 	p.Content = new(Content)
 	p.SetBodyRaw(pt.raw)
-	p.SetHeader(pt.header)
+	p.SetHeader(pt.Header)
+	return p
 }
 
 type ThreadVote struct {
@@ -295,10 +297,11 @@ func (tv *ThreadVote) ToRep() *ContentRep {
 	}
 }
 
-func (tv *ThreadVote) Fill(tvt *ThreadVoteTransport) {
+func (tv *ThreadVote) Fill(tvt *ThreadVoteTransport) *ThreadVote {
 	tv.Content = new(Content)
 	tv.SetBodyRaw(tvt.raw)
-	tv.SetHeader(tvt.header)
+	tv.SetHeader(tvt.Header)
+	return tv
 }
 
 type PostVote struct {
@@ -318,10 +321,11 @@ func (pv *PostVote) ToRep() *ContentRep {
 	}
 }
 
-func (pv *PostVote) Fill(pvt *PostVoteTransport) {
+func (pv *PostVote) Fill(pvt *PostVoteTransport) *PostVote {
 	pv.Content = new(Content)
 	pv.SetBodyRaw(pvt.raw)
-	pv.SetHeader(pvt.header)
+	pv.SetHeader(pvt.Header)
+	return pv
 }
 
 type UserVote struct {
@@ -341,10 +345,11 @@ func (uv *UserVote) ToRep() *ContentRep {
 	}
 }
 
-func (uv *UserVote) Fill(uvt *UserVoteTransport) {
+func (uv *UserVote) Fill(uvt *UserVoteTransport) *UserVote {
 	uv.Content = new(Content)
 	uv.SetBodyRaw(uvt.raw)
-	uv.SetHeader(uvt.header)
+	uv.SetHeader(uvt.Header)
+	return uv
 }
 
 //func GetVote(vElem *skyobject.RefsElem) (*Vote, error) {

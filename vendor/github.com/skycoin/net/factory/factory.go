@@ -23,7 +23,7 @@ type FactoryCommonFields struct {
 }
 
 func NewFactoryCommonFields() FactoryCommonFields {
-	return FactoryCommonFields{connections: make(map[*Connection]struct{}), serverConnections:make(map[*Connection]struct{})}
+	return FactoryCommonFields{connections: make(map[*Connection]struct{}), serverConnections: make(map[*Connection]struct{})}
 }
 
 func (f *FactoryCommonFields) AddConn(conn *Connection) {
