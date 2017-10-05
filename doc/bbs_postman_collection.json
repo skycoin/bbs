@@ -46,96 +46,6 @@
 			]
 		},
 		{
-			"name": "Content",
-			"description": "Regarding submission of boards, threads, posts and votes.",
-			"item": [
-				{
-					"name": "New Thread",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/content/new_thread",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"description": "Public key of board to submit thread.",
-									"type": "text"
-								},
-								{
-									"key": "name",
-									"value": "Test Thread",
-									"description": "Name of thread to submit.",
-									"type": "text"
-								},
-								{
-									"key": "body",
-									"value": "This is a test thread.",
-									"description": "Text body of thread to submit.",
-									"type": "text"
-								}
-							]
-						},
-						"description": "Creates a new thread on board of public key. If node does not own the board, a request to the board's submission addresses is initiated via RPC."
-					},
-					"response": []
-				},
-				{
-					"name": "New Post",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/content/new_post",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"description": "Public key of board where post should belong.",
-									"type": "text"
-								},
-								{
-									"key": "thread_ref",
-									"value": "6466cbc286121f375ac427a01ab91157817ddd2aea6114445e2efd026521aa4a",
-									"description": "Reference of thread where post should belong.",
-									"type": "text"
-								},
-								{
-									"key": "post_ref",
-									"value": "",
-									"description": "(Optional, not yet implemented) Include if this post is reply of another post.",
-									"type": "text"
-								},
-								{
-									"key": "name",
-									"value": "Test Image Post",
-									"description": "Name of post.",
-									"type": "text"
-								},
-								{
-									"key": "body",
-									"value": "This is a test image post.",
-									"description": "Body of post.",
-									"type": "text"
-								},
-								{
-									"key": "images",
-									"value": "[{\"url\":\"https://i.imgur.com/ASFEeYi.jpg\",\"name\":\"Skywire Miner\",\"thumbnail_url\":\"https://i.imgur.com/ASFEeYim.jpg\",\"size\":5,\"height\":5,\"width\":3}]",
-									"description": "Json objects representing images (Optional, can leave blank).",
-									"type": "text"
-								}
-							]
-						},
-						"description": "Add a new post to specified board and thread. (Can also be a reply to another post)"
-					},
-					"response": []
-				}
-			]
-		},
-		{
 			"name": "Admin",
 			"description": "Folder for admin actions.",
 			"item": [
@@ -315,8 +225,8 @@
 					"_postman_isSubFolder": true
 				},
 				{
-					"name": "Session",
-					"description": "",
+					"name": "Session (Legacy)",
+					"description": "Endpoints regarding session management (user login, logout, creation, deletion).\n\nThis is now legacy as session management is to be moved to client-side.",
 					"item": [
 						{
 							"name": "Get All Users",
@@ -498,6 +408,214 @@
 					"_postman_isSubFolder": true
 				},
 				{
+					"name": "Submission (Legacy)",
+					"description": "Regarding submission of boards, threads, posts and votes (Legacy).\n\nUse of these endpoints require a login from legacy session endpoints located in \"Admin > Session (Legacy)\".",
+					"item": [
+						{
+							"name": "New Thread",
+							"request": {
+								"url": "http://127.0.0.1:7410/api/content/new_thread",
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "board_public_key",
+											"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+											"description": "Public key of board to submit thread.",
+											"type": "text"
+										},
+										{
+											"key": "name",
+											"value": "Test Thread",
+											"description": "Name of thread to submit.",
+											"type": "text"
+										},
+										{
+											"key": "body",
+											"value": "This is a test thread.",
+											"description": "Text body of thread to submit.",
+											"type": "text"
+										}
+									]
+								},
+								"description": "Creates a new thread on board of public key. If node does not own the board, a request to the board's submission addresses is initiated via RPC."
+							},
+							"response": []
+						},
+						{
+							"name": "New Post",
+							"request": {
+								"url": "http://127.0.0.1:7410/api/content/new_post",
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "board_public_key",
+											"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+											"description": "Public key of board where post should belong.",
+											"type": "text"
+										},
+										{
+											"key": "thread_ref",
+											"value": "6466cbc286121f375ac427a01ab91157817ddd2aea6114445e2efd026521aa4a",
+											"description": "Reference of thread where post should belong.",
+											"type": "text"
+										},
+										{
+											"key": "post_ref",
+											"value": "",
+											"description": "(Optional, not yet implemented) Include if this post is reply of another post.",
+											"type": "text"
+										},
+										{
+											"key": "name",
+											"value": "Test Image Post",
+											"description": "Name of post.",
+											"type": "text"
+										},
+										{
+											"key": "body",
+											"value": "This is a test image post.",
+											"description": "Body of post.",
+											"type": "text"
+										},
+										{
+											"key": "images",
+											"value": "[{\"url\":\"https://i.imgur.com/ASFEeYi.jpg\",\"name\":\"Skywire Miner\",\"thumbnail_url\":\"https://i.imgur.com/ASFEeYim.jpg\",\"size\":5,\"height\":5,\"width\":3}]",
+											"description": "Json objects representing images (Optional, can leave blank).",
+											"type": "text"
+										}
+									]
+								},
+								"description": "Add a new post to specified board and thread. (Can also be a reply to another post)"
+							},
+							"response": []
+						},
+						{
+							"name": "Vote Thread",
+							"request": {
+								"url": "http://127.0.0.1:7410/api/submission/vote_thread",
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "board_public_key",
+											"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+											"description": "Public key of board in which thread originates.",
+											"type": "text"
+										},
+										{
+											"key": "thread_ref",
+											"value": "6466cbc286121f375ac427a01ab91157817ddd2aea6114445e2efd026521aa4a",
+											"description": "Reference of thread to vote on.",
+											"type": "text"
+										},
+										{
+											"key": "mode",
+											"value": "+1",
+											"description": "Mode of vote (+1 : affirm) (0 : neutral) (-1 : disaffirm).",
+											"type": "text"
+										},
+										{
+											"key": "tag",
+											"value": "",
+											"description": "(Optional) tag field for some optional text.",
+											"type": "text"
+										}
+									]
+								},
+								"description": "Votes on specified thread."
+							},
+							"response": []
+						},
+						{
+							"name": "Vote Post",
+							"request": {
+								"url": "http://127.0.0.1:7410/api/submission/vote_post",
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "board_public_key",
+											"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+											"description": "Public key of board in which post originates.",
+											"type": "text"
+										},
+										{
+											"key": "post_ref",
+											"value": "d8510c642f907072c66f0fc9a147e0c072002b1ea6079d33bb3b4ca8721abf4e",
+											"description": "Reference of post to vote on.",
+											"type": "text"
+										},
+										{
+											"key": "mode",
+											"value": "-1",
+											"description": "Mode of vote (+1 : affirm) (0 : neutral) (-1 : disaffirm).",
+											"type": "text"
+										},
+										{
+											"key": "tag",
+											"value": "spam",
+											"description": "(Optional) tag field for some optional text.",
+											"type": "text"
+										}
+									]
+								},
+								"description": "Submits a vote for specified post."
+							},
+							"response": []
+						},
+						{
+							"name": "Vote User",
+							"request": {
+								"url": "http://127.0.0.1:7410/api/submission/vote_user",
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "board_public_key",
+											"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+											"description": "Public key of board to submit vote for user.",
+											"type": "text"
+										},
+										{
+											"key": "user_public_key",
+											"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+											"description": "Public key of user to vote in.",
+											"type": "text"
+										},
+										{
+											"key": "mode",
+											"value": "-1",
+											"description": "Mode of vote (+1 : follow) (0 : neutral) (-1 : avoid).",
+											"type": "text"
+										},
+										{
+											"key": "tag",
+											"value": "awesome",
+											"description": "(Optional) tag field for some optional text.",
+											"type": "text"
+										}
+									]
+								},
+								"description": "Records a vote for a user."
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
 					"name": "Node Stats",
 					"request": {
 						"url": "http://127.0.0.1:7410/api/admin/stats",
@@ -538,129 +656,6 @@
 						"header": [],
 						"body": {},
 						"description": "Exits the node."
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Votes",
-			"description": "Regards adding and viewing votes.",
-			"item": [
-				{
-					"name": "Vote User",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/votes/vote_user",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"description": "Public key of board to submit vote for user.",
-									"type": "text"
-								},
-								{
-									"key": "user_public_key",
-									"value": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
-									"description": "Public key of user to vote in.",
-									"type": "text"
-								},
-								{
-									"key": "mode",
-									"value": "-1",
-									"description": "Mode of vote (+1 : follow) (0 : neutral) (-1 : avoid).",
-									"type": "text"
-								},
-								{
-									"key": "tag",
-									"value": "awesome",
-									"description": "(Optional) tag field for some optional text.",
-									"type": "text"
-								}
-							]
-						},
-						"description": "Records a vote for a user."
-					},
-					"response": []
-				},
-				{
-					"name": "Vote Thread",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/votes/vote_thread",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"description": "Public key of board in which thread originates.",
-									"type": "text"
-								},
-								{
-									"key": "thread_ref",
-									"value": "6466cbc286121f375ac427a01ab91157817ddd2aea6114445e2efd026521aa4a",
-									"description": "Reference of thread to vote on.",
-									"type": "text"
-								},
-								{
-									"key": "mode",
-									"value": "+1",
-									"description": "Mode of vote (+1 : affirm) (0 : neutral) (-1 : disaffirm).",
-									"type": "text"
-								},
-								{
-									"key": "tag",
-									"value": "",
-									"description": "(Optional) tag field for some optional text.",
-									"type": "text"
-								}
-							]
-						},
-						"description": "Votes on specified thread."
-					},
-					"response": []
-				},
-				{
-					"name": "Vote Post",
-					"request": {
-						"url": "http://127.0.0.1:7410/api/votes/vote_post",
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "board_public_key",
-									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
-									"description": "Public key of board in which post originates.",
-									"type": "text"
-								},
-								{
-									"key": "post_ref",
-									"value": "d8510c642f907072c66f0fc9a147e0c072002b1ea6079d33bb3b4ca8721abf4e",
-									"description": "Reference of post to vote on.",
-									"type": "text"
-								},
-								{
-									"key": "mode",
-									"value": "-1",
-									"description": "Mode of vote (+1 : affirm) (0 : neutral) (-1 : disaffirm).",
-									"type": "text"
-								},
-								{
-									"key": "tag",
-									"value": "spam",
-									"description": "(Optional) tag field for some optional text.",
-									"type": "text"
-								}
-							]
-						},
-						"description": "Submits a vote for specified post."
 					},
 					"response": []
 				}
@@ -781,6 +776,39 @@
 				"header": [],
 				"body": {},
 				"description": "Gets a list of boards in which are avaliable for subscription."
+			},
+			"response": []
+		},
+		{
+			"name": "New Submission",
+			"request": {
+				"url": "http://127.0.0.1:7410/api/new_submission",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "type",
+							"value": "",
+							"description": "Type of data that is being submitted.",
+							"type": "text"
+						},
+						{
+							"key": "body",
+							"value": "",
+							"description": "Data body that is being submitted (best to keep the form with less whitespace).",
+							"type": "text"
+						},
+						{
+							"key": "sig",
+							"value": "",
+							"description": "Signature of body.",
+							"type": "text"
+						}
+					]
+				},
+				"description": "When user session management is implemented client-side, and the BBS node serves a website that is exposed publicly, this endpoint will be used for submitting content to boards."
 			},
 			"response": []
 		}

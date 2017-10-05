@@ -8,8 +8,9 @@ import (
 )
 
 type ContentTransport struct {
-	raw    []byte
-	header *ContentHeaderData
+	OfBoard cipher.PubKey
+	Header  *ContentHeaderData
+	raw     []byte
 }
 
 type ThreadTransport struct {
@@ -41,7 +42,7 @@ func NewThreadTransport(raw []byte, sig cipher.Sig, check CheckThreadFunc) (*Thr
 	}
 
 	return &ThreadTransport{
-		ContentTransport: &ContentTransport{raw: raw, header: header},
+		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
 		body:             body,
 	}, nil
 }
@@ -75,7 +76,7 @@ func NewPostTransport(raw []byte, sig cipher.Sig, check CheckPostFunc) (*PostTra
 	}
 
 	return &PostTransport{
-		ContentTransport: &ContentTransport{raw: raw, header: header},
+		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
 		body:             body,
 	}, nil
 }
@@ -109,7 +110,7 @@ func NewThreadVoteTransport(raw []byte, sig cipher.Sig, check CheckThreadVoteFun
 	}
 
 	return &ThreadVoteTransport{
-		ContentTransport: &ContentTransport{raw: raw, header: header},
+		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
 		body:             body,
 	}, nil
 }
@@ -143,7 +144,7 @@ func NewPostVoteTransport(raw []byte, sig cipher.Sig, check CheckPostVoteFunc) (
 	}
 
 	return &PostVoteTransport{
-		ContentTransport: &ContentTransport{raw: raw, header: header},
+		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
 		body:             body,
 	}, nil
 }
@@ -177,7 +178,7 @@ func NewUserVoteTransport(raw []byte, sig cipher.Sig, check CheckUserVoteFunc) (
 	}
 
 	return &UserVoteTransport{
-		ContentTransport: &ContentTransport{raw: raw, header: header},
+		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
 		body:             body,
 	}, nil
 }

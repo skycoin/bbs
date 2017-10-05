@@ -1,8 +1,8 @@
 package content_view
 
 import (
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"encoding/json"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 )
 
 /*

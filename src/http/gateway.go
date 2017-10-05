@@ -30,7 +30,7 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 
 	// For content submission.
 	RegisterSubmissionHandlers(mux, g)
-	RegisterLegacySubmissionsHandlers(mux, g) // TODO: Remove.
+	RegisterLegacySubmissionsHandlers(mux, g)
 
 	// Gets a list of boards; remote and master (boards that this node owns).
 	mux.HandleFunc("/api/get_boards",
@@ -71,7 +71,6 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 				UserPubKeyStr:  r.FormValue("user_public_key"),
 			}))
 		})
-
 
 	// Lists boards that have been discovered, but not subscribed to.
 	mux.HandleFunc("/api/discover_boards",

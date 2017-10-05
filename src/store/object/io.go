@@ -11,6 +11,23 @@ import (
 	"time"
 )
 
+type SubmissionIO struct {
+	Type   r0.ContentType
+	Body   []byte
+	SigStr string
+	Sig    cipher.Sig
+}
+
+func (a *SubmissionIO) Process() error {
+	// Convert signature.
+	var e error
+	if a.Sig, e = cipher.SigFromHex(a.SigStr); e != nil {
+		return boo.WrapType(e, boo.InvalidInput,
+			"invalid hex representation of signature:", a.SigStr)
+	}
+	return nil
+}
+
 // NewBoard represents io required to create a new board.
 type NewBoardIO struct {
 	Name        string        `bbs:"name"`
@@ -32,7 +49,7 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 		Body:    a.Body,
 		Created: time.Now().UnixNano(),
 		SubKeys: keys.PubKeyArrayToStringArray(subPKs),
-		Tags: []string{},
+		Tags:    []string{},
 	})
 	return nil
 }
@@ -171,17 +188,6 @@ func (a *ConnectionIO) Process() error {
 		return e
 	}
 	return nil
-}
-
-// SubmissionIO represents submission address input/output.
-type SubmissionIO struct {
-	BoardPubKeyStr string        `bbs:"bpkStr"`
-	BoardPubKey    cipher.PubKey `bbs:"bpk"`
-	SubAddress     string        `bbs:"address"`
-}
-
-func (a *SubmissionIO) Process() error {
-	return tag.Process(a)
 }
 
 // BoardIO represents a subscription input.

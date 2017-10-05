@@ -1,13 +1,13 @@
 package content_view
 
 import (
+	"fmt"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"sync"
-	"fmt"
 	"log"
+	"sync"
 )
 
 type indexPage struct {

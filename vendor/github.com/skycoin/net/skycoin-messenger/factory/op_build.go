@@ -76,7 +76,7 @@ func (req *appConn) Execute(f *MessengerFactory, conn *Connection) (r resp, err 
 			conn.GetContextLogger().Debugf("transport err %v", err)
 			return
 		}
-		c.writeOP(OP_FORWARD_NODE_CONN, &forwardNodeConn{Node: req.Node, App: req.App, FromApp: fromApp, FromNode:fromNode})
+		c.writeOP(OP_FORWARD_NODE_CONN, &forwardNodeConn{Node: req.Node, App: req.App, FromApp: fromApp, FromNode: fromNode})
 		conn.setTransport(req.App, tr)
 	})
 	return
@@ -110,7 +110,7 @@ func (req *buildConnResp) Execute(f *MessengerFactory, conn *Connection) (r resp
 	tr.setUDPConn(conn)
 	addr := genP2PAddress()
 	fnOK := func() {
-		appConn.writeOP(OP_BUILD_APP_CONN|RESP_PREFIX, &appConnResp{Address:addr})
+		appConn.writeOP(OP_BUILD_APP_CONN|RESP_PREFIX, &appConnResp{Address: addr})
 	}
 	err = tr.ListenForApp(addr, fnOK)
 	for err != nil {
@@ -157,10 +157,10 @@ func (req *forwardNodeConn) Execute(f *MessengerFactory, conn *Connection) (r re
 	conn.GetContextLogger().Debugf("conn remote addr %v", conn.GetRemoteAddr())
 	err = c.writeOP(OP_BUILD_NODE_CONN|RESP_PREFIX,
 		&buildConn{
-			Address: conn.GetRemoteAddr().String(),
-			Node: req.Node,
-			App: req.App,
-			FromApp: req.FromApp,
+			Address:  conn.GetRemoteAddr().String(),
+			Node:     req.Node,
+			App:      req.App,
+			FromApp:  req.FromApp,
 			FromNode: req.FromNode,
 		})
 	return
@@ -184,10 +184,10 @@ func (req *forwardNodeConnResp) Execute(f *MessengerFactory, conn *Connection) (
 
 	err = c.writeOP(OP_FORWARD_NODE_CONN|RESP_PREFIX,
 		&buildConnResp{
-			Address: conn.GetRemoteAddr().String(),
-			Node: req.Node,
-			App: req.App,
-			FromApp: req.FromApp,
+			Address:  conn.GetRemoteAddr().String(),
+			Node:     req.Node,
+			App:      req.App,
+			FromApp:  req.FromApp,
 			FromNode: req.FromNode,
 		})
 	return
