@@ -30,7 +30,7 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 
 	// For content submission.
 	RegisterSubmissionHandlers(mux, g)
-	//RegisterLegacySubmissionsHandlers(mux, g)
+	RegisterLegacySubmissionsHandlers(mux, g)
 
 	// Gets a list of boards; remote and master (boards that this node owns).
 	mux.HandleFunc("/api/get_boards",
