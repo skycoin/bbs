@@ -42,6 +42,54 @@
 						"description": "Generates a public/private key pair from seed (if provided). Otherwise a random key pair will be generated."
 					},
 					"response": []
+				},
+				{
+					"name": "Hash (String)",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/tools/hash_string",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "data",
+									"value": "{\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"created\":1507011466251404010,\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\"}",
+									"description": "String to hash.",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Finds the SHA256 hash of some incoming string data."
+					},
+					"response": []
+				},
+				{
+					"name": "Sign",
+					"request": {
+						"url": "http://127.0.0.1:7410/api/tools/sign",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "hash",
+									"value": "22947b6018ea170ec4e19a2df3221989fd0531639d86a2b60fb4e9b4a0771383",
+									"description": "SHA256 hash to be signed (Hex representation).",
+									"type": "text"
+								},
+								{
+									"key": "secret_key",
+									"value": "69eb49ceac75c3e0993395ecf25730578499f8091a935a59452f9fef7115dd4d",
+									"description": "Secret key to sig with (Hex representation).",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
 				}
 			]
 		},
@@ -704,7 +752,7 @@
 					"formdata": [
 						{
 							"key": "board_public_key",
-							"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+							"value": "02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1",
 							"description": "Public key of board.",
 							"type": "text"
 						}
@@ -790,19 +838,19 @@
 					"formdata": [
 						{
 							"key": "type",
-							"value": "",
+							"value": "5,thread",
 							"description": "Type of data that is being submitted.",
 							"type": "text"
 						},
 						{
 							"key": "body",
-							"value": "",
+							"value": "{\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"created\":1507011466251404010,\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\"}",
 							"description": "Data body that is being submitted (best to keep the form with less whitespace).",
 							"type": "text"
 						},
 						{
 							"key": "sig",
-							"value": "",
+							"value": "d4572654617b12e186f4604b60a52e57957dab90ca1bcdb9da60b6dfa50788fb12e3554445b0d1d2f01ecb8419cd80fe407f799e27ba247db30f8142815b254400",
 							"description": "Signature of body.",
 							"type": "text"
 						}
@@ -810,7 +858,107 @@
 				},
 				"description": "When user session management is implemented client-side, and the BBS node serves a website that is exposed publicly, this endpoint will be used for submitting content to boards."
 			},
-			"response": []
+			"response": [
+				{
+					"id": "dd24e9c1-fd7c-4d81-9d69-83bfbe465bfc",
+					"name": "New Thread",
+					"originalRequest": {
+						"url": "http://127.0.0.1:7410/api/new_submission",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "type",
+									"value": "5,thread",
+									"description": "Type of data that is being submitted.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "{\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"created\":1507011466251404010,\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\"}",
+									"description": "Data body that is being submitted (best to keep the form with less whitespace).",
+									"type": "text"
+								},
+								{
+									"key": "sig",
+									"value": "d4572654617b12e186f4604b60a52e57957dab90ca1bcdb9da60b6dfa50788fb12e3554445b0d1d2f01ecb8419cd80fe407f799e27ba247db30f8142815b254400",
+									"description": "Signature of body.",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "",
+					"_postman_previewtype": "parsed",
+					"header": [],
+					"cookie": [],
+					"responseTime": 0,
+					"body": "{\n    \"okay\": true,\n    \"data\": {\n        \"board\": {\n            \"public_key\": \"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\n            \"header\": {\n                \"type\": \"5,board\"\n            },\n            \"body\": {\n                \"name\": \"Test Board\",\n                \"body\": \"This is a test board.\",\n                \"created\": 1507087380834316180,\n                \"submission_keys\": [],\n                \"tags\": []\n            }\n        },\n        \"threads\": [\n            {\n                \"header\": {\n                    \"type\": \"5,thread\",\n                    \"hash\": \"37215d922cc682ef81763a40cd51edbc3c1c9e9b9c7bc4c52e23b8115fc30c97\",\n                    \"pk\": \"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\n                    \"sig\": \"d4572654617b12e186f4604b60a52e57957dab90ca1bcdb9da60b6dfa50788fb12e3554445b0d1d2f01ecb8419cd80fe407f799e27ba247db30f8142815b254400\"\n                },\n                \"body\": {\n                    \"of_board\": \"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\n                    \"name\": \"Test Thread\",\n                    \"body\": \"This is a test thread.\",\n                    \"created\": 1507011466251404010,\n                    \"creator\": \"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"\n                }\n            }\n        ]\n    }\n}"
+				},
+				{
+					"id": "d407cb52-54e3-487e-afe3-1396e921f31c",
+					"name": "New Post",
+					"originalRequest": {
+						"url": "http://127.0.0.1:7410/api/new_submission",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "type",
+									"value": "5,post",
+									"description": "Type of data that is being submitted.",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "{\"name\":\"Test Post\",\"body\":\"This is a test post.\",\"created\":1507011466251404010,\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"37215d922cc682ef81763a40cd51edbc3c1c9e9b9c7bc4c52e23b8115fc30c97\"}",
+									"description": "Data body that is being submitted (best to keep the form with less whitespace).",
+									"type": "text"
+								},
+								{
+									"key": "sig",
+									"value": "8dd49b8c904ac0acd187549c46dc1adb55489aab7df8644a6d96f27306d37c2447e6af4bcaa9a991315a45e2cf363a1b04022b6c3c3fb0ec9a453f9025b0092200",
+									"description": "Signature of body.",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"_postman_previewtype": "text",
+					"header": [
+						{
+							"key": "Content-Length",
+							"value": "1493",
+							"name": "Content-Length",
+							"description": "The length of the response body in octets (8-bit bytes)"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "The mime type of this content"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 05 Oct 2017 02:59:27 GMT",
+							"name": "Date",
+							"description": "The date and time that the message was sent"
+						}
+					],
+					"cookie": [],
+					"responseTime": 1004,
+					"body": "{\"okay\":true,\"data\":{\"board\":{\"public_key\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"header\":{\"type\":\"5,board\"},\"body\":{\"name\":\"Test Board\",\"body\":\"This is a test board.\",\"created\":1507087380834316180,\"submission_keys\":[],\"tags\":[]}},\"thread\":{\"header\":{\"type\":\"5,thread\",\"hash\":\"37215d922cc682ef81763a40cd51edbc3c1c9e9b9c7bc4c52e23b8115fc30c97\",\"pk\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"sig\":\"d4572654617b12e186f4604b60a52e57957dab90ca1bcdb9da60b6dfa50788fb12e3554445b0d1d2f01ecb8419cd80fe407f799e27ba247db30f8142815b254400\"},\"body\":{\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"created\":1507011466251404010,\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}},\"posts\":[{\"header\":{\"type\":\"5,post\",\"hash\":\"22947b6018ea170ec4e19a2df3221989fd0531639d86a2b60fb4e9b4a0771383\",\"pk\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"sig\":\"8dd49b8c904ac0acd187549c46dc1adb55489aab7df8644a6d96f27306d37c2447e6af4bcaa9a991315a45e2cf363a1b04022b6c3c3fb0ec9a453f9025b0092200\"},\"body\":{\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"37215d922cc682ef81763a40cd51edbc3c1c9e9b9c7bc4c52e23b8115fc30c97\",\"name\":\"Test Post\",\"body\":\"This is a test post.\",\"created\":1507011466251404010,\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}}]}}"
+				}
+			]
 		}
 	]
 }

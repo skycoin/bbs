@@ -28,9 +28,11 @@ func RegisterToolsHandlers(mux *http.ServeMux, _ *Gateway) {
 			}
 			send(w)(
 				struct {
+					Seed   string `json:"seed"`
 					PubKey string `json:"public_key"`
 					SecKey string `json:"secret_key"`
 				}{
+					Seed:   seed,
 					PubKey: pk.Hex(),
 					SecKey: sk.Hex(),
 				},
