@@ -17,12 +17,14 @@ import (
 	"os/signal"
 	"path/filepath"
 	"time"
+	"github.com/skycoin/bbs/src/rpc"
 )
 
 const (
 	defaultConfigSubDir    = ".skybbs"
 	defaultStaticSubDir    = "static/dist"
 	defaultDevStaticSubDir = "src/github.com/skycoin/bbs/static/dist"
+	defaultRPCPort         = 8996
 	defaultCXOPort         = 8998
 	defaultCXORPCPort      = 8997
 	defaultHTTPPort        = 7410
@@ -46,6 +48,9 @@ type Config struct {
 	Memory    bool   `json:"memory"`     // Whether to run node in memory.
 	ConfigDir string `json:"config_dir"` // Full path for configuration directory.
 
+	RPC     bool `json:"rpc"`      // Enable RPC interface for admin control.
+	RPCPort int  `json:"rpc_port"` // Listening port of node RPC.
+
 	CXOPort    int  `json:"cxo_port"`               // Listening port of CXO.
 	CXORPC     bool `json:"cxo_rpc"`                // Whether to enable CXO RPC.
 	CXORPCPort int  `json:"cxo_rpc_port,omitempty"` // Listening RPC port of CXO.
@@ -65,6 +70,8 @@ func NewDefaultConfig() *Config {
 	return &Config{
 		Memory:             false, // Save to disk.
 		ConfigDir:          "",    // --> Action: set as '$HOME/.skybbs'
+		RPC:                true,
+		RPCPort:            defaultRPCPort,
 		CXOPort:            defaultCXOPort,
 		CXORPC:             false,
 		CXORPCPort:         defaultCXORPCPort,
@@ -156,8 +163,21 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 				Quit: quit,
 			},
 		)
-		CatchError(e, "failed to start HTTP Server")
+		CatchError(e, "failed to start HTTP server")
 		defer httpServer.Close()
+
+		rpcServer, e := rpc.NewServer(
+			&rpc.ServerConfig{
+				Enable: &c.RPC,
+				Port:   &c.RPCPort,
+			},
+			&rpc.Gateway{
+				CXO:      httpServer.CXO(),
+				QuitChan: quit,
+			},
+		)
+		CatchError(e, "failed to start RPC server")
+		defer rpcServer.Close()
 
 		if c.Browser {
 			address := fmt.Sprintf("http://127.0.0.1:%d", c.HTTPPort)
@@ -210,6 +230,14 @@ func main() {
 		cli.StringFlag{
 			Name:        "config-dir",
 			Destination: &config.ConfigDir,
+		},
+		cli.BoolTFlag{
+			Name: "rpc",
+			Destination: &config.RPC,
+		},
+		cli.IntFlag{
+			Name: "rpc-port",
+			Destination: &config.RPCPort,
 		},
 		cli.IntFlag{
 			Name:        "cxo-port",
