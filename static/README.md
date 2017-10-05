@@ -26,8 +26,9 @@ From your command line:
 ```bash
 git clone https://github.com/skycoin/bbs.git
 cd bbs/static
+npm update
 npm install
-npm run start
+npm start
 ```
 
 ## Build
@@ -35,6 +36,7 @@ From your command line:
 ```bash
 git clone https://github.com/skycoin/bbs.git
 cd bbs/static
+npm update
 npm install
-npm run build
+ng build
 ```
