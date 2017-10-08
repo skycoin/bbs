@@ -75,3 +75,18 @@ func (g *Gateway) NewBoard(in *object.NewBoardIO, _ *struct{}) error {
 	}
 	return g.CXO.NewBoard(in)
 }
+
+func (g *Gateway) DeleteBoard(in *object.BoardIO, _ *struct{}) error {
+	if e := in.Process(); e != nil {
+		return e
+	}
+	return g.CXO.UnsubscribeMaster(in.PubKey)
+}
+
+func (g *Gateway) ExportBoard(in *object.ExportBoardIO, _ *struct{}) error {
+	if e := in.Process(); e != nil {
+		return e
+	}
+	_, _, e := g.CXO.ExportBoard(in.PubKey, in.Name)
+	return e
+}

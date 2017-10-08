@@ -23,6 +23,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
+
 	switch in.Type {
 	case r0.V5ThreadType:
 		transport, e := r0.NewThreadTransport(in.Body, in.Sig, nil)
@@ -36,7 +37,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 		thread := new(r0.Thread).Fill(transport)
 		var goal uint64
 		if bi.IsMaster() {
-			if goal, e = bi.NewThread(thread); e != nil {
+			if goal, e = bi.Submit(thread.Content); e != nil {
 				return nil, e
 			}
 		} else {
@@ -64,7 +65,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 		post := new(r0.Post).Fill(transport)
 		var goal uint64
 		if bi.IsMaster() {
-			if goal, e = bi.NewPost(post); e != nil {
+			if goal, e = bi.Submit(post.Content); e != nil {
 				return nil, e
 			}
 		} else {
@@ -93,7 +94,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 		threadVote := new(r0.ThreadVote).Fill(transport)
 		var goal uint64
 		if bi.IsMaster() {
-			if goal, e = bi.NewThreadVote(threadVote); e != nil {
+			if goal, e = bi.Submit(threadVote.Content); e != nil {
 				return nil, e
 			}
 		} else {
@@ -122,7 +123,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 		postVote := new(r0.PostVote).Fill(transport)
 		var goal uint64
 		if bi.IsMaster() {
-			if goal, e = bi.NewPostVote(postVote); e != nil {
+			if goal, e = bi.Submit(postVote.Content); e != nil {
 				return nil, e
 			}
 		} else {
@@ -151,7 +152,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 		userVote := new(r0.UserVote).Fill(transport)
 		var goal uint64
 		if bi.IsMaster() {
-			if goal, e = bi.NewUserVote(userVote); e != nil {
+			if goal, e = bi.Submit(userVote.Content); e != nil {
 				return nil, e
 			}
 		} else {
@@ -397,7 +398,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 	}
 	var goal uint64
 	if bi.IsMaster() {
-		if goal, e = bi.NewThread(in.Thread); e != nil {
+		if goal, e = bi.Submit(in.Thread.Content); e != nil {
 			return nil, e
 		}
 	} else {
@@ -447,7 +448,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	}
 	var goal uint64
 	if bi.IsMaster() {
-		if goal, e = bi.NewPost(in.Post); e != nil {
+		if goal, e = bi.Submit(in.Post.Content); e != nil {
 			return nil, e
 		}
 	} else {
@@ -498,7 +499,7 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 	}
 	var goal uint64
 	if bi.IsMaster() {
-		if goal, e = bi.NewUserVote(in.Vote); e != nil {
+		if goal, e = bi.Submit(in.Vote.Content); e != nil {
 			return nil, e
 		}
 	} else {
@@ -531,7 +532,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 	}
 	var goal uint64
 	if bi.IsMaster() {
-		if goal, e = bi.NewThreadVote(in.Vote); e != nil {
+		if goal, e = bi.Submit(in.Vote.Content); e != nil {
 			return nil, e
 		}
 	} else {
@@ -563,7 +564,7 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 	}
 	var goal uint64
 	if bi.IsMaster() {
-		if goal, e = bi.NewPostVote(in.Vote); e != nil {
+		if goal, e = bi.Submit(in.Vote.Content); e != nil {
 			return nil, e
 		}
 	} else {

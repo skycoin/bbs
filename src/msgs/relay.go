@@ -300,27 +300,8 @@ func (r *Relay) processNewContent(msg *BBSMessage) (uint64, error) {
 	if e != nil {
 		return 0, e
 	}
-	switch content.GetHeader().Type {
 
-	case r0.V5ThreadType:
-		return bi.NewThread(content.ToThread())
-
-	case r0.V5PostType:
-		return bi.NewPost(content.ToPost())
-
-	case r0.V5ThreadVoteType:
-		return bi.NewThreadVote(content.ToThreadVote())
-
-	case r0.V5PostVoteType:
-		return bi.NewPostVote(content.ToPostVote())
-
-	case r0.V5UserVoteType:
-		return bi.NewUserVote(content.ToUserVote())
-
-	default:
-		return 0, boo.Newf(boo.InvalidInput, "invalid content type '%s'",
-			content.GetHeader().Type)
-	}
+	return bi.Submit(content)
 }
 
 func (r *Relay) processResponse(msg *BBSMessage) error {
