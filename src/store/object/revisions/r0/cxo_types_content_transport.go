@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
+	"time"
 )
 
 type ContentTransport struct {
@@ -35,6 +36,7 @@ func NewThreadTransport(raw []byte, sig cipher.Sig, check CheckThreadFunc) (*Thr
 		Type: V5ThreadType,
 		Hash: cipher.SumSHA256(raw).Hex(),
 		PK:   body.GetCreator().Hex(),
+		TS:   time.Now().UnixNano(),
 		Sig:  sig.Hex(),
 	}
 	if e := header.Verify(); e != nil {
@@ -69,6 +71,7 @@ func NewPostTransport(raw []byte, sig cipher.Sig, check CheckPostFunc) (*PostTra
 		Type: V5PostType,
 		Hash: cipher.SumSHA256(raw).Hex(),
 		PK:   body.GetCreator().Hex(),
+		TS:   time.Now().UnixNano(),
 		Sig:  sig.Hex(),
 	}
 	if e := header.Verify(); e != nil {
@@ -103,6 +106,7 @@ func NewThreadVoteTransport(raw []byte, sig cipher.Sig, check CheckThreadVoteFun
 		Type: V5ThreadVoteType,
 		Hash: cipher.SumSHA256(raw).Hex(),
 		PK:   body.GetCreator().Hex(),
+		TS:   time.Now().UnixNano(),
 		Sig:  sig.Hex(),
 	}
 	if e := header.Verify(); e != nil {
@@ -137,6 +141,7 @@ func NewPostVoteTransport(raw []byte, sig cipher.Sig, check CheckPostVoteFunc) (
 		Type: V5PostVoteType,
 		Hash: cipher.SumSHA256(raw).Hex(),
 		PK:   body.GetCreator().Hex(),
+		TS:   time.Now().UnixNano(),
 		Sig:  sig.Hex(),
 	}
 	if e := header.Verify(); e != nil {
@@ -171,6 +176,7 @@ func NewUserVoteTransport(raw []byte, sig cipher.Sig, check CheckUserVoteFunc) (
 		Type: V5UserVoteType,
 		Hash: cipher.SumSHA256(raw).Hex(),
 		PK:   body.GetCreator().Hex(),
+		TS:   time.Now().UnixNano(),
 		Sig:  sig.Hex(),
 	}
 	if e := header.Verify(); e != nil {

@@ -9,7 +9,6 @@ import (
 type BoardData struct {
 	Name    string   `json:"name"`            // Name of board.
 	Body    string   `json:"body"`            // Description of board.
-	Created int64    `json:"created"`         // Time of creation (unix time in ns).
 	SubKeys []string `json:"submission_keys"` // Submission public keys.
 	Tags    []string `json:"tags"`            // Tags used for searching.
 }
@@ -36,7 +35,6 @@ type ThreadData struct {
 	OfBoard string `json:"of_board"` // Public key of board of which thread belongs.
 	Name    string `json:"name"`     // Name of thread.
 	Body    string `json:"body"`     // Body of thread.
-	Created int64  `json:"created"`  // Time of creation (unix time in ns).
 	Creator string `json:"creator"`  // Public key of creator (in hex).
 }
 
@@ -63,7 +61,6 @@ type PostData struct {
 	Name     string       `json:"name"`              // Name of post.
 	Body     string       `json:"body"`              // Body of post.
 	Images   []*ImageData `json:"images,omitempty"`  // Images of post (optional).
-	Created  int64        `json:"created"`           // Time of creation (unix time in ns).
 	Creator  string       `json:"creator"`           // Public key of creator (in hex).
 }
 
@@ -117,7 +114,6 @@ type VoteData struct {
 	OfBoard string `json:"of_board"` // Public key of board in which vote belongs.
 	Value   int    `json:"value"`    // +1, 0, -1.
 	Tag     string `json:"tag"`      // Added tag of vote.
-	Created int64  `json:"created"`  // Time of creation (unix time in ns).
 	Creator string `json:"creator"`  // Public key of creator (in hex).
 }
 
