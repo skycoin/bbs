@@ -12,6 +12,8 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"log"
 	"time"
+	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/bbs/src/store/state"
 )
 
 type Access struct {
@@ -30,150 +32,98 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 		if e != nil {
 			return nil, e
 		}
-		bi, e := a.CXO.GetBoardInstance(transport.OfBoard)
-		if e != nil {
-			return nil, e
-		}
 		thread := new(r0.Thread).Fill(transport)
-		var goal uint64
-		if bi.IsMaster() {
-			if goal, e = bi.Submit(thread.Content); e != nil {
-				return nil, e
-			}
-		} else {
-			goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), thread.Content)
-			if e != nil {
-				return nil, e
-			}
-		}
-		if e := bi.WaitSeq(ctx, goal); e != nil {
+		if bi, e := submitAndWait(ctx, a, transport.OfBoard, thread.Content); e != nil {
 			return nil, e
+		} else {
+			return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
+				Perspective: transport.Header.PK,
+			})
 		}
-		return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
-			Perspective: transport.Header.PK,
-		})
 
 	case r0.V5PostType:
 		transport, e := r0.NewPostTransport(in.Body, in.Sig, nil)
 		if e != nil {
 			return nil, e
 		}
-		bi, e := a.CXO.GetBoardInstance(transport.OfBoard)
-		if e != nil {
-			return nil, e
-		}
 		post := new(r0.Post).Fill(transport)
-		var goal uint64
-		if bi.IsMaster() {
-			if goal, e = bi.Submit(post.Content); e != nil {
-				return nil, e
-			}
-		} else {
-			goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), post.Content)
-			if e != nil {
-				return nil, e
-			}
-		}
-		if e := bi.WaitSeq(ctx, goal); e != nil {
+		if bi, e := submitAndWait(ctx, a, transport.OfBoard, post.Content); e != nil {
 			return nil, e
+		} else {
+			return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
+				Perspective: post.GetBody().Creator,
+				ThreadHash:  post.GetBody().OfThread,
+			})
 		}
-		return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
-			Perspective: post.GetBody().Creator,
-			ThreadHash:  post.GetBody().OfThread,
-		})
 
 	case r0.V5ThreadVoteType:
 		transport, e := r0.NewThreadVoteTransport(in.Body, in.Sig, nil)
 		if e != nil {
 			return nil, e
 		}
-		bi, e := a.CXO.GetBoardInstance(transport.OfBoard)
-		if e != nil {
+		tVote := new(r0.ThreadVote).Fill(transport)
+		if bi, e := submitAndWait(ctx, a, transport.OfBoard, tVote.Content); e != nil {
 			return nil, e
-		}
-		threadVote := new(r0.ThreadVote).Fill(transport)
-		var goal uint64
-		if bi.IsMaster() {
-			if goal, e = bi.Submit(threadVote.Content); e != nil {
-				return nil, e
-			}
 		} else {
-			goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), threadVote.Content)
-			if e != nil {
-				return nil, e
-			}
+			return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+				Perspective: tVote.GetBody().Creator,
+				ContentHash: tVote.GetHeader().Hash,
+			})
 		}
-		if e := bi.WaitSeq(ctx, goal); e != nil {
-			return nil, e
-		}
-		return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
-			Perspective: threadVote.GetBody().Creator,
-			ContentHash: threadVote.GetHeader().Hash,
-		})
 
 	case r0.V5PostVoteType:
 		transport, e := r0.NewPostVoteTransport(in.Body, in.Sig, nil)
 		if e != nil {
 			return nil, e
 		}
-		bi, e := a.CXO.GetBoardInstance(transport.OfBoard)
-		if e != nil {
+		pVote := new(r0.PostVote).Fill(transport)
+		if bi, e := submitAndWait(ctx, a, transport.OfBoard, pVote.Content); e != nil {
 			return nil, e
-		}
-		postVote := new(r0.PostVote).Fill(transport)
-		var goal uint64
-		if bi.IsMaster() {
-			if goal, e = bi.Submit(postVote.Content); e != nil {
-				return nil, e
-			}
 		} else {
-			goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), postVote.Content)
-			if e != nil {
-				return nil, e
-			}
+			return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+				Perspective: pVote.GetBody().Creator,
+				ContentHash: pVote.GetHeader().Hash,
+			})
 		}
-		if e := bi.WaitSeq(ctx, goal); e != nil {
-			return nil, e
-		}
-		return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
-			Perspective: postVote.GetBody().Creator,
-			ContentHash: postVote.GetHeader().Hash,
-		})
 
 	case r0.V5UserVoteType:
 		transport, e := r0.NewUserVoteTransport(in.Body, in.Sig, nil)
 		if e != nil {
 			return nil, e
 		}
-		bi, e := a.CXO.GetBoardInstance(transport.OfBoard)
-		if e != nil {
+		uVote := new(r0.UserVote).Fill(transport)
+		if bi, e := submitAndWait(ctx, a, transport.OfBoard, uVote.Content); e != nil {
 			return nil, e
-		}
-		userVote := new(r0.UserVote).Fill(transport)
-		var goal uint64
-		if bi.IsMaster() {
-			if goal, e = bi.Submit(userVote.Content); e != nil {
-				return nil, e
-			}
 		} else {
-			goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), userVote.Content)
+			out, e := bi.Get(views.Follow, follow_view.FollowPage, uVote.GetBody().Creator)
 			if e != nil {
 				return nil, e
 			}
+			return getFollowPageOutput(out), nil
 		}
-		if e := bi.WaitSeq(ctx, goal); e != nil {
-			return nil, e
-		}
-		out, e := bi.Get(views.Follow, follow_view.FollowPage, userVote.GetBody().Creator)
-		if e != nil {
-			return nil, e
-		}
-		return getFollowPageOutput(out), nil
 
 	default:
 		return nil, boo.Newf(boo.InvalidInput,
 			"content submission of type '%s' is invalid", in.Type)
 	}
+}
+
+func submitAndWait(ctx context.Context, a *Access, bpk cipher.PubKey, content *r0.Content) (*state.BoardInstance, error) {
+	bi, e := a.CXO.GetBoardInstance(bpk)
+	if e != nil {
+		return nil, e
+	}
+	var goal uint64
+	if bi.IsMaster() {
+		if goal, e = bi.Submit(content); e != nil {
+			return nil, e
+		}
+	} else {
+		if goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), content); e != nil {
+			return nil, e
+		}
+	}
+	return bi, bi.WaitSeq(ctx, goal)
 }
 
 /*

@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
+	"time"
 )
 
 type BasicBody struct {
@@ -160,6 +161,7 @@ type ContentHeaderData struct {
 	Type ContentType `json:"type"`           // Content type and version.
 	Hash string      `json:"hash,omitempty"` // Hash of body.
 	PK   string      `json:"pk,omitempty"`   // Public key.
+	TS   int64       `json:"ts,omitempty"`   // Timestamp.
 	Sig  string      `json:"sig,omitempty"`  // Signature of body.
 }
 
@@ -217,6 +219,7 @@ func (b *Board) Fill(bpk cipher.PubKey, data *BoardData) {
 	b.SetBody(data)
 	b.SetHeader(&ContentHeaderData{
 		Type: V5BoardType,
+		TS: time.Now().UnixNano(),
 	})
 }
 
