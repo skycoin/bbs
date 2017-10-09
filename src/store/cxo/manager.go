@@ -389,7 +389,7 @@ func (m *Manager) GetBoardInstance(bpk cipher.PubKey) (*state.BoardInstance, err
 
 func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, error) {
 
-	var masterOut []interface{}
+	var masterOut = []interface{}{}
 	m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		bi, e := m.compiler.GetBoard(pk)
 		if e != nil {
@@ -404,7 +404,7 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 		masterOut = append(masterOut, bView)
 	})
 
-	var remoteOut []interface{}
+	var remoteOut = []interface{}{}
 	m.file.RangeRemoteSubs(func(pk cipher.PubKey) {
 		bi, e := m.compiler.GetBoard(pk)
 		if e != nil {
