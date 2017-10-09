@@ -8,7 +8,6 @@ import (
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
-	"time"
 )
 
 type SubmissionIO struct {
@@ -47,7 +46,6 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 	a.Board.Fill(a.BoardPubKey, &r0.BoardData{
 		Name:    a.Name,
 		Body:    a.Body,
-		Created: time.Now().UnixNano(),
 		SubKeys: keys.PubKeyArrayToStringArray(subPKs),
 		Tags:    []string{},
 	})
@@ -73,7 +71,6 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		OfBoard: a.BoardPubKey.Hex(),
 		Name:    a.Name,
 		Body:    a.Body,
-		Created: time.Now().UnixNano(),
 		Creator: upk.Hex(),
 	}
 	tDataRaw, e := json.Marshal(tData)
@@ -123,7 +120,6 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 		Name:     a.Name,
 		Body:     a.Body,
 		Images:   a.Images,
-		Created:  time.Now().UnixNano(),
 		Creator:  upk.Hex(),
 	}
 	pDataRaw, e := json.Marshal(pData)
@@ -240,7 +236,6 @@ func (a *UserVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 			OfBoard: a.BoardPubKeyStr,
 			Value:   int(a.Mode),
 			Tag:     string(a.Tag),
-			Created: time.Now().UnixNano(),
 			Creator: upk.Hex(),
 		},
 		OfUser: a.UserPubKeyStr,
@@ -283,7 +278,6 @@ func (a *ThreadVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 			OfBoard: a.BoardPubKeyStr,
 			Value:   int(a.Mode),
 			Tag:     string(a.Tag),
-			Created: time.Now().UnixNano(),
 			Creator: upk.Hex(),
 		},
 		OfThread: a.ThreadRefStr,
@@ -326,7 +320,6 @@ func (a *PostVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 			OfBoard: a.BoardPubKeyStr,
 			Value:   int(a.Mode),
 			Tag:     string(a.Tag),
-			Created: time.Now().UnixNano(),
 			Creator: upk.Hex(),
 		},
 		OfPost: a.PostRefStr,

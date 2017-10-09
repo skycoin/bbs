@@ -9,15 +9,47 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
-// NewThread triggers a request to add a new thread to the board.
-// Returns sequence of root in which thread is to be available, or error on failure.
-func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
+func (bi *BoardInstance) Submit(content *r0.Content) (uint64, error) {
 
-	var goalSeq uint64
-	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	var (
+		goal uint64
+		contentType = content.GetHeader().Type
+	)
 
-		// Set goal seq.
-		goalSeq = p.Root().Seq + 1
+	switch contentType {
+	case r0.V5ThreadType:
+		if e := submitThread(bi, &goal, content.ToThread()); e != nil {
+			return 0, e
+		}
+	case r0.V5PostType:
+		if e := submitPost(bi, &goal, content.ToPost()); e != nil {
+			return 0, e
+		}
+	case r0.V5ThreadVoteType:
+		if e := submitThreadVote(bi, &goal, content.ToThreadVote()); e != nil {
+			return 0, e
+		}
+	case r0.V5PostVoteType:
+		if e := submitPostVote(bi, &goal, content.ToPostVote()); e != nil {
+			return 0, e
+		}
+	case r0.V5UserVoteType:
+		if e := submitUserVote(bi, &goal, content.ToUserVote()); e != nil {
+			return 0, e
+		}
+	default:
+		return 0, boo.Newf(boo.InvalidInput,
+			"content has invalid type '%s'", contentType)
+	}
+
+	return goal, nil
+}
+
+func submitThread(bi *BoardInstance, goal *uint64, thread *r0.Thread) error {
+	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+
+		// Set goal sequence.
+		*goal = p.Root().Seq + 1
 
 		// Get thread ref.
 		tRef := p.Ref(thread.Content)
@@ -47,29 +79,24 @@ func (bi *BoardInstance) NewThread(thread *r0.Thread) (uint64, error) {
 		// Save changes.
 		return pages.Save(p)
 	})
-
-	return goalSeq, e
 }
 
-// NewPost triggers a request to add a new post to the board.
-// Returns sequence of root in which post is to be available, or error on failure.
-func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
-	pBody := post.GetBody()
+func submitPost(bi *BoardInstance, goal *uint64, post *r0.Post) error {
+	body := post.GetBody()
 
-	var goalSeq uint64
-	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
-		// Set goal seq.
-		goalSeq = p.Root().Seq + 1
+		// Set goal sequence.
+		*goal = p.Root().Seq + 1
 
 		// Get post ref.
 		pRef := p.Ref(post.Content)
 
 		// Ensure thread exists.
-		tpHash, has := h.GetThreadPageHash(pBody.OfThread)
+		tpHash, has := h.GetThreadPageHash(body.OfThread)
 		if !has {
 			return boo.Newf(boo.NotFound,
-				"thread of hash '%s' not found", pBody.OfThread)
+				"thread of hash '%s' not found", body.OfThread)
 		}
 
 		// Get root pages.
@@ -91,7 +118,7 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		}
 
 		// Modify headers.
-		h.SetThread(pBody.OfThread, tpRef.Hash)
+		h.SetThread(body.OfThread, tpRef.Hash)
 
 		// Add post to diff.
 		if e := pages.DiffPage.Add(post.Content); e != nil {
@@ -101,56 +128,39 @@ func (bi *BoardInstance) NewPost(post *r0.Post) (uint64, error) {
 		// Save changes.
 		return pages.Save(p)
 	})
-
-	return goalSeq, e
 }
 
-func (bi *BoardInstance) NewThreadVote(threadVote *r0.ThreadVote) (uint64, error) {
-	tvBody := threadVote.GetBody()
+func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *r0.ThreadVote) error {
+	body := tVote.GetBody()
 
-	var goalSeq uint64
-	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
-
-		// Set goal seq.
-		goalSeq = p.Root().Seq + 1
+	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		*goal = p.Root().Seq + 1
 
 		// Check vote.
-		if _, ok := h.GetThreadPageHash(tvBody.OfThread); !ok {
+		if _, ok := h.GetThreadPageHash(body.OfThread); !ok {
 			return boo.Newf(boo.NotFound,
-				"thread of hash '%s' is not found", tvBody.OfThread)
+				"thread of hash '%s' is not found", body.OfThread)
 		}
 
-		return addVoteToProfile(p, h, threadVote.Content, tvBody.Creator)
+		return addVoteToProfile(p, h, tVote.Content, body.Creator)
 	})
-	return goalSeq, e
 }
 
-func (bi *BoardInstance) NewPostVote(postVote *r0.PostVote) (uint64, error) {
-	pvBody := postVote.GetBody()
+func submitPostVote(bi *BoardInstance, goal *uint64, pVote *r0.PostVote) error {
+	body := pVote.GetBody()
 
-	var goalSeq uint64
-	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
-
-		// Set goal seq.
-		goalSeq = p.Root().Seq + 1
-
-		return addVoteToProfile(p, h, postVote.Content, pvBody.Creator)
+	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		*goal = p.Root().Seq + 1
+		return addVoteToProfile(p, h, pVote.Content, body.Creator)
 	})
-	return goalSeq, e
 }
 
-func (bi *BoardInstance) NewUserVote(userVote *r0.UserVote) (uint64, error) {
-	uvBody := userVote.GetBody()
-
-	var goalSeq uint64
-	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
-
-		// Set goal seq.
-		goalSeq = p.Root().Seq + 1
-
-		return addVoteToProfile(p, h, userVote.Content, uvBody.Creator)
+func submitUserVote(bi *BoardInstance, goal *uint64, uVote *r0.UserVote) error {
+	body := uVote.GetBody()
+	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		*goal = p.Root().Seq + 1
+		return addVoteToProfile(p, h, uVote.Content, body.Creator)
 	})
-	return goalSeq, e
 }
 
 func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *r0.Content, creator string) error {
