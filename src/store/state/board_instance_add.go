@@ -9,50 +9,47 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
-func (bi *BoardInstance) Submit(content *r0.Content) (uint64, error) {
+func (bi *BoardInstance) Submit(transport *r0.Transport) (uint64, error) {
 
-	var (
-		goal uint64
-		contentType = content.GetHeader().Type
-	)
+	var goal uint64
 
-	switch contentType {
+	switch transport.Body.Type {
 	case r0.V5ThreadType:
-		if e := submitThread(bi, &goal, content.ToThread()); e != nil {
+		if e := submitThread(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
 	case r0.V5PostType:
-		if e := submitPost(bi, &goal, content.ToPost()); e != nil {
+		if e := submitPost(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
 	case r0.V5ThreadVoteType:
-		if e := submitThreadVote(bi, &goal, content.ToThreadVote()); e != nil {
+		if e := submitThreadVote(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
 	case r0.V5PostVoteType:
-		if e := submitPostVote(bi, &goal, content.ToPostVote()); e != nil {
+		if e := submitPostVote(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
 	case r0.V5UserVoteType:
-		if e := submitUserVote(bi, &goal, content.ToUserVote()); e != nil {
+		if e := submitUserVote(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
 	default:
 		return 0, boo.Newf(boo.InvalidInput,
-			"content has invalid type '%s'", contentType)
+			"content has invalid type '%s'", transport.Body.Type)
 	}
 
 	return goal, nil
 }
 
-func submitThread(bi *BoardInstance, goal *uint64, thread *r0.Thread) error {
+func submitThread(bi *BoardInstance, goal *uint64, thread *r0.Content) error {
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal sequence.
 		*goal = p.Root().Seq + 1
 
 		// Get thread ref.
-		tRef := p.Ref(thread.Content)
+		tRef := p.Ref(thread)
 
 		// Ensure thread does not exist.
 		if _, has := h.GetThreadPageHash(thread.GetHeader().Hash); has {
@@ -72,7 +69,7 @@ func submitThread(bi *BoardInstance, goal *uint64, thread *r0.Thread) error {
 		}
 
 		// Add thread to diff page.
-		if e := pages.DiffPage.Add(thread.Content); e != nil {
+		if e := pages.DiffPage.Add(thread); e != nil {
 			return e
 		}
 
@@ -81,7 +78,7 @@ func submitThread(bi *BoardInstance, goal *uint64, thread *r0.Thread) error {
 	})
 }
 
-func submitPost(bi *BoardInstance, goal *uint64, post *r0.Post) error {
+func submitPost(bi *BoardInstance, goal *uint64, post *r0.Content) error {
 	body := post.GetBody()
 
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
@@ -90,7 +87,7 @@ func submitPost(bi *BoardInstance, goal *uint64, post *r0.Post) error {
 		*goal = p.Root().Seq + 1
 
 		// Get post ref.
-		pRef := p.Ref(post.Content)
+		pRef := p.Ref(post)
 
 		// Ensure thread exists.
 		tpHash, has := h.GetThreadPageHash(body.OfThread)
@@ -121,7 +118,7 @@ func submitPost(bi *BoardInstance, goal *uint64, post *r0.Post) error {
 		h.SetThread(body.OfThread, tpRef.Hash)
 
 		// Add post to diff.
-		if e := pages.DiffPage.Add(post.Content); e != nil {
+		if e := pages.DiffPage.Add(post); e != nil {
 			return e
 		}
 
@@ -130,7 +127,7 @@ func submitPost(bi *BoardInstance, goal *uint64, post *r0.Post) error {
 	})
 }
 
-func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *r0.ThreadVote) error {
+func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *r0.Content) error {
 	body := tVote.GetBody()
 
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
@@ -142,24 +139,24 @@ func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *r0.ThreadVote) err
 				"thread of hash '%s' is not found", body.OfThread)
 		}
 
-		return addVoteToProfile(p, h, tVote.Content, body.Creator)
+		return addVoteToProfile(p, h, tVote, body.Creator)
 	})
 }
 
-func submitPostVote(bi *BoardInstance, goal *uint64, pVote *r0.PostVote) error {
+func submitPostVote(bi *BoardInstance, goal *uint64, pVote *r0.Content) error {
 	body := pVote.GetBody()
 
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		*goal = p.Root().Seq + 1
-		return addVoteToProfile(p, h, pVote.Content, body.Creator)
+		return addVoteToProfile(p, h, pVote, body.Creator)
 	})
 }
 
-func submitUserVote(bi *BoardInstance, goal *uint64, uVote *r0.UserVote) error {
+func submitUserVote(bi *BoardInstance, goal *uint64, uVote *r0.Content) error {
 	body := uVote.GetBody()
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		*goal = p.Root().Seq + 1
-		return addVoteToProfile(p, h, uVote.Content, body.Creator)
+		return addVoteToProfile(p, h, uVote, body.Creator)
 	})
 }
 
@@ -197,7 +194,7 @@ func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *r0.Content, c
 
 func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
 	bi.l.Println("ensuring submission keys as:", keys.PubKeyArrayToString(pks))
-	return bi.EditBoard(func(board *r0.Board) (bool, error) {
+	return bi.EditBoard(func(board *r0.Content) (bool, error) {
 		body := board.GetBody()
 		if keys.ComparePubKeyArrays(body.GetSubKeys(), pks) {
 			return false, nil
@@ -210,7 +207,7 @@ func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, erro
 
 func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 	var pks []cipher.PubKey
-	if e := bi.ViewBoard(func(board *r0.Board) (bool, error) {
+	if e := bi.ViewBoard(func(board *r0.Content) (bool, error) {
 		pks = board.GetBody().GetSubKeys()
 		return false, nil
 	}); e != nil {
@@ -223,7 +220,7 @@ func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 // BoardAction is a function in which board modification/viewing takes place.
 // Returns a boolean that represents whether changes have been made and
 // an error on failure.
-type BoardAction func(board *r0.Board) (bool, error)
+type BoardAction func(board *r0.Content) (bool, error)
 
 // EditBoard triggers a board action.
 func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
@@ -253,7 +250,7 @@ func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 		}
 
 		// Save changes.
-		if e := pages.BoardPage.Board.SetValue(board.Content); e != nil {
+		if e := pages.BoardPage.Board.SetValue(board); e != nil {
 			return e
 		}
 

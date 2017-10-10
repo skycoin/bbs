@@ -1,13 +1,13 @@
 package rpc
 
 import (
+	"github.com/skycoin/bbs/src/misc/inform"
 	"log"
 	"net"
 	"net/rpc"
-	"sync"
-	"github.com/skycoin/bbs/src/misc/inform"
 	"os"
 	"strconv"
+	"sync"
 )
 
 const (
@@ -20,12 +20,12 @@ type ServerConfig struct {
 }
 
 type Server struct {
-	c *ServerConfig
-	l *log.Logger
+	c      *ServerConfig
+	l      *log.Logger
 	listen net.Listener
-	rpc *rpc.Server
-	api *Gateway
-	wg sync.WaitGroup
+	rpc    *rpc.Server
+	api    *Gateway
+	wg     sync.WaitGroup
 }
 
 func NewServer(c *ServerConfig, g *Gateway) (*Server, error) {

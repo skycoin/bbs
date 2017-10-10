@@ -3,6 +3,7 @@ package content_view
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"log"
 )
 
 const (
@@ -120,6 +121,10 @@ func (v *ContentView) getVotes(in *ContentVotesIn) (*ContentVotesOut, error) {
 			Ref: in.ContentHash,
 		}
 		return out, nil
+	}
+
+	for i, hash := range v.c {
+		log.Printf("[%d] %s", i, hash)
 	}
 
 	return nil, boo.Newf(boo.NotFound,

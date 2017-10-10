@@ -55,10 +55,10 @@ func NewBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 			Typ: r0.RootTypeBoard,
 			Rev: 0,
 			Del: false,
-			Sum: in.Board.Body,
+			Sum: in.Content.Body,
 		},
 		&r0.BoardPage{
-			Board: pack.Ref(in.Board.Content),
+			Board: pack.Ref(in.Content),
 		},
 		&r0.DiffPage{},
 		&r0.UsersPage{},

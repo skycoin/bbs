@@ -24,17 +24,16 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 
 	return pages.UsersPage.RangeUserProfiles(func(i int, profile *r0.UserProfile) error {
 		return profile.RangeSubmissions(func(i int, c *r0.Content) error {
-			cHeader := c.GetHeader()
+			cBody := c.GetBody()
 
 			// Only parse if content is user vote.
-			if cHeader.Type == r0.V5UserVoteType {
-				cBody := c.ToUserVote().GetBody()
+			if cBody.Type == r0.V5UserVoteType {
 
 				// Ensure creator's profile exists.
-				followRep, ok := v.uMap[cHeader.PK]
+				followRep, ok := v.uMap[cBody.Creator]
 				if !ok {
-					followRep = NewFollowRep(cHeader.PK)
-					v.uMap[cHeader.PK] = followRep
+					followRep = NewFollowRep(cBody.Creator)
+					v.uMap[cBody.Creator] = followRep
 				}
 
 				// Add stuff.
@@ -49,17 +48,15 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 func (v *FollowView) Update(pack *skyobject.Pack, headers *pack.Headers) error {
 
 	for _, c := range headers.GetChanges().New {
-		cHeader := c.GetHeader()
+		cBody := c.GetBody()
 
 		// Only parse if content is user type.
-		if cHeader.Type == r0.V5UserVoteType {
-			cBody := c.ToUserVote().GetBody()
-
+		if cBody.Type == r0.V5UserVoteType {
 			// Ensure creator's profile exists.
-			followRep, ok := v.uMap[cHeader.PK]
+			followRep, ok := v.uMap[cBody.Creator]
 			if !ok {
-				followRep = NewFollowRep(cHeader.PK)
-				v.uMap[cHeader.PK] = followRep
+				followRep = NewFollowRep(cBody.Creator)
+				v.uMap[cBody.Creator] = followRep
 			}
 
 			// Add stuff.

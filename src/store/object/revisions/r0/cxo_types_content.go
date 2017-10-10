@@ -2,33 +2,90 @@ package r0
 
 import (
 	"encoding/json"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
-	"time"
 )
 
-type BasicBody struct {
-	OfBoard string `json:"of_board"`
-	Creator string `json:"creator"`
+func errGetFromBody(e error, what string) error {
+	return boo.WrapTypef(e, boo.InvalidRead,
+		"failed to get '%s' from body", what)
 }
 
-func newBasicBody(raw []byte) (*BasicBody, error) {
-	out := new(BasicBody)
+type Body struct {
+	Type     ContentType `json:"type"`                // ALL
+	TS       int64       `json:"ts"`                  // ALL
+	OfBoard  string      `json:"of_board,omitempty"`  // thread, post, thread_vote, post_vote, user_vote
+	OfThread string      `json:"of_thread,omitempty"` // post, thread_vote
+	OfPost   string      `json:"of_post,omitempty"`   // post (optional), post_vote
+	Name     string      `json:"name,omitempty"`      // board, thread, post
+	Body     string      `json:"body,omitempty"`      // board, thread, post
+	Value    int         `json:"value,omitempty"`     // thread_vote, post_vote, user_vote
+	Tag      string      `json:"tag,omitempty"`       // thread_vote, post_vote, user_vote
+	Tags     []string    `json:"tags,omitempty"`      // board
+	SubKeys  []string    `json:"submission_keys,omitempty"` // board
+	Creator  string      `json:"creator,omitempty"`   // thread, post, thread_vote, post_vote, user_vote
+}
+
+func NewBody(raw []byte) (*Body, error) {
+	out := new(Body)
 	if e := json.Unmarshal(raw, out); e != nil {
 		return nil, e
 	}
 	return out, nil
 }
 
-func (c *BasicBody) GetOfBoard() (cipher.PubKey, error) {
-	return keys.GetPubKey(c.OfBoard)
+func (c *Body) GetOfBoard() (cipher.PubKey, error) {
+	if pk, e := keys.GetPubKey(c.OfBoard); e != nil {
+		return pk, errGetFromBody(e, "of_board")
+	} else {
+		return pk, nil
+	}
 }
 
-func (c *BasicBody) GetCreator() (cipher.PubKey, error) {
-	return keys.GetPubKey(c.Creator)
+func (c *Body) GetOfThread() (cipher.SHA256, error) {
+	if hash, e := keys.GetHash(c.OfThread); e != nil {
+		return hash, errGetFromBody(e, "of_thread")
+	} else {
+		return hash, nil
+	}
+}
+
+func (c *Body) GetOfPost() (cipher.SHA256, error) {
+	if hash, e := keys.GetHash(c.OfPost); e != nil {
+		return hash, errGetFromBody(e, "of_post")
+	} else {
+		return hash, nil
+	}
+}
+
+func (c *Body) GetSubKeys() []cipher.PubKey {
+	out := make([]cipher.PubKey, len(c.SubKeys))
+	for i, pkStr := range c.SubKeys {
+		var e error
+		if out[i], e = keys.GetPubKey(pkStr); e != nil {
+			log.Printf("error obtaining 'submission_keys'[%d]", i)
+		}
+	}
+	return out
+}
+
+func (c *Body) SetSubKeys(pks []cipher.PubKey) {
+	c.SubKeys = make([]string, len(pks))
+	for i, pk := range pks {
+		c.SubKeys[i] = pk.Hex()
+	}
+}
+
+func (c *Body) GetCreator() (cipher.PubKey, error) {
+	if pk, e := keys.GetPubKey(c.Creator); e != nil {
+		return pk, errGetFromBody(e, "creator")
+	} else {
+		return pk, nil
+	}
 }
 
 type Content struct {
@@ -48,21 +105,25 @@ func (c *Content) String() string {
 	return string(raw)
 }
 
-func (c *Content) Verify() (*BasicBody, error) {
-	b, e := newBasicBody(c.Body)
+func (c *Content) Verify() (*Body, error) {
+	b, e := NewBody(c.Body)
 	if e != nil {
 		return nil, e
 	}
 
 	h := c.GetHeader()
 	h.Hash = cipher.SumSHA256(c.Body).Hex()
-	h.PK = b.Creator
+
+	creator, e := b.GetCreator()
+	if e != nil {
+		return nil, e
+	}
 
 	if c.Header, e = json.Marshal(h); e != nil {
 		return nil, e
 	}
 
-	if e := cipher.VerifySignature(h.GetPK(), h.GetSig(), h.GetHash()); e != nil {
+	if e := cipher.VerifySignature(creator, h.GetSig(), h.GetHash()); e != nil {
 		return nil, e
 	}
 
@@ -103,40 +164,25 @@ func (c *Content) SetHeader(data *ContentHeaderData) {
 	c.Header = jsonMarshal(data)
 }
 
-func (c *Content) GetBody(v interface{}) {
-	jsonUnmarshal(c.Body, v)
+func (c *Content) GetBody() *Body {
+	body := new(Body)
+	jsonUnmarshal(c.Body, body)
+	return body
 }
 
-func (c *Content) SetBody(v interface{}) {
-	c.Body = jsonMarshal(v)
+func (c *Content) SetBody(body *Body) {
+	c.Body = jsonMarshal(body)
 }
 
 func (c *Content) SetBodyRaw(raw []byte) {
 	c.Body = raw
 }
 
-func (c *Content) ToBoard() *Board {
-	return &Board{Content: c}
-}
-
-func (c *Content) ToThread() *Thread {
-	return &Thread{Content: c}
-}
-
-func (c *Content) ToPost() *Post {
-	return &Post{Content: c}
-}
-
-func (c *Content) ToThreadVote() *ThreadVote {
-	return &ThreadVote{Content: c}
-}
-
-func (c *Content) ToPostVote() *PostVote {
-	return &PostVote{Content: c}
-}
-
-func (c *Content) ToUserVote() *UserVote {
-	return &UserVote{Content: c}
+func (c *Content) ToRep() *ContentRep {
+	return &ContentRep{
+		Header: c.GetHeader(),
+		Body:   c.GetBody(),
+	}
 }
 
 type ContentRep struct {
@@ -148,6 +194,20 @@ type ContentRep struct {
 
 type ContentType string
 
+func (t *ContentType) IsValid() bool {
+	switch *t {
+	case
+		V5BoardType,
+		V5ThreadType,
+		V5PostType,
+		V5ThreadVoteType,
+		V5PostVoteType,
+		V5UserVoteType:
+		return true
+	}
+	return false
+}
+
 const (
 	V5BoardType      = ContentType("5,board")
 	V5ThreadType     = ContentType("5,thread")
@@ -158,10 +218,7 @@ const (
 )
 
 type ContentHeaderData struct {
-	Type ContentType `json:"type"`           // Content type and version.
 	Hash string      `json:"hash,omitempty"` // Hash of body.
-	PK   string      `json:"pk,omitempty"`   // Public key.
-	TS   int64       `json:"ts,omitempty"`   // Timestamp.
 	Sig  string      `json:"sig,omitempty"`  // Signature of body.
 }
 
@@ -169,14 +226,6 @@ func (h *ContentHeaderData) GetHash() cipher.SHA256 {
 	out, e := keys.GetHash(h.Hash)
 	if e != nil {
 		log.Println("failed to get 'hash' from header:", e)
-	}
-	return out
-}
-
-func (h *ContentHeaderData) GetPK() cipher.PubKey {
-	out, e := keys.GetPubKey(h.PK)
-	if e != nil {
-		log.Println("failed to get 'pk' from header:", e)
 	}
 	return out
 }
@@ -189,170 +238,11 @@ func (h *ContentHeaderData) GetSig() cipher.Sig {
 	return out
 }
 
-func (h *ContentHeaderData) Verify() error {
-	if e := cipher.VerifySignature(h.GetPK(), h.GetSig(), h.GetHash()); e != nil {
-		return genErrHeaderUnverified(e, string(h.Type))
+func (h *ContentHeaderData) Verify(upk cipher.PubKey) error {
+	if e := cipher.VerifySignature(upk, h.GetSig(), h.GetHash()); e != nil {
+		return genErrHeaderUnverified(e, h.Hash)
 	}
 	return nil
-}
-
-type Board struct {
-	*Content
-}
-
-func (b *Board) GetBody() *BoardData {
-	data := new(BoardData)
-	b.Content.GetBody(data)
-	return data
-}
-
-func (b *Board) ToRep(pk cipher.PubKey) *ContentRep {
-	return &ContentRep{
-		PubKey: pk.Hex(),
-		Header: b.GetHeader(),
-		Body:   b.GetBody(),
-	}
-}
-
-func (b *Board) Fill(bpk cipher.PubKey, data *BoardData) {
-	b.Content = new(Content)
-	b.SetBody(data)
-	b.SetHeader(&ContentHeaderData{
-		Type: V5BoardType,
-		TS: time.Now().UnixNano(),
-	})
-}
-
-type Thread struct {
-	*Content
-}
-
-func (t *Thread) GetBody() *ThreadData {
-	data := new(ThreadData)
-	t.Content.GetBody(data)
-	return data
-}
-
-func (t *Thread) ToRep() *ContentRep {
-	return &ContentRep{
-		Header: t.GetHeader(),
-		Body:   t.GetBody(),
-	}
-}
-
-func (t *Thread) Fill(tt *ThreadTransport) *Thread {
-	t.Content = new(Content)
-	t.SetBodyRaw(tt.raw)
-	t.SetHeader(tt.Header)
-	return t
-}
-
-type Post struct {
-	*Content
-}
-
-func GetPost(pElem *skyobject.RefsElem) (*Post, error) {
-	pVal, e := pElem.Value()
-	if e != nil {
-		return nil, elemValueErr(e, pElem)
-	}
-	p, ok := pVal.(*Content)
-	if !ok {
-		return nil, elemExtErr(pElem)
-	}
-	return p.ToPost(), nil
-}
-
-func (p *Post) GetBody() *PostData {
-	data := new(PostData)
-	p.Content.GetBody(data)
-	return data
-}
-
-func (p *Post) ToRep() *ContentRep {
-	return &ContentRep{
-		Header: p.GetHeader(),
-		Body:   p.GetBody(),
-	}
-}
-
-func (p *Post) Fill(pt *PostTransport) *Post {
-	p.Content = new(Content)
-	p.SetBodyRaw(pt.raw)
-	p.SetHeader(pt.Header)
-	return p
-}
-
-type ThreadVote struct {
-	*Content
-}
-
-func (tv *ThreadVote) GetBody() *ThreadVoteData {
-	data := new(ThreadVoteData)
-	tv.Content.GetBody(data)
-	return data
-}
-
-func (tv *ThreadVote) ToRep() *ContentRep {
-	return &ContentRep{
-		Header: tv.GetHeader(),
-		Body:   tv.GetBody(),
-	}
-}
-
-func (tv *ThreadVote) Fill(tvt *ThreadVoteTransport) *ThreadVote {
-	tv.Content = new(Content)
-	tv.SetBodyRaw(tvt.raw)
-	tv.SetHeader(tvt.Header)
-	return tv
-}
-
-type PostVote struct {
-	*Content
-}
-
-func (pv *PostVote) GetBody() *PostVoteData {
-	data := new(PostVoteData)
-	pv.Content.GetBody(data)
-	return data
-}
-
-func (pv *PostVote) ToRep() *ContentRep {
-	return &ContentRep{
-		Header: pv.GetHeader(),
-		Body:   pv.GetBody(),
-	}
-}
-
-func (pv *PostVote) Fill(pvt *PostVoteTransport) *PostVote {
-	pv.Content = new(Content)
-	pv.SetBodyRaw(pvt.raw)
-	pv.SetHeader(pvt.Header)
-	return pv
-}
-
-type UserVote struct {
-	*Content
-}
-
-func (uv *UserVote) GetBody() *UserVoteData {
-	data := new(UserVoteData)
-	uv.Content.GetBody(data)
-	return data
-}
-
-func (uv *UserVote) ToRep() *ContentRep {
-	return &ContentRep{
-		Header: uv.GetHeader(),
-		Body:   uv.GetBody(),
-	}
-}
-
-func (uv *UserVote) Fill(uvt *UserVoteTransport) *UserVote {
-	uv.Content = new(Content)
-	uv.SetBodyRaw(uvt.raw)
-	uv.SetHeader(uvt.Header)
-	return uv
 }
 
 //func GetVote(vElem *skyobject.RefsElem) (*Vote, error) {

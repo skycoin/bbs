@@ -11,6 +11,7 @@ type BoardData struct {
 	Body    string   `json:"body"`            // Description of board.
 	SubKeys []string `json:"submission_keys"` // Submission public keys.
 	Tags    []string `json:"tags"`            // Tags used for searching.
+	TS      int64    `json:"ts"`              // Time of creation (unix time in ns).
 }
 
 func (bd *BoardData) GetSubKeys() []cipher.PubKey {
@@ -35,6 +36,7 @@ type ThreadData struct {
 	OfBoard string `json:"of_board"` // Public key of board of which thread belongs.
 	Name    string `json:"name"`     // Name of thread.
 	Body    string `json:"body"`     // Body of thread.
+	TS      int64  `json:"ts"`       // Time of creation (unix time in ns).
 	Creator string `json:"creator"`  // Public key of creator (in hex).
 }
 
@@ -62,6 +64,7 @@ type PostData struct {
 	Body     string       `json:"body"`              // Body of post.
 	Images   []*ImageData `json:"images,omitempty"`  // Images of post (optional).
 	Creator  string       `json:"creator"`           // Public key of creator (in hex).
+	TS       int64        `json:"ts"`                // Time of creation (unix time in ns).
 }
 
 func (pd *PostData) GetOfBoard() cipher.PubKey {
@@ -115,6 +118,7 @@ type VoteData struct {
 	Value   int    `json:"value"`    // +1, 0, -1.
 	Tag     string `json:"tag"`      // Added tag of vote.
 	Creator string `json:"creator"`  // Public key of creator (in hex).
+	TS      int64  `json:"ts"`       // Time of creation (unix time in ns).
 }
 
 func (vd *VoteData) GetOfBoard() cipher.PubKey {

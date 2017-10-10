@@ -8,10 +8,10 @@ import (
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
+	"time"
 )
 
 type SubmissionIO struct {
-	Type   r0.ContentType
 	Body   []byte
 	SigStr string
 	Sig    cipher.Sig
@@ -34,7 +34,7 @@ type NewBoardIO struct {
 	Seed        string        `bbs:"bSeed"`
 	BoardPubKey cipher.PubKey `bbs:"bpk"`
 	BoardSecKey cipher.SecKey `bbs:"bsk"`
-	Board       *r0.Board
+	Content   *r0.Content
 }
 
 func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
@@ -42,8 +42,11 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Board = new(r0.Board)
-	a.Board.Fill(a.BoardPubKey, &r0.BoardData{
+	a.Content = new(r0.Content)
+	a.Content.SetHeader(&r0.ContentHeaderData{})
+	a.Content.SetBody(&r0.Body{
+		Type: r0.V5BoardType,
+		TS: time.Now().UnixNano(),
 		Name:    a.Name,
 		Body:    a.Body,
 		SubKeys: keys.PubKeyArrayToStringArray(subPKs),
@@ -58,14 +61,13 @@ type NewThreadIO struct {
 	BoardPubKey    cipher.PubKey `bbs:"bpk"`
 	Name           string        `bbs:"name"`
 	Body           string        `bbs:"body"`
-	Thread         *r0.Thread
+	Transport      *r0.Transport
 }
 
 func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Thread = new(r0.Thread)
 
 	tData := &r0.ThreadData{
 		OfBoard: a.BoardPubKey.Hex(),
@@ -79,12 +81,9 @@ func (a *NewThreadIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	}
 	tSig := cipher.SignHash(cipher.SumSHA256(tDataRaw), usk)
 
-	transport, e := r0.NewThreadTransport(tDataRaw, tSig, nil)
-	if e != nil {
+	if a.Transport, e = r0.NewTransport(tDataRaw, tSig); e != nil {
 		return e
 	}
-
-	a.Thread.Fill(transport)
 	return nil
 }
 
@@ -99,7 +98,7 @@ type NewPostIO struct {
 	Body           string        `bbs:"body"`
 	ImagesStr      string
 	Images         []*r0.ImageData
-	Post           *r0.Post
+	Transport      *r0.Transport
 }
 
 func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
@@ -111,7 +110,6 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 			return boo.WrapType(e, boo.InvalidInput, "failed to read 'images' form value")
 		}
 	}
-	a.Post = new(r0.Post)
 
 	pData := &r0.PostData{
 		OfBoard:  a.BoardPubKey.Hex(),
@@ -128,12 +126,10 @@ func (a *NewPostIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	}
 	pSig := cipher.SignHash(cipher.SumSHA256(pDataRaw), usk)
 
-	transport, e := r0.NewPostTransport(pDataRaw, pSig, nil)
-	if e != nil {
+	if a.Transport, e = r0.NewTransport(pDataRaw, pSig); e != nil {
 		return e
 	}
 
-	a.Post.Fill(transport)
 	return nil
 }
 
@@ -222,14 +218,13 @@ type UserVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *r0.UserVote
+	Transport      *r0.Transport
 }
 
 func (a *UserVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = new(r0.UserVote)
 
 	vData := &r0.UserVoteData{
 		VoteData: r0.VoteData{
@@ -246,12 +241,10 @@ func (a *UserVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	}
 	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), usk)
 
-	transport, e := r0.NewUserVoteTransport(vDataRaw, vSig, nil)
-	if e != nil {
+	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
 		return e
 	}
 
-	a.Vote.Fill(transport)
 	return nil
 }
 
@@ -264,14 +257,13 @@ type ThreadVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *r0.ThreadVote
+	Transport      *r0.Transport
 }
 
 func (a *ThreadVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = new(r0.ThreadVote)
 
 	vData := &r0.ThreadVoteData{
 		VoteData: r0.VoteData{
@@ -288,12 +280,10 @@ func (a *ThreadVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	}
 	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), usk)
 
-	transport, e := r0.NewThreadVoteTransport(vDataRaw, vSig, nil)
-	if e != nil {
+	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
 		return e
 	}
 
-	a.Vote.Fill(transport)
 	return nil
 }
 
@@ -306,14 +296,13 @@ type PostVoteIO struct {
 	Mode           int8          `bbs:"mode"`
 	TagStr         string        `bbs:"tagStr"`
 	Tag            []byte        `bbs:"tag"`
-	Vote           *r0.PostVote
+	Transport      *r0.Transport
 }
 
 func (a *PostVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Vote = new(r0.PostVote)
 
 	vData := &r0.PostVoteData{
 		VoteData: r0.VoteData{
@@ -330,12 +319,9 @@ func (a *PostVoteIO) Process(upk cipher.PubKey, usk cipher.SecKey) error {
 	}
 	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), usk)
 
-	transport, e := r0.NewPostVoteTransport(vDataRaw, vSig, nil)
-	if e != nil {
+	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
 		return e
 	}
-
-	a.Vote.Fill(transport)
 	return nil
 }
 

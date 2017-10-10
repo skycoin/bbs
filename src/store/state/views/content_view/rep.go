@@ -27,11 +27,11 @@ func (r *VotesRep) GetValue(c *r0.Content) int {
 	var value int
 	switch r.Type {
 	case r0.V5ThreadVoteType:
-		value = c.ToThreadVote().GetBody().Value
+		value = c.GetBody().Value
 	case r0.V5PostVoteType:
-		value = c.ToPostVote().GetBody().Value
+		value = c.GetBody().Value
 	case r0.V5UserVoteType:
-		value = c.ToUserVote().GetBody().Value
+		value = c.GetBody().Value
 	}
 	return value
 }
@@ -44,7 +44,7 @@ func (r *VotesRep) Fill(refType r0.ContentType, refHash string) *VotesRep {
 }
 
 func (r *VotesRep) Add(c *r0.Content) {
-	creator := c.GetHeader().PK
+	creator := c.GetBody().Creator
 	if oldC, has := r.Votes[creator]; has {
 		switch r.GetValue(oldC) {
 		case +1:

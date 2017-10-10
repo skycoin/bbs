@@ -169,12 +169,12 @@ func (bp *BoardPage) Save(p *skyobject.Pack) error {
 	return nil
 }
 
-func (bp *BoardPage) GetBoard() (*Board, error) {
+func (bp *BoardPage) GetBoard() (*Content, error) {
 	c, e := GetContentFromRef(&bp.Board)
 	if e != nil {
 		return nil, e
 	}
-	return c.ToBoard(), nil
+	return c, nil
 }
 
 func (bp *BoardPage) GetThreadCount() int {
@@ -268,12 +268,12 @@ func GetThreadPage(tpElem *skyobject.RefsElem) (*ThreadPage, error) {
 	return tp, nil
 }
 
-func (tp *ThreadPage) GetThread() (*Thread, error) {
+func (tp *ThreadPage) GetThread() (*Content, error) {
 	c, e := GetContentFromRef(&tp.Thread)
 	if e != nil {
 		return nil, e
 	}
-	return c.ToThread(), nil
+	return c, nil
 }
 
 func (tp *ThreadPage) GetPostCount() int {
@@ -281,9 +281,9 @@ func (tp *ThreadPage) GetPostCount() int {
 	return l
 }
 
-func (tp *ThreadPage) RangePosts(action func(i int, post *Post) error) error {
+func (tp *ThreadPage) RangePosts(action func(i int, post *Content) error) error {
 	return tp.Posts.Ascend(func(i int, pElem *skyobject.RefsElem) error {
-		post, e := GetPost(pElem)
+		post, e := GetContentFromElem(pElem)
 		if e != nil {
 			return e
 		}
@@ -291,12 +291,12 @@ func (tp *ThreadPage) RangePosts(action func(i int, post *Post) error) error {
 	})
 }
 
-func (tp *ThreadPage) AddPost(cxoPostHash cipher.SHA256, post *Post) error {
+func (tp *ThreadPage) AddPost(cxoPostHash cipher.SHA256, post *Content) error {
 	if elem, _ := tp.Posts.RefByHash(cxoPostHash); elem != nil {
 		return boo.Newf(boo.AlreadyExists,
 			"post of hash '%s' already exists in 'ThreadPage.Posts'", cxoPostHash.Hex())
 	}
-	if e := tp.Posts.Append(post.Content); e != nil {
+	if e := tp.Posts.Append(post); e != nil {
 		return boo.WrapTypef(e, boo.Internal,
 			"failed to append %v to 'ThreadPage.Posts'", post)
 	}
