@@ -1,192 +1,51 @@
 package r0
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
-	"time"
+	"encoding/json"
 )
 
-type ContentTransport struct {
-	OfBoard cipher.PubKey
+type Transport struct {
 	Header  *ContentHeaderData
-	raw     []byte
+	Body    *Body
+	Content *Content
 }
 
-type ThreadTransport struct {
-	*ContentTransport
-	body *ThreadData
-}
+func NewTransport(rawBody []byte, sig cipher.Sig) (*Transport, error) {
+	out := new(Transport)
 
-type CheckThreadFunc func(td *ThreadData) error
-
-func NewThreadTransport(raw []byte, sig cipher.Sig, check CheckThreadFunc) (*ThreadTransport, error) {
-	body := new(ThreadData)
-	if e := json.Unmarshal(raw, body); e != nil {
-		return nil, genErrInvalidJSON(e, "thread")
-	}
-	if check != nil {
-		if e := check(body); e != nil {
-			return nil, e
-		}
-	}
-
-	header := &ContentHeaderData{
-		Type: V5ThreadType,
-		Hash: cipher.SumSHA256(raw).Hex(),
-		PK:   body.GetCreator().Hex(),
-		TS:   time.Now().UnixNano(),
-		Sig:  sig.Hex(),
-	}
-	if e := header.Verify(); e != nil {
+	var e error
+	if out.Body, e = NewBody(rawBody); e != nil {
 		return nil, e
 	}
 
-	return &ThreadTransport{
-		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
-		body:             body,
-	}, nil
-}
-
-type PostTransport struct {
-	*ContentTransport
-	body *PostData
-}
-
-type CheckPostFunc func(pd *PostData) error
-
-func NewPostTransport(raw []byte, sig cipher.Sig, check CheckPostFunc) (*PostTransport, error) {
-	body := new(PostData)
-	if e := json.Unmarshal(raw, body); e != nil {
-		return nil, genErrInvalidJSON(e, "post")
-	}
-	if check != nil {
-		if e := check(body); e != nil {
-			return nil, e
-		}
-	}
-
-	header := &ContentHeaderData{
-		Type: V5PostType,
-		Hash: cipher.SumSHA256(raw).Hex(),
-		PK:   body.GetCreator().Hex(),
-		TS:   time.Now().UnixNano(),
-		Sig:  sig.Hex(),
-	}
-	if e := header.Verify(); e != nil {
+	creator, e := out.Body.GetCreator()
+	if e != nil {
 		return nil, e
 	}
 
-	return &PostTransport{
-		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
-		body:             body,
-	}, nil
-}
-
-type ThreadVoteTransport struct {
-	*ContentTransport
-	body *ThreadVoteData
-}
-
-type CheckThreadVoteFunc func(tvd *ThreadVoteData) error
-
-func NewThreadVoteTransport(raw []byte, sig cipher.Sig, check CheckThreadVoteFunc) (*ThreadVoteTransport, error) {
-	body := new(ThreadVoteData)
-	if e := json.Unmarshal(raw, body); e != nil {
-		return nil, genErrInvalidJSON(e, "thread vote")
+	out.Header = &ContentHeaderData{
+		Hash: cipher.SumSHA256(rawBody).Hex(),
+		Sig: sig.Hex(),
 	}
-	if check != nil {
-		if e := check(body); e != nil {
-			return nil, e
-		}
-	}
-
-	header := &ContentHeaderData{
-		Type: V5ThreadVoteType,
-		Hash: cipher.SumSHA256(raw).Hex(),
-		PK:   body.GetCreator().Hex(),
-		TS:   time.Now().UnixNano(),
-		Sig:  sig.Hex(),
-	}
-	if e := header.Verify(); e != nil {
+	if e := out.Header.Verify(creator); e != nil {
 		return nil, e
 	}
 
-	return &ThreadVoteTransport{
-		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
-		body:             body,
-	}, nil
-}
-
-type PostVoteTransport struct {
-	*ContentTransport
-	body *PostVoteData
-}
-
-type CheckPostVoteFunc func(pvd *PostVoteData) error
-
-func NewPostVoteTransport(raw []byte, sig cipher.Sig, check CheckPostVoteFunc) (*PostVoteTransport, error) {
-	body := new(PostVoteData)
-	if e := json.Unmarshal(raw, body); e != nil {
-		return nil, genErrInvalidJSON(e, "post vote")
-	}
-	if check != nil {
-		if e := check(body); e != nil {
-			return nil, e
-		}
-	}
-
-	header := &ContentHeaderData{
-		Type: V5PostVoteType,
-		Hash: cipher.SumSHA256(raw).Hex(),
-		PK:   body.GetCreator().Hex(),
-		TS:   time.Now().UnixNano(),
-		Sig:  sig.Hex(),
-	}
-	if e := header.Verify(); e != nil {
+	out.Content = new(Content)
+	if out.Content.Header, e = json.Marshal(out.Header); e != nil {
 		return nil, e
 	}
+	out.Content.Body = rawBody
 
-	return &PostVoteTransport{
-		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
-		body:             body,
-	}, nil
+	return out, nil
 }
 
-type UserVoteTransport struct {
-	*ContentTransport
-	body *UserVoteData
-}
-
-type CheckUserVoteFunc func(uvd *UserVoteData) error
-
-func NewUserVoteTransport(raw []byte, sig cipher.Sig, check CheckUserVoteFunc) (*UserVoteTransport, error) {
-	body := new(UserVoteData)
-	if e := json.Unmarshal(raw, body); e != nil {
-		return nil, genErrInvalidJSON(e, "user vote")
-	}
-	if check != nil {
-		if e := check(body); e != nil {
-			return nil, e
-		}
-	}
-
-	header := &ContentHeaderData{
-		Type: V5UserVoteType,
-		Hash: cipher.SumSHA256(raw).Hex(),
-		PK:   body.GetCreator().Hex(),
-		TS:   time.Now().UnixNano(),
-		Sig:  sig.Hex(),
-	}
-	if e := header.Verify(); e != nil {
-		return nil, e
-	}
-
-	return &UserVoteTransport{
-		ContentTransport: &ContentTransport{OfBoard: body.GetOfBoard(), raw: raw, Header: header},
-		body:             body,
-	}, nil
+func (t *Transport) GetOfBoard() cipher.PubKey {
+	pk, _ := t.Body.GetOfBoard()
+	return pk
 }
 
 /*
@@ -198,7 +57,7 @@ func genErrInvalidJSON(e error, what string) error {
 		fmt.Sprintf("failed to read '%s' data", what))
 }
 
-func genErrHeaderUnverified(e error, what string) error {
+func genErrHeaderUnverified(e error, hash string) error {
 	return boo.WrapType(e, boo.NotAuthorised,
-		fmt.Sprintf("failed to verify '%s'", what))
+		fmt.Sprintf("failed to verify content of hash '%s'", hash))
 }

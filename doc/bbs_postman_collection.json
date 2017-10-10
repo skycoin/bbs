@@ -54,7 +54,7 @@
 							"formdata": [
 								{
 									"key": "data",
-									"value": "{\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"created\":1507011466251404010,\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\"}",
+									"value": "{\"type\":\"5,thread_vote\",\"ts\":12345,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"value\":-1,\"tag\":\"spam\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
 									"description": "String to hash.",
 									"type": "text"
 								}
@@ -75,7 +75,7 @@
 							"formdata": [
 								{
 									"key": "hash",
-									"value": "22947b6018ea170ec4e19a2df3221989fd0531639d86a2b60fb4e9b4a0771383",
+									"value": "977c140aeb453b5935a16512e5f9617fe8b49838473696c5ad285c6659841129",
 									"description": "SHA256 hash to be signed (Hex representation).",
 									"type": "text"
 								},
@@ -462,7 +462,7 @@
 						{
 							"name": "New Thread",
 							"request": {
-								"url": "http://127.0.0.1:7410/api/content/new_thread",
+								"url": "http://127.0.0.1:7410/api/submission/new_thread",
 								"method": "POST",
 								"header": [],
 								"body": {
@@ -495,7 +495,7 @@
 						{
 							"name": "New Post",
 							"request": {
-								"url": "http://127.0.0.1:7410/api/content/new_post",
+								"url": "http://127.0.0.1:7410/api/submission/new_post",
 								"method": "POST",
 								"header": [],
 								"body": {
@@ -731,7 +731,7 @@
 					"formdata": [
 						{
 							"key": "board_public_key",
-							"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+							"value": "02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1",
 							"description": "Board's public key.",
 							"type": "text"
 						}
@@ -837,20 +837,14 @@
 					"mode": "formdata",
 					"formdata": [
 						{
-							"key": "type",
-							"value": "5,thread",
-							"description": "Type of data that is being submitted.",
-							"type": "text"
-						},
-						{
 							"key": "body",
-							"value": "{\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"created\":1507011466251404010,\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\"}",
+							"value": "{\"type\":\"5,post\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"ts\":123435,\"name\":\"Test Post\",\"body\":\"This is a test post.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
 							"description": "Data body that is being submitted (best to keep the form with less whitespace).",
 							"type": "text"
 						},
 						{
 							"key": "sig",
-							"value": "d4572654617b12e186f4604b60a52e57957dab90ca1bcdb9da60b6dfa50788fb12e3554445b0d1d2f01ecb8419cd80fe407f799e27ba247db30f8142815b254400",
+							"value": "086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700",
 							"description": "Signature of body.",
 							"type": "text"
 						}
@@ -860,7 +854,7 @@
 			},
 			"response": [
 				{
-					"id": "dd24e9c1-fd7c-4d81-9d69-83bfbe465bfc",
+					"id": "a06a94d1-a4d6-4930-8360-7d62e274ab5d",
 					"name": "New Thread",
 					"originalRequest": {
 						"url": "http://127.0.0.1:7410/api/new_submission",
@@ -900,7 +894,7 @@
 					"body": "{\n    \"okay\": true,\n    \"data\": {\n        \"board\": {\n            \"public_key\": \"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\n            \"header\": {\n                \"type\": \"5,board\"\n            },\n            \"body\": {\n                \"name\": \"Test Board\",\n                \"body\": \"This is a test board.\",\n                \"created\": 1507087380834316180,\n                \"submission_keys\": [],\n                \"tags\": []\n            }\n        },\n        \"threads\": [\n            {\n                \"header\": {\n                    \"type\": \"5,thread\",\n                    \"hash\": \"37215d922cc682ef81763a40cd51edbc3c1c9e9b9c7bc4c52e23b8115fc30c97\",\n                    \"pk\": \"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\n                    \"sig\": \"d4572654617b12e186f4604b60a52e57957dab90ca1bcdb9da60b6dfa50788fb12e3554445b0d1d2f01ecb8419cd80fe407f799e27ba247db30f8142815b254400\"\n                },\n                \"body\": {\n                    \"of_board\": \"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\n                    \"name\": \"Test Thread\",\n                    \"body\": \"This is a test thread.\",\n                    \"created\": 1507011466251404010,\n                    \"creator\": \"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"\n                }\n            }\n        ]\n    }\n}"
 				},
 				{
-					"id": "d407cb52-54e3-487e-afe3-1396e921f31c",
+					"id": "c2ffc4b9-ad56-405d-af73-7aabc55259a3",
 					"name": "New Post",
 					"originalRequest": {
 						"url": "http://127.0.0.1:7410/api/new_submission",

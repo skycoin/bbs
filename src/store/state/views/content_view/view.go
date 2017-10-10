@@ -50,7 +50,9 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		return e
 	}
 	v.i.Board = board.GetHeader().Hash
-	v.c[v.i.Board] = board.ToRep(v.pk)
+	boardRep := board.ToRep()
+	boardRep.PubKey = v.pk.Hex()
+	v.c[v.i.Board] = boardRep
 
 	log.Printf("INITIATING THREADS : count(%d)", pages.BoardPage.GetThreadCount())
 	v.i.Threads = make([]string, pages.BoardPage.GetThreadCount())
@@ -72,7 +74,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 
 		// Fill posts.
 		postHashes := make([]string, tp.GetPostCount())
-		e = tp.RangePosts(func(i int, post *r0.Post) error {
+		e = tp.RangePosts(func(i int, post *r0.Content) error {
 
 			log.Printf("\t\t- [%d] POST : hash(%s)",
 				i, post.GetHeader().Hash)
@@ -104,7 +106,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 		return uap.RangeSubmissions(func(i int, c *r0.Content) error {
 
 			log.Printf("\t\t- [%d] SUBMISSION : type(%s) hash(%s)",
-				i, c.GetHeader().Type, c.GetHeader().Hash)
+				i, c.GetBody().Type, c.GetHeader().Hash)
 
 			return v.processVote(c)
 		})
@@ -125,24 +127,26 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 	}
 	delete(v.c, v.i.Board)
 	v.i.Board = board.GetHeader().Hash
-	v.c[v.i.Board] = board.ToRep(v.pk)
+	boardRep := board.ToRep()
+	boardRep.PubKey = v.pk.Hex()
+	v.c[v.i.Board] = boardRep
 
 	changes := headers.GetChanges()
 
 	for _, content := range changes.New {
-		header := content.GetHeader()
-		switch header.Type {
+		var (
+			header = content.GetHeader()
+			body   = content.GetBody()
+		)
+		switch body.Type {
 		case r0.V5ThreadType:
-			thread := content.ToThread()
 			v.i.Threads = append(v.i.Threads, header.Hash)
-			v.c[header.Hash] = thread.ToRep()
+			v.c[header.Hash] = content.ToRep()
 
 		case r0.V5PostType:
-			post := content.ToPost()
-			postBody := post.GetBody()
-			posts, _ := v.i.Posts[postBody.OfThread]
-			v.i.Posts[postBody.OfThread] = append(posts, header.Hash)
-			v.c[header.Hash] = post.ToRep()
+			posts, _ := v.i.Posts[body.OfThread]
+			v.i.Posts[body.OfThread] = append(posts, header.Hash)
+			v.c[header.Hash] = content.ToRep()
 
 		case r0.V5ThreadVoteType, r0.V5PostVoteType:
 			v.processVote(content)
@@ -156,13 +160,13 @@ func (v *ContentView) processVote(c *r0.Content) error {
 	var cType r0.ContentType
 
 	// Only if vote is for post or thread.
-	switch c.GetHeader().Type {
+	switch c.GetBody().Type {
 	case r0.V5ThreadVoteType:
-		cHash = c.ToThreadVote().GetBody().OfThread
+		cHash = c.GetBody().OfThread
 		cType = r0.V5ThreadVoteType
 
 	case r0.V5PostVoteType:
-		cHash = c.ToPostVote().GetBody().OfPost
+		cHash = c.GetBody().OfPost
 		cType = r0.V5PostVoteType
 
 	default:

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/skycoin/bbs/src/http"
 	"github.com/skycoin/bbs/src/msgs"
+	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/session"
@@ -17,7 +18,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"time"
-	"github.com/skycoin/bbs/src/rpc"
 )
 
 const (
@@ -232,11 +232,11 @@ func main() {
 			Destination: &config.ConfigDir,
 		},
 		cli.BoolTFlag{
-			Name: "rpc",
+			Name:        "rpc",
 			Destination: &config.RPC,
 		},
 		cli.IntFlag{
-			Name: "rpc-port",
+			Name:        "rpc-port",
 			Destination: &config.RPCPort,
 		},
 		cli.IntFlag{

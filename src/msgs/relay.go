@@ -288,20 +288,18 @@ func (r *Relay) processNewContent(msg *BBSMessage) (uint64, error) {
 	if e != nil {
 		return 0, e
 	}
-	basic, e := content.Verify()
-	if e != nil {
-		return 0, e
-	}
-	bpk, e := basic.GetOfBoard()
-	if e != nil {
-		return 0, e
-	}
-	bi, e := r.compiler.GetBoard(bpk)
+
+	transport, e := r0.NewTransport(content.Body, content.GetHeader().GetSig())
 	if e != nil {
 		return 0, e
 	}
 
-	return bi.Submit(content)
+	bi, e := r.compiler.GetBoard(transport.GetOfBoard())
+	if e != nil {
+		return 0, e
+	}
+
+	return bi.Submit(transport)
 }
 
 func (r *Relay) processResponse(msg *BBSMessage) error {
