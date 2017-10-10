@@ -394,7 +394,7 @@ func (a *Access) GetFollowPage(ctx context.Context, in *object.UserIO) (interfac
 	if e != nil {
 		return nil, e
 	}
-	out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKey)
+	out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
 	if e != nil {
 		return nil, e
 	}
