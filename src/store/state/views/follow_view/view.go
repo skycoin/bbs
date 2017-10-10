@@ -77,7 +77,7 @@ func (v *FollowView) Get(id string, a ...interface{}) (interface{}, error) {
 	case id == FollowPage && len(a) == 1:
 		fr, has := v.uMap[upk]
 		if !has {
-			return &FollowRepView{UserPubKey: upk}, nil
+			return NewFollowRep(upk), nil
 		}
 		return fr.View(), nil
 
