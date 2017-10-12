@@ -41,11 +41,13 @@ func NewServer(c *ServerConfig, g *Gateway) (*Server, error) {
 	if e := s.rpc.Register(g); e != nil {
 		return nil, e
 	}
+	address := "[::]:" + strconv.Itoa(*c.Port)
 	var e error
-	s.listen, e = net.Listen("tcp", ":"+strconv.Itoa(*c.Port))
+	s.listen, e = net.Listen("tcp", address)
 	if e != nil {
 		return nil, e
 	}
+	s.l.Printf("listening on: '%s'", address)
 	s.wg.Add(1)
 	go func(l net.Listener) {
 		defer s.wg.Done()

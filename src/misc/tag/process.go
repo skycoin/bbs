@@ -13,6 +13,7 @@ const (
 	processKey      = "bbs"
 	valUserPKStr    = "upkStr"
 	valUserPK       = "upk"
+	valUserSKStr    = "uskStr"
 	valUserSK       = "usk"
 	valUserRefStr   = "uRefStr"
 	valUserRef      = "uRef"
@@ -66,6 +67,14 @@ func process(tm tMap) error {
 			return wrapErr(e, "user public key")
 		}
 		tm.set(valUserPK, upk)
+	}
+	// User secret key.
+	if uskStr, has := tm[valUserSKStr]; has {
+		usk, e := keys.GetSecKey(uskStr.String())
+		if e != nil {
+			return wrapErr(e, "user secret key")
+		}
+		tm.set(valUserSK, usk)
 	}
 	// User reference.
 	if uRefStr, has := tm[valUserRefStr]; has {

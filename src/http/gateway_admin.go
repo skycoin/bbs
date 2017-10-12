@@ -10,7 +10,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Quits the node.
 	mux.HandleFunc("/api/admin/quit",
 		func(w http.ResponseWriter, r *http.Request) {
-			g.Quit <- 0
+			g.QuitChan <- 0
 			send(w)(true, nil)
 		})
 
@@ -18,52 +18,6 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	mux.HandleFunc("/api/admin/stats",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(true, nil)
-		})
-
-	/*
-		<<< SESSION >>>
-		>>> Endpoints for global session management.
-	*/
-
-	// Lists all users.
-	mux.HandleFunc("/api/admin/session/users/get_all",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.GetUsers(r.Context()))
-		})
-
-	// Creates a new user.
-	mux.HandleFunc("/api/admin/session/users/new",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.NewUser(r.Context(), &object.NewUserIO{
-				Seed:  r.FormValue("seed"),
-				Alias: r.FormValue("alias"),
-			}))
-		})
-
-	// Deletes a user.
-	mux.HandleFunc("/api/admin/session/users/delete",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.DeleteUser(r.Context(), r.FormValue("alias")))
-		})
-
-	// User login.
-	mux.HandleFunc("/api/admin/session/login",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.Login(r.Context(), &object.LoginIO{
-				Alias: r.FormValue("alias"),
-			}))
-		})
-
-	// User logout.
-	mux.HandleFunc("/api/admin/session/logout",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.Logout(r.Context()))
-		})
-
-	// Get current session information.
-	mux.HandleFunc("/api/admin/session/get_info",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.GetSession(r.Context()))
 		})
 
 	/*

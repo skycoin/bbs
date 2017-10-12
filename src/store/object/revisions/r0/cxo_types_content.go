@@ -16,18 +16,18 @@ func errGetFromBody(e error, what string) error {
 }
 
 type Body struct {
-	Type     ContentType `json:"type"`                // ALL
-	TS       int64       `json:"ts"`                  // ALL
-	OfBoard  string      `json:"of_board,omitempty"`  // thread, post, thread_vote, post_vote, user_vote
-	OfThread string      `json:"of_thread,omitempty"` // post, thread_vote
-	OfPost   string      `json:"of_post,omitempty"`   // post (optional), post_vote
-	Name     string      `json:"name,omitempty"`      // board, thread, post
-	Body     string      `json:"body,omitempty"`      // board, thread, post
-	Value    int         `json:"value,omitempty"`     // thread_vote, post_vote, user_vote
-	Tag      string      `json:"tag,omitempty"`       // thread_vote, post_vote, user_vote
-	Tags     []string    `json:"tags,omitempty"`      // board
+	Type     ContentType `json:"type"`                      // ALL
+	TS       int64       `json:"ts"`                        // ALL
+	OfBoard  string      `json:"of_board,omitempty"`        // thread, post, thread_vote, post_vote, user_vote
+	OfThread string      `json:"of_thread,omitempty"`       // post, thread_vote
+	OfPost   string      `json:"of_post,omitempty"`         // post (optional), post_vote
+	Name     string      `json:"name,omitempty"`            // board, thread, post
+	Body     string      `json:"body,omitempty"`            // board, thread, post
+	Value    int         `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
+	Tag      string      `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
+	Tags     []string    `json:"tags,omitempty"`            // board
 	SubKeys  []string    `json:"submission_keys,omitempty"` // board
-	Creator  string      `json:"creator,omitempty"`   // thread, post, thread_vote, post_vote, user_vote
+	Creator  string      `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
 }
 
 func NewBody(raw []byte) (*Body, error) {
@@ -218,8 +218,8 @@ const (
 )
 
 type ContentHeaderData struct {
-	Hash string      `json:"hash,omitempty"` // Hash of body.
-	Sig  string      `json:"sig,omitempty"`  // Signature of body.
+	Hash string `json:"hash,omitempty"` // Hash of body.
+	Sig  string `json:"sig,omitempty"`  // Signature of body.
 }
 
 func (h *ContentHeaderData) GetHash() cipher.SHA256 {

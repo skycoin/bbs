@@ -14,9 +14,9 @@ import (
 
 // Gateway represents what is exposed to HTTP interface.
 type Gateway struct {
-	l      *log.Logger
-	Access *store.Access
-	Quit   chan int
+	l        *log.Logger
+	Access   *store.Access
+	QuitChan chan int
 }
 
 func (g *Gateway) host(mux *http.ServeMux) error {
