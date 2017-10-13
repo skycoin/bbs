@@ -194,6 +194,43 @@ func main() {
 						}))
 					},
 				},
+				{
+					Name:  "get_boards",
+					Usage: "gets a list of hosted boards on the node",
+					Action: func(ctx *cli.Context) error {
+						return do(rpc.GetBoards())
+					},
+				},
+				{
+					Name:  "get_board",
+					Usage: "gets a single board",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "board-public-key, bpk",
+							Usage: "public key of the board to obtain",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return do(rpc.GetBoard(&object.BoardIO{
+							PubKeyStr: ctx.String("board-public-key"),
+						}))
+					},
+				},
+				{
+					Name:  "get_board_page",
+					Usage: "gets a view of a board and it's threads",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "board-public-key, bpk",
+							Usage: "public key of the board to obtain",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return do(rpc.GetBoardPage(&object.BoardIO{
+							PubKeyStr: ctx.String("board-public-key"),
+						}))
+					},
+				},
 			},
 		},
 	}
@@ -202,12 +239,7 @@ func main() {
 	}
 }
 
-func do(action rpc.Action) error {
-	out, e := rpc.Send(Address, action)
-	if e != nil {
-		return e
-	} else {
-		log.Println(out)
-		return nil
-	}
+func do(method string, in interface{}) error {
+	log.Println(rpc.Send(Address)(method, in))
+	return nil
 }

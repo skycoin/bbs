@@ -2,153 +2,104 @@ package rpc
 
 import (
 	"encoding/json"
-	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/object"
 	"net/rpc"
 )
 
-type Call func(method string, in, out interface{}) error
-
-type Action func(call Call) string
-
-func Send(address string, action Action) (string, error) {
-	client, e := rpc.Dial("tcp", address)
-	if e != nil {
-		return "", e
+func Send(address string) func(method string, in interface{}) string {
+	return func(method string, in interface{}) string {
+		client, e := rpc.Dial("tcp", address)
+		if e != nil {
+			return errString(e)
+		}
+		defer client.Close()
+		var out string
+		if e := client.Call(method, in, &out); e != nil {
+			return errString(e)
+		} else {
+			return okString(out)
+		}
 	}
-	defer client.Close()
-	return action(client.Call), nil
 }
 
 /*
 	<<< CONNECTIONS >>>
 */
 
-func GetConnections() Action {
-	return func(call Call) string {
-		out := new(store.ConnectionsOutput)
-		if e := call("Gateway.GetConnections", &struct{}{}, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func GetConnections() (string, interface{}) {
+	return method("GetConnections"), empty()
 }
 
-func NewConnection(in *object.ConnectionIO) Action {
-	return func(call Call) string {
-		out := new(store.ConnectionsOutput)
-		if e := call("Gateway.NewConnection", in, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func NewConnection(in *object.ConnectionIO) (string, interface{}) {
+	return method("NewConnection"), in
 }
 
-func DeleteConnection(in *object.ConnectionIO) Action {
-	return func(call Call) string {
-		out := new(store.ConnectionsOutput)
-		if e := call("Gateway.DeleteConnection", in, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func DeleteConnection(in *object.ConnectionIO) (string, interface{}) {
+	return method("DeleteConnection"), in
 }
 
 /*
 	<<< SUBSCRIPTIONS >>>
 */
 
-func GetSubscriptions() Action {
-	return func(call Call) string {
-		out := new(store.SubscriptionsOutput)
-		if e := call("Gateway.GetSubscriptions", &struct{}{}, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func GetSubscriptions() (string, interface{}) {
+	return method("GetSubscriptions"), empty()
 }
 
-func NewSubscription(in *object.BoardIO) Action {
-	return func(call Call) string {
-		out := new(store.SubscriptionsOutput)
-		if e := call("Gateway.NewSubscription", in, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func NewSubscription(in *object.BoardIO) (string, interface{}) {
+	return method("NewSubscription"), in
 }
 
-func DeleteSubscription(in *object.BoardIO) Action {
-	return func(call Call) string {
-		out := new(store.SubscriptionsOutput)
-		if e := call("Gateway.DeleteSubscription", in, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func DeleteSubscription(in *object.BoardIO) (string, interface{}) {
+	return method("DeleteSubscription"), in
 }
 
 /*
 	<<< CONTENT : ADMIN >>>
 */
 
-func NewBoard(in *object.NewBoardIO) Action {
-	return func(call Call) string {
-		out := new(store.BoardsOutput)
-		if e := call("Gateway.NewBoard", in, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func NewBoard(in *object.NewBoardIO) (string, interface{}) {
+	return method("NewBoard"), in
 }
 
-func DeleteBoard(in *object.BoardIO) Action {
-	return func(call Call) string {
-		out := new(store.BoardsOutput)
-		if e := call("Gateway.DeleteBoard", in, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func DeleteBoard(in *object.BoardIO) (string, interface{}) {
+	return method("DeleteBoard"), in
 }
 
-func ExportBoard(in *object.ExportBoardIO) Action {
-	return func(call Call) string {
-		out := new(store.ExportBoardOutput)
-		if e := call("Gateway.ExportBoard", in, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func ExportBoard(in *object.ExportBoardIO) (string, interface{}) {
+	return method("ExportBoard"), in
 }
 
-func ImportBoard(in *object.ExportBoardIO) Action {
-	return func(call Call) string {
-		out := new(store.ExportBoardOutput)
-		if e := call("Gateway.ImportBoard", in, out); e != nil {
-			return errString(e)
-		} else {
-			return jsonString(out)
-		}
-	}
+func ImportBoard(in *object.ExportBoardIO) (string, interface{}) {
+	return method("ImportBoard"), in
+}
+
+/*
+	<<< CONTENT >>>
+*/
+
+func GetBoards() (string, interface{}) {
+	return method("GetBoards"), empty()
+}
+
+func GetBoard(in *object.BoardIO) (string, interface{}) {
+	return method("GetBoard"), in
+}
+
+func GetBoardPage(in *object.BoardIO) (string, interface{}) {
+	return method("GetBoardPage"), in
 }
 
 /*
 	<<< HELPER FUNCTIONS >>>
 */
 
-func jsonString(v interface{}) string {
-	data, _ := json.MarshalIndent(v, "", "  ")
-	return "[OK] " + string(data)
+func method(v string) string {
+	return "Gateway." + v
+}
+
+func okString(v string) string {
+	return "[OK] " + v
 }
 
 func errString(e error) string {
@@ -159,4 +110,8 @@ func errString(e error) string {
 	}
 	data, _ := json.MarshalIndent(v, "", "  ")
 	return "[ERROR] " + string(data)
+}
+
+func empty() *struct{} {
+	return &struct{}{}
 }

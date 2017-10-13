@@ -62,11 +62,13 @@ func Process(obj interface{}) error {
 func process(tm tMap) error {
 	// User public key.
 	if upkStr, has := tm[valUserPKStr]; has {
-		upk, e := keys.GetPubKey(upkStr.String())
-		if e != nil {
-			return wrapErr(e, "user public key")
+		if upkStr.String() != "" {
+			upk, e := keys.GetPubKey(upkStr.String())
+			if e != nil {
+				return wrapErr(e, "user public key")
+			}
+			tm.set(valUserPK, upk)
 		}
-		tm.set(valUserPK, upk)
 	}
 	// User secret key.
 	if uskStr, has := tm[valUserSKStr]; has {
