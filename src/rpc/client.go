@@ -90,6 +90,15 @@ func GetBoardPage(in *object.BoardIO) (string, interface{}) {
 	return method("GetBoardPage"), in
 }
 
+func GetThreadPage(in *object.ThreadIO) (string, interface{}) {
+	return method("GetThreadPage"), in
+}
+
+func GetFollowPage(in *object.UserIO) (string, interface{}) {
+	return method("GetFollowPage"), in
+}
+
+
 /*
 	<<< HELPER FUNCTIONS >>>
 */

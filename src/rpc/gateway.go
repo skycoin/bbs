@@ -94,6 +94,14 @@ func (g *Gateway) GetBoardPage(in *object.BoardIO, out *string) error {
 	return send(out)(g.Access.GetBoardPage(context.Background(), in))
 }
 
+func (g *Gateway) GetThreadPage(in *object.ThreadIO, out *string) error {
+	return send(out)(g.Access.GetThreadPage(context.Background(), in))
+}
+
+func (g *Gateway) GetFollowPage(in *object.UserIO, out *string) error {
+	return send(out)(g.Access.GetFollowPage(context.Background(), in))
+}
+
 /*
 	<<< HELPER FUNCTIONS >>>
 */

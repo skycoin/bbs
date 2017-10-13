@@ -231,6 +231,46 @@ func main() {
 						}))
 					},
 				},
+				{
+					Name: "get_thread_page",
+					Usage: "gets a view of a board's thread and it's posts",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name: "board-public-key, bpk",
+							Usage: "the public key of the board in which the thread resides",
+						},
+						cli.StringFlag{
+							Name: "thread-hash, th",
+							Usage: "the hash of the thread in which to obtain thread page",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return do(rpc.GetThreadPage(&object.ThreadIO{
+							BoardPubKeyStr: ctx.String("board-public-key"),
+							ThreadRefStr: ctx.String("thread-hash"),
+						}))
+					},
+				},
+				{
+					Name: "get_follow_page",
+					Usage: "gets a view of users that the specified user is following/avoiding",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name: "board-public-key, bpk",
+							Usage: "public key of board in which to obtain follow page",
+						},
+						cli.StringFlag{
+							Name: "user-public-key, upk",
+							Usage: "public key of user to get follow page of",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return do(rpc.GetFollowPage(&object.UserIO{
+							BoardPubKeyStr: ctx.String("board-public-key"),
+							UserPubKeyStr: ctx.String("user-public-key"),
+						}))
+					},
+				},
 			},
 		},
 	}
