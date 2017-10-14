@@ -103,6 +103,30 @@ func (g *Gateway) GetFollowPage(in *object.UserIO, out *string) error {
 }
 
 /*
+	<<< CONTENT : SUBMISSION >>>
+*/
+
+func (g *Gateway) NewThread(in *object.NewThreadIO, out *string) error {
+	return send(out)(g.Access.NewThread(context.Background(), in))
+}
+
+func (g *Gateway) NewPost(in *object.NewPostIO, out *string) error {
+	return send(out)(g.Access.NewPost(context.Background(), in))
+}
+
+func (g *Gateway) VoteThread(in *object.ThreadVoteIO, out *string) error {
+	return send(out)(g.Access.VoteThread(context.Background(), in))
+}
+
+func (g *Gateway) VotePost(in *object.PostVoteIO, out *string) error {
+	return send(out)(g.Access.VotePost(context.Background(), in))
+}
+
+func (g *Gateway) VoteUser(in *object.UserVoteIO, out *string) error {
+	return send(out)(g.Access.VoteUser(context.Background(), in))
+}
+
+/*
 	<<< HELPER FUNCTIONS >>>
 */
 

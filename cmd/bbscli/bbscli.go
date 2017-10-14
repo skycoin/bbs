@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store/object"
 	"gopkg.in/urfave/cli.v1"
@@ -9,7 +10,7 @@ import (
 )
 
 var (
-	Address = "127.0.0.1:8996"
+	Address = "[::]:8996"
 )
 
 func main() {
@@ -27,6 +28,69 @@ func main() {
 	}
 	app.Commands = cli.Commands{
 		{
+			Name:  "tools",
+			Usage: "cryptography tools",
+			Subcommands: cli.Commands{
+				{
+					Name:  "generate_seed",
+					Usage: "generates a random unique seed",
+					Action: func(ctx *cli.Context) error {
+						return do(keys.GenerateSeed())
+					},
+				},
+				{
+					Name:  "generate_key_pair",
+					Usage: "generates a public, private key pair",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "seed, s",
+							Usage: "seed to generate key pair with",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return do(keys.GenerateKeyPair(&keys.GenerateKeyPairIn{
+							Seed: ctx.String("seed"),
+						}))
+					},
+				},
+				{
+					Name:  "sum_sha256",
+					Usage: "finds the SHA256 hash sum of given data",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "data, d",
+							Usage: "data to hash",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return do(keys.SumSHA256(&keys.SumSHA256In{
+							Data: ctx.String("data"),
+						}))
+					},
+				},
+				{
+					Name:  "sign_hash",
+					Usage: "generates a signature of a hash with given secret key",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "hash, h",
+							Usage: "hash to be signed",
+						},
+						cli.StringFlag{
+							Name:  "secret-key, sk",
+							Usage: "secret key to sign hash with",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return do(keys.SignHash(&keys.SignHashIn{
+							Hash:   ctx.String("hash"),
+							SecKey: ctx.String("secret_key"),
+						}))
+					},
+				},
+			},
+		},
+		{
 			Name:  "connections",
 			Usage: "manages connections of the node",
 			Subcommands: cli.Commands{
@@ -34,7 +98,7 @@ func main() {
 					Name:  "list",
 					Usage: "lists all connections",
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.GetConnections())
+						return call(rpc.GetConnections())
 					},
 				},
 				{
@@ -47,7 +111,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.NewConnection(&object.ConnectionIO{
+						return call(rpc.NewConnection(&object.ConnectionIO{
 							Address: ctx.String("address"),
 						}))
 					},
@@ -62,7 +126,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.DeleteConnection(&object.ConnectionIO{
+						return call(rpc.DeleteConnection(&object.ConnectionIO{
 							Address: ctx.String("address"),
 						}))
 					},
@@ -77,7 +141,7 @@ func main() {
 					Name:  "list",
 					Usage: "lists all subscriptions",
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.GetSubscriptions())
+						return call(rpc.GetSubscriptions())
 					},
 				},
 				{
@@ -89,7 +153,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.NewSubscription(&object.BoardIO{
+						return call(rpc.NewSubscription(&object.BoardIO{
 							PubKeyStr: ctx.String("public-key"),
 						}))
 					},
@@ -103,7 +167,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.DeleteSubscription(&object.BoardIO{
+						return call(rpc.DeleteSubscription(&object.BoardIO{
 							PubKeyStr: ctx.String("public-key"),
 						}))
 					},
@@ -132,7 +196,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.NewBoard(&object.NewBoardIO{
+						return call(rpc.NewBoard(&object.NewBoardIO{
 							Name: ctx.String("name"),
 							Body: ctx.String("body"),
 							Seed: ctx.String("seed"),
@@ -149,7 +213,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.DeleteBoard(&object.BoardIO{
+						return call(rpc.DeleteBoard(&object.BoardIO{
 							PubKeyStr: ctx.String("public-key"),
 						}))
 					},
@@ -168,7 +232,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.ExportBoard(&object.ExportBoardIO{
+						return call(rpc.ExportBoard(&object.ExportBoardIO{
 							PubKeyStr: ctx.String("public-key"),
 							Name:      ctx.String("file-name"),
 						}))
@@ -188,7 +252,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.ImportBoard(&object.ExportBoardIO{
+						return call(rpc.ImportBoard(&object.ExportBoardIO{
 							PubKeyStr: ctx.String("public-key"),
 							Name:      ctx.String("file-name"),
 						}))
@@ -198,7 +262,7 @@ func main() {
 					Name:  "get_boards",
 					Usage: "gets a list of hosted boards on the node",
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.GetBoards())
+						return call(rpc.GetBoards())
 					},
 				},
 				{
@@ -211,7 +275,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.GetBoard(&object.BoardIO{
+						return call(rpc.GetBoard(&object.BoardIO{
 							PubKeyStr: ctx.String("board-public-key"),
 						}))
 					},
@@ -226,51 +290,179 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.GetBoardPage(&object.BoardIO{
+						return call(rpc.GetBoardPage(&object.BoardIO{
 							PubKeyStr: ctx.String("board-public-key"),
 						}))
 					},
 				},
 				{
-					Name: "get_thread_page",
+					Name:  "get_thread_page",
 					Usage: "gets a view of a board's thread and it's posts",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
-							Name: "board-public-key, bpk",
+							Name:  "board-public-key, bpk",
 							Usage: "the public key of the board in which the thread resides",
 						},
 						cli.StringFlag{
-							Name: "thread-hash, th",
+							Name:  "thread-hash, th",
 							Usage: "the hash of the thread in which to obtain thread page",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.GetThreadPage(&object.ThreadIO{
+						return call(rpc.GetThreadPage(&object.ThreadIO{
 							BoardPubKeyStr: ctx.String("board-public-key"),
-							ThreadRefStr: ctx.String("thread-hash"),
+							ThreadRefStr:   ctx.String("thread-hash"),
 						}))
 					},
 				},
 				{
-					Name: "get_follow_page",
+					Name:  "get_follow_page",
 					Usage: "gets a view of users that the specified user is following/avoiding",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
-							Name: "board-public-key, bpk",
+							Name:  "board-public-key, bpk",
 							Usage: "public key of board in which to obtain follow page",
 						},
 						cli.StringFlag{
-							Name: "user-public-key, upk",
+							Name:  "user-public-key, upk",
 							Usage: "public key of user to get follow page of",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(rpc.GetFollowPage(&object.UserIO{
+						return call(rpc.GetFollowPage(&object.UserIO{
 							BoardPubKeyStr: ctx.String("board-public-key"),
-							UserPubKeyStr: ctx.String("user-public-key"),
+							UserPubKeyStr:  ctx.String("user-public-key"),
 						}))
 					},
 				},
+				{
+					Name:  "new_thread",
+					Usage: "submits a new thread to specified board",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "board-public-key, bpk",
+							Usage: "public key of the board in which to submit the thread",
+						},
+						cli.StringFlag{
+							Name:  "name, n",
+							Usage: "name of the thread",
+						},
+						cli.StringFlag{
+							Name:  "body, b",
+							Usage: "body of the thread",
+						},
+						cli.StringFlag{
+							Name:  "user-public-key, upk",
+							Usage: "public key of the thread's creator",
+						},
+						cli.StringFlag{
+							Name:  "user-secret-key, usk",
+							Usage: "secret key of the thread's creator",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return call(rpc.NewThread(&object.NewThreadIO{
+							BoardPubKeyStr: ctx.String("board-public-key"),
+							Name:           ctx.String("name"),
+							Body:           ctx.String("body"),
+							UserPubKeyStr:  ctx.String("user-public-key"),
+							UserSecKeyStr:  ctx.String("user-secret-key"),
+						}))
+					},
+				},
+				{
+					Name:  "new_post",
+					Usage: "submits a new post to specified board and thread",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "board-public-key, bpk",
+							Usage: "public key of board in which to submit the post",
+						},
+						cli.StringFlag{
+							Name:  "thread-hash, th",
+							Usage: "hash of the thread in which to submit the post",
+						},
+						cli.StringFlag{
+							Name:  "post-hash, ph",
+							Usage: "(optional) hash of post in which this post is a reply to",
+						},
+						cli.StringFlag{
+							Name:  "name, n",
+							Usage: "name of the post",
+						},
+						cli.StringFlag{
+							Name:  "body, b",
+							Usage: "body of the post",
+						},
+						cli.StringFlag{
+							Name:  "user-public-key, upk",
+							Usage: "public key of the post's creator",
+						},
+						cli.StringFlag{
+							Name:  "user-secret-key, usk",
+							Usage: "secret key of the post's creator",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						// TODO: Have images too.
+						return call(rpc.NewPost(&object.NewPostIO{
+							BoardPubKeyStr: ctx.String("board-public-key"),
+							ThreadRefStr:   ctx.String("thread-hash"),
+							PostRefStr:     ctx.String("post-hash"),
+							Name:           ctx.String("name"),
+							Body:           ctx.String("body"),
+							UserPubKeyStr:  ctx.String("user-public-key"),
+							UserSecKeyStr:  ctx.String("user-secret-key"),
+						}))
+					},
+				},
+				{
+					Name:  "vote_thread",
+					Usage: "submits a vote for a given thread",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "board-public-key, bpk",
+							Usage: "public key of board in which to submit the vote",
+						},
+						cli.StringFlag{
+							Name:  "thread-hash, th",
+							Usage: "hash of the thread to vote",
+						},
+						cli.StringFlag{
+							Name:  "value, v",
+							Usage: "value of the vote (+1, 0, -1)",
+						},
+						cli.StringFlag{
+							Name:  "tag, t",
+							Usage: "the vote's tag",
+						},
+						cli.StringFlag{
+							Name:  "user-public-key, upk",
+							Usage: "public key of the vote's creator",
+						},
+						cli.StringFlag{
+							Name:  "user-secret-key, usk",
+							Usage: "secret key of the vote's creator",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return call(rpc.VoteThread(&object.ThreadVoteIO{
+							BoardPubKeyStr: ctx.String("board-public-key"),
+							ThreadRefStr:   ctx.String("thread-hash"),
+							ModeStr:        ctx.String("value"),
+							TagStr:         ctx.String("tag"),
+							UserPubKeyStr:  ctx.String("user-public-key"),
+							UserSecKeyStr:  ctx.String("user-secret-key"),
+						}))
+					},
+				},
+				//{
+				//	Name: "vote_post",
+				//	Usage: "submits a vote for a given post",
+				//	Flags: cli.FlagsByName{
+				//
+				//	},
+				//},
 			},
 		},
 	}
@@ -279,7 +471,12 @@ func main() {
 	}
 }
 
-func do(method string, in interface{}) error {
+func call(method string, in interface{}) error {
 	log.Println(rpc.Send(Address)(method, in))
+	return nil
+}
+
+func do(out interface{}, e error) error {
+	log.Println(rpc.Do(out, e))
 	return nil
 }

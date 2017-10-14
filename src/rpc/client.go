@@ -22,6 +22,16 @@ func Send(address string) func(method string, in interface{}) string {
 	}
 }
 
+func Do(out interface{}, e error) string {
+	if e != nil {
+		return errString(e)
+	} else if data, e := json.MarshalIndent(out, "", "  "); e != nil {
+		return errString(e)
+	} else {
+		return okString(string(data))
+	}
+}
+
 /*
 	<<< CONNECTIONS >>>
 */
@@ -98,6 +108,29 @@ func GetFollowPage(in *object.UserIO) (string, interface{}) {
 	return method("GetFollowPage"), in
 }
 
+/*
+	<<< CONTENT : SUBMISSION >>>
+*/
+
+func NewThread(in *object.NewThreadIO) (string, interface{}) {
+	return method("NewThread"), in
+}
+
+func NewPost(in *object.NewPostIO) (string, interface{}) {
+	return method("NewPost"), in
+}
+
+func VoteThread(in *object.ThreadVoteIO) (string, interface{}) {
+	return method("VoteThread"), in
+}
+
+func VotePost(in *object.PostVoteIO) (string, interface{}) {
+	return method("VotePost"), in
+}
+
+func VoteUser(in *object.UserVoteIO) (string, interface{}) {
+	return method("VoteUser"), in
+}
 
 /*
 	<<< HELPER FUNCTIONS >>>
