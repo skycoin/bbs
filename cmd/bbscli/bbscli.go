@@ -426,7 +426,7 @@ func main() {
 						},
 						cli.StringFlag{
 							Name:  "thread-hash, th",
-							Usage: "hash of the thread to vote",
+							Usage: "hash of the thread to cast vote on",
 						},
 						cli.StringFlag{
 							Name:  "value, v",
@@ -456,13 +456,86 @@ func main() {
 						}))
 					},
 				},
-				//{
-				//	Name: "vote_post",
-				//	Usage: "submits a vote for a given post",
-				//	Flags: cli.FlagsByName{
-				//
-				//	},
-				//},
+				{
+					Name: "vote_post",
+					Usage: "submits a vote for a given post",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "board-public-key, bpk",
+							Usage: "public key of board in which to submit the vote",
+						},
+						cli.StringFlag{
+							Name:  "post-hash, ph",
+							Usage: "hash of the post to cast vote on",
+						},
+						cli.StringFlag{
+							Name:  "value, v",
+							Usage: "value of the vote (+1, 0, -1)",
+						},
+						cli.StringFlag{
+							Name:  "tag, t",
+							Usage: "the vote's tag",
+						},
+						cli.StringFlag{
+							Name:  "user-public-key, upk",
+							Usage: "public key of the vote's creator",
+						},
+						cli.StringFlag{
+							Name:  "user-secret-key, usk",
+							Usage: "secret key of the vote's creator",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return call(rpc.VotePost(&object.PostVoteIO{
+							BoardPubKeyStr: ctx.String("board-public-key"),
+							PostRefStr: ctx.String("post-hash"),
+							ModeStr: ctx.String("value"),
+							TagStr: ctx.String("tag"),
+							UserPubKeyStr:  ctx.String("user-public-key"),
+							UserSecKeyStr:  ctx.String("user-secret-key"),
+						}))
+					},
+				},
+				{
+					Name: "vote_user",
+					Usage: "submits a vote for a given user",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name:  "board-public-key, bpk",
+							Usage: "public key of board in which to submit the vote",
+						},
+						cli.StringFlag{
+							Name:  "user-ref, ur",
+							Usage: "public key of the user to cast vote on",
+						},
+						cli.StringFlag{
+							Name:  "value, v",
+							Usage: "value of the vote (+1, 0, -1)",
+						},
+						cli.StringFlag{
+							Name:  "tag, t",
+							Usage: "the vote's tag",
+						},
+						cli.StringFlag{
+							Name:  "user-public-key, upk",
+							Usage: "public key of the vote's creator",
+						},
+						cli.StringFlag{
+							Name:  "user-secret-key, usk",
+							Usage: "secret key of the vote's creator",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return call(rpc.VoteUser(&object.UserVoteIO{
+							BoardPubKeyStr: ctx.String("board-public-key"),
+							UserRefStr:     ctx.String("user-ref"),
+							ModeStr:        ctx.String("value"),
+							TagStr:         ctx.String("tag"),
+							UserPubKeyStr:  ctx.String("user-public-key"),
+							UserSecKeyStr:  ctx.String("user-secret-key"),
+						}))
+					},
+				},
 			},
 		},
 	}
