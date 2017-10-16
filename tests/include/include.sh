@@ -5,22 +5,12 @@ inMac() {
         echo "curl is not installed."
         exit 1
     fi
-    if ! type "jq" > /dev/null; then
-        echo "jq is not installed."
-        exit 1
-    fi
 }
 
 inLinux() {
     # Check if curl is installed.
     if ! dpkg -s curl > /dev/null ; then
         echo "curl is not installed."
-        exit 1
-    fi
-
-    # Check if jq is installed.
-    if ! dpkg -s jq > /dev/null ; then
-        echo "jq is not installed."
         exit 1
     fi
 }

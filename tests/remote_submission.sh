@@ -32,26 +32,25 @@ NewBoard 7414 "Board C" "Board generated with 'c'." "c"
 
 # Subscribe.
 
-#NewSubscription 7414 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b"
-#NewSubscription 7414 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b"
+NewSubscription 7414 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b"
+NewSubscription 7414 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b"
 
 # Add some threads.
 
-#for i in {1..9}
-#do
-#    NewTestThread 5414 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" ${i} \
-#        "89e8ba35e8e694ffc8936c88cbd3af8907d149adcba942e63914184cc28e192a" &
-#done
-#NewTestThread 5414 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" 10 "89e8ba35e8e694ffc8936c88cbd3af8907d149adcba942e63914184cc28e192a"
+for i in {1..5}
+do
+    NewThread 5414 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
+        "Test Thread ${i}" "A description of thread ${i}." \
+        "89e8ba35e8e694ffc8936c88cbd3af8907d149adcba942e63914184cc28e192a"
+done
 
-NewThread 5414 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" "Test Thread" "A description." "89e8ba35e8e694ffc8936c88cbd3af8907d149adcba942e63914184cc28e192a"
 
-#for i in {1..9}
-#do
-#    NewTestThread 5414 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" ${i} \
-#        "89e8ba35e8e694ffc8936c88cbd3af8907d149adcba942e63914184cc28e192a" &
-#done
-#NewTestThread 5414 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" 10 "89e8ba35e8e694ffc8936c88cbd3af8907d149adcba942e63914184cc28e192a"
+for i in {1..5}
+do
+    NewThread 5414 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" \
+        "Test Thread ${i}" "A description of thread ${i}." \
+        "89e8ba35e8e694ffc8936c88cbd3af8907d149adcba942e63914184cc28e192a"
+done
 
 # All done.
 sleep 2
