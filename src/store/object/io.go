@@ -57,34 +57,34 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 
 // NewThread represents io required to create a new thread.
 type NewThreadIO struct {
-	BoardPubKeyStr string        `bbs:"bpkStr"`
-	BoardPubKey    cipher.PubKey `bbs:"bpk"`
-	Name           string        `bbs:"name"`
-	Body           string        `bbs:"body"`
-	UserPubKeyStr  string        `bbs:"upkStr"`
-	UserPubKey     cipher.PubKey `bbs:"upk"`
-	UserSecKeyStr  string        `bbs:"uskStr"`
-	UserSecKey     cipher.SecKey `bbs:"usk"`
-	Transport      *r0.Transport
+	BoardPubKeyStr   string        `bbs:"bpkStr"`
+	BoardPubKey      cipher.PubKey `bbs:"bpk"`
+	Name             string        `bbs:"name"`
+	Body             string        `bbs:"body"`
+	CreatorSecKeyStr string        `bbs:"uskStr"`
+	CreatorSecKey    cipher.SecKey `bbs:"usk"`
+	CreatorPubKey    cipher.PubKey
+	Transport        *r0.Transport
 }
 
 func (a *NewThreadIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-
-	tData := &r0.ThreadData{
+	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
+	tData := &r0.Body{
+		Type: r0.V5ThreadType,
+		TS: time.Now().UnixNano(),
 		OfBoard: a.BoardPubKey.Hex(),
 		Name:    a.Name,
 		Body:    a.Body,
-		Creator: a.UserPubKeyStr,
+		Creator: a.CreatorPubKey.Hex(),
 	}
 	tDataRaw, e := json.Marshal(tData)
 	if e != nil {
 		return e
 	}
-	tSig := cipher.SignHash(cipher.SumSHA256(tDataRaw), a.UserSecKey)
-
+	tSig := cipher.SignHash(cipher.SumSHA256(tDataRaw), a.CreatorSecKey)
 	if a.Transport, e = r0.NewTransport(tDataRaw, tSig); e != nil {
 		return e
 	}
@@ -92,21 +92,20 @@ func (a *NewThreadIO) Process() error {
 }
 
 type NewPostIO struct {
-	BoardPubKeyStr string        `bbs:"bpkStr"`
-	BoardPubKey    cipher.PubKey `bbs:"bpk"`
-	ThreadRefStr   string        `bbs:"tRefStr"`
-	ThreadRef      cipher.SHA256 `bbs:"tRef"`
-	PostRefStr     string        `bbs:"pRefStr"`
-	PostRef        cipher.SHA256 `bbs:"pRef"`
-	Name           string        `bbs:"name"`
-	Body           string        `bbs:"body"`
-	ImagesStr      string
-	Images         []*r0.ImageData
-	UserPubKeyStr  string        `bbs:"upkStr"`
-	UserPubKey     cipher.PubKey `bbs:"upk"`
-	UserSecKeyStr  string        `bbs:"uskStr"`
-	UserSecKey     cipher.SecKey `bbs:"usk"`
-	Transport      *r0.Transport
+	BoardPubKeyStr   string        `bbs:"bpkStr"`
+	BoardPubKey      cipher.PubKey `bbs:"bpk"`
+	ThreadRefStr     string        `bbs:"tRefStr"`
+	ThreadRef        cipher.SHA256 `bbs:"tRef"`
+	PostRefStr       string        `bbs:"pRefStr"`
+	PostRef          cipher.SHA256 `bbs:"pRef"`
+	Name             string        `bbs:"name"`
+	Body             string        `bbs:"body"`
+	ImagesStr        string
+	Images           []*r0.ImageData
+	CreatorSecKeyStr string        `bbs:"uskStr"`
+	CreatorSecKey    cipher.SecKey `bbs:"usk"`
+	CreatorPubKey    cipher.PubKey
+	Transport        *r0.Transport
 }
 
 func (a *NewPostIO) Process() error {
@@ -118,61 +117,24 @@ func (a *NewPostIO) Process() error {
 			return boo.WrapType(e, boo.InvalidInput, "failed to read 'images' form value")
 		}
 	}
-
-	pData := &r0.PostData{
+	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
+	pData := &r0.Body{
+		Type: r0.V5PostType,
+		TS: time.Now().UnixNano(),
 		OfBoard:  a.BoardPubKey.Hex(),
 		OfThread: a.ThreadRef.Hex(),
 		OfPost:   a.PostRef.Hex(),
 		Name:     a.Name,
 		Body:     a.Body,
 		Images:   a.Images,
-		Creator:  a.UserPubKeyStr,
+		Creator:  a.CreatorPubKey.Hex(),
 	}
 	pDataRaw, e := json.Marshal(pData)
 	if e != nil {
 		return e
 	}
-	pSig := cipher.SignHash(cipher.SumSHA256(pDataRaw), a.UserSecKey)
-
+	pSig := cipher.SignHash(cipher.SumSHA256(pDataRaw), a.CreatorSecKey)
 	if a.Transport, e = r0.NewTransport(pDataRaw, pSig); e != nil {
-		return e
-	}
-
-	return nil
-}
-
-// NewUser represents io required when creating a new user.
-type NewUserIO struct {
-	Alias      string        `bbs:"alias" trans:"alias"`
-	Seed       string        `bbs:"uSeed"`
-	Password   string        `bbs:"password"`
-	UserPubKey cipher.PubKey `bbs:"upk" trans:"upk"`
-	UserSecKey cipher.SecKey `bbs:"usk" trans:"usk"`
-	File       *UserFile
-}
-
-func (a *NewUserIO) Process() error {
-	if e := tag.Process(a); e != nil {
-		return e
-	}
-	a.File = &UserFile{
-		User: r0.User{
-			Alias:  a.Alias,
-			PubKey: a.UserPubKey,
-			SecKey: a.UserSecKey,
-		},
-		Seed: a.Seed,
-	}
-	return nil
-}
-
-// Login represents input required when logging io.
-type LoginIO struct {
-	Alias string `bbs:"alias"`
-}
-
-func (a *LoginIO) Process() error {
-	if e := tag.Process(a); e != nil {
 		return e
 	}
 	return nil
@@ -222,40 +184,40 @@ func (a *ThreadIO) Process() error {
 }
 
 type UserVoteIO struct {
-	BoardPubKeyStr string        `bbs:"bpkStr"`
-	BoardPubKey    cipher.PubKey `bbs:"bpk"`
-	UserRefStr     string        `bbs:"uRefStr"`
-	UserRef        cipher.PubKey `bbs:"uRef"`
-	ModeStr        string        `bbs:"modeStr"`
-	Mode           int8          `bbs:"mode"`
-	TagStr         string        `bbs:"tagStr"`
-	Tag            []byte        `bbs:"tag"`
-	UserPubKeyStr  string        `bbs:"upkStr"`
-	UserPubKey     cipher.PubKey `bbs:"upk"`
-	UserSecKeyStr  string        `bbs:"uskStr"`
-	UserSecKey     cipher.SecKey `bbs:"usk"`
-	Transport      *r0.Transport
+	BoardPubKeyStr   string        `bbs:"bpkStr"`
+	BoardPubKey      cipher.PubKey `bbs:"bpk"`
+	UserPubKeyStr    string        `bbs:"upkStr"`
+	UserPubKey       cipher.PubKey `bbs:"upk"`
+	ModeStr          string        `bbs:"modeStr"`
+	Mode             int8          `bbs:"mode"`
+	TagStr           string        `bbs:"tagStr"`
+	Tag              []byte        `bbs:"tag"`
+	CreatorSecKeyStr string        `bbs:"uskStr"`
+	CreatorSecKey    cipher.SecKey `bbs:"usk"`
+	CreatorPubKey    cipher.PubKey
+	Transport        *r0.Transport
 }
 
 func (a *UserVoteIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
+	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
+	vData := &r0.Body{
+		Type: r0.V5UserVoteType,
+		TS: time.Now().UnixNano(),
+		OfBoard: a.BoardPubKeyStr,
+		OfUser:  a.UserPubKeyStr,
+		Value:   int(a.Mode),
+		Tag:     string(a.Tag),
+		Creator: a.CreatorPubKey.Hex(),
 
-	vData := &r0.UserVoteData{
-		VoteData: r0.VoteData{
-			OfBoard: a.BoardPubKeyStr,
-			Value:   int(a.Mode),
-			Tag:     string(a.Tag),
-			Creator: a.UserPubKeyStr,
-		},
-		OfUser: a.UserRefStr,
 	}
 	vDataRaw, e := json.Marshal(vData)
 	if e != nil {
 		return e
 	}
-	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.UserSecKey)
+	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.CreatorSecKey)
 
 	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
 		return e
@@ -265,84 +227,79 @@ func (a *UserVoteIO) Process() error {
 }
 
 type ThreadVoteIO struct {
-	BoardPubKeyStr string        `bbs:"bpkStr"`
-	BoardPubKey    cipher.PubKey `bbs:"bpk"`
-	ThreadRefStr   string        `bbs:"tRefStr"`
-	ThreadRef      cipher.SHA256 `bbs:"tRef"`
-	ModeStr        string        `bbs:"modeStr"`
-	Mode           int8          `bbs:"mode"`
-	TagStr         string        `bbs:"tagStr"`
-	Tag            []byte        `bbs:"tag"`
-	UserPubKeyStr  string        `bbs:"upkStr"`
-	UserPubKey     cipher.PubKey `bbs:"upk"`
-	UserSecKeyStr  string        `bbs:"uskStr"`
-	UserSecKey     cipher.SecKey `bbs:"usk"`
-	Transport      *r0.Transport
+	BoardPubKeyStr   string        `bbs:"bpkStr"`
+	BoardPubKey      cipher.PubKey `bbs:"bpk"`
+	ThreadRefStr     string        `bbs:"tRefStr"`
+	ThreadRef        cipher.SHA256 `bbs:"tRef"`
+	ModeStr          string        `bbs:"modeStr"`
+	Mode             int8          `bbs:"mode"`
+	TagStr           string        `bbs:"tagStr"`
+	Tag              []byte        `bbs:"tag"`
+	CreatorSecKeyStr string        `bbs:"uskStr"`
+	CreatorSecKey    cipher.SecKey `bbs:"usk"`
+	CreatorPubKey    cipher.PubKey
+	Transport        *r0.Transport
 }
 
 func (a *ThreadVoteIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-
-	vData := &r0.ThreadVoteData{
-		VoteData: r0.VoteData{
-			OfBoard: a.BoardPubKeyStr,
-			Value:   int(a.Mode),
-			Tag:     string(a.Tag),
-			Creator: a.UserPubKeyStr,
-		},
+	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
+	vData := &r0.Body{
+		Type: r0.V5ThreadVoteType,
+		TS: time.Now().UnixNano(),
+		OfBoard: a.BoardPubKeyStr,
 		OfThread: a.ThreadRefStr,
+		Value:   int(a.Mode),
+		Tag:     string(a.Tag),
+		Creator: a.CreatorPubKey.Hex(),
 	}
 	vDataRaw, e := json.Marshal(vData)
 	if e != nil {
 		return e
 	}
-	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.UserSecKey)
-
+	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.CreatorSecKey)
 	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
 		return e
 	}
-
 	return nil
 }
 
 type PostVoteIO struct {
-	BoardPubKeyStr string        `bbs:"bpkStr"`
-	BoardPubKey    cipher.PubKey `bbs:"bpk"`
-	PostRefStr     string        `bbs:"pRefStr"`
-	PostRef        cipher.SHA256 `bbs:"pRef"`
-	ModeStr        string        `bbs:"modeStr"`
-	Mode           int8          `bbs:"mode"`
-	TagStr         string        `bbs:"tagStr"`
-	Tag            []byte        `bbs:"tag"`
-	UserPubKeyStr  string        `bbs:"upkStr"`
-	UserPubKey     cipher.PubKey `bbs:"upk"`
-	UserSecKeyStr  string        `bbs:"uskStr"`
-	UserSecKey     cipher.SecKey `bbs:"usk"`
-	Transport      *r0.Transport
+	BoardPubKeyStr   string        `bbs:"bpkStr"`
+	BoardPubKey      cipher.PubKey `bbs:"bpk"`
+	PostRefStr       string        `bbs:"pRefStr"`
+	PostRef          cipher.SHA256 `bbs:"pRef"`
+	ModeStr          string        `bbs:"modeStr"`
+	Mode             int8          `bbs:"mode"`
+	TagStr           string        `bbs:"tagStr"`
+	Tag              []byte        `bbs:"tag"`
+	CreatorSecKeyStr string        `bbs:"uskStr"`
+	CreatorSecKey    cipher.SecKey `bbs:"usk"`
+	CreatorPubKey    cipher.PubKey
+	Transport        *r0.Transport
 }
 
 func (a *PostVoteIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-
-	vData := &r0.PostVoteData{
-		VoteData: r0.VoteData{
-			OfBoard: a.BoardPubKeyStr,
-			Value:   int(a.Mode),
-			Tag:     string(a.Tag),
-			Creator: a.UserPubKeyStr,
-		},
+	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
+	vData := &r0.Body{
+		Type: r0.V5PostVoteType,
+		TS: time.Now().UnixNano(),
+		OfBoard: a.BoardPubKeyStr,
 		OfPost: a.PostRefStr,
+		Value:   int(a.Mode),
+		Tag:     string(a.Tag),
+		Creator: a.CreatorPubKey.Hex(),
 	}
 	vDataRaw, e := json.Marshal(vData)
 	if e != nil {
 		return e
 	}
-	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.UserSecKey)
-
+	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.CreatorSecKey)
 	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
 		return e
 	}

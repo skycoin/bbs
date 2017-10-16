@@ -7,23 +7,28 @@ import (
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
+	"strconv"
 )
 
 var (
-	Address = "[::]:8996"
+	Port = 8996
 )
+
+func address() string {
+	return "[::]:" + strconv.Itoa(Port)
+}
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "bbscli"
 	app.Usage = "a command-line interface to interact with a Skycoin BBS node"
 	app.Flags = cli.FlagsByName{
-		cli.StringFlag{
-			Name:        "address,a",
-			Usage:       "rpc address of bbs node",
-			EnvVar:      "BBS_ADDRESS",
-			Value:       Address,
-			Destination: &Address,
+		cli.IntFlag{
+			Name: "port, p",
+			Usage: "rpc port of the bbs node",
+			EnvVar: "BBS_RPC_PORT",
+			Value: Port,
+			Destination: &Port,
 		},
 	}
 	app.Commands = cli.Commands{
@@ -117,7 +122,7 @@ func main() {
 					},
 				},
 				{
-					Name:  "del",
+					Name:  "delete",
 					Usage: "removes a connection",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
@@ -352,21 +357,16 @@ func main() {
 							Usage: "body of the thread",
 						},
 						cli.StringFlag{
-							Name:  "user-public-key, upk",
-							Usage: "public key of the thread's creator",
-						},
-						cli.StringFlag{
-							Name:  "user-secret-key, usk",
+							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the thread's creator",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.NewThread(&object.NewThreadIO{
-							BoardPubKeyStr: ctx.String("board-public-key"),
-							Name:           ctx.String("name"),
-							Body:           ctx.String("body"),
-							UserPubKeyStr:  ctx.String("user-public-key"),
-							UserSecKeyStr:  ctx.String("user-secret-key"),
+							BoardPubKeyStr:   ctx.String("board-public-key"),
+							Name:             ctx.String("name"),
+							Body:             ctx.String("body"),
+							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
 				},
@@ -395,24 +395,19 @@ func main() {
 							Usage: "body of the post",
 						},
 						cli.StringFlag{
-							Name:  "user-public-key, upk",
-							Usage: "public key of the post's creator",
-						},
-						cli.StringFlag{
-							Name:  "user-secret-key, usk",
+							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the post's creator",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
 						// TODO: Have images too.
 						return call(rpc.NewPost(&object.NewPostIO{
-							BoardPubKeyStr: ctx.String("board-public-key"),
-							ThreadRefStr:   ctx.String("thread-hash"),
-							PostRefStr:     ctx.String("post-hash"),
-							Name:           ctx.String("name"),
-							Body:           ctx.String("body"),
-							UserPubKeyStr:  ctx.String("user-public-key"),
-							UserSecKeyStr:  ctx.String("user-secret-key"),
+							BoardPubKeyStr:   ctx.String("board-public-key"),
+							ThreadRefStr:     ctx.String("thread-hash"),
+							PostRefStr:       ctx.String("post-hash"),
+							Name:             ctx.String("name"),
+							Body:             ctx.String("body"),
+							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
 				},
@@ -437,22 +432,17 @@ func main() {
 							Usage: "the vote's tag",
 						},
 						cli.StringFlag{
-							Name:  "user-public-key, upk",
-							Usage: "public key of the vote's creator",
-						},
-						cli.StringFlag{
-							Name:  "user-secret-key, usk",
+							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the vote's creator",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.VoteThread(&object.ThreadVoteIO{
-							BoardPubKeyStr: ctx.String("board-public-key"),
-							ThreadRefStr:   ctx.String("thread-hash"),
-							ModeStr:        ctx.String("value"),
-							TagStr:         ctx.String("tag"),
-							UserPubKeyStr:  ctx.String("user-public-key"),
-							UserSecKeyStr:  ctx.String("user-secret-key"),
+							BoardPubKeyStr:   ctx.String("board-public-key"),
+							ThreadRefStr:     ctx.String("thread-hash"),
+							ModeStr:          ctx.String("value"),
+							TagStr:           ctx.String("tag"),
+							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
 				},
@@ -477,22 +467,17 @@ func main() {
 							Usage: "the vote's tag",
 						},
 						cli.StringFlag{
-							Name:  "user-public-key, upk",
-							Usage: "public key of the vote's creator",
-						},
-						cli.StringFlag{
-							Name:  "user-secret-key, usk",
+							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the vote's creator",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.VotePost(&object.PostVoteIO{
-							BoardPubKeyStr: ctx.String("board-public-key"),
-							PostRefStr: ctx.String("post-hash"),
-							ModeStr: ctx.String("value"),
-							TagStr: ctx.String("tag"),
-							UserPubKeyStr:  ctx.String("user-public-key"),
-							UserSecKeyStr:  ctx.String("user-secret-key"),
+							BoardPubKeyStr:   ctx.String("board-public-key"),
+							PostRefStr:       ctx.String("post-hash"),
+							ModeStr:          ctx.String("value"),
+							TagStr:           ctx.String("tag"),
+							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
 				},
@@ -505,7 +490,7 @@ func main() {
 							Usage: "public key of board in which to submit the vote",
 						},
 						cli.StringFlag{
-							Name:  "user-ref, ur",
+							Name:  "user-public-key, upk",
 							Usage: "public key of the user to cast vote on",
 						},
 						cli.StringFlag{
@@ -517,22 +502,17 @@ func main() {
 							Usage: "the vote's tag",
 						},
 						cli.StringFlag{
-							Name:  "user-public-key, upk",
-							Usage: "public key of the vote's creator",
-						},
-						cli.StringFlag{
-							Name:  "user-secret-key, usk",
+							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the vote's creator",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.VoteUser(&object.UserVoteIO{
-							BoardPubKeyStr: ctx.String("board-public-key"),
-							UserRefStr:     ctx.String("user-ref"),
-							ModeStr:        ctx.String("value"),
-							TagStr:         ctx.String("tag"),
-							UserPubKeyStr:  ctx.String("user-public-key"),
-							UserSecKeyStr:  ctx.String("user-secret-key"),
+							BoardPubKeyStr:   ctx.String("board-public-key"),
+							UserPubKeyStr:    ctx.String("user-public-key"),
+							ModeStr:          ctx.String("value"),
+							TagStr:           ctx.String("tag"),
+							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
 				},
@@ -545,7 +525,7 @@ func main() {
 }
 
 func call(method string, in interface{}) error {
-	log.Println(rpc.Send(Address)(method, in))
+	log.Println(rpc.Send(address())(method, in))
 	return nil
 }
 

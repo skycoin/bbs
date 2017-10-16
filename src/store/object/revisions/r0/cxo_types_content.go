@@ -15,14 +15,26 @@ func errGetFromBody(e error, what string) error {
 		"failed to get '%s' from body", what)
 }
 
+type ImageData struct {
+	Name   string       `json:"name"`
+	Hash   string       `json:"hash"`
+	URL    string       `json:"url,omitempty"`
+	Size   int          `json:"size,omitempty"`
+	Height int          `json:"height,omitempty"`
+	Width  int          `json:"width,omitempty"`
+	Thumbs []*ImageData `json:"thumbs,omitempty"`
+}
+
 type Body struct {
 	Type     ContentType `json:"type"`                      // ALL
 	TS       int64       `json:"ts"`                        // ALL
 	OfBoard  string      `json:"of_board,omitempty"`        // thread, post, thread_vote, post_vote, user_vote
 	OfThread string      `json:"of_thread,omitempty"`       // post, thread_vote
 	OfPost   string      `json:"of_post,omitempty"`         // post (optional), post_vote
+	OfUser   string      `json:"of_user,omitempty"`         // vote
 	Name     string      `json:"name,omitempty"`            // board, thread, post
 	Body     string      `json:"body,omitempty"`            // board, thread, post
+	Images   []*ImageData `json:"images,omitempty"`         // post (optional)
 	Value    int         `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
 	Tag      string      `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
 	Tags     []string    `json:"tags,omitempty"`            // board
@@ -59,6 +71,14 @@ func (c *Body) GetOfPost() (cipher.SHA256, error) {
 		return hash, errGetFromBody(e, "of_post")
 	} else {
 		return hash, nil
+	}
+}
+
+func (c *Body) GetOfUser() (cipher.PubKey, error) {
+	if pk, e := keys.GetPubKey(c.OfUser); e != nil {
+		return pk, errGetFromBody(e, "of_user")
+	} else {
+		return pk, nil
 	}
 }
 

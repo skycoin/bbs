@@ -263,7 +263,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
-		Perspective: in.UserPubKeyStr,
+		Perspective: in.CreatorPubKey.Hex(),
 	})
 }
 
@@ -304,7 +304,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
-		Perspective: in.UserPubKeyStr,
+		Perspective: in.CreatorPubKey.Hex(),
 		ThreadHash:  in.ThreadRefStr,
 	})
 }
@@ -380,7 +380,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
-		Perspective: in.UserPubKeyStr,
+		Perspective: in.CreatorPubKey.Hex(),
 		ContentHash: in.ThreadRefStr,
 	})
 }
@@ -408,7 +408,7 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 		return nil, e
 	}
 	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
-		Perspective: in.UserPubKeyStr,
+		Perspective: in.CreatorPubKey.Hex(),
 		ContentHash: in.PostRefStr,
 	})
 }

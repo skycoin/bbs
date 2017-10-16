@@ -43,7 +43,6 @@ var (
 
 // Config represents configuration for node.
 type Config struct {
-	Master    bool   `json:"master"`     // Whether to run node in master mode.
 	Memory    bool   `json:"memory"`     // Whether to run node in memory.
 	ConfigDir string `json:"config_dir"` // Full path for configuration directory.
 
@@ -213,10 +212,6 @@ func main() {
 		cli.BoolFlag{
 			Name:        "dev",
 			Destination: &devMode,
-		},
-		cli.BoolFlag{
-			Name:        "master",
-			Destination: &config.Master,
 		},
 		cli.BoolFlag{
 			Name:        "memory",
