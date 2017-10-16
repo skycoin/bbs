@@ -1,10 +1,10 @@
 package r0
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
-	"encoding/json"
 )
 
 type Transport struct {
@@ -28,7 +28,7 @@ func NewTransport(rawBody []byte, sig cipher.Sig) (*Transport, error) {
 
 	out.Header = &ContentHeaderData{
 		Hash: cipher.SumSHA256(rawBody).Hex(),
-		Sig: sig.Hex(),
+		Sig:  sig.Hex(),
 	}
 	if e := out.Header.Verify(creator); e != nil {
 		return nil, e

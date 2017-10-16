@@ -1,11 +1,11 @@
 package rpc
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/cxo"
+	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
-	"github.com/skycoin/skycoin/src/cipher"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 )
 
 type Gateway struct {
-	CXO      *cxo.Manager
+	Access   *store.Access
 	QuitChan chan int
 }
 
@@ -26,67 +26,119 @@ func (g *Gateway) Quit(code int, ok *bool) error {
 	return nil
 }
 
-type ConnectionsOutput struct {
-	Connections []r0.Connection `json:"connections"`
+/*
+	<<< CONNECTIONS >>>
+*/
+
+func (g *Gateway) GetConnections(_ *struct{}, out *string) error {
+	return send(out)(g.Access.GetConnections(context.Background()))
 }
 
-func (g *Gateway) Connections(_ struct{}, out *ConnectionsOutput) error {
-	out.Connections = g.CXO.GetConnections()
-	return nil
+func (g *Gateway) NewConnection(in *object.ConnectionIO, out *string) error {
+	return send(out)(g.Access.NewConnection(context.Background(), in))
 }
 
-func (g *Gateway) AddConnection(address string, _ *struct{}) error {
-	return g.CXO.Connect(address)
+func (g *Gateway) DeleteConnection(in *object.ConnectionIO, out *string) error {
+	return send(out)(g.Access.DeleteConnection(context.Background(), in))
 }
 
-func (g *Gateway) RemoveConnection(address string, _ *struct{}) error {
-	return g.CXO.Disconnect(address)
+/*
+	<<< SUBSCRIPTIONS >>>
+*/
+
+func (g *Gateway) GetSubscriptions(_ *struct{}, out *string) error {
+	return send(out)(g.Access.GetSubscriptions(context.Background()))
 }
 
-type FeedsOutput struct {
-	Feeds []string `json:"feeds"`
+func (g *Gateway) NewSubscription(in *object.BoardIO, out *string) error {
+	return send(out)(g.Access.NewSubscription(context.Background(), in))
 }
 
-func (g *Gateway) Subscriptions(_ struct{}, out *FeedsOutput) error {
-	pks := g.CXO.GetSubscriptions()
-	out.Feeds = make([]string, len(pks))
-	for i, pk := range pks {
-		out.Feeds[i] = pk.Hex()
+func (g *Gateway) DeleteSubscription(in *object.BoardIO, out *string) error {
+	return send(out)(g.Access.DeleteSubscription(context.Background(), in))
+}
+
+/*
+	<<< CONTENT : ADMIN >>>
+*/
+
+func (g *Gateway) NewBoard(in *object.NewBoardIO, out *string) error {
+	return send(out)(g.Access.NewBoard(context.Background(), in))
+}
+
+func (g *Gateway) DeleteBoard(in *object.BoardIO, out *string) error {
+	return send(out)(g.Access.DeleteBoard(context.Background(), in))
+}
+
+func (g *Gateway) ExportBoard(in *object.ExportBoardIO, out *string) error {
+	return send(out)(g.Access.ExportBoard(context.Background(), in))
+}
+
+func (g *Gateway) ImportBoard(in *object.ExportBoardIO, out *string) error {
+	return send(out)(g.Access.ImportBoard(context.Background(), in))
+}
+
+/*
+	<<< CONTENT >>>
+*/
+
+func (g *Gateway) GetBoards(_ *struct{}, out *string) error {
+	return send(out)(g.Access.GetBoards(context.Background()))
+}
+
+func (g *Gateway) GetBoard(in *object.BoardIO, out *string) error {
+	return send(out)(g.Access.GetBoard(context.Background(), in))
+}
+
+func (g *Gateway) GetBoardPage(in *object.BoardIO, out *string) error {
+	return send(out)(g.Access.GetBoardPage(context.Background(), in))
+}
+
+func (g *Gateway) GetThreadPage(in *object.ThreadIO, out *string) error {
+	return send(out)(g.Access.GetThreadPage(context.Background(), in))
+}
+
+func (g *Gateway) GetFollowPage(in *object.UserIO, out *string) error {
+	return send(out)(g.Access.GetFollowPage(context.Background(), in))
+}
+
+/*
+	<<< CONTENT : SUBMISSION >>>
+*/
+
+func (g *Gateway) NewThread(in *object.NewThreadIO, out *string) error {
+	return send(out)(g.Access.NewThread(context.Background(), in))
+}
+
+func (g *Gateway) NewPost(in *object.NewPostIO, out *string) error {
+	return send(out)(g.Access.NewPost(context.Background(), in))
+}
+
+func (g *Gateway) VoteThread(in *object.ThreadVoteIO, out *string) error {
+	return send(out)(g.Access.VoteThread(context.Background(), in))
+}
+
+func (g *Gateway) VotePost(in *object.PostVoteIO, out *string) error {
+	return send(out)(g.Access.VotePost(context.Background(), in))
+}
+
+func (g *Gateway) VoteUser(in *object.UserVoteIO, out *string) error {
+	return send(out)(g.Access.VoteUser(context.Background(), in))
+}
+
+/*
+	<<< HELPER FUNCTIONS >>>
+*/
+
+func send(out *string) func(v interface{}, e error) error {
+	return func(v interface{}, e error) error {
+		if e != nil {
+			return e
+		} else if data, e := json.MarshalIndent(v, "", "  "); e != nil {
+			return e
+		} else {
+			*out = string(data)
+			return nil
+		}
 	}
-	return nil
-}
-
-func (g *Gateway) SubscribeRemote(pk cipher.PubKey, _ *struct{}) error {
-	return g.CXO.SubscribeRemote(pk)
-}
-
-type SubscribeMasterInput struct {
-	PubKey cipher.PubKey
-	SecKey cipher.SecKey
-}
-
-func (g *Gateway) SubscribeMaster(in SubscribeMasterInput, _ *struct{}) error {
-	return g.CXO.SubscribeMaster(in.PubKey, in.SecKey)
-}
-
-func (g *Gateway) NewBoard(in *object.NewBoardIO, _ *struct{}) error {
-	if e := in.Process(g.CXO.Relay().GetKeys()); e != nil {
-		return e
-	}
-	return g.CXO.NewBoard(in)
-}
-
-func (g *Gateway) DeleteBoard(in *object.BoardIO, _ *struct{}) error {
-	if e := in.Process(); e != nil {
-		return e
-	}
-	return g.CXO.UnsubscribeMaster(in.PubKey)
-}
-
-func (g *Gateway) ExportBoard(in *object.ExportBoardIO, _ *struct{}) error {
-	if e := in.Process(); e != nil {
-		return e
-	}
-	_, _, e := g.CXO.ExportBoard(in.PubKey, in.Name)
-	return e
 }

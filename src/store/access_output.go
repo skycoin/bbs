@@ -67,16 +67,6 @@ func getSubscriptions(_ context.Context, ss []cipher.PubKey) *SubscriptionsOutpu
 	return out
 }
 
-type SubmissionOutput struct {
-	SubAddresses []string `json:"submission_addresses"`
-}
-
-func getSubmissionOutput(addresses []string) *SubmissionOutput {
-	return &SubmissionOutput{
-		SubAddresses: addresses,
-	}
-}
-
 type BoardsOutput struct {
 	MasterBoards []interface{} `json:"master_boards"`
 	RemoteBoards []interface{} `json:"remote_boards"`

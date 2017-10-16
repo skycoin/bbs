@@ -8,7 +8,6 @@ import (
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
-	"github.com/skycoin/bbs/src/store/session"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/browser"
 	"github.com/skycoin/skycoin/src/util/file"
@@ -44,7 +43,6 @@ var (
 
 // Config represents configuration for node.
 type Config struct {
-	Master    bool   `json:"master"`     // Whether to run node in master mode.
 	Memory    bool   `json:"memory"`     // Whether to run node in memory.
 	ConfigDir string `json:"config_dir"` // Full path for configuration directory.
 
@@ -135,12 +133,6 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 			},
 			&http.Gateway{
 				Access: &store.Access{
-					Session: session.NewManager(
-						&session.ManagerConfig{
-							MemoryMode: &c.Memory,
-							ConfigDir:  &c.ConfigDir,
-						},
-					),
 					CXO: cxo.NewManager(
 						&cxo.ManagerConfig{
 							Memory:             &c.Memory,
@@ -160,7 +152,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 						},
 					),
 				},
-				Quit: quit,
+				QuitChan: quit,
 			},
 		)
 		CatchError(e, "failed to start HTTP server")
@@ -172,7 +164,9 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 				Port:   &c.RPCPort,
 			},
 			&rpc.Gateway{
-				CXO:      httpServer.CXO(),
+				Access: &store.Access{
+					CXO: httpServer.CXO(),
+				},
 				QuitChan: quit,
 			},
 		)
@@ -220,10 +214,6 @@ func main() {
 			Destination: &devMode,
 		},
 		cli.BoolFlag{
-			Name:        "master",
-			Destination: &config.Master,
-		},
-		cli.BoolFlag{
 			Name:        "memory",
 			Destination: &config.Memory,
 		},
@@ -238,6 +228,7 @@ func main() {
 		cli.IntFlag{
 			Name:        "rpc-port",
 			Destination: &config.RPCPort,
+			Value:       config.RPCPort,
 		},
 		cli.IntFlag{
 			Name:        "cxo-port",
@@ -276,7 +267,7 @@ func main() {
 		},
 	}
 	app := cli.NewApp()
-	app.Name = "Skycoin BBS Node"
+	app.Name = "bbsnode"
 	app.Usage = "Runs a Skycoin BBS Node"
 	app.Flags = flags
 	app.Action = config.GenerateAction()
