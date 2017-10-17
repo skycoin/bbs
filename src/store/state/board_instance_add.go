@@ -3,34 +3,34 @@ package state
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
-func (bi *BoardInstance) Submit(transport *r0.Transport) (uint64, error) {
+func (bi *BoardInstance) Submit(transport *object.Transport) (uint64, error) {
 
 	var goal uint64
 
 	switch transport.Body.Type {
-	case r0.V5ThreadType:
+	case object.V5ThreadType:
 		if e := submitThread(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
-	case r0.V5PostType:
+	case object.V5PostType:
 		if e := submitPost(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
-	case r0.V5ThreadVoteType:
+	case object.V5ThreadVoteType:
 		if e := submitThreadVote(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
-	case r0.V5PostVoteType:
+	case object.V5PostVoteType:
 		if e := submitPostVote(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
-	case r0.V5UserVoteType:
+	case object.V5UserVoteType:
 		if e := submitUserVote(bi, &goal, transport.Content); e != nil {
 			return 0, e
 		}
@@ -42,7 +42,7 @@ func (bi *BoardInstance) Submit(transport *r0.Transport) (uint64, error) {
 	return goal, nil
 }
 
-func submitThread(bi *BoardInstance, goal *uint64, thread *r0.Content) error {
+func submitThread(bi *BoardInstance, goal *uint64, thread *object.Content) error {
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal sequence.
@@ -58,7 +58,7 @@ func submitThread(bi *BoardInstance, goal *uint64, thread *r0.Content) error {
 		}
 
 		// Get root children pages.
-		pages, e := r0.GetPages(p, false, true, true, true)
+		pages, e := object.GetPages(p, false, true, true, true)
 		if e != nil {
 			return e
 		}
@@ -78,7 +78,7 @@ func submitThread(bi *BoardInstance, goal *uint64, thread *r0.Content) error {
 	})
 }
 
-func submitPost(bi *BoardInstance, goal *uint64, post *r0.Content) error {
+func submitPost(bi *BoardInstance, goal *uint64, post *object.Content) error {
 	body := post.GetBody()
 
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
@@ -97,7 +97,7 @@ func submitPost(bi *BoardInstance, goal *uint64, post *r0.Content) error {
 		}
 
 		// Get root pages.
-		pages, e := r0.GetPages(p, false, true, true, false)
+		pages, e := object.GetPages(p, false, true, true, false)
 		if e != nil {
 			return e
 		}
@@ -127,7 +127,7 @@ func submitPost(bi *BoardInstance, goal *uint64, post *r0.Content) error {
 	})
 }
 
-func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *r0.Content) error {
+func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *object.Content) error {
 	body := tVote.GetBody()
 
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
@@ -143,7 +143,7 @@ func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *r0.Content) error 
 	})
 }
 
-func submitPostVote(bi *BoardInstance, goal *uint64, pVote *r0.Content) error {
+func submitPostVote(bi *BoardInstance, goal *uint64, pVote *object.Content) error {
 	body := pVote.GetBody()
 
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
@@ -152,7 +152,7 @@ func submitPostVote(bi *BoardInstance, goal *uint64, pVote *r0.Content) error {
 	})
 }
 
-func submitUserVote(bi *BoardInstance, goal *uint64, uVote *r0.Content) error {
+func submitUserVote(bi *BoardInstance, goal *uint64, uVote *object.Content) error {
 	body := uVote.GetBody()
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		*goal = p.Root().Seq + 1
@@ -160,10 +160,10 @@ func submitUserVote(bi *BoardInstance, goal *uint64, uVote *r0.Content) error {
 	})
 }
 
-func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *r0.Content, creator string) error {
+func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *object.Content, creator string) error {
 
 	// Get root children pages.
-	pages, e := r0.GetPages(p, false, false, true, true)
+	pages, e := object.GetPages(p, false, false, true, true)
 	if e != nil {
 		return e
 	}
@@ -194,7 +194,7 @@ func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *r0.Content, c
 
 func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
 	bi.l.Println("ensuring submission keys as:", keys.PubKeyArrayToString(pks))
-	return bi.EditBoard(func(board *r0.Content) (bool, error) {
+	return bi.EditBoard(func(board *object.Content) (bool, error) {
 		body := board.GetBody()
 		if keys.ComparePubKeyArrays(body.GetSubKeys(), pks) {
 			return false, nil
@@ -207,7 +207,7 @@ func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, erro
 
 func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 	var pks []cipher.PubKey
-	if e := bi.ViewBoard(func(board *r0.Content) (bool, error) {
+	if e := bi.ViewBoard(func(board *object.Content) (bool, error) {
 		pks = board.GetBody().GetSubKeys()
 		return false, nil
 	}); e != nil {
@@ -220,7 +220,7 @@ func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
 // BoardAction is a function in which board modification/viewing takes place.
 // Returns a boolean that represents whether changes have been made and
 // an error on failure.
-type BoardAction func(board *r0.Content) (bool, error)
+type BoardAction func(board *object.Content) (bool, error)
 
 // EditBoard triggers a board action.
 func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
@@ -231,7 +231,7 @@ func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get root children.
-		pages, e := r0.GetPages(p, false, true, false, false)
+		pages, e := object.GetPages(p, false, true, false, false)
 		if e != nil {
 			return e
 		}
@@ -262,7 +262,7 @@ func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 func (bi *BoardInstance) ViewBoard(action BoardAction) error {
 	return bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		// Get root children.
-		pages, e := r0.GetPages(p, false, true, false, false)
+		pages, e := object.GetPages(p, false, true, false, false)
 		if e != nil {
 			return e
 		}

@@ -5,7 +5,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
@@ -23,7 +22,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 		return nil, e
 	}
 
-	transport, e := r0.NewTransport(in.Body, in.Sig)
+	transport, e := object.NewTransport(in.Body, in.Sig)
 	if e != nil {
 		return nil, e
 	}
@@ -34,30 +33,30 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 	}
 
 	switch transport.Body.Type {
-	case r0.V5ThreadType:
+	case object.V5ThreadType:
 		return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
 			Perspective: transport.Body.Creator,
 		})
 
-	case r0.V5PostType:
+	case object.V5PostType:
 		return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
 			Perspective: transport.Body.Creator,
 			ThreadHash:  transport.Body.OfThread,
 		})
 
-	case r0.V5ThreadVoteType:
+	case object.V5ThreadVoteType:
 		return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
 			Perspective: transport.Body.Creator,
 			ContentHash: transport.Body.OfThread,
 		})
 
-	case r0.V5PostVoteType:
+	case object.V5PostVoteType:
 		return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
 			Perspective: transport.Body.Creator,
 			ContentHash: transport.Body.OfPost,
 		})
 
-	case r0.V5UserVoteType:
+	case object.V5UserVoteType:
 		out, e := bi.Get(views.Follow, follow_view.FollowPage, transport.Body.Creator)
 		if e != nil {
 			return nil, e
@@ -70,7 +69,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 	}
 }
 
-func submitAndWait(ctx context.Context, a *Access, transport *r0.Transport) (*state.BoardInstance, error) {
+func submitAndWait(ctx context.Context, a *Access, transport *object.Transport) (*state.BoardInstance, error) {
 	ofBoard := transport.GetOfBoard()
 
 	bi, e := a.CXO.GetBoardInstance(ofBoard)
@@ -173,27 +172,27 @@ func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOu
 	return a.GetBoards(ctx)
 }
 
-func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
-	if e := in.Process(); e != nil {
-		return nil, e
-	}
-	path, data, e := a.CXO.ExportBoard(in.PubKey, in.Name)
-	if e != nil {
-		return nil, e
-	}
-	return getExportBoardOutput(path, data), nil
-}
-
-func (a *Access) ImportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
-	if e := in.Process(); e != nil {
-		return nil, e
-	}
-	path, out, e := a.CXO.ImportBoard(in.PubKey, in.Name)
-	if e != nil {
-		return nil, e
-	}
-	return getExportBoardOutput(path, out), nil
-}
+//func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
+//	if e := in.Process(); e != nil {
+//		return nil, e
+//	}
+//	path, data, e := a.CXO.ExportBoard(in.PubKey, in.Name)
+//	if e != nil {
+//		return nil, e
+//	}
+//	return getExportBoardOutput(path, data), nil
+//}
+//
+//func (a *Access) ImportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
+//	if e := in.Process(); e != nil {
+//		return nil, e
+//	}
+//	path, out, e := a.CXO.ImportBoard(in.PubKey, in.Name)
+//	if e != nil {
+//		return nil, e
+//	}
+//	return getExportBoardOutput(path, out), nil
+//}
 
 func (a *Access) GetDiscoveredBoards(ctx context.Context) ([]string, error) {
 	return a.CXO.GetDiscoveredBoards(), nil

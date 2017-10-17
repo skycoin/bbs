@@ -2,8 +2,8 @@ package content_view
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"log"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 const (
@@ -36,7 +36,7 @@ func (v *ContentView) Get(id string, a ...interface{}) (interface{}, error) {
 	}
 }
 
-func (v *ContentView) getBoard() (*r0.ContentRep, error) {
+func (v *ContentView) getBoard() (*object.ContentRep, error) {
 	return v.c[v.i.Board], nil
 }
 
@@ -45,14 +45,14 @@ type BoardPageIn struct {
 }
 
 type BoardPageOut struct {
-	Board   *r0.ContentRep   `json:"board"`
-	Threads []*r0.ContentRep `json:"threads"`
+	Board   *object.ContentRep   `json:"board"`
+	Threads []*object.ContentRep `json:"threads"`
 }
 
 func (v *ContentView) getBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
 	out := new(BoardPageOut)
 	out.Board = v.c[v.i.Board]
-	out.Threads = make([]*r0.ContentRep, len(v.i.Threads))
+	out.Threads = make([]*object.ContentRep, len(v.i.Threads))
 	for i, tHash := range v.i.Threads {
 		out.Threads[i] = v.c[tHash]
 		if votes, ok := v.v[tHash]; ok {
@@ -68,9 +68,9 @@ type ThreadPageIn struct {
 }
 
 type ThreadPageOut struct {
-	Board  *r0.ContentRep   `json:"board"`
-	Thread *r0.ContentRep   `json:"thread"`
-	Posts  []*r0.ContentRep `json:"posts"`
+	Board  *object.ContentRep   `json:"board"`
+	Thread *object.ContentRep   `json:"thread"`
+	Posts  []*object.ContentRep `json:"posts"`
 }
 
 func (v *ContentView) getThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
@@ -88,7 +88,7 @@ func (v *ContentView) getThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
 	}
 
 	postHashes := v.i.Posts[in.ThreadHash]
-	out.Posts = make([]*r0.ContentRep, len(postHashes))
+	out.Posts = make([]*object.ContentRep, len(postHashes))
 	for i, pHash := range postHashes {
 		out.Posts[i] = v.c[pHash]
 		if votes, ok := v.v[pHash]; ok {

@@ -5,7 +5,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/tag"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"time"
@@ -34,7 +33,7 @@ type NewBoardIO struct {
 	Seed        string        `bbs:"bSeed"`
 	BoardPubKey cipher.PubKey `bbs:"bpk"`
 	BoardSecKey cipher.SecKey `bbs:"bsk"`
-	Content     *r0.Content
+	Content     *Content
 }
 
 func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
@@ -42,10 +41,10 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
-	a.Content = new(r0.Content)
-	a.Content.SetHeader(&r0.ContentHeaderData{})
-	a.Content.SetBody(&r0.Body{
-		Type:    r0.V5BoardType,
+	a.Content = new(Content)
+	a.Content.SetHeader(&ContentHeaderData{})
+	a.Content.SetBody(&Body{
+		Type:    V5BoardType,
 		TS:      time.Now().UnixNano(),
 		Name:    a.Name,
 		Body:    a.Body,
@@ -64,7 +63,7 @@ type NewThreadIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
-	Transport        *r0.Transport
+	Transport        *Transport
 }
 
 func (a *NewThreadIO) Process() error {
@@ -72,8 +71,8 @@ func (a *NewThreadIO) Process() error {
 		return e
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
-	tData := &r0.Body{
-		Type: r0.V5ThreadType,
+	tData := &Body{
+		Type: V5ThreadType,
 		TS: time.Now().UnixNano(),
 		OfBoard: a.BoardPubKey.Hex(),
 		Name:    a.Name,
@@ -85,7 +84,7 @@ func (a *NewThreadIO) Process() error {
 		return e
 	}
 	tSig := cipher.SignHash(cipher.SumSHA256(tDataRaw), a.CreatorSecKey)
-	if a.Transport, e = r0.NewTransport(tDataRaw, tSig); e != nil {
+	if a.Transport, e = NewTransport(tDataRaw, tSig); e != nil {
 		return e
 	}
 	return nil
@@ -101,11 +100,11 @@ type NewPostIO struct {
 	Name             string        `bbs:"name"`
 	Body             string        `bbs:"body"`
 	ImagesStr        string
-	Images           []*r0.ImageData
+	Images           []*ImageData
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
-	Transport        *r0.Transport
+	Transport        *Transport
 }
 
 func (a *NewPostIO) Process() error {
@@ -118,8 +117,8 @@ func (a *NewPostIO) Process() error {
 		}
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
-	pData := &r0.Body{
-		Type: r0.V5PostType,
+	pData := &Body{
+		Type: V5PostType,
 		TS: time.Now().UnixNano(),
 		OfBoard:  a.BoardPubKey.Hex(),
 		OfThread: a.ThreadRef.Hex(),
@@ -134,7 +133,7 @@ func (a *NewPostIO) Process() error {
 		return e
 	}
 	pSig := cipher.SignHash(cipher.SumSHA256(pDataRaw), a.CreatorSecKey)
-	if a.Transport, e = r0.NewTransport(pDataRaw, pSig); e != nil {
+	if a.Transport, e = NewTransport(pDataRaw, pSig); e != nil {
 		return e
 	}
 	return nil
@@ -195,7 +194,7 @@ type UserVoteIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
-	Transport        *r0.Transport
+	Transport        *Transport
 }
 
 func (a *UserVoteIO) Process() error {
@@ -203,8 +202,8 @@ func (a *UserVoteIO) Process() error {
 		return e
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
-	vData := &r0.Body{
-		Type: r0.V5UserVoteType,
+	vData := &Body{
+		Type: V5UserVoteType,
 		TS: time.Now().UnixNano(),
 		OfBoard: a.BoardPubKeyStr,
 		OfUser:  a.UserPubKeyStr,
@@ -219,7 +218,7 @@ func (a *UserVoteIO) Process() error {
 	}
 	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.CreatorSecKey)
 
-	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
+	if a.Transport, e = NewTransport(vDataRaw, vSig); e != nil {
 		return e
 	}
 
@@ -238,7 +237,7 @@ type ThreadVoteIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
-	Transport        *r0.Transport
+	Transport        *Transport
 }
 
 func (a *ThreadVoteIO) Process() error {
@@ -246,8 +245,8 @@ func (a *ThreadVoteIO) Process() error {
 		return e
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
-	vData := &r0.Body{
-		Type: r0.V5ThreadVoteType,
+	vData := &Body{
+		Type: V5ThreadVoteType,
 		TS: time.Now().UnixNano(),
 		OfBoard: a.BoardPubKeyStr,
 		OfThread: a.ThreadRefStr,
@@ -260,7 +259,7 @@ func (a *ThreadVoteIO) Process() error {
 		return e
 	}
 	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.CreatorSecKey)
-	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
+	if a.Transport, e = NewTransport(vDataRaw, vSig); e != nil {
 		return e
 	}
 	return nil
@@ -278,7 +277,7 @@ type PostVoteIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
-	Transport        *r0.Transport
+	Transport        *Transport
 }
 
 func (a *PostVoteIO) Process() error {
@@ -286,8 +285,8 @@ func (a *PostVoteIO) Process() error {
 		return e
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
-	vData := &r0.Body{
-		Type: r0.V5PostVoteType,
+	vData := &Body{
+		Type: V5PostVoteType,
 		TS: time.Now().UnixNano(),
 		OfBoard: a.BoardPubKeyStr,
 		OfPost: a.PostRefStr,
@@ -300,7 +299,7 @@ func (a *PostVoteIO) Process() error {
 		return e
 	}
 	vSig := cipher.SignHash(cipher.SumSHA256(vDataRaw), a.CreatorSecKey)
-	if a.Transport, e = r0.NewTransport(vDataRaw, vSig); e != nil {
+	if a.Transport, e = NewTransport(vDataRaw, vSig); e != nil {
 		return e
 	}
 	return nil

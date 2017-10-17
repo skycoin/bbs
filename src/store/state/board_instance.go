@@ -6,8 +6,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/typ"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
-	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
@@ -18,6 +16,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 var (
@@ -216,7 +215,7 @@ func (bi *BoardInstance) GetSeq() uint64 {
 }
 
 // GetSummary returns the board's summary in encoded json and signed with board's public key.
-func (bi *BoardInstance) GetSummary(pk cipher.PubKey, sk cipher.SecKey) (*r0.BoardSummaryWrap, error) {
+func (bi *BoardInstance) GetSummary(pk cipher.PubKey, sk cipher.SecKey) (*object.BoardSummaryWrap, error) {
 	v, e := bi.Get(views.Content, content_view.Board)
 	if e != nil {
 		return nil, e
@@ -225,7 +224,7 @@ func (bi *BoardInstance) GetSummary(pk cipher.PubKey, sk cipher.SecKey) (*r0.Boa
 	if e != nil {
 		return nil, e
 	}
-	out := &r0.BoardSummaryWrap{Raw: raw}
+	out := &object.BoardSummaryWrap{Raw: raw}
 	out.Sign(pk, sk)
 	return out, nil
 }
@@ -307,21 +306,21 @@ func (bi *BoardInstance) IsReady() bool {
 }
 
 // Export exports root to board json file.
-func (bi *BoardInstance) Export() (*transfer.RootRep, error) {
-	out := new(transfer.RootRep)
-	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
-		pages, e := r0.GetPages(p, true, true, false, false)
-		if e != nil {
-			return e
-		}
-		return out.Fill(pages.RootPage, pages.BoardPage)
-	})
-	return out, e
-}
+//func (bi *BoardInstance) Export() (*transfer.RootRep, error) {
+//	out := new(transfer.RootRep)
+//	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+//		pages, e := r0.GetPages(p, true, true, false, false)
+//		if e != nil {
+//			return e
+//		}
+//		return out.Fill(pages.RootPage, pages.BoardPage)
+//	})
+//	return out, e
+//}
 
 // Import imports board json file data to root.
-func (bi *BoardInstance) Import(rep *transfer.RootRep) error {
-	return bi.EditPack(func(p *skyobject.Pack, _ *pack.Headers) error {
-		return rep.Dump(r0.NewGenerator(p))
-	})
-}
+//func (bi *BoardInstance) Import(rep *transfer.RootRep) error {
+//	return bi.EditPack(func(p *skyobject.Pack, _ *pack.Headers) error {
+//		return rep.Dump(r0.NewGenerator(p))
+//	})
+//}

@@ -2,7 +2,7 @@ package content_view
 
 import (
 	"encoding/json"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 /*
@@ -11,9 +11,9 @@ import (
 
 type VotesRep struct {
 	Ref  string
-	Type r0.ContentType
+	Type object.ContentType
 
-	Votes     map[string]*r0.Content // Key: pk string, Value: vote.
+	Votes     map[string]*object.Content // Key: pk string, Value: vote.
 	UpCount   int
 	DownCount int
 }
@@ -23,27 +23,27 @@ func (r *VotesRep) String() string {
 	return string(raw)
 }
 
-func (r *VotesRep) GetValue(c *r0.Content) int {
+func (r *VotesRep) GetValue(c *object.Content) int {
 	var value int
 	switch r.Type {
-	case r0.V5ThreadVoteType:
+	case object.V5ThreadVoteType:
 		value = c.GetBody().Value
-	case r0.V5PostVoteType:
+	case object.V5PostVoteType:
 		value = c.GetBody().Value
-	case r0.V5UserVoteType:
+	case object.V5UserVoteType:
 		value = c.GetBody().Value
 	}
 	return value
 }
 
-func (r *VotesRep) Fill(refType r0.ContentType, refHash string) *VotesRep {
+func (r *VotesRep) Fill(refType object.ContentType, refHash string) *VotesRep {
 	r.Ref = refHash
 	r.Type = refType
-	r.Votes = make(map[string]*r0.Content)
+	r.Votes = make(map[string]*object.Content)
 	return r
 }
 
-func (r *VotesRep) Add(c *r0.Content) {
+func (r *VotesRep) Add(c *object.Content) {
 	creator := c.GetBody().Creator
 	if oldC, has := r.Votes[creator]; has {
 		switch r.GetValue(oldC) {

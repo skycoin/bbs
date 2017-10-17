@@ -2,12 +2,12 @@ package content_view
 
 import (
 	"fmt"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"sync"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 type indexPage struct {
@@ -26,7 +26,7 @@ type ContentView struct {
 	sync.Mutex
 	pk cipher.PubKey
 	i  *indexPage
-	c  map[string]*r0.ContentRep
+	c  map[string]*object.ContentRep
 	v  map[string]*VotesRep
 }
 
@@ -34,14 +34,14 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := r0.GetPages(pack, false, true, false, true)
+	pages, e := object.GetPages(pack, false, true, false, true)
 	if e != nil {
 		return e
 	}
 
 	v.pk = pack.Root().Pub
 	v.i = newIndexPage()
-	v.c = make(map[string]*r0.ContentRep)
+	v.c = make(map[string]*object.ContentRep)
 	v.v = make(map[string]*VotesRep)
 
 	// Set board.
@@ -58,7 +58,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.i.Threads = make([]string, pages.BoardPage.GetThreadCount())
 
 	// Fill threads and posts.
-	e = pages.BoardPage.RangeThreadPages(func(i int, tp *r0.ThreadPage) error {
+	e = pages.BoardPage.RangeThreadPages(func(i int, tp *object.ThreadPage) error {
 
 		thread, e := tp.GetThread()
 		if e != nil {
@@ -74,7 +74,7 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 
 		// Fill posts.
 		postHashes := make([]string, tp.GetPostCount())
-		e = tp.RangePosts(func(i int, post *r0.Content) error {
+		e = tp.RangePosts(func(i int, post *object.Content) error {
 
 			log.Printf("\t\t- [%d] POST : hash(%s)",
 				i, post.GetHeader().Hash)
@@ -98,12 +98,12 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	log.Printf("INITIATING VOTES FROM USER PROFILES : user_count(%d)",
 		pages.UsersPage.GetUsersLen())
 
-	return pages.UsersPage.RangeUserProfiles(func(i int, uap *r0.UserProfile) error {
+	return pages.UsersPage.RangeUserProfiles(func(i int, uap *object.UserProfile) error {
 
 		log.Printf("\t- [%d] USER : pk(%s) submission_count(%d)",
 			i, uap.PubKey, uap.GetSubmissionsLen())
 
-		return uap.RangeSubmissions(func(i int, c *r0.Content) error {
+		return uap.RangeSubmissions(func(i int, c *object.Content) error {
 
 			log.Printf("\t\t- [%d] SUBMISSION : type(%s) hash(%s)",
 				i, c.GetBody().Type, c.GetHeader().Hash)
@@ -117,7 +117,7 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := r0.GetPages(pack, false, true)
+	pages, e := object.GetPages(pack, false, true)
 	if e != nil {
 		return e
 	}
@@ -139,35 +139,35 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 			body   = content.GetBody()
 		)
 		switch body.Type {
-		case r0.V5ThreadType:
+		case object.V5ThreadType:
 			v.i.Threads = append(v.i.Threads, header.Hash)
 			v.c[header.Hash] = content.ToRep()
 
-		case r0.V5PostType:
+		case object.V5PostType:
 			posts, _ := v.i.Posts[body.OfThread]
 			v.i.Posts[body.OfThread] = append(posts, header.Hash)
 			v.c[header.Hash] = content.ToRep()
 
-		case r0.V5ThreadVoteType, r0.V5PostVoteType:
+		case object.V5ThreadVoteType, object.V5PostVoteType:
 			v.processVote(content)
 		}
 	}
 	return nil
 }
 
-func (v *ContentView) processVote(c *r0.Content) error {
+func (v *ContentView) processVote(c *object.Content) error {
 	var cHash string
-	var cType r0.ContentType
+	var cType object.ContentType
 
 	// Only if vote is for post or thread.
 	switch c.GetBody().Type {
-	case r0.V5ThreadVoteType:
+	case object.V5ThreadVoteType:
 		cHash = c.GetBody().OfThread
-		cType = r0.V5ThreadVoteType
+		cType = object.V5ThreadVoteType
 
-	case r0.V5PostVoteType:
+	case object.V5PostVoteType:
 		cHash = c.GetBody().OfPost
-		cType = r0.V5PostVoteType
+		cType = object.V5PostVoteType
 
 	default:
 		return nil

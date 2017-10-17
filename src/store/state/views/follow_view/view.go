@@ -2,9 +2,9 @@ package follow_view
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 type FollowView struct {
@@ -17,17 +17,17 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.uMap = make(map[string]*FollowRep)
 
 	// Get pages.
-	pages, e := r0.GetPages(pack, false, false, false, true)
+	pages, e := object.GetPages(pack, false, false, false, true)
 	if e != nil {
 		return e
 	}
 
-	return pages.UsersPage.RangeUserProfiles(func(i int, profile *r0.UserProfile) error {
-		return profile.RangeSubmissions(func(i int, c *r0.Content) error {
+	return pages.UsersPage.RangeUserProfiles(func(i int, profile *object.UserProfile) error {
+		return profile.RangeSubmissions(func(i int, c *object.Content) error {
 			cBody := c.GetBody()
 
 			// Only parse if content is user vote.
-			if cBody.Type == r0.V5UserVoteType {
+			if cBody.Type == object.V5UserVoteType {
 
 				// Ensure creator's profile exists.
 				followRep, ok := v.uMap[cBody.Creator]
@@ -51,7 +51,7 @@ func (v *FollowView) Update(pack *skyobject.Pack, headers *pack.Headers) error {
 		cBody := c.GetBody()
 
 		// Only parse if content is user type.
-		if cBody.Type == r0.V5UserVoteType {
+		if cBody.Type == object.V5UserVoteType {
 			// Ensure creator's profile exists.
 			followRep, ok := v.uMap[cBody.Creator]
 			if !ok {

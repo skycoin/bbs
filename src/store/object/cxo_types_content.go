@@ -1,4 +1,4 @@
-package r0
+package object
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
+	"fmt"
 )
 
 func errGetFromBody(e error, what string) error {
@@ -109,8 +110,16 @@ func (c *Body) GetCreator() (cipher.PubKey, error) {
 }
 
 type Content struct {
-	Header []byte // Contains type, creator public key and signature.
-	Body   []byte // Contains actual content.
+	Header []byte `json:"header,string"` // Contains type, creator public key and signature.
+	Body   []byte `json:"header,string"` // Contains actual content.
+}
+
+func (c *Content) Export() (interface{}, error) {
+	return c, nil
+}
+
+func (c *Content) Import(rep interface{}) error {
+	return nil
 }
 
 func (c *Content) String() string {
@@ -265,17 +274,50 @@ func (h *ContentHeaderData) Verify(upk cipher.PubKey) error {
 	return nil
 }
 
-//func GetVote(vElem *skyobject.RefsElem) (*Vote, error) {
-//	vVal, e := vElem.Value()
-//	if e != nil {
-//		return nil, elemValueErr(e, vElem)
-//	}
-//	v, ok := vVal.(*Vote)
-//	if !ok {
-//		return nil, elemExtErr(vElem)
-//	}
-//	return v, nil
-//}
+/*
+	<<< TRANSPORT >>>
+*/
+
+type Transport struct {
+	Header  *ContentHeaderData
+	Body    *Body
+	Content *Content
+}
+
+func NewTransport(rawBody []byte, sig cipher.Sig) (*Transport, error) {
+	out := new(Transport)
+
+	var e error
+	if out.Body, e = NewBody(rawBody); e != nil {
+		return nil, e
+	}
+
+	creator, e := out.Body.GetCreator()
+	if e != nil {
+		return nil, e
+	}
+
+	out.Header = &ContentHeaderData{
+		Hash: cipher.SumSHA256(rawBody).Hex(),
+		Sig:  sig.Hex(),
+	}
+	if e := out.Header.Verify(creator); e != nil {
+		return nil, e
+	}
+
+	out.Content = new(Content)
+	if out.Content.Header, e = json.Marshal(out.Header); e != nil {
+		return nil, e
+	}
+	out.Content.Body = rawBody
+
+	return out, nil
+}
+
+func (t *Transport) GetOfBoard() cipher.PubKey {
+	pk, _ := t.Body.GetOfBoard()
+	return pk
+}
 
 /*
 	<<< BOARD SUMMARY WRAP >>>
@@ -311,4 +353,14 @@ func jsonMarshal(v interface{}) []byte {
 		log.Println("json marshal error:", e)
 	}
 	return data
+}
+
+func genErrInvalidJSON(e error, what string) error {
+	return boo.WrapType(e, boo.InvalidInput,
+		fmt.Sprintf("failed to read '%s' data", what))
+}
+
+func genErrHeaderUnverified(e error, hash string) error {
+	return boo.WrapType(e, boo.NotAuthorised,
+		fmt.Sprintf("failed to verify content of hash '%s'", hash))
 }

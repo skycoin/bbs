@@ -7,8 +7,6 @@ import (
 	"github.com/skycoin/bbs/src/msgs"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
-	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
@@ -17,7 +15,6 @@ import (
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/skycoin/src/util/file"
 	"io/ioutil"
 	log2 "log"
 	"os"
@@ -261,11 +258,11 @@ func (m *Manager) retryLoop() {
 	<<< CONNECTION >>>
 */
 
-func (m *Manager) GetConnections() []r0.Connection {
+func (m *Manager) GetConnections() []object.Connection {
 	connections := m.node.Connections()
-	out := make([]r0.Connection, len(connections))
+	out := make([]object.Connection, len(connections))
 	for i, conn := range m.node.Connections() {
-		out[i] = r0.Connection{
+		out[i] = object.Connection{
 			Address: conn.Address(),
 			State:   conn.Gnet().State().String(),
 		}
@@ -457,47 +454,47 @@ func (m *Manager) GetDiscoveredBoards() []string {
 	<<< IMPORT / EXPORT >>>
 */
 
-func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
-	if *m.c.Memory {
-		return "", nil, nil
-	}
-	bi, e := m.compiler.GetBoard(pk)
-	if e != nil {
-		return "", nil, e
-	}
-	out, e := bi.Export()
-	if e != nil {
-		return "", nil, e
-	}
-	path := m.exportPath(name)
-	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
-		return "", nil, e
-	}
-	return path, out, nil
-}
+//func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
+//	if *m.c.Memory {
+//		return "", nil, nil
+//	}
+//	bi, e := m.compiler.GetBoard(pk)
+//	if e != nil {
+//		return "", nil, e
+//	}
+//	out, e := bi.Export()
+//	if e != nil {
+//		return "", nil, e
+//	}
+//	path := m.exportPath(name)
+//	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
+//		return "", nil, e
+//	}
+//	return path, out, nil
+//}
 
-func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
-	if *m.c.Memory {
-		return "", nil, nil
-	}
-
-	path := m.exportPath(name)
-	out := new(transfer.RootRep)
-	if e := file.LoadJSON(path, out); e != nil {
-		return "", nil, e
-	}
-
-	_, has := m.file.GetMasterSubSecKey(pk)
-	if !has {
-		return "", nil, boo.Newf(boo.NotAuthorised,
-			"this node is not the master of board of public key '%s'", pk.Hex())
-	}
-	bi, e := m.compiler.GetBoard(pk)
-	if e != nil {
-		return "", nil, e
-	}
-	if e := bi.Import(out); e != nil {
-		return "", nil, e
-	}
-	return path, out, nil
-}
+//func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
+//	if *m.c.Memory {
+//		return "", nil, nil
+//	}
+//
+//	path := m.exportPath(name)
+//	out := new(transfer.RootRep)
+//	if e := file.LoadJSON(path, out); e != nil {
+//		return "", nil, e
+//	}
+//
+//	_, has := m.file.GetMasterSubSecKey(pk)
+//	if !has {
+//		return "", nil, boo.Newf(boo.NotAuthorised,
+//			"this node is not the master of board of public key '%s'", pk.Hex())
+//	}
+//	bi, e := m.compiler.GetBoard(pk)
+//	if e != nil {
+//		return "", nil, e
+//	}
+//	if e := bi.Import(out); e != nil {
+//		return "", nil, e
+//	}
+//	return path, out, nil
+//}

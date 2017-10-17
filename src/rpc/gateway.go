@@ -70,13 +70,13 @@ func (g *Gateway) DeleteBoard(in *object.BoardIO, out *string) error {
 	return send(out)(g.Access.DeleteBoard(context.Background(), in))
 }
 
-func (g *Gateway) ExportBoard(in *object.ExportBoardIO, out *string) error {
-	return send(out)(g.Access.ExportBoard(context.Background(), in))
-}
-
-func (g *Gateway) ImportBoard(in *object.ExportBoardIO, out *string) error {
-	return send(out)(g.Access.ImportBoard(context.Background(), in))
-}
+//func (g *Gateway) ExportBoard(in *object.ExportBoardIO, out *string) error {
+//	return send(out)(g.Access.ExportBoard(context.Background(), in))
+//}
+//
+//func (g *Gateway) ImportBoard(in *object.ExportBoardIO, out *string) error {
+//	return send(out)(g.Access.ImportBoard(context.Background(), in))
+//}
 
 /*
 	<<< CONTENT >>>

@@ -1,9 +1,8 @@
-package r0
+package object
 
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
@@ -121,26 +120,6 @@ func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
 	return rp, nil
 }
 
-func (rp *RootPage) ToRep() (*transfer.RootPageRep, error) {
-	out := &transfer.RootPageRep{
-		Type:     rp.Typ,
-		Revision: rp.Rev,
-		Deleted:  rp.Del,
-		Summary:  transfer.RootPageSummary{}, // TODO: Implement summary.
-	}
-	return out, nil
-}
-
-func (rp *RootPage) FromRep(rpRep *transfer.RootPageRep) error {
-	*rp = RootPage{
-		Typ: rpRep.Type,
-		Rev: rpRep.Revision,
-		Del: rpRep.Deleted,
-		Sum: nil, // TODO: Implement summary.
-	}
-	return nil
-}
-
 /*
 	<<< BOARD PAGE >>>
 */
@@ -216,37 +195,6 @@ func (bp *BoardPage) AddThread(tRef skyobject.Ref) error {
 	return nil
 }
 
-func (bp *BoardPage) ExportBoard() (transfer.Board, error) {
-	return nil, nil
-}
-
-func (bp *BoardPage) ExportThreadPages() ([]transfer.ThreadPage, error) {
-	l, e := bp.Threads.Len()
-	if e != nil {
-		return nil, e
-	}
-	out := make([]transfer.ThreadPage, l)
-	e = bp.RangeThreadPages(func(i int, tp *ThreadPage) error {
-		out[i] = tp
-		return nil
-	})
-	return out, e
-}
-
-func (bp *BoardPage) ImportBoard(p *skyobject.Pack, b transfer.Board) error {
-	return bp.Board.SetValue(b)
-}
-
-func (bp *BoardPage) ImportThreadPages(p *skyobject.Pack, tps []transfer.ThreadPage) error {
-	bp.Threads.Clear()
-	for _, tp := range tps {
-		if e := bp.Threads.Append(tp); e != nil {
-			return e
-		}
-	}
-	return nil
-}
-
 /*
 	<<< THREAD PAGE >>>
 */
@@ -306,28 +254,6 @@ func (tp *ThreadPage) AddPost(cxoPostHash cipher.SHA256, post *Content) error {
 func (tp *ThreadPage) Save(tpElem *skyobject.RefsElem) error {
 	if e := tpElem.SetValue(tp); e != nil {
 		return boo.WrapType(e, boo.Internal, "failed to save 'ThreadPage'")
-	}
-	return nil
-}
-
-func (tp *ThreadPage) ExportThread() (transfer.Thread, error) {
-	return nil, nil
-}
-
-func (tp *ThreadPage) ExportPosts() ([]transfer.Post, error) {
-	return nil, nil
-}
-
-func (tp *ThreadPage) ImportThread(p *skyobject.Pack, t transfer.Thread) error {
-	return tp.Thread.SetValue(t)
-}
-
-func (tp *ThreadPage) ImportPosts(p *skyobject.Pack, ps []transfer.Post) error {
-	tp.Posts.Clear()
-	for _, p := range ps {
-		if e := tp.Posts.Append(p); e != nil {
-			return e
-		}
 	}
 	return nil
 }
@@ -547,46 +473,6 @@ type UserView struct {
 type Connection struct {
 	Address string `json:"address"`
 	State   string `json:"state"`
-}
-
-/*
-	<<< GENERATOR (IMPORT/EXPORT) >>>
-*/
-
-type Generator struct {
-	p *skyobject.Pack
-}
-
-func NewGenerator(p *skyobject.Pack) *Generator {
-	return &Generator{p: p}
-}
-
-func (g *Generator) Pack() *skyobject.Pack {
-	return g.p
-}
-
-func (g *Generator) NewRootPage() transfer.RootPage {
-	return new(RootPage)
-}
-
-func (g *Generator) NewBoardPage() transfer.BoardPage {
-	return new(BoardPage)
-}
-
-func (g *Generator) NewThreadPage() transfer.ThreadPage {
-	return new(ThreadPage)
-}
-
-func (g *Generator) NewBoard() transfer.Board {
-	return nil // new(Board)
-}
-
-func (g *Generator) NewThread() transfer.Thread {
-	return nil // new(Thread)
-}
-
-func (g *Generator) NewPost() transfer.Post {
-	return nil // new(Post)
 }
 
 /*

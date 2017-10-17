@@ -2,10 +2,10 @@ package msgs
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 const (
@@ -81,8 +81,8 @@ func (m *BBSMessage) GetBody() []byte {
 	return m.SendMessage[factory.SEND_MSG_META_END+tLen:]
 }
 
-func (m *BBSMessage) ExtractContent() (*r0.Content, error) {
-	v := new(r0.Content)
+func (m *BBSMessage) ExtractContent() (*object.Content, error) {
+	v := new(object.Content)
 	if e := encoder.DeserializeRaw(m.GetBody(), v); e != nil {
 		return nil, boo.WrapType(e, boo.InvalidRead,
 			"failed to deserialize content data")
