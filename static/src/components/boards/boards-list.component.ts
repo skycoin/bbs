@@ -31,8 +31,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   addForm = new FormGroup({
     name: new FormControl('', Validators.required),
     body: new FormControl('', Validators.required),
-    seed: new FormControl({ value: '', disabled: true }, Validators.required),
-    submission_addresses: new FormControl('')
+    seed: new FormControl({ value: '', disabled: true }, Validators.required)
   });
   tmpBoard: Board = null;
   regexpStr = new RegExp('<br\s*/?>', 'g');
@@ -106,7 +105,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
           data.append('seed', this.addForm.get('seed').value);
           data.append('name', this.addForm.get('name').value.trim());
           data.append('body', this.common.replaceURL(this.common.replaceHtmlEnter(this.addForm.get('body').value)));
-          data.append('submission_addresses', this.addForm.get('submission_addresses').value);
           this.api.addBoard(data).subscribe(res => {
             this.getBoards();
             this.alert.success({ content: 'Added Successfully' });
@@ -139,7 +137,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
       if (result) {
         this.loading.start();
         this.api.delSubmissionAddress(data).subscribe(res => {
-          this.tmpBoard.submission_addresses = res.data.board.submission_addresses;
+          // this.tmpBoard.submission_addresses = res.data.board.submission_addresses;
           this.loading.close();
         });
       }
@@ -197,7 +195,6 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     ev.stopPropagation();
     ev.preventDefault();
     const modalRef = this.pop.open(AlertComponent);
-    console.log(modalRef.componentInstance);
     modalRef.componentInstance.title = 'Delete Board';
     modalRef.componentInstance.body = 'Do you delete the board?';
     modalRef.result.then(result => {

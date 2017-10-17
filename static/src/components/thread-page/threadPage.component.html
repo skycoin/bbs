@@ -1,55 +1,60 @@
 <div class="container">
-  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="data?.data?.thread?.name != '' " [@flyInOut]>
-
+  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="threadPage?.data?.thread?.body?.body?.name != '' "
+    [@flyInOut]>
     <div class="content-box">
       <div class="other-block">
         <a href="javascript:void(0)" class="img-box">
-            <i class="fa fa-user fa-3x" aria-hidden="true"></i>
+          <i class="fa fa-user fa-3x" aria-hidden="true"></i>
         </a>
         <div class="info-box">
-          <a href="javascript:void(0);" class="author-name tooltip-normal break-line" [attr.aria-label]="data?.data?.thread?.creator">{{data?.data?.thread?.creator}}</a>
+          <a href="javascript:void(0);" class="author-name tooltip-normal break-line" [attr.aria-label]="threadPage?.data?.thread?.body?.creator">{{threadPage?.data?.thread?.body?.creator}}</a>
           <small class="text-muted">
-          replies
-          <span class="replies">{{data?.data?.thread?.post_count}}</span> &nbsp;• &nbsp;
-          created &nbsp;<span>{{data?.data?.thread?.created / 1000000 | date:'M/d/y H:mm'}}</span>
-        </small>
+            replies
+            <span class="replies">{{threadPage?.data?.posts?.length}}</span> &nbsp;• &nbsp; created &nbsp;
+            <span>{{threadPage?.data?.thread?.body?.created / 1000000 | date:'M/d/y H:mm'}}</span>
+          </small>
         </div>
       </div>
       <hr>
       <div class="card-block">
         <div class="content">
-          <h5 class="post-or-thread-title">{{data?.data?.thread?.name}}</h5>
-          <p class="break-line text-muted body">{{data?.data?.thread?.body}}</p>
+          <p class="post-or-thread-title">{{threadPage?.data?.thread?.body?.name}}</p>
+          <p class="break-line body">{{threadPage?.data?.thread?.body?.body}}</p>
         </div>
       </div>
       <div class="card-block">
-        <chip color="#e84737" icon="fa-sort-asc" text="up vote" [count]="data?.data?.thread?.votes?.up_votes?.count" (click)="addThreadVote('1',$event)"></chip>
-        <chip color="#756e6e" icon="fa-sort-desc" text="down vote" [count]="data?.data?.thread?.votes?.down_votes?.count" (click)="addThreadVote('-1',$event)"></chip>
+        <chip color="#e84737" icon="fa-sort-asc" text="up vote" [count]="threadPage?.data?.thread?.votes?.up_votes?.count" (click)="addThreadVote('1',$event)"></chip>
+        <chip color="#756e6e" icon="fa-sort-desc" text="down vote" [count]="threadPage?.data?.thread?.votes?.down_votes?.count" (click)="addThreadVote('-1',$event)"></chip>
       </div>
     </div>
   </div>
+  <!-- Posts Box -->
   <div class="post-box">
-    <div #post class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (data?.data?.posts | orderBy:sort);let i = index;trackBy:trackPosts"
+    <div #post class="card post border-top-0 border-left-0 border-right-0" *ngFor="let item of (threadPage?.data?.posts | orderBy:sort);let i = index;trackBy:trackPosts"
       [@flyInOut]>
       <div class="content-box">
         <div class="card-block">
           <div class="content">
             <div class="row post-title-box">
               <div class="col-10 title-content-box">
-                <a href="javascript:void(0);" class="creator tooltip-normal break-line" [attr.aria-label]="item?.creator">{{item?.creator}}<small class="time">{{item?.created / 1000000 | date:'M/d/y H:mm'}}</small></a>
+                <a href="javascript:void(0);" class="creator tooltip-normal break-line" [attr.aria-label]="item?.body?.creator">{{item?.body?.creator}}
+                  <small class="time">{{item?.body?.created / 1000000 | date:'M/d/y H:mm'}}</small>
+                </a>
               </div>
               <div class="col text-right other">
                 <i class="fa fa-chevron-down" aria-hidden="true" (click)="Menu($event,item)">
-                          <div class="overlay" *ngIf="item?.voteMenu" (click)="Menu($event,item)"></div>
-                          <ul class="vote-menu" *ngIf="item?.voteMenu">
-                            <li (click)="addPostVote('+1',item,$event)"><i class="fa fa-sort-asc" aria-hidden="true"></i>                up vote</li>
-                <li (click)="addPostVote('-1',item,$event)"><i class="fa fa-sort-desc" aria-hidden="true"></i> down vote</li>
-                </ul>
+                  <div class="overlay" *ngIf="item?.voteMenu" (click)="Menu($event,item)"></div>
+                  <ul class="vote-menu" *ngIf="item?.voteMenu">
+                    <li (click)="addPostVote('+1',item,$event)">
+                      <i class="fa fa-sort-asc" aria-hidden="true"></i> up vote</li>
+                    <li (click)="addPostVote('-1',item,$event)">
+                      <i class="fa fa-sort-desc" aria-hidden="true"></i> down vote</li>
+                  </ul>
                 </i>
               </div>
             </div>
-            <h6 class="post-or-thread-title">{{item?.name}}</h6>
-            <p class="text-muted break-line" [innerHTML]="item?.body | safeHtml"></p>
+            <p class="post-or-thread-title">{{item?.body?.name}}</p>
+            <p class="break-line" [innerHTML]="item?.body?.body | safeHtml"></p>
             <div class="card-block" *ngIf="item?.votes?.up_votes?.count || item?.votes?.down_votes?.count">
               <chip color="#e84737" icon="fa-sort-asc" text="up vote" [count]="item?.votes?.up_votes?.count" (click)="addPostVote('+1',item,$event)"></chip>
               <chip color="#756e6e" icon="fa-sort-desc" text="down vote" [count]="item?.votes?.down_votes?.count" (click)="addPostVote('-1',item,$event)"></chip>
@@ -60,6 +65,7 @@
     </div>
   </div>
 </div>
+<!-- Ng Template -->
 <ng-template #fab>
   <fab>
     <fa-button name="New Post" icon="fa-pencil" (click)="openReply(addPost)"></fa-button>
@@ -70,8 +76,8 @@
     <div class="modal-header">
       <h4 class="modal-title">New Post</h4>
       <button type="button" class="close" aria-label="Close" (click)="c(false)">
-      <span aria-hidden="true">&times;</span>
-    </button>
+        <span aria-hidden="true">&times;</span>
+      </button>
     </div>
     <div class="modal-body">
       <form [formGroup]="postForm" novalidate>

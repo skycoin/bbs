@@ -8,6 +8,11 @@ app-threadpage {
     min-width: 20px;
     min-height: 20px;
   }
+  .post-or-thread-title {
+    text-decoration: underline;
+    margin-bottom: .5rem;
+    font-weight: 500;
+  }
   .thread {}
   .post-box {
     margin-bottom: 5rem;

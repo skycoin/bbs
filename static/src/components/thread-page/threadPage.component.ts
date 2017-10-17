@@ -49,7 +49,8 @@ export class ThreadPageComponent implements OnInit {
   sort = 'esc';
   boardKey = '';
   threadKey = '';
-  data: ThreadPage;
+  threadPk = '';
+  threadPage: ThreadPage;
   postForm = new FormGroup({
     name: new FormControl('', Validators.required),
     body: new FormControl('', Validators.required),
@@ -112,6 +113,7 @@ export class ThreadPageComponent implements OnInit {
     this.route.queryParams.subscribe(res => {
       this.boardKey = res['boardKey'];
       this.threadKey = res['thread_ref'];
+      this.threadPk = res['thread_pk'];
       this.open(this.boardKey, this.threadKey);
     });
     Observable.timer(10).subscribe(() => {
@@ -127,7 +129,7 @@ export class ThreadPageComponent implements OnInit {
       return;
     }
     post.creatorMenu = true;
-    if (!post.creator) {
+    if (!post.body.creator) {
       return;
     }
     this.showUserInfoMenu = true;
@@ -145,37 +147,43 @@ export class ThreadPageComponent implements OnInit {
   public setSort() {
     this.sort = this.sort === 'desc' ? 'asc' : 'desc';
   }
-  trackPosts(index, post) {
-    return post ? post.ref : undefined;
+  trackPosts(index, post: Post) {
+    return post ? post.header.hash : undefined;
   }
   addThreadVote(mode: string, ev: Event) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
-    if (!this.data.data.thread.votes) {
-      this.data.data.thread.votes = {
+    if (!this.threadPage.data.thread.votes) {
+      this.threadPage.data.thread.votes = {
         up_votes: { count: 0, voted: false },
         down_votes: { count: 0, voted: false }
       }
     }
     if (mode === '-1') {
-      this.data.data.thread.votes.down_votes.count += 1;
+      this.threadPage.data.thread.votes.down_votes.count += 1;
     } else {
-      this.data.data.thread.votes.up_votes.count += 1;
+      this.threadPage.data.thread.votes.up_votes.count += 1;
     }
+    // const jsonStr = {
+    //   creator: ApiService.userInfo.public_key,
+    //   of_board: this.boardKey,
+    //   of_thread: this.threadKey,
+    //   mode: mode
+    // }
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
     data.append('thread_ref', this.threadKey);
     data.append('mode', mode);
-    this.api.addThreadVote(data).subscribe(voteRes => {
+    this.api.addOldThreadVote(data).subscribe(voteRes => {
       if (voteRes.okay) {
-        this.data.data.thread.votes = voteRes.data.votes;
+        this.threadPage.data.thread.votes = voteRes.data.votes;
       }
     }, err => {
       if (mode === '-1') {
-        this.data.data.thread.votes.down_votes.count -= 1;
+        this.threadPage.data.thread.votes.down_votes.count -= 1;
       } else {
-        this.data.data.thread.votes.up_votes.count -= 1;
+        this.threadPage.data.thread.votes.up_votes.count -= 1;
       }
     })
   }
@@ -185,7 +193,7 @@ export class ThreadPageComponent implements OnInit {
     ev.preventDefault();
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
-    data.append('user_public_key', post.creator);
+    data.append('user_public_key', post.body.creator);
     data.append('mode', mode);
     this.loading.start();
     this.api.addUserVote(data).subscribe(result => {
@@ -217,11 +225,18 @@ export class ThreadPageComponent implements OnInit {
     } else {
       post.votes.up_votes.count += 1;
     }
+    const jsonStr = {
+      creator: ApiService.userInfo.public_key,
+      of_board: this.boardKey,
+      of_thread: post.body.of_thread,
+      mode: mode
+    }
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
-    data.append('post_ref', post.ref);
+    data.append('post_ref', post.body.of_thread);
     data.append('mode', mode);
-    this.api.addPostVote(data).subscribe(res => {
+    this.api.addOldPostVote(data).subscribe(res => {
+      console.log('add post vote: ', res);
       if (res.okay) {
         post.votes = res.data.votes;
       }
@@ -243,15 +258,18 @@ export class ThreadPageComponent implements OnInit {
               this.alert.error({ content: 'title and content can not be empty' });
               return;
             }
-            const data = new FormData();
-            data.append('board_public_key', this.boardKey);
-            data.append('thread_ref', this.threadKey);
-            data.append('name', this.postForm.get('name').value);
-            data.append('body', this.postForm.get('body').value);
+            const jsonStr = {
+              name: this.postForm.get('name').value,
+              body: this.common.replaceHtmlEnter(this.postForm.get('body').value),
+              creator: ApiService.userInfo.public_key,
+              of_board: this.boardKey,
+              of_thread: this.threadKey
+            };
             this.loading.start();
-            this.api.newPost(data).subscribe((res: ThreadPage) => {
+            this.api.newPost(JSON.stringify(jsonStr)).subscribe((res: ThreadPage) => {
+              console.log('new post:', res);
               if (res.okay) {
-                this.data.data.posts = res.data.posts;
+                this.threadPage.data.posts = res.data.posts;
                 this.alert.success({ content: 'Added successfully' });
                 this.loading.close();
               }
@@ -285,9 +303,10 @@ export class ThreadPageComponent implements OnInit {
     data.append('board_public_key', boardKey);
     data.append('thread_ref', ref);
     this.api.getThreadpage(data).subscribe(res => {
-      this.data = res;
+      console.log('res: ', res);
+      this.threadPage = res;
     }, err => {
-      this.router.navigate(['']);
+      // this.router.navigate(['']);
     });
   }
 

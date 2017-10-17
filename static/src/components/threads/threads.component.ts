@@ -1,5 +1,5 @@
 import { Component, EventEmitter, HostBinding, OnInit, Output, ViewEncapsulation, ViewChild, TemplateRef } from '@angular/core';
-import { ApiService, Board, CommonService, Thread, Alert, BoardPage, Popup } from '../../providers';
+import { ApiService, Board, CommonService, Thread, Alert, BoardPage, Popup, ThreadSubmission } from '../../providers';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { slideInLeftAnimation } from '../../animations/router.animations';
@@ -52,8 +52,8 @@ export class ThreadsComponent implements OnInit {
       this.pop.open(this.fabBtnTemplate, { isDialog: false });
     });
   }
-  trackThreads(index, thread) {
-    return thread ? thread.reference : undefined;
+  trackThreads(index, thread: Thread) {
+    return thread ? thread.header.pk : undefined;
   }
   initThreads(key) {
     if (key === '') {
@@ -96,13 +96,17 @@ export class ThreadsComponent implements OnInit {
               return;
             }
             const data = new FormData();
-            data.append('board_public_key', this.boardKey);
-            data.append('body', this.common.replaceHtmlEnter(this.addForm.get('body').value));
-            data.append('name', this.addForm.get('name').value);
-            this.api.newThread(data).subscribe(threadRes => {
-              this.threads = threadRes.data.threads;
+            const jsonStr = {
+              name: this.addForm.get('name').value,
+              body: this.common.replaceHtmlEnter(this.addForm.get('body').value),
+              created: new Date().getMilliseconds(),
+              creator: ApiService.userInfo.public_key,
+              of_board: this.boardKey
+            };
+            this.api.newThread(JSON.stringify(jsonStr)).subscribe(res => {
+              this.threads = res.data.threads;
               this.alert.success({ content: 'Added successfully' });
-            });
+            })
           }
         }, err => {
         });
@@ -113,12 +117,12 @@ export class ThreadsComponent implements OnInit {
 
   }
 
-  open(ref: string) {
+  open(ref, pk: string) {
     if (this.boardKey === '' || ref === '') {
-      // this.common.showErrorAlert('Parameter error!!!');
+      this.alert.error({ content: 'Parameter error!!!' });
       return;
     }
-    this.router.navigate(['/threads/p'], { queryParams: { boardKey: this.boardKey, thread_ref: ref } });
+    this.router.navigate(['/threads/p'], { queryParams: { boardKey: this.boardKey, thread_ref: ref, thread_pk: pk } });
   }
 
   openImport(ev: Event, threadKey: string, content: any) {

@@ -5,7 +5,7 @@
       <div class="card-block">
         <div class="row card-top">
           <div class="col-9">
-            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="board?.name">{{board?.name}} <small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
+            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="board?.body?.name">{{board?.body?.name}} <small class="time">{{board?.body?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
 
           </div>
           <div class="col-3">
@@ -15,7 +15,7 @@
             </p>
           </div>
         </div>
-        <p class="description block-with-text" [innerHTML]="board?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
+        <p class="description text-muted block-with-text" [innerHTML]="board?.body?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
         <!-- <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p> -->
       </div>
     </div>
@@ -25,7 +25,7 @@
       <div class="card-block">
         <div class="row card-top">
           <div class="col-9">
-            <a href="javascript:void(0);" class="title tooltip-normal  break-line" [attr.aria-label]="board?.name">{{board?.name}}<small class="time">{{board?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
+            <a href="javascript:void(0);" class="title tooltip-normal  break-line" [attr.aria-label]="board?.body?.name">{{board?.body?.name}}<small class="time">{{board?.body?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
 
           </div>
           <div class="col-3">
@@ -35,11 +35,11 @@
             </p>
           </div>
         </div>
-        <p class="description block-with-text" [innerHTML]="board?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
+        <p class="description block-with-text" [innerHTML]="board?.body?.body | replace: [regexpStr,replaceStr]  | safeHtml"></p>
         <!-- <p class="text-right created"><small>{{board?.created / 1000000 | date: 'medium'}}</small></p> -->
       </div>
     </div>
-    <h5 class="not-found" *ngIf="boards?.length === 0 && remoteBoards?.length === 0">
+    <h5 class="not-found" *ngIf="!boards && !remoteBoards">
       <p><i class="fa fa-exclamation-circle fa-2x" aria-hidden="true"></i></p>
       <p class="hint-text">No Boards Found</p>
     </h5>
@@ -152,18 +152,18 @@
       </div>
       <div class="card-block">
         <div class="thread-item">
-          <h5>Name</h5><span class="break-line text-muted">{{tmpBoard?.name}}</span>
+          <h5>Name</h5><span class="break-line text-muted">{{tmpBoard?.body?.name}}</span>
         </div>
         <div class="thread-item">
           <h5>Description</h5>
-          <span class="break-line text-muted" [innerHTML]="tmpBoard?.body | safeHtml"></span>
+          <span class="break-line text-muted" [innerHTML]="tmpBoard?.body?.body | safeHtml"></span>
         </div>
         <div class="thread-item">
           <h5>Public Key</h5>
           <span class="break-line text-muted">{{tmpBoard?.public_key}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpBoard?.public_key" (onClip)="copy($event)"></i></span>
         </div>
         <div class="thread-item">
-          <h5>Created</h5> <span class="text-muted">{{tmpBoard?.created / 1000000 | date: 'medium'}}</span>
+          <h5>Created</h5> <span class="text-muted">{{tmpBoard?.body?.created / 1000000 | date: 'medium'}}</span>
         </div>
       </div>
     </div>

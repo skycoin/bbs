@@ -1,19 +1,19 @@
 <div class="threads">
   <div class="jumbotron">
     <div class="container">
-      <h1 class="display-5">{{board?.name}}</h1>
-      <p class="lead break-line" [innerHTML]="board?.body"></p>
+      <h1 class="display-5">{{board?.body?.name}}</h1>
+      <p class="lead break-line" [innerHTML]="board?.body?.body"></p>
     </div>
   </div>
   <div class="container">
-    <div class="card" (click)="open(thread?.ref)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
+    <div class="card" (click)="open(thread?.header?.hash,thread?.header?.pk)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
       <div class="card-block">
         <div class="row card-top">
           <div class="col">
-            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="thread?.name">{{thread?.name}}<small class="time">{{thread?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
+            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="thread?.name">{{thread?.body?.name}}<small class="time">{{thread?.body?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
           </div>
         </div>
-        <p class="margin-0 text-muted block-with-text">{{thread?.body}}</p>
+        <p class="margin-0 block-with-text text-muted">{{thread?.body?.body}}</p>
       </div>
     </div>
     <h5 class="not-found" *ngIf="threads?.length == 0">No Threads Found</h5>

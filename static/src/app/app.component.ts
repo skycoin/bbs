@@ -1,5 +1,15 @@
 import { Component, OnInit, ViewChild, HostListener, QueryList, ViewChildren, ElementRef, Renderer } from '@angular/core';
-import { ApiService, CommonService, Alert, LoadingService, Popup, FollowPageDataInfo, FollowPage, User } from '../providers';
+import {
+  ApiService,
+  CommonService,
+  Alert,
+  LoadingService,
+  Popup,
+  FollowPageDataInfo,
+  FollowPage,
+  User,
+  LoginInfo
+} from '../providers';
 import { FixedButtonComponent } from '../components';
 import { ToTopComponent } from '../components';
 import 'rxjs/add/operator/filter';
@@ -62,6 +72,7 @@ export class AppComponent implements OnInit {
           this.isLogIn = info.data.logged_in;
           this.userName = info.data.session.user.alias;
           this.userPublicKey = info.data.session.user.public_key;
+          ApiService.userInfo = info.data.session.user;
         }
       }
     })
@@ -185,12 +196,13 @@ export class AppComponent implements OnInit {
   startLogin() {
     const data = new FormData();
     data.append('alias', this.alias);
-    this.api.login(data).subscribe(res => {
-      if (res.okay) {
-        this.isLogIn = res.data.logged_in;
-        this.userName = res.data.session.user.alias;
-        this.userPublicKey = res.data.session.user.public_key;
+    this.api.login(data).subscribe((loginInfo: LoginInfo) => {
+      if (loginInfo.okay) {
+        this.isLogIn = loginInfo.data.logged_in;
+        this.userName = loginInfo.data.session.user.alias;
+        this.userPublicKey = loginInfo.data.session.user.public_key;
         this.alias = '';
+        ApiService.userInfo = loginInfo.data.session.user;
       }
       this.showLoginBox = false;
     })
@@ -208,8 +220,8 @@ export class AppComponent implements OnInit {
         const data = new FormData();
         data.append('alias', this.alias);
         data.append('seed', seed.data);
-        this.api.newUser(data).subscribe(user => {
-          if (user.okay) {
+        this.api.newUser(data).subscribe(userData => {
+          if (userData.okay) {
             this.startLogin();
           }
         })
@@ -234,13 +246,13 @@ export class AppComponent implements OnInit {
   }
 
   openFollow(ev: Event, content: any) {
-    if (!this.boardKey || !this.userPublicKey) {
+    if (!this.boardKey || !ApiService.userInfo) {
       this.alert.error({ content: 'Please go to a board' });
       return;
     }
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
-    data.append('user_public_key', this.userPublicKey);
+    data.append('user_public_key', ApiService.userInfo.public_key);
     this.api.getFollowPage(data).subscribe((page: FollowPage) => {
       if (page.okay) {
         this.userFollow = page.data.follow_page;
