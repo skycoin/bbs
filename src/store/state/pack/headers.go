@@ -34,7 +34,12 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 	}
 
 	// Get required root children.
-	pages, e := object.GetPages(p, false, true, true, true)
+	pages, e := object.GetPages(p, &object.GetPagesIn{
+		RootPage: false,
+		BoardPage: true,
+		DiffPage: true,
+		UsersPage: true,
+	})
 	if e != nil {
 		return nil, e
 	}
@@ -58,7 +63,7 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 
 	// Fill users header data.
 	e = pages.UsersPage.Users.Ascend(func(i int, uapElem *skyobject.RefsElem) error {
-		uap, e := object.GetUserActivityPage(uapElem)
+		uap, e := object.GetUserProfile(uapElem)
 		if e != nil {
 			return e
 		}

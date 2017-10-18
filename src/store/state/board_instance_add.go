@@ -58,7 +58,12 @@ func submitThread(bi *BoardInstance, goal *uint64, thread *object.Content) error
 		}
 
 		// Get root children pages.
-		pages, e := object.GetPages(p, false, true, true, true)
+		pages, e := object.GetPages(p, &object.GetPagesIn{
+			RootPage: false,
+			BoardPage: true,
+			DiffPage: true,
+			UsersPage: true,
+		})
 		if e != nil {
 			return e
 		}
@@ -97,7 +102,12 @@ func submitPost(bi *BoardInstance, goal *uint64, post *object.Content) error {
 		}
 
 		// Get root pages.
-		pages, e := object.GetPages(p, false, true, true, false)
+		pages, e := object.GetPages(p, &object.GetPagesIn{
+			RootPage: false,
+			BoardPage: true,
+			DiffPage: true,
+			UsersPage: false,
+		})
 		if e != nil {
 			return e
 		}
@@ -163,7 +173,12 @@ func submitUserVote(bi *BoardInstance, goal *uint64, uVote *object.Content) erro
 func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *object.Content, creator string) error {
 
 	// Get root children pages.
-	pages, e := object.GetPages(p, false, false, true, true)
+	pages, e := object.GetPages(p, &object.GetPagesIn{
+		RootPage: false,
+		BoardPage: false,
+		DiffPage: true,
+		UsersPage: true,
+	})
 	if e != nil {
 		return e
 	}
@@ -231,7 +246,12 @@ func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 		goalSeq = p.Root().Seq + 1
 
 		// Get root children.
-		pages, e := object.GetPages(p, false, true, false, false)
+		pages, e := object.GetPages(p, &object.GetPagesIn{
+			RootPage: false,
+			BoardPage: true,
+			DiffPage: false,
+			UsersPage: false,
+		})
 		if e != nil {
 			return e
 		}
@@ -262,7 +282,12 @@ func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 func (bi *BoardInstance) ViewBoard(action BoardAction) error {
 	return bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		// Get root children.
-		pages, e := object.GetPages(p, false, true, false, false)
+		pages, e := object.GetPages(p, &object.GetPagesIn{
+			RootPage: false,
+			BoardPage: true,
+			DiffPage: false,
+			UsersPage: false,
+		})
 		if e != nil {
 			return e
 		}

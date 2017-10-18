@@ -17,7 +17,12 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.uMap = make(map[string]*FollowRep)
 
 	// Get pages.
-	pages, e := object.GetPages(pack, false, false, false, true)
+	pages, e := object.GetPages(pack, &object.GetPagesIn{
+		RootPage: false,
+		BoardPage: false,
+		DiffPage: false,
+		UsersPage: true,
+	})
 	if e != nil {
 		return e
 	}

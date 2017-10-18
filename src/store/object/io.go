@@ -317,14 +317,30 @@ func (a *UserIO) Process() error {
 }
 
 type ExportBoardIO struct {
+	FilePath  string
 	PubKeyStr string        `bbs:"bpkStr"`
 	PubKey    cipher.PubKey `bbs:"bpk"`
-	Name      string        `bbs:"alias"`
 }
 
 func (a *ExportBoardIO) Process() error {
 	if e := tag.Process(a); e != nil {
 		return e
 	}
+	return nil
+}
+
+type ImportBoardIO struct {
+	FilePath string
+	SecKeyStr string
+	SecKey cipher.SecKey
+	PubKey cipher.PubKey
+}
+
+func (a *ImportBoardIO) Process() error {
+	var e error
+	if a.SecKey, e = keys.GetSecKey(a.SecKeyStr); e != nil {
+		return e
+	}
+	a.PubKey = cipher.PubKeyFromSecKey(a.SecKey)
 	return nil
 }

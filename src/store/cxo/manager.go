@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"github.com/skycoin/skycoin/src/util/file"
 )
 
 const (
@@ -454,6 +455,48 @@ func (m *Manager) GetDiscoveredBoards() []string {
 	<<< IMPORT / EXPORT >>>
 */
 
+func (m *Manager) ExportBoard(pk cipher.PubKey, path string) (*object.PagesJSON, error) {
+	bi, e := m.GetBoardInstance(pk)
+	if e != nil {
+		return nil, e
+	}
+
+	out, e := bi.Export(pk, cipher.SecKey{})
+	if e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk cipher.PubKey, sk cipher.SecKey) error {
+	if m.file.HasRemoteSub(pk) {
+		m.unsubscribeNode(pk)
+	}
+	if m.file.HasMasterSub(pk) == false {
+		nbIn := &object.NewBoardIO{
+			Name: "Temporary Board",
+			Body: "This is a temporary board.",
+			BoardPubKey: pk,
+			BoardSecKey: sk,
+		}
+		if e := nbIn.Process(m.Relay().GetKeys()); e != nil {
+			return e
+		}
+		if e := m.NewBoard(nbIn); e != nil {
+			return e
+		}
+	}
+	bi, e := m.GetBoardInstance(pk)
+	if e != nil {
+		return e
+	}
+	goal, e := bi.Import(in)
+	if e != nil {
+		return e
+	}
+	return bi.WaitSeq(ctx, goal)
+}
+
 //func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
 //	if *m.c.Memory {
 //		return "", nil, nil
@@ -498,3 +541,4 @@ func (m *Manager) GetDiscoveredBoards() []string {
 //	}
 //	return path, out, nil
 //}
+

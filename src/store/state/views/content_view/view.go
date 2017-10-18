@@ -34,7 +34,12 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := object.GetPages(pack, false, true, false, true)
+	pages, e := object.GetPages(pack, &object.GetPagesIn{
+		RootPage: false,
+		BoardPage: true,
+		DiffPage: false,
+		UsersPage: true,
+	})
 	if e != nil {
 		return e
 	}
@@ -117,7 +122,12 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 	v.Lock()
 	defer v.Unlock()
 
-	pages, e := object.GetPages(pack, false, true)
+	pages, e := object.GetPages(pack, &object.GetPagesIn{
+		RootPage: false,
+		BoardPage: true,
+		DiffPage: false,
+		UsersPage: false,
+	})
 	if e != nil {
 		return e
 	}

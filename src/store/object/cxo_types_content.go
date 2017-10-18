@@ -114,14 +114,6 @@ type Content struct {
 	Body   []byte `json:"header,string"` // Contains actual content.
 }
 
-func (c *Content) Export() (interface{}, error) {
-	return c, nil
-}
-
-func (c *Content) Import(rep interface{}) error {
-	return nil
-}
-
 func (c *Content) String() string {
 	data := struct {
 		Header string

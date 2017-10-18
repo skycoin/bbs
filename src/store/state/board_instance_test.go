@@ -96,7 +96,12 @@ func obtainBoardPubKey(t *testing.T, bi *BoardInstance) cipher.PubKey {
 func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 	var threads []cipher.SHA256
 	bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
-		pages, e := object.GetPages(p, false, true)
+		pages, e := object.GetPages(p, &object.GetPagesIn{
+			RootPage: false,
+			BoardPage: true,
+			DiffPage: false,
+			UsersPage: false,
+		})
 		if e != nil {
 			return e
 		}

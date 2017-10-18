@@ -11,6 +11,8 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"log"
 	"time"
+	"github.com/skycoin/skycoin/src/util/file"
+	"os"
 )
 
 type Access struct {
@@ -172,27 +174,33 @@ func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOu
 	return a.GetBoards(ctx)
 }
 
-//func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
-//	if e := in.Process(); e != nil {
-//		return nil, e
-//	}
-//	path, data, e := a.CXO.ExportBoard(in.PubKey, in.Name)
-//	if e != nil {
-//		return nil, e
-//	}
-//	return getExportBoardOutput(path, data), nil
-//}
-//
-//func (a *Access) ImportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
-//	if e := in.Process(); e != nil {
-//		return nil, e
-//	}
-//	path, out, e := a.CXO.ImportBoard(in.PubKey, in.Name)
-//	if e != nil {
-//		return nil, e
-//	}
-//	return getExportBoardOutput(path, out), nil
-//}
+func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	out, e := a.CXO.ExportBoard(in.PubKey, in.FilePath)
+	if e != nil {
+		return nil, e
+	}
+	if e := file.SaveJSONSafe(in.FilePath, out, os.FileMode(0600)); e != nil {
+		return nil, e
+	}
+	return getExportBoardOutput(in.FilePath, out), nil
+}
+
+func (a *Access) ImportBoard(ctx context.Context, in *object.ImportBoardIO) (*ExportBoardOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	pagesIn := new(object.PagesJSON)
+	if e := file.LoadJSON(in.FilePath, pagesIn); e != nil {
+		return nil, e
+	}
+	if e := a.CXO.ImportBoard(ctx, pagesIn, in.PubKey, in.SecKey); e != nil {
+		return nil, e
+	}
+	return getExportBoardOutput(in.FilePath, pagesIn), nil
+}
 
 func (a *Access) GetDiscoveredBoards(ctx context.Context) ([]string, error) {
 	return a.CXO.GetDiscoveredBoards(), nil

@@ -30,6 +30,8 @@ var (
 type BoardInstance struct {
 	l *log.Logger
 
+	adders []views.Adder // generates views.
+
 	mux sync.RWMutex // Only use (RLock/RUnlock) with reading root sequence.
 	n   *node.Node
 	p   *skyobject.Pack
@@ -37,6 +39,7 @@ type BoardInstance struct {
 	v   map[string]views.View
 
 	needPublish typ.Bool // Whether there are changes that need to be published.
+	needReset   typ.Bool // Whether a reset is needed.
 	isReceived  typ.Bool // Whether we have received this root.
 	isReady     typ.Bool // Whether we have received a full root.
 }
@@ -47,7 +50,8 @@ func (bi *BoardInstance) Init(n *node.Node, pk cipher.PubKey, adders ...views.Ad
 	bi.n = n
 	bi.v = make(map[string]views.View)
 
-	for _, adder := range adders {
+	bi.adders = adders
+	for _, adder := range bi.adders {
 		views.Add(bi.v, adder)
 	}
 
@@ -160,6 +164,16 @@ func (bi *BoardInstance) PublishChanges() error {
 		return boo.WrapType(e, boo.Internal, "failed to save in cxo db")
 	}
 	bi.n.Publish(bi.p.Root())
+
+	// Reset header and views if needed.
+	if bi.needReset.Value() {
+		bi.h = nil
+		bi.v = make(map[string]views.View)
+		for _, adder := range bi.adders {
+			views.Add(bi.v, adder)
+		}
+	}
+	bi.needReset.Clear()
 
 	// Update headers.
 	var e error
@@ -303,6 +317,38 @@ func (bi *BoardInstance) IsReceived() bool {
 // IsReady determines whether board is received and ready.
 func (bi *BoardInstance) IsReady() bool {
 	return bi.isReady.Value()
+}
+
+func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.PagesJSON, error) {
+	var out *object.PagesJSON
+	var e = bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		pages, e := object.GetPages(p, &object.GetPagesIn{
+			RootPage: true,
+			BoardPage: true,
+			DiffPage: true,
+			UsersPage: true,
+		})
+		if e != nil {
+			return e
+		}
+		out, e = pages.ToJSON(pk, sk)
+		return e
+	})
+	return out, e
+}
+
+func (bi *BoardInstance) Import(in *object.PagesJSON) (uint64, error) {
+	var goal uint64
+	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		goal = p.Root().Seq + 1
+		pages, e := object.NewPages(p, in)
+		if e != nil {
+			return e
+		}
+		return pages.Save(p)
+	})
+	bi.needReset.Set()
+	return goal, e
 }
 
 // Export exports root to board json file.
