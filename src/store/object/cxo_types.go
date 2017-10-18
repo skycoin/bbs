@@ -47,17 +47,17 @@ type Pages struct {
 }
 
 type PagesJSON struct {
-	PubKey string `json:"public_key"`
-	SecKey string `json:"secret_key"`
-	RootPage *RootPage `json:"root_page"`
+	PubKey    string         `json:"public_key"`
+	SecKey    string         `json:"secret_key"`
+	RootPage  *RootPage      `json:"root_page"`
 	BoardPage *BoardPageJSON `json:"board_page"`
-	DiffPage *DiffPageJSON `json:"diff_page"`
+	DiffPage  *DiffPageJSON  `json:"diff_page"`
 	UsersPage *UsersPageJSON `json:"users_page"`
 }
 
 func NewPages(p *skyobject.Pack, in *PagesJSON) (*Pages, error) {
 	out := &Pages{
-		PK: p.Root().Pub,
+		PK:       p.Root().Pub,
 		RootPage: in.RootPage,
 	}
 	var e error
@@ -74,9 +74,9 @@ func NewPages(p *skyobject.Pack, in *PagesJSON) (*Pages, error) {
 }
 
 type GetPagesIn struct {
-	RootPage bool
+	RootPage  bool
 	BoardPage bool
-	DiffPage bool
+	DiffPage  bool
 	UsersPage bool
 }
 
@@ -126,8 +126,8 @@ func (p *Pages) Save(pack *skyobject.Pack) error {
 
 func (p *Pages) ToJSON(pk cipher.PubKey, sk cipher.SecKey) (*PagesJSON, error) {
 	out := &PagesJSON{
-		PubKey: pk.Hex(),
-		SecKey: sk.Hex(),
+		PubKey:   pk.Hex(),
+		SecKey:   sk.Hex(),
 		RootPage: p.RootPage,
 	}
 	var e error
@@ -153,10 +153,10 @@ const (
 
 // RootPage helps determine the type, version of the root, and whether the root has been deleted.
 type RootPage struct {
-	Typ string `json:"type"` // Type of root.
+	Typ string `json:"type"`     // Type of root.
 	Rev uint64 `json:"revision"` // Revision of root type.
-	Del bool   `json:"deleted"` // Whether root is deleted.
-	Sum []byte `json:"summary"` // Summary of the root.
+	Del bool   `json:"deleted"`  // Whether root is deleted.
+	Sum []byte `json:"summary"`  // Summary of the root.
 }
 
 func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
@@ -182,7 +182,7 @@ type BoardPage struct {
 }
 
 type BoardPageJSON struct {
-	Board *Content `json:"board"`
+	Board   *Content          `json:"board"`
 	Threads []*ThreadPageJSON `json:"threads"`
 }
 
@@ -295,8 +295,8 @@ type ThreadPage struct {
 }
 
 type ThreadPageJSON struct {
-	Thread *Content `json:"thread"`
-	Posts []*Content `json:"posts"`
+	Thread *Content   `json:"thread"`
+	Posts  []*Content `json:"posts"`
 }
 
 func NewThreadPage(p *skyobject.Pack, in *ThreadPageJSON) (*ThreadPage, error) {
@@ -618,7 +618,7 @@ type UserProfile struct {
 }
 
 type UserProfileJSON struct {
-	PubKey      string    `json:"public_key"`
+	PubKey      string     `json:"public_key"`
 	Submissions []*Content `json:"submissions"`
 }
 
@@ -665,7 +665,7 @@ func (uap *UserProfile) RangeSubmissions(action func(i int, c *Content) error) e
 
 func (uap *UserProfile) ToJSON() (*UserProfileJSON, error) {
 	out := &UserProfileJSON{
-		PubKey: uap.PubKey,
+		PubKey:      uap.PubKey,
 		Submissions: make([]*Content, uap.GetSubmissionsLen()),
 	}
 	e := uap.RangeSubmissions(func(i int, c *Content) error {

@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/typ"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
@@ -16,7 +17,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 var (
@@ -323,9 +323,9 @@ func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.Pag
 	var out *object.PagesJSON
 	var e = bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		pages, e := object.GetPages(p, &object.GetPagesIn{
-			RootPage: true,
+			RootPage:  true,
 			BoardPage: true,
-			DiffPage: true,
+			DiffPage:  true,
 			UsersPage: true,
 		})
 		if e != nil {

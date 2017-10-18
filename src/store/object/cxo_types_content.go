@@ -2,13 +2,13 @@ package object
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
-	"fmt"
 )
 
 func errGetFromBody(e error, what string) error {
@@ -27,20 +27,20 @@ type ImageData struct {
 }
 
 type Body struct {
-	Type     ContentType `json:"type"`                      // ALL
-	TS       int64       `json:"ts"`                        // ALL
-	OfBoard  string      `json:"of_board,omitempty"`        // thread, post, thread_vote, post_vote, user_vote
-	OfThread string      `json:"of_thread,omitempty"`       // post, thread_vote
-	OfPost   string      `json:"of_post,omitempty"`         // post (optional), post_vote
-	OfUser   string      `json:"of_user,omitempty"`         // vote
-	Name     string      `json:"name,omitempty"`            // board, thread, post
-	Body     string      `json:"body,omitempty"`            // board, thread, post
-	Images   []*ImageData `json:"images,omitempty"`         // post (optional)
-	Value    int         `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
-	Tag      string      `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
-	Tags     []string    `json:"tags,omitempty"`            // board
-	SubKeys  []string    `json:"submission_keys,omitempty"` // board
-	Creator  string      `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
+	Type     ContentType  `json:"type"`                      // ALL
+	TS       int64        `json:"ts"`                        // ALL
+	OfBoard  string       `json:"of_board,omitempty"`        // thread, post, thread_vote, post_vote, user_vote
+	OfThread string       `json:"of_thread,omitempty"`       // post, thread_vote
+	OfPost   string       `json:"of_post,omitempty"`         // post (optional), post_vote
+	OfUser   string       `json:"of_user,omitempty"`         // vote
+	Name     string       `json:"name,omitempty"`            // board, thread, post
+	Body     string       `json:"body,omitempty"`            // board, thread, post
+	Images   []*ImageData `json:"images,omitempty"`          // post (optional)
+	Value    int          `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
+	Tag      string       `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
+	Tags     []string     `json:"tags,omitempty"`            // board
+	SubKeys  []string     `json:"submission_keys,omitempty"` // board
+	Creator  string       `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
 }
 
 func NewBody(raw []byte) (*Body, error) {

@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"github.com/skycoin/skycoin/src/util/file"
 )
 
 const (
@@ -474,8 +473,8 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 	}
 	if m.file.HasMasterSub(pk) == false {
 		nbIn := &object.NewBoardIO{
-			Name: "Temporary Board",
-			Body: "This is a temporary board.",
+			Name:        "Temporary Board",
+			Body:        "This is a temporary board.",
 			BoardPubKey: pk,
 			BoardSecKey: sk,
 		}
@@ -541,4 +540,3 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 //	}
 //	return path, out, nil
 //}
-

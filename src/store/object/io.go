@@ -72,8 +72,8 @@ func (a *NewThreadIO) Process() error {
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	tData := &Body{
-		Type: V5ThreadType,
-		TS: time.Now().UnixNano(),
+		Type:    V5ThreadType,
+		TS:      time.Now().UnixNano(),
 		OfBoard: a.BoardPubKey.Hex(),
 		Name:    a.Name,
 		Body:    a.Body,
@@ -118,8 +118,8 @@ func (a *NewPostIO) Process() error {
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	pData := &Body{
-		Type: V5PostType,
-		TS: time.Now().UnixNano(),
+		Type:     V5PostType,
+		TS:       time.Now().UnixNano(),
 		OfBoard:  a.BoardPubKey.Hex(),
 		OfThread: a.ThreadRef.Hex(),
 		OfPost:   a.PostRef.Hex(),
@@ -203,14 +203,13 @@ func (a *UserVoteIO) Process() error {
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	vData := &Body{
-		Type: V5UserVoteType,
-		TS: time.Now().UnixNano(),
+		Type:    V5UserVoteType,
+		TS:      time.Now().UnixNano(),
 		OfBoard: a.BoardPubKeyStr,
 		OfUser:  a.UserPubKeyStr,
 		Value:   int(a.Mode),
 		Tag:     string(a.Tag),
 		Creator: a.CreatorPubKey.Hex(),
-
 	}
 	vDataRaw, e := json.Marshal(vData)
 	if e != nil {
@@ -246,13 +245,13 @@ func (a *ThreadVoteIO) Process() error {
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	vData := &Body{
-		Type: V5ThreadVoteType,
-		TS: time.Now().UnixNano(),
-		OfBoard: a.BoardPubKeyStr,
+		Type:     V5ThreadVoteType,
+		TS:       time.Now().UnixNano(),
+		OfBoard:  a.BoardPubKeyStr,
 		OfThread: a.ThreadRefStr,
-		Value:   int(a.Mode),
-		Tag:     string(a.Tag),
-		Creator: a.CreatorPubKey.Hex(),
+		Value:    int(a.Mode),
+		Tag:      string(a.Tag),
+		Creator:  a.CreatorPubKey.Hex(),
 	}
 	vDataRaw, e := json.Marshal(vData)
 	if e != nil {
@@ -286,10 +285,10 @@ func (a *PostVoteIO) Process() error {
 	}
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	vData := &Body{
-		Type: V5PostVoteType,
-		TS: time.Now().UnixNano(),
+		Type:    V5PostVoteType,
+		TS:      time.Now().UnixNano(),
 		OfBoard: a.BoardPubKeyStr,
-		OfPost: a.PostRefStr,
+		OfPost:  a.PostRefStr,
 		Value:   int(a.Mode),
 		Tag:     string(a.Tag),
 		Creator: a.CreatorPubKey.Hex(),
@@ -330,10 +329,10 @@ func (a *ExportBoardIO) Process() error {
 }
 
 type ImportBoardIO struct {
-	FilePath string
+	FilePath  string
 	SecKeyStr string
-	SecKey cipher.SecKey
-	PubKey cipher.PubKey
+	SecKey    cipher.SecKey
+	PubKey    cipher.PubKey
 }
 
 func (a *ImportBoardIO) Process() error {

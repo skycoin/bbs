@@ -63,13 +63,13 @@ func getFollowPageOutput(v interface{}) *FollowPageOutput {
 }
 
 type ExportBoardOutput struct {
-	FilePath string `json:"file_path"`
-	Board  *object.ContentRep `json:"board"`
+	FilePath string             `json:"file_path"`
+	Board    *object.ContentRep `json:"board"`
 }
 
 func getExportBoardOutput(path string, pages *object.PagesJSON) *ExportBoardOutput {
 	return &ExportBoardOutput{
 		FilePath: path,
-		Board: pages.BoardPage.Board.ToRep(),
+		Board:    pages.BoardPage.Board.ToRep(),
 	}
 }

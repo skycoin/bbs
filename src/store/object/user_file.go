@@ -18,5 +18,5 @@ func (f *UserFile) View() *UserFileView {
 
 type UserFileView struct {
 	User UserView `json:"user"`
-	Seed string      `json:"seed"`
+	Seed string   `json:"seed"`
 }

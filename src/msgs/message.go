@@ -2,10 +2,10 @@ package msgs
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 const (

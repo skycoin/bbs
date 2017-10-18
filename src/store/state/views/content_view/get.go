@@ -2,8 +2,8 @@ package content_view
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"log"
 	"github.com/skycoin/bbs/src/store/object"
+	"log"
 )
 
 const (

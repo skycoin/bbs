@@ -2,12 +2,12 @@ package content_view
 
 import (
 	"fmt"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"sync"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 type indexPage struct {
@@ -35,9 +35,9 @@ func (v *ContentView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 	defer v.Unlock()
 
 	pages, e := object.GetPages(pack, &object.GetPagesIn{
-		RootPage: false,
+		RootPage:  false,
 		BoardPage: true,
-		DiffPage: false,
+		DiffPage:  false,
 		UsersPage: true,
 	})
 	if e != nil {
@@ -123,9 +123,9 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 	defer v.Unlock()
 
 	pages, e := object.GetPages(pack, &object.GetPagesIn{
-		RootPage: false,
+		RootPage:  false,
 		BoardPage: true,
-		DiffPage: false,
+		DiffPage:  false,
 		UsersPage: false,
 	})
 	if e != nil {

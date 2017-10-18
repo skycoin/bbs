@@ -2,6 +2,7 @@ package state
 
 import (
 	"fmt"
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
@@ -11,7 +12,6 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"testing"
-	"github.com/skycoin/bbs/src/misc/keys"
 )
 
 const (
@@ -97,9 +97,9 @@ func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 	var threads []cipher.SHA256
 	bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		pages, e := object.GetPages(p, &object.GetPagesIn{
-			RootPage: false,
+			RootPage:  false,
 			BoardPage: true,
-			DiffPage: false,
+			DiffPage:  false,
 			UsersPage: false,
 		})
 		if e != nil {
@@ -123,9 +123,9 @@ func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte) (cipher.SHA256, uint64) {
 	_, csk := cipher.GenerateDeterministicKeyPair(userSeed)
 	in := &object.NewThreadIO{
-		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
-		Name:           fmt.Sprintf("Thread %d", threadIndex),
-		Body:           fmt.Sprintf("A test thread created of index %d.", threadIndex),
+		BoardPubKeyStr:   obtainBoardPubKey(t, bi).Hex(),
+		Name:             fmt.Sprintf("Thread %d", threadIndex),
+		Body:             fmt.Sprintf("A test thread created of index %d.", threadIndex),
 		CreatorSecKeyStr: csk.Hex(),
 	}
 	if e := in.Process(); e != nil {
@@ -142,10 +142,10 @@ func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte
 func addPost(t *testing.T, bi *BoardInstance, threadHash cipher.SHA256, postIndex int, userSeed []byte) uint64 {
 	_, csk := cipher.GenerateDeterministicKeyPair(userSeed)
 	in := &object.NewPostIO{
-		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
-		ThreadRefStr:   threadHash.Hex(),
-		Name:           fmt.Sprintf("Post %d", postIndex),
-		Body:           fmt.Sprintf("A test post created of index %d.", postIndex),
+		BoardPubKeyStr:   obtainBoardPubKey(t, bi).Hex(),
+		ThreadRefStr:     threadHash.Hex(),
+		Name:             fmt.Sprintf("Post %d", postIndex),
+		Body:             fmt.Sprintf("A test post created of index %d.", postIndex),
 		CreatorSecKeyStr: csk.Hex(),
 	}
 	if e := in.Process(); e != nil {

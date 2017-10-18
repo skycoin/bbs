@@ -2,9 +2,9 @@ package follow_view
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 type FollowView struct {
@@ -18,9 +18,9 @@ func (v *FollowView) Init(pack *skyobject.Pack, headers *pack.Headers) error {
 
 	// Get pages.
 	pages, e := object.GetPages(pack, &object.GetPagesIn{
-		RootPage: false,
+		RootPage:  false,
 		BoardPage: false,
-		DiffPage: false,
+		DiffPage:  false,
 		UsersPage: true,
 	})
 	if e != nil {

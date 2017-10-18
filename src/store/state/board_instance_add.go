@@ -3,10 +3,10 @@ package state
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 func (bi *BoardInstance) Submit(transport *object.Transport) (uint64, error) {
@@ -59,9 +59,9 @@ func submitThread(bi *BoardInstance, goal *uint64, thread *object.Content) error
 
 		// Get root children pages.
 		pages, e := object.GetPages(p, &object.GetPagesIn{
-			RootPage: false,
+			RootPage:  false,
 			BoardPage: true,
-			DiffPage: true,
+			DiffPage:  true,
 			UsersPage: true,
 		})
 		if e != nil {
@@ -103,9 +103,9 @@ func submitPost(bi *BoardInstance, goal *uint64, post *object.Content) error {
 
 		// Get root pages.
 		pages, e := object.GetPages(p, &object.GetPagesIn{
-			RootPage: false,
+			RootPage:  false,
 			BoardPage: true,
-			DiffPage: true,
+			DiffPage:  true,
 			UsersPage: false,
 		})
 		if e != nil {
@@ -174,9 +174,9 @@ func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *object.Conten
 
 	// Get root children pages.
 	pages, e := object.GetPages(p, &object.GetPagesIn{
-		RootPage: false,
+		RootPage:  false,
 		BoardPage: false,
-		DiffPage: true,
+		DiffPage:  true,
 		UsersPage: true,
 	})
 	if e != nil {
@@ -247,9 +247,9 @@ func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 
 		// Get root children.
 		pages, e := object.GetPages(p, &object.GetPagesIn{
-			RootPage: false,
+			RootPage:  false,
 			BoardPage: true,
-			DiffPage: false,
+			DiffPage:  false,
 			UsersPage: false,
 		})
 		if e != nil {
@@ -283,9 +283,9 @@ func (bi *BoardInstance) ViewBoard(action BoardAction) error {
 	return bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		// Get root children.
 		pages, e := object.GetPages(p, &object.GetPagesIn{
-			RootPage: false,
+			RootPage:  false,
 			BoardPage: true,
-			DiffPage: false,
+			DiffPage:  false,
 			UsersPage: false,
 		})
 		if e != nil {

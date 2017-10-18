@@ -9,10 +9,10 @@ import (
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/bbs/src/store/state/views/follow_view"
-	"log"
-	"time"
 	"github.com/skycoin/skycoin/src/util/file"
+	"log"
 	"os"
+	"time"
 )
 
 type Access struct {
@@ -182,7 +182,7 @@ func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*Ex
 	if e != nil {
 		return nil, e
 	}
-	if e := file.SaveJSONSafe(in.FilePath, out, os.FileMode(0600)); e != nil {
+	if e := file.SaveJSON(in.FilePath, out, os.FileMode(0600)); e != nil {
 		return nil, e
 	}
 	return getExportBoardOutput(in.FilePath, out), nil

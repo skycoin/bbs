@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -12,7 +13,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 const (

@@ -2,10 +2,10 @@ package pack
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 /*
@@ -35,9 +35,9 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 
 	// Get required root children.
 	pages, e := object.GetPages(p, &object.GetPagesIn{
-		RootPage: false,
+		RootPage:  false,
 		BoardPage: true,
-		DiffPage: true,
+		DiffPage:  true,
 		UsersPage: true,
 	})
 	if e != nil {
