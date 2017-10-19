@@ -24,10 +24,10 @@ func main() {
 	app.Usage = "a command-line interface to interact with a Skycoin BBS node"
 	app.Flags = cli.FlagsByName{
 		cli.IntFlag{
-			Name: "port, p",
-			Usage: "rpc port of the bbs node",
-			EnvVar: "BBS_RPC_PORT",
-			Value: Port,
+			Name:        "port, p",
+			Usage:       "rpc port of the bbs node",
+			EnvVar:      "BBS_RPC_PORT",
+			Value:       Port,
 			Destination: &Port,
 		},
 	}
@@ -232,14 +232,14 @@ func main() {
 							Usage: "public key of the board to export",
 						},
 						cli.StringFlag{
-							Name:  "file-name, fn",
-							Usage: "name of file to export board to",
+							Name:  "file-path, fp",
+							Usage: "full path of file to export board to",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.ExportBoard(&object.ExportBoardIO{
 							PubKeyStr: ctx.String("public-key"),
-							Name:      ctx.String("file-name"),
+							FilePath:  ctx.String("file-path"),
 						}))
 					},
 				},
@@ -252,14 +252,14 @@ func main() {
 							Usage: "public key of the board to import data to",
 						},
 						cli.StringFlag{
-							Name:  "file-name, fn",
-							Usage: "name of file to import board data from",
+							Name:  "file-path, fp",
+							Usage: "full path of file to import board data from",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.ImportBoard(&object.ExportBoardIO{
 							PubKeyStr: ctx.String("public-key"),
-							Name:      ctx.String("file-name"),
+							FilePath:  ctx.String("file-path"),
 						}))
 					},
 				},
@@ -447,7 +447,7 @@ func main() {
 					},
 				},
 				{
-					Name: "vote_post",
+					Name:  "vote_post",
 					Usage: "submits a vote for a given post",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
@@ -482,7 +482,7 @@ func main() {
 					},
 				},
 				{
-					Name: "vote_user",
+					Name:  "vote_user",
 					Usage: "submits a vote for a given user",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{

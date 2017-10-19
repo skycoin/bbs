@@ -3,51 +3,14 @@ package store
 import (
 	"context"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
-	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
-type UsersOutput struct {
-	Users []r0.UserView `json:"users"`
-}
-
-func getUsers(_ context.Context, aliases []string) *UsersOutput {
-	out := &UsersOutput{
-		Users: make([]r0.UserView, len(aliases)),
-	}
-	for i, alias := range aliases {
-		out.Users[i] = r0.UserView{
-			User: r0.User{Alias: alias},
-		}
-	}
-	return out
-}
-
-type SessionOutput struct {
-	LoggedIn bool                 `json:"logged_in"`
-	Session  *object.UserFileView `json:"session"`
-}
-
-func getSession(_ context.Context, f *object.UserFile) *SessionOutput {
-	if f == nil {
-		return &SessionOutput{
-			LoggedIn: false,
-			Session:  nil,
-		}
-	} else {
-		return &SessionOutput{
-			LoggedIn: true,
-			Session:  f.View(),
-		}
-	}
-}
-
 type ConnectionsOutput struct {
-	Connections []r0.Connection `json:"connections"`
+	Connections []object.Connection `json:"connections"`
 }
 
-func getConnections(_ context.Context, cs []r0.Connection) *ConnectionsOutput {
+func getConnections(_ context.Context, cs []object.Connection) *ConnectionsOutput {
 	return &ConnectionsOutput{
 		Connections: cs,
 	}
@@ -100,13 +63,13 @@ func getFollowPageOutput(v interface{}) *FollowPageOutput {
 }
 
 type ExportBoardOutput struct {
-	FilePath string            `json:"file_path"`
-	FileData *transfer.RootRep `json:"file_data"`
+	FilePath string             `json:"file_path"`
+	Board    *object.ContentRep `json:"board"`
 }
 
-func getExportBoardOutput(path string, root *transfer.RootRep) *ExportBoardOutput {
+func getExportBoardOutput(path string, pages *object.PagesJSON) *ExportBoardOutput {
 	return &ExportBoardOutput{
 		FilePath: path,
-		FileData: root,
+		Board:    pages.BoardPage.Board.ToRep(),
 	}
 }

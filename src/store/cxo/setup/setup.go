@@ -2,7 +2,6 @@ package setup
 
 import (
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 )
@@ -10,32 +9,32 @@ import (
 // PrepareRegistry sets up the CXO Registry.
 func PrepareRegistry(r *skyobject.Reg) {
 	r.Register(
-		r0.RootPageName,
-		r0.RootPage{})
+		object.RootPageName,
+		object.RootPage{})
 
 	r.Register(
-		r0.BoardPageName,
-		r0.BoardPage{})
+		object.BoardPageName,
+		object.BoardPage{})
 
 	r.Register(
-		r0.ThreadPageName,
-		r0.ThreadPage{})
+		object.ThreadPageName,
+		object.ThreadPage{})
 
 	r.Register(
-		r0.DiffPageName,
-		r0.DiffPage{})
+		object.DiffPageName,
+		object.DiffPage{})
 
 	r.Register(
-		r0.UsersPageName,
-		r0.UsersPage{})
+		object.UsersPageName,
+		object.UsersPage{})
 
 	r.Register(
-		r0.UserProfileName,
-		r0.UserProfile{})
+		object.UserProfileName,
+		object.UserProfile{})
 
 	r.Register(
-		r0.ContentName,
-		r0.Content{})
+		object.ContentName,
+		object.Content{})
 }
 
 // NewBoard generates a new board.
@@ -51,17 +50,17 @@ func NewBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 	}
 
 	pack.Append(
-		&r0.RootPage{
-			Typ: r0.RootTypeBoard,
+		&object.RootPage{
+			Typ: object.RootTypeBoard,
 			Rev: 0,
 			Del: false,
 			Sum: in.Content.Body,
 		},
-		&r0.BoardPage{
+		&object.BoardPage{
 			Board: pack.Ref(in.Content),
 		},
-		&r0.DiffPage{},
-		&r0.UsersPage{},
+		&object.DiffPage{},
+		&object.UsersPage{},
 	)
 	if e := pack.Save(); e != nil {
 		return nil, e

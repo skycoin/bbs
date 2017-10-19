@@ -101,17 +101,17 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	mux.HandleFunc("/api/admin/content/export_board",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.ExportBoard(r.Context(), &object.ExportBoardIO{
+				FilePath:  r.FormValue("file_path"),
 				PubKeyStr: r.FormValue("board_public_key"),
-				Name:      r.FormValue("file_name"),
 			}))
 		})
 
 	// Imports an entire board root from file to CXO.
 	mux.HandleFunc("/api/admin/content/import_board",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.ImportBoard(r.Context(), &object.ExportBoardIO{
-				PubKeyStr: r.FormValue("board_public_key"),
-				Name:      r.FormValue("file_name"),
+			send(w)(g.Access.ImportBoard(r.Context(), &object.ImportBoardIO{
+				FilePath:  r.FormValue("file_path"),
+				SecKeyStr: r.FormValue("board_secret_key"),
 			}))
 		})
 }

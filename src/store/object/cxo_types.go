@@ -1,9 +1,8 @@
-package r0
+package object
 
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/object/transfer"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
@@ -47,25 +46,58 @@ type Pages struct {
 	UsersPage *UsersPage
 }
 
-func GetPages(p *skyobject.Pack, get ...bool) (out *Pages, e error) {
-	out = &Pages{PK: p.Root().Pub}
+type PagesJSON struct {
+	PubKey    string         `json:"public_key"`
+	SecKey    string         `json:"secret_key"`
+	RootPage  *RootPage      `json:"root_page"`
+	BoardPage *BoardPageJSON `json:"board_page"`
+	DiffPage  *DiffPageJSON  `json:"diff_page"`
+	UsersPage *UsersPageJSON `json:"users_page"`
+}
 
-	if len(get) > IndexRootPage && get[IndexRootPage] {
+func NewPages(p *skyobject.Pack, in *PagesJSON) (*Pages, error) {
+	out := &Pages{
+		PK:       p.Root().Pub,
+		RootPage: in.RootPage,
+	}
+	var e error
+	if out.BoardPage, e = NewBoardPage(p, in.BoardPage); e != nil {
+		return nil, e
+	}
+	if out.DiffPage, e = NewDiffPage(p, in.DiffPage); e != nil {
+		return nil, e
+	}
+	if out.UsersPage, e = NewUsersPage(p, in.UsersPage); e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
+type GetPagesIn struct {
+	RootPage  bool
+	BoardPage bool
+	DiffPage  bool
+	UsersPage bool
+}
+
+func GetPages(p *skyobject.Pack, in *GetPagesIn) (out *Pages, e error) {
+	out = &Pages{PK: p.Root().Pub}
+	if in.RootPage {
 		if out.RootPage, e = GetRootPage(p); e != nil {
 			return
 		}
 	}
-	if len(get) > IndexBoardPage && get[IndexBoardPage] {
+	if in.BoardPage {
 		if out.BoardPage, e = GetBoardPage(p); e != nil {
 			return
 		}
 	}
-	if len(get) > IndexDiffPage && get[IndexDiffPage] {
+	if in.DiffPage {
 		if out.DiffPage, e = GetDiffPage(p); e != nil {
 			return
 		}
 	}
-	if len(get) > IndexUsersPage && get[IndexUsersPage] {
+	if in.UsersPage {
 		if out.UsersPage, e = GetUsersPage(p); e != nil {
 			return
 		}
@@ -92,6 +124,25 @@ func (p *Pages) Save(pack *skyobject.Pack) error {
 	return nil
 }
 
+func (p *Pages) ToJSON(pk cipher.PubKey, sk cipher.SecKey) (*PagesJSON, error) {
+	out := &PagesJSON{
+		PubKey:   pk.Hex(),
+		SecKey:   sk.Hex(),
+		RootPage: p.RootPage,
+	}
+	var e error
+	if out.BoardPage, e = p.BoardPage.ToJSON(); e != nil {
+		return nil, e
+	}
+	if out.DiffPage, e = p.DiffPage.ToJSON(); e != nil {
+		return nil, e
+	}
+	if out.UsersPage, e = p.UsersPage.ToJSON(); e != nil {
+		return nil, e
+	}
+	return out, nil
+}
+
 /*
 	<<< ROOT PAGE >>>
 */
@@ -102,10 +153,10 @@ const (
 
 // RootPage helps determine the type, version of the root, and whether the root has been deleted.
 type RootPage struct {
-	Typ string // Type of root.
-	Rev uint64 // Revision of root type.
-	Del bool   // Whether root is deleted.
-	Sum []byte // Summary of the root.
+	Typ string `json:"type"`     // Type of root.
+	Rev uint64 `json:"revision"` // Revision of root type.
+	Del bool   `json:"deleted"`  // Whether root is deleted.
+	Sum []byte `json:"summary"`  // Summary of the root.
 }
 
 func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
@@ -121,26 +172,6 @@ func GetRootPage(p *skyobject.Pack) (*RootPage, error) {
 	return rp, nil
 }
 
-func (rp *RootPage) ToRep() (*transfer.RootPageRep, error) {
-	out := &transfer.RootPageRep{
-		Type:     rp.Typ,
-		Revision: rp.Rev,
-		Deleted:  rp.Del,
-		Summary:  transfer.RootPageSummary{}, // TODO: Implement summary.
-	}
-	return out, nil
-}
-
-func (rp *RootPage) FromRep(rpRep *transfer.RootPageRep) error {
-	*rp = RootPage{
-		Typ: rpRep.Type,
-		Rev: rpRep.Revision,
-		Del: rpRep.Deleted,
-		Sum: nil, // TODO: Implement summary.
-	}
-	return nil
-}
-
 /*
 	<<< BOARD PAGE >>>
 */
@@ -148,6 +179,29 @@ func (rp *RootPage) FromRep(rpRep *transfer.RootPageRep) error {
 type BoardPage struct {
 	Board   skyobject.Ref  `skyobject:"schema=bbs.r0.Content"`
 	Threads skyobject.Refs `skyobject:"schema=bbs.r0.ThreadPage"`
+}
+
+type BoardPageJSON struct {
+	Board   *Content          `json:"board"`
+	Threads []*ThreadPageJSON `json:"threads"`
+}
+
+func NewBoardPage(p *skyobject.Pack, in *BoardPageJSON) (*BoardPage, error) {
+	out := new(BoardPage)
+	p.Ref(out)
+	if e := out.Board.SetValue(in.Board); e != nil {
+		return nil, e
+	}
+	for _, tpJSON := range in.Threads {
+		bp, e := NewThreadPage(p, tpJSON)
+		if e != nil {
+			return nil, e
+		}
+		if e := out.Threads.Append(bp); e != nil {
+			return nil, e
+		}
+	}
+	return out, nil
 }
 
 func GetBoardPage(p *skyobject.Pack) (*BoardPage, error) {
@@ -216,35 +270,19 @@ func (bp *BoardPage) AddThread(tRef skyobject.Ref) error {
 	return nil
 }
 
-func (bp *BoardPage) ExportBoard() (transfer.Board, error) {
-	return nil, nil
-}
-
-func (bp *BoardPage) ExportThreadPages() ([]transfer.ThreadPage, error) {
-	l, e := bp.Threads.Len()
-	if e != nil {
+func (bp *BoardPage) ToJSON() (*BoardPageJSON, error) {
+	out := &BoardPageJSON{
+		Threads: make([]*ThreadPageJSON, bp.GetThreadCount()),
+	}
+	var e error
+	if out.Board, e = bp.GetBoard(); e != nil {
 		return nil, e
 	}
-	out := make([]transfer.ThreadPage, l)
 	e = bp.RangeThreadPages(func(i int, tp *ThreadPage) error {
-		out[i] = tp
-		return nil
+		out.Threads[i], e = tp.ToJSON()
+		return e
 	})
 	return out, e
-}
-
-func (bp *BoardPage) ImportBoard(p *skyobject.Pack, b transfer.Board) error {
-	return bp.Board.SetValue(b)
-}
-
-func (bp *BoardPage) ImportThreadPages(p *skyobject.Pack, tps []transfer.ThreadPage) error {
-	bp.Threads.Clear()
-	for _, tp := range tps {
-		if e := bp.Threads.Append(tp); e != nil {
-			return e
-		}
-	}
-	return nil
 }
 
 /*
@@ -254,6 +292,25 @@ func (bp *BoardPage) ImportThreadPages(p *skyobject.Pack, tps []transfer.ThreadP
 type ThreadPage struct {
 	Thread skyobject.Ref  `skyobject:"schema=bbs.r0.Content"`
 	Posts  skyobject.Refs `skyobject:"schema=bbs.r0.Content"`
+}
+
+type ThreadPageJSON struct {
+	Thread *Content   `json:"thread"`
+	Posts  []*Content `json:"posts"`
+}
+
+func NewThreadPage(p *skyobject.Pack, in *ThreadPageJSON) (*ThreadPage, error) {
+	out := new(ThreadPage)
+	p.Ref(out)
+	if e := out.Thread.SetValue(in.Thread); e != nil {
+		return nil, e
+	}
+	for _, postJSON := range in.Posts {
+		if e := out.Posts.Append(postJSON); e != nil {
+			return nil, e
+		}
+	}
+	return out, nil
 }
 
 func GetThreadPage(tpElem *skyobject.RefsElem) (*ThreadPage, error) {
@@ -310,26 +367,19 @@ func (tp *ThreadPage) Save(tpElem *skyobject.RefsElem) error {
 	return nil
 }
 
-func (tp *ThreadPage) ExportThread() (transfer.Thread, error) {
-	return nil, nil
-}
-
-func (tp *ThreadPage) ExportPosts() ([]transfer.Post, error) {
-	return nil, nil
-}
-
-func (tp *ThreadPage) ImportThread(p *skyobject.Pack, t transfer.Thread) error {
-	return tp.Thread.SetValue(t)
-}
-
-func (tp *ThreadPage) ImportPosts(p *skyobject.Pack, ps []transfer.Post) error {
-	tp.Posts.Clear()
-	for _, p := range ps {
-		if e := tp.Posts.Append(p); e != nil {
-			return e
-		}
+func (tp *ThreadPage) ToJSON() (*ThreadPageJSON, error) {
+	out := &ThreadPageJSON{
+		Posts: make([]*Content, tp.GetPostCount()),
 	}
-	return nil
+	var e error
+	if out.Thread, e = tp.GetThread(); e != nil {
+		return nil, e
+	}
+	e = tp.RangePosts(func(i int, post *Content) error {
+		out.Posts[i] = post
+		return nil
+	})
+	return out, e
 }
 
 /*
@@ -338,6 +388,27 @@ func (tp *ThreadPage) ImportPosts(p *skyobject.Pack, ps []transfer.Post) error {
 
 type DiffPage struct {
 	Submissions skyobject.Refs `skyobject:"schema=bbs.r0.Content"`
+}
+
+type DiffPageJSON struct {
+	Submissions []*Content `json:"submissions"`
+}
+
+type Changes struct {
+	NeedReset bool
+	Total     int
+	New       []*Content
+}
+
+func NewDiffPage(p *skyobject.Pack, in *DiffPageJSON) (*DiffPage, error) {
+	out := new(DiffPage)
+	p.Ref(out)
+	for _, subJSON := range in.Submissions {
+		if e := out.Submissions.Append(subJSON); e != nil {
+			return nil, e
+		}
+	}
+	return out, nil
 }
 
 func GetDiffPage(p *skyobject.Pack) (*DiffPage, error) {
@@ -375,12 +446,6 @@ func (dp *DiffPage) GetOfIndex(i int) (*Content, error) {
 	return GetContentFromElem(cElem)
 }
 
-type Changes struct {
-	NeedReset bool
-	Total     int
-	New       []*Content
-}
-
 func (dp *DiffPage) GetChanges(oldC *Changes) (*Changes, error) {
 	newC := new(Changes)
 
@@ -415,12 +480,48 @@ func (dp *DiffPage) GetChanges(oldC *Changes) (*Changes, error) {
 	return newC, nil
 }
 
+func (dp *DiffPage) ToJSON() (*DiffPageJSON, error) {
+	subCount, e := dp.Submissions.Len()
+	if e != nil {
+		return nil, e
+	}
+	out := &DiffPageJSON{
+		Submissions: make([]*Content, subCount),
+	}
+	e = dp.Submissions.Ascend(func(i int, ref *skyobject.RefsElem) error {
+		if out.Submissions[i], e = GetContentFromElem(ref); e != nil {
+			return e
+		}
+		return nil
+	})
+	return out, e
+}
+
 /*
 	<<< USERS PAGE >>>
 */
 
 type UsersPage struct {
 	Users skyobject.Refs `skyobject:"schema=bbs.r0.UserProfile"`
+}
+
+type UsersPageJSON struct {
+	Users []*UserProfileJSON `json:"users"`
+}
+
+func NewUsersPage(p *skyobject.Pack, in *UsersPageJSON) (*UsersPage, error) {
+	out := new(UsersPage)
+	p.Ref(out)
+	for _, profileJSON := range in.Users {
+		profile, e := NewUserProfile(p, profileJSON)
+		if e != nil {
+			return nil, e
+		}
+		if e := out.Users.Append(profile); e != nil {
+			return nil, e
+		}
+	}
+	return out, nil
 }
 
 func GetUsersPage(p *skyobject.Pack) (*UsersPage, error) {
@@ -460,7 +561,7 @@ func (up *UsersPage) AddUserSubmission(uapHash cipher.SHA256, c *Content) (ciphe
 	if e != nil {
 		return cipher.SHA256{}, refByHashErr(e, uapHash, "Users")
 	}
-	uap, e := GetUserActivityPage(uapElem)
+	uap, e := GetUserProfile(uapElem)
 	if e != nil {
 		return cipher.SHA256{}, e
 	}
@@ -478,12 +579,32 @@ func (up *UsersPage) AddUserSubmission(uapHash cipher.SHA256, c *Content) (ciphe
 
 func (up *UsersPage) RangeUserProfiles(action func(i int, uap *UserProfile) error) error {
 	return up.Users.Ascend(func(i int, uapElem *skyobject.RefsElem) error {
-		uap, e := GetUserActivityPage(uapElem)
+		uap, e := GetUserProfile(uapElem)
 		if e != nil {
 			return e
 		}
 		return action(i, uap)
 	})
+}
+
+func (up *UsersPage) ToJSON() (*UsersPageJSON, error) {
+	uCount, e := up.Users.Len()
+	if e != nil {
+		return nil, boo.WrapType(e, boo.InvalidRead,
+			"corrupt user's page")
+	}
+	out := &UsersPageJSON{
+		Users: make([]*UserProfileJSON, uCount),
+	}
+	e = up.RangeUserProfiles(func(i int, uap *UserProfile) error {
+		var e error
+		if out.Users[i], e = uap.ToJSON(); e != nil {
+			return boo.WrapType(e, boo.InvalidRead,
+				"range user profiles failed at index", i)
+		}
+		return nil
+	})
+	return out, e
 }
 
 /*
@@ -496,7 +617,25 @@ type UserProfile struct {
 	Submissions skyobject.Refs `skyobject:"schema=bbs.r0.Content"`
 }
 
-func GetUserActivityPage(uapElem *skyobject.RefsElem) (*UserProfile, error) {
+type UserProfileJSON struct {
+	PubKey      string     `json:"public_key"`
+	Submissions []*Content `json:"submissions"`
+}
+
+func NewUserProfile(p *skyobject.Pack, in *UserProfileJSON) (*UserProfile, error) {
+	var out = new(UserProfile)
+	p.Ref(out)
+	out.PubKey = in.PubKey
+	for _, subJSON := range in.Submissions {
+		if e := out.Submissions.Append(subJSON); e != nil {
+			return nil, boo.WrapType(e, boo.InvalidRead,
+				"failed to append user profile submissions")
+		}
+	}
+	return out, nil
+}
+
+func GetUserProfile(uapElem *skyobject.RefsElem) (*UserProfile, error) {
 	uapVal, e := uapElem.Value()
 	if e != nil {
 		return nil, elemValueErr(e, uapElem)
@@ -524,6 +663,18 @@ func (uap *UserProfile) RangeSubmissions(action func(i int, c *Content) error) e
 	})
 }
 
+func (uap *UserProfile) ToJSON() (*UserProfileJSON, error) {
+	out := &UserProfileJSON{
+		PubKey:      uap.PubKey,
+		Submissions: make([]*Content, uap.GetSubmissionsLen()),
+	}
+	e := uap.RangeSubmissions(func(i int, c *Content) error {
+		out.Submissions[i] = c
+		return nil
+	})
+	return out, e
+}
+
 /*
 	<<< USER >>>
 */
@@ -547,46 +698,6 @@ type UserView struct {
 type Connection struct {
 	Address string `json:"address"`
 	State   string `json:"state"`
-}
-
-/*
-	<<< GENERATOR (IMPORT/EXPORT) >>>
-*/
-
-type Generator struct {
-	p *skyobject.Pack
-}
-
-func NewGenerator(p *skyobject.Pack) *Generator {
-	return &Generator{p: p}
-}
-
-func (g *Generator) Pack() *skyobject.Pack {
-	return g.p
-}
-
-func (g *Generator) NewRootPage() transfer.RootPage {
-	return new(RootPage)
-}
-
-func (g *Generator) NewBoardPage() transfer.BoardPage {
-	return new(BoardPage)
-}
-
-func (g *Generator) NewThreadPage() transfer.ThreadPage {
-	return new(ThreadPage)
-}
-
-func (g *Generator) NewBoard() transfer.Board {
-	return nil // new(Board)
-}
-
-func (g *Generator) NewThread() transfer.Thread {
-	return nil // new(Thread)
-}
-
-func (g *Generator) NewPost() transfer.Post {
-	return nil // new(Post)
 }
 
 /*

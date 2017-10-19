@@ -74,7 +74,7 @@ func (g *Gateway) ExportBoard(in *object.ExportBoardIO, out *string) error {
 	return send(out)(g.Access.ExportBoard(context.Background(), in))
 }
 
-func (g *Gateway) ImportBoard(in *object.ExportBoardIO, out *string) error {
+func (g *Gateway) ImportBoard(in *object.ImportBoardIO, out *string) error {
 	return send(out)(g.Access.ImportBoard(context.Background(), in))
 }
 
