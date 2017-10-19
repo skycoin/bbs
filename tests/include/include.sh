@@ -78,6 +78,30 @@ RunNode() {
         -cxo-rpc=false \
         -http-port=${PORT_HTTP} \
         -http-gui=${GUI} \
+        -http-gui-dir=${GOPATH}/src/github.com/skycoin/bbs/static/dist \
+        &
+}
+
+RunNodeWithMessengerSkycoinNet() {
+    if [[ $# -ne 3 ]] ; then
+        echo "3 arguments required"
+        exit 1
+    fi
+
+    PORT_HTTP=$1 ; PORT_CXO=$2 ; GUI=$3
+
+    pv "START NODE: PORT_HTTP ${PORT_HTTP}, PORT_SUB ${PORT_SUB}, PORT_CXO ${PORT_CXO}..."
+
+    go run ${GOPATH}/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go \
+        -dev=false \
+        -master=true \
+        -memory=true \
+        -defaults=false \
+        -cxo-port=${PORT_CXO} \
+        -cxo-rpc=false \
+        -http-port=${PORT_HTTP} \
+        -http-gui=${GUI} \
+        -http-gui-dir=${GOPATH}/src/github.com/skycoin/bbs/static/dist \
         &
 }
 
