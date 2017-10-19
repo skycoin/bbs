@@ -17,7 +17,7 @@ sleep 5
 # Run some nodes (HTTP | CXO | RPC | GUI).
 
 RunNode 5410 5412 5414 false
-RunNode 7410 7412 7414 true
+RunNode 7410 7412 7414 false
 
 # Wait for nodes to start running (assuming 10s is enough).
 
