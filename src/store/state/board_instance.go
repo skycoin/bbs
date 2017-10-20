@@ -354,7 +354,6 @@ func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.Pag
 }
 
 func (bi *BoardInstance) Import(in *object.PagesJSON) (uint64, error) {
-	defer log.Println("IMPORT OKAY HERE!")
 	var goal uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		goal = p.Root().Seq + 1
