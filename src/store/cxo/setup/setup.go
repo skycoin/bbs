@@ -49,6 +49,17 @@ func NewBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 		return nil, e
 	}
 
+	if e := SetBoard(pack, in); e != nil {
+		return nil, e
+	}
+	node.Publish(pack.Root())
+	pack.Close()
+
+	return node.Container().LastRoot(in.BoardPubKey)
+}
+
+func SetBoard(pack *skyobject.Pack, in *object.NewBoardIO) error {
+	pack.Clear()
 	pack.Append(
 		&object.RootPage{
 			Typ: object.RootTypeBoard,
@@ -62,11 +73,5 @@ func NewBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 		&object.DiffPage{},
 		&object.UsersPage{},
 	)
-	if e := pack.Save(); e != nil {
-		return nil, e
-	}
-	node.Publish(pack.Root())
-	pack.Close()
-
-	return node.Container().LastRoot(in.BoardPubKey)
+	return pack.Save()
 }

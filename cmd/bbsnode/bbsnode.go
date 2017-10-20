@@ -84,7 +84,7 @@ func NewDefaultConfig() *Config {
 
 func (c *Config) Print() {
 	data, _ := json.MarshalIndent(*c, "", "    ")
-	fmt.Println(string(data))
+	log.Println(string(data))
 }
 
 // PostProcess checks the flags and processes them.

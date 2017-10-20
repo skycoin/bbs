@@ -131,10 +131,12 @@ func (v *ContentView) Update(pack *skyobject.Pack, headers *pack.Headers) error 
 	if e != nil {
 		return e
 	}
+
 	board, e := pages.BoardPage.GetBoard()
 	if e != nil {
 		return e
 	}
+
 	delete(v.c, v.i.Board)
 	v.i.Board = board.GetHeader().Hash
 	boardRep := board.ToRep()
