@@ -1,7 +1,8 @@
-package r0
+package object
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/tag"
@@ -26,20 +27,20 @@ type ImageData struct {
 }
 
 type Body struct {
-	Type     ContentType `json:"type"`                      // ALL
-	TS       int64       `json:"ts"`                        // ALL
-	OfBoard  string      `json:"of_board,omitempty"`        // thread, post, thread_vote, post_vote, user_vote
-	OfThread string      `json:"of_thread,omitempty"`       // post, thread_vote
-	OfPost   string      `json:"of_post,omitempty"`         // post (optional), post_vote
-	OfUser   string      `json:"of_user,omitempty"`         // vote
-	Name     string      `json:"name,omitempty"`            // board, thread, post
-	Body     string      `json:"body,omitempty"`            // board, thread, post
-	Images   []*ImageData `json:"images,omitempty"`         // post (optional)
-	Value    int         `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
-	Tag      string      `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
-	Tags     []string    `json:"tags,omitempty"`            // board
-	SubKeys  []string    `json:"submission_keys,omitempty"` // board
-	Creator  string      `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
+	Type     ContentType  `json:"type"`                      // ALL
+	TS       int64        `json:"ts"`                        // ALL
+	OfBoard  string       `json:"of_board,omitempty"`        // thread, post, thread_vote, post_vote, user_vote
+	OfThread string       `json:"of_thread,omitempty"`       // post, thread_vote
+	OfPost   string       `json:"of_post,omitempty"`         // post (optional), post_vote
+	OfUser   string       `json:"of_user,omitempty"`         // vote
+	Name     string       `json:"name,omitempty"`            // board, thread, post
+	Body     string       `json:"body,omitempty"`            // board, thread, post
+	Images   []*ImageData `json:"images,omitempty"`          // post (optional)
+	Value    int          `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
+	Tag      string       `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
+	Tags     []string     `json:"tags,omitempty"`            // board
+	SubKeys  []string     `json:"submission_keys,omitempty"` // board
+	Creator  string       `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
 }
 
 func NewBody(raw []byte) (*Body, error) {
@@ -109,8 +110,8 @@ func (c *Body) GetCreator() (cipher.PubKey, error) {
 }
 
 type Content struct {
-	Header []byte // Contains type, creator public key and signature.
-	Body   []byte // Contains actual content.
+	Header []byte `json:"header,string"` // Contains type, creator public key and signature.
+	Body   []byte `json:"header,string"` // Contains actual content.
 }
 
 func (c *Content) String() string {
@@ -265,17 +266,50 @@ func (h *ContentHeaderData) Verify(upk cipher.PubKey) error {
 	return nil
 }
 
-//func GetVote(vElem *skyobject.RefsElem) (*Vote, error) {
-//	vVal, e := vElem.Value()
-//	if e != nil {
-//		return nil, elemValueErr(e, vElem)
-//	}
-//	v, ok := vVal.(*Vote)
-//	if !ok {
-//		return nil, elemExtErr(vElem)
-//	}
-//	return v, nil
-//}
+/*
+	<<< TRANSPORT >>>
+*/
+
+type Transport struct {
+	Header  *ContentHeaderData
+	Body    *Body
+	Content *Content
+}
+
+func NewTransport(rawBody []byte, sig cipher.Sig) (*Transport, error) {
+	out := new(Transport)
+
+	var e error
+	if out.Body, e = NewBody(rawBody); e != nil {
+		return nil, e
+	}
+
+	creator, e := out.Body.GetCreator()
+	if e != nil {
+		return nil, e
+	}
+
+	out.Header = &ContentHeaderData{
+		Hash: cipher.SumSHA256(rawBody).Hex(),
+		Sig:  sig.Hex(),
+	}
+	if e := out.Header.Verify(creator); e != nil {
+		return nil, e
+	}
+
+	out.Content = new(Content)
+	if out.Content.Header, e = json.Marshal(out.Header); e != nil {
+		return nil, e
+	}
+	out.Content.Body = rawBody
+
+	return out, nil
+}
+
+func (t *Transport) GetOfBoard() cipher.PubKey {
+	pk, _ := t.Body.GetOfBoard()
+	return pk
+}
 
 /*
 	<<< BOARD SUMMARY WRAP >>>
@@ -311,4 +345,14 @@ func jsonMarshal(v interface{}) []byte {
 		log.Println("json marshal error:", e)
 	}
 	return data
+}
+
+func genErrInvalidJSON(e error, what string) error {
+	return boo.WrapType(e, boo.InvalidInput,
+		fmt.Sprintf("failed to read '%s' data", what))
+}
+
+func genErrHeaderUnverified(e error, hash string) error {
+	return boo.WrapType(e, boo.NotAuthorised,
+		fmt.Sprintf("failed to verify content of hash '%s'", hash))
 }

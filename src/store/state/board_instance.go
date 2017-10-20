@@ -6,8 +6,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/typ"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
-	"github.com/skycoin/bbs/src/store/object/transfer"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/bbs/src/store/state/views/content_view"
@@ -31,6 +30,8 @@ var (
 type BoardInstance struct {
 	l *log.Logger
 
+	adders []views.Adder // generates views.
+
 	mux sync.RWMutex // Only use (RLock/RUnlock) with reading root sequence.
 	n   *node.Node
 	p   *skyobject.Pack
@@ -38,6 +39,7 @@ type BoardInstance struct {
 	v   map[string]views.View
 
 	needPublish typ.Bool // Whether there are changes that need to be published.
+	needReset   typ.Bool // Whether a reset is needed.
 	isReceived  typ.Bool // Whether we have received this root.
 	isReady     typ.Bool // Whether we have received a full root.
 }
@@ -48,7 +50,8 @@ func (bi *BoardInstance) Init(n *node.Node, pk cipher.PubKey, adders ...views.Ad
 	bi.n = n
 	bi.v = make(map[string]views.View)
 
-	for _, adder := range adders {
+	bi.adders = adders
+	for _, adder := range bi.adders {
 		views.Add(bi.v, adder)
 	}
 
@@ -162,6 +165,16 @@ func (bi *BoardInstance) PublishChanges() error {
 	}
 	bi.n.Publish(bi.p.Root())
 
+	// Reset header and views if needed.
+	if bi.needReset.Value() {
+		bi.h = nil
+		bi.v = make(map[string]views.View)
+		for _, adder := range bi.adders {
+			views.Add(bi.v, adder)
+		}
+	}
+	bi.needReset.Clear()
+
 	// Update headers.
 	var e error
 	if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
@@ -216,7 +229,7 @@ func (bi *BoardInstance) GetSeq() uint64 {
 }
 
 // GetSummary returns the board's summary in encoded json and signed with board's public key.
-func (bi *BoardInstance) GetSummary(pk cipher.PubKey, sk cipher.SecKey) (*r0.BoardSummaryWrap, error) {
+func (bi *BoardInstance) GetSummary(pk cipher.PubKey, sk cipher.SecKey) (*object.BoardSummaryWrap, error) {
 	v, e := bi.Get(views.Content, content_view.Board)
 	if e != nil {
 		return nil, e
@@ -225,7 +238,7 @@ func (bi *BoardInstance) GetSummary(pk cipher.PubKey, sk cipher.SecKey) (*r0.Boa
 	if e != nil {
 		return nil, e
 	}
-	out := &r0.BoardSummaryWrap{Raw: raw}
+	out := &object.BoardSummaryWrap{Raw: raw}
 	out.Sign(pk, sk)
 	return out, nil
 }
@@ -306,22 +319,54 @@ func (bi *BoardInstance) IsReady() bool {
 	return bi.isReady.Value()
 }
 
-// Export exports root to board json file.
-func (bi *BoardInstance) Export() (*transfer.RootRep, error) {
-	out := new(transfer.RootRep)
-	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
-		pages, e := r0.GetPages(p, true, true, false, false)
+func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.PagesJSON, error) {
+	var out *object.PagesJSON
+	var e = bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		pages, e := object.GetPages(p, &object.GetPagesIn{
+			RootPage:  true,
+			BoardPage: true,
+			DiffPage:  true,
+			UsersPage: true,
+		})
 		if e != nil {
 			return e
 		}
-		return out.Fill(pages.RootPage, pages.BoardPage)
+		out, e = pages.ToJSON(pk, sk)
+		return e
 	})
 	return out, e
 }
 
-// Import imports board json file data to root.
-func (bi *BoardInstance) Import(rep *transfer.RootRep) error {
-	return bi.EditPack(func(p *skyobject.Pack, _ *pack.Headers) error {
-		return rep.Dump(r0.NewGenerator(p))
+func (bi *BoardInstance) Import(in *object.PagesJSON) (uint64, error) {
+	var goal uint64
+	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+		goal = p.Root().Seq + 1
+		pages, e := object.NewPages(p, in)
+		if e != nil {
+			return e
+		}
+		return pages.Save(p)
 	})
+	bi.needReset.Set()
+	return goal, e
 }
+
+// Export exports root to board json file.
+//func (bi *BoardInstance) Export() (*transfer.RootRep, error) {
+//	out := new(transfer.RootRep)
+//	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+//		pages, e := r0.GetPages(p, true, true, false, false)
+//		if e != nil {
+//			return e
+//		}
+//		return out.Fill(pages.RootPage, pages.BoardPage)
+//	})
+//	return out, e
+//}
+
+// Import imports board json file data to root.
+//func (bi *BoardInstance) Import(rep *transfer.RootRep) error {
+//	return bi.EditPack(func(p *skyobject.Pack, _ *pack.Headers) error {
+//		return rep.Dump(r0.NewGenerator(p))
+//	})
+//}

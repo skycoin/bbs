@@ -2,7 +2,7 @@ package pack
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
@@ -14,7 +14,7 @@ import (
 
 type Headers struct {
 	rootSeq uint64
-	changes *r0.Changes
+	changes *object.Changes
 
 	tMux    sync.Mutex
 	threads map[string]cipher.SHA256 // key(thread content hash), value(thread page hash)
@@ -24,7 +24,7 @@ type Headers struct {
 }
 
 func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
-	if len(p.Root().Refs) != r0.RootChildrenCount {
+	if len(p.Root().Refs) != object.RootChildrenCount {
 		return nil, boo.New(boo.InvalidRead,
 			"invalid root")
 	}
@@ -34,14 +34,19 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 	}
 
 	// Get required root children.
-	pages, e := r0.GetPages(p, false, true, true, true)
+	pages, e := object.GetPages(p, &object.GetPagesIn{
+		RootPage:  false,
+		BoardPage: true,
+		DiffPage:  true,
+		UsersPage: true,
+	})
 	if e != nil {
 		return nil, e
 	}
 
 	// Fill threads header data.
 	e = pages.BoardPage.Threads.Ascend(func(i int, tpElem *skyobject.RefsElem) error {
-		tp, e := r0.GetThreadPage(tpElem)
+		tp, e := object.GetThreadPage(tpElem)
 		if e != nil {
 			return e
 		}
@@ -58,7 +63,7 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 
 	// Fill users header data.
 	e = pages.UsersPage.Users.Ascend(func(i int, uapElem *skyobject.RefsElem) error {
-		uap, e := r0.GetUserActivityPage(uapElem)
+		uap, e := object.GetUserProfile(uapElem)
 		if e != nil {
 			return e
 		}
@@ -70,7 +75,7 @@ func NewHeaders(oldHeaders *Headers, p *skyobject.Pack) (*Headers, error) {
 	}
 
 	// Fill initial changes object.
-	var oldChanges *r0.Changes
+	var oldChanges *object.Changes
 	if oldHeaders != nil {
 		oldChanges = oldHeaders.GetChanges()
 	}
@@ -86,7 +91,7 @@ func (h *Headers) GetRootSeq() uint64 {
 	return h.rootSeq
 }
 
-func (h *Headers) GetChanges() *r0.Changes {
+func (h *Headers) GetChanges() *object.Changes {
 	return h.changes
 }
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -289,7 +289,7 @@ func (r *Relay) processNewContent(msg *BBSMessage) (uint64, error) {
 		return 0, e
 	}
 
-	transport, e := r0.NewTransport(content.Body, content.GetHeader().GetSig())
+	transport, e := object.NewTransport(content.Body, content.GetHeader().GetSig())
 	if e != nil {
 		return 0, e
 	}
@@ -311,7 +311,7 @@ func (r *Relay) processResponse(msg *BBSMessage) error {
 	return nil
 }
 
-func (r *Relay) NewContent(ctx context.Context, toPKs []cipher.PubKey, content *r0.Content) (uint64, error) {
+func (r *Relay) NewContent(ctx context.Context, toPKs []cipher.PubKey, content *object.Content) (uint64, error) {
 	return r.multiSendRequest(ctx, toPKs, MsgNewContent, encoder.Serialize(content))
 }
 

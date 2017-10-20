@@ -2,9 +2,9 @@ package state
 
 import (
 	"fmt"
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
@@ -96,13 +96,18 @@ func obtainBoardPubKey(t *testing.T, bi *BoardInstance) cipher.PubKey {
 func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 	var threads []cipher.SHA256
 	bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
-		pages, e := r0.GetPages(p, false, true)
+		pages, e := object.GetPages(p, &object.GetPagesIn{
+			RootPage:  false,
+			BoardPage: true,
+			DiffPage:  false,
+			UsersPage: false,
+		})
 		if e != nil {
 			return e
 		}
 		threads = make([]cipher.SHA256, pages.BoardPage.GetThreadCount())
 		return pages.BoardPage.RangeThreadPages(
-			func(i int, tp *r0.ThreadPage) error {
+			func(i int, tp *object.ThreadPage) error {
 				thread, e := tp.GetThread()
 				if e != nil {
 					t.Fatal("failed to extract thread:", e)
@@ -116,33 +121,37 @@ func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 }
 
 func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte) (cipher.SHA256, uint64) {
+	_, csk := cipher.GenerateDeterministicKeyPair(userSeed)
 	in := &object.NewThreadIO{
-		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
-		Name:           fmt.Sprintf("Thread %d", threadIndex),
-		Body:           fmt.Sprintf("A test thread created of index %d.", threadIndex),
+		BoardPubKeyStr:   obtainBoardPubKey(t, bi).Hex(),
+		Name:             fmt.Sprintf("Thread %d", threadIndex),
+		Body:             fmt.Sprintf("A test thread created of index %d.", threadIndex),
+		CreatorSecKeyStr: csk.Hex(),
 	}
-	if e := in.Process(cipher.GenerateDeterministicKeyPair(userSeed)); e != nil {
+	if e := in.Process(); e != nil {
 		t.Fatal("failed to process new thread input:", e)
 	}
-	goal, e := bi.NewThread(in.Thread)
+	goal, e := bi.Submit(in.Transport)
 	if e != nil {
 		t.Fatal("failed to create new thread:", e)
 	}
-
-	return cipher.SumSHA256(in.Thread.Body), goal
+	hash, _ := keys.GetHash(in.Transport.Header.Hash)
+	return hash, goal
 }
 
 func addPost(t *testing.T, bi *BoardInstance, threadHash cipher.SHA256, postIndex int, userSeed []byte) uint64 {
+	_, csk := cipher.GenerateDeterministicKeyPair(userSeed)
 	in := &object.NewPostIO{
-		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
-		ThreadRefStr:   threadHash.Hex(),
-		Name:           fmt.Sprintf("Post %d", postIndex),
-		Body:           fmt.Sprintf("A test post created of index %d.", postIndex),
+		BoardPubKeyStr:   obtainBoardPubKey(t, bi).Hex(),
+		ThreadRefStr:     threadHash.Hex(),
+		Name:             fmt.Sprintf("Post %d", postIndex),
+		Body:             fmt.Sprintf("A test post created of index %d.", postIndex),
+		CreatorSecKeyStr: csk.Hex(),
 	}
-	if e := in.Process(cipher.GenerateDeterministicKeyPair(userSeed)); e != nil {
+	if e := in.Process(); e != nil {
 		t.Fatal("failed to process new post input:", e)
 	}
-	goal, e := bi.NewPost(in.Post)
+	goal, e := bi.Submit(in.Transport)
 	if e != nil {
 		t.Fatal("failed to create new post:", e)
 	}
