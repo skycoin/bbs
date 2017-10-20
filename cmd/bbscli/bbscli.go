@@ -10,6 +10,10 @@ import (
 	"strconv"
 )
 
+const (
+	Version = "0.5"
+)
+
 var (
 	Port = 8996
 )
@@ -18,10 +22,21 @@ func address() string {
 	return "[::]:" + strconv.Itoa(Port)
 }
 
+func call(method string, in interface{}) error {
+	log.Println(rpc.Send(address())(method, in))
+	return nil
+}
+
+func do(out interface{}, e error) error {
+	log.Println(rpc.Do(out, e))
+	return nil
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "bbscli"
 	app.Usage = "a command-line interface to interact with a Skycoin BBS node"
+	app.Version = Version
 	app.Flags = cli.FlagsByName{
 		cli.IntFlag{
 			Name:        "port, p",
@@ -195,6 +210,10 @@ func main() {
 							Name:  "body, b",
 							Usage: "body of the board",
 						},
+						cli.Int64Flag{
+							Name:  "timestamp, ts",
+							Usage: "(optional) the data's timestamp, leave blank to use current time",
+						},
 						cli.StringFlag{
 							Name:  "seed, s",
 							Usage: "seed to generate key pair of the board",
@@ -204,6 +223,7 @@ func main() {
 						return call(rpc.NewBoard(&object.NewBoardIO{
 							Name: ctx.String("name"),
 							Body: ctx.String("body"),
+							TS:   ctx.Int64("timestamp"),
 							Seed: ctx.String("seed"),
 						}))
 					},
@@ -360,12 +380,17 @@ func main() {
 							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the thread's creator",
 						},
+						cli.Int64Flag{
+							Name:  "timestamp, ts",
+							Usage: "(optional) the data's timestamp, leave blank to use current time",
+						},
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.NewThread(&object.NewThreadIO{
 							BoardPubKeyStr:   ctx.String("board-public-key"),
 							Name:             ctx.String("name"),
 							Body:             ctx.String("body"),
+							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
@@ -394,6 +419,10 @@ func main() {
 							Name:  "body, b",
 							Usage: "body of the post",
 						},
+						cli.Int64Flag{
+							Name:  "timestamp, ts",
+							Usage: "(optional) the data's timestamp, leave blank to use current time",
+						},
 						cli.StringFlag{
 							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the post's creator",
@@ -407,6 +436,7 @@ func main() {
 							PostRefStr:       ctx.String("post-hash"),
 							Name:             ctx.String("name"),
 							Body:             ctx.String("body"),
+							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
@@ -431,6 +461,10 @@ func main() {
 							Name:  "tag, t",
 							Usage: "the vote's tag",
 						},
+						cli.Int64Flag{
+							Name:  "timestamp, ts",
+							Usage: "(optional) the data's timestamp, leave blank to use current time",
+						},
 						cli.StringFlag{
 							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the vote's creator",
@@ -442,6 +476,7 @@ func main() {
 							ThreadRefStr:     ctx.String("thread-hash"),
 							ModeStr:          ctx.String("value"),
 							TagStr:           ctx.String("tag"),
+							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
@@ -466,6 +501,10 @@ func main() {
 							Name:  "tag, t",
 							Usage: "the vote's tag",
 						},
+						cli.Int64Flag{
+							Name:  "timestamp, ts",
+							Usage: "(optional) the data's timestamp, leave blank to use current time",
+						},
 						cli.StringFlag{
 							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the vote's creator",
@@ -477,6 +516,7 @@ func main() {
 							PostRefStr:       ctx.String("post-hash"),
 							ModeStr:          ctx.String("value"),
 							TagStr:           ctx.String("tag"),
+							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
@@ -501,6 +541,10 @@ func main() {
 							Name:  "tag, t",
 							Usage: "the vote's tag",
 						},
+						cli.Int64Flag{
+							Name:  "timestamp, ts",
+							Usage: "(optional) the data's timestamp, leave blank to use current time",
+						},
 						cli.StringFlag{
 							Name:  "creator-secret-key, csk",
 							Usage: "secret key of the vote's creator",
@@ -512,6 +556,7 @@ func main() {
 							UserPubKeyStr:    ctx.String("user-public-key"),
 							ModeStr:          ctx.String("value"),
 							TagStr:           ctx.String("tag"),
+							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
 					},
@@ -522,14 +567,4 @@ func main() {
 	if e := app.Run(os.Args); e != nil {
 		log.Println(e)
 	}
-}
-
-func call(method string, in interface{}) error {
-	log.Println(rpc.Send(address())(method, in))
-	return nil
-}
-
-func do(out interface{}, e error) error {
-	log.Println(rpc.Do(out, e))
-	return nil
 }

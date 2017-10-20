@@ -111,7 +111,7 @@ func (c *Body) GetCreator() (cipher.PubKey, error) {
 
 type Content struct {
 	Header []byte `json:"header"` // Contains type, creator public key and signature.
-	Body   []byte `json:"body"` // Contains actual content.
+	Body   []byte `json:"body"`   // Contains actual content.
 }
 
 func (c *Content) String() string {

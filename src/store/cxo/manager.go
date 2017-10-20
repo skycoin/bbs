@@ -475,7 +475,7 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 		nbIn := &object.NewBoardIO{
 			BoardPubKey: pk,
 			BoardSecKey: sk,
-			Content: new(object.Content),
+			Content:     new(object.Content),
 		}
 		nbIn.Content.SetHeader(&object.ContentHeaderData{})
 		nbIn.Content.SetBody(&object.Body{})
