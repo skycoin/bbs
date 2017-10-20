@@ -17,6 +17,10 @@ import { bounceInAnimation, tabLeftAnimation, tabRightAnimation } from '../anima
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/timer'
 
+// import * as crypto from 'crypto-js';
+
+declare var cipher: any;
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -55,27 +59,48 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api.getAllUser().subscribe(res => {
-      this.autoAilas = res.data.users;
-      this._orginAutoAilas = this.autoAilas;
-    })
+    // const seed = cipher.generateSeed();
+    // const keypair = cipher.generateKeyPair(seed)
+    // const encryptText = crypto.AES.encrypt('nyf', '123456')
+    // console.log('crypto:', encryptText.toString());
+    // const bytes = crypto.AES.decrypt(encryptText.toString(), '123456');
+    // const plaintext = bytes.toString(crypto.enc.Utf8);
+    // console.log('plaintext:', plaintext);
+    // this.api.getAllUser().subscribe(res => {
+    //   this.autoAilas = res.data.users;
+    //   this._orginAutoAilas = this.autoAilas;
+    // })
     this.common.fb = this.fb;
-    this.api.getStats().subscribe(stats => {
-      this.isMasterNode = stats.node_is_master;
-    });
+    // this.api.getStats().subscribe(stats => {
+    //   this.isMasterNode = stats.node_is_master;
+    // });
     Observable.timer(10).subscribe(() => {
       this.pop.open(ToTopComponent, { isDialog: false });
     });
-    this.api.getSessionInfo().subscribe(info => {
-      if (info.okay) {
-        if (info.data.session && info.data.logged_in) {
-          this.isLogIn = info.data.logged_in;
-          this.userName = info.data.session.user.alias;
-          this.userPublicKey = info.data.session.user.public_key;
-          ApiService.userInfo = info.data.session.user;
-        }
-      }
-    })
+    // this.api.getSessionInfo().subscribe(info => {
+    //   if (info.okay) {
+    //     if (info.data.session && info.data.logged_in) {
+    //       this.isLogIn = info.data.logged_in;
+    //       this.userName = info.data.session.user.alias;
+    //       this.userPublicKey = info.data.session.user.public_key;
+    //       ApiService.userInfo = info.data.session.user;
+    //     }
+    //   }
+    // })
+  }
+  openRegister(ev: Event, content: any) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.pop.open(content, { isDialog: true, canClickBackdrop: false }).result.then(result => {
+    }, err => { });
+  }
+  openLogin(ev: Event, content: any) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.pop.open(content, { isDialog: true, canClickBackdrop: false }).result.then(result => {
+    }, err => { });
   }
   selectAlias(ev: Event) {
     ev.stopImmediatePropagation();

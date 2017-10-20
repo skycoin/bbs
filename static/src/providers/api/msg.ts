@@ -134,6 +134,7 @@ export interface ThreadBody {
 }
 export interface Thread {
   body?: ThreadBody;
+  name?: string;
   header?: BaseHeader;
   // author_alias?: string;
   votes?: Votes;

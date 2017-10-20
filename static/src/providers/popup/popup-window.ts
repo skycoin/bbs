@@ -27,12 +27,13 @@ import { PopupRef } from './popup-ref';
 export class PopupWindow implements OnInit {
   // tslint:disable-next-line:no-output-rename
   ref: PopupRef = null;
+  canClick = true;
   constructor(private el: ElementRef) { }
 
   ngOnInit() { }
   @HostListener('click', ['$event'])
   _click(ev: Event) {
-    if (this.ref && this.el.nativeElement === ev.target) {
+    if (this.canClick && this.ref && this.el.nativeElement === ev.target) {
       this.ref.close(false);
     }
   }

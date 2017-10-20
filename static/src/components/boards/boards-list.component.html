@@ -5,7 +5,7 @@
       <div class="card-block">
         <div class="row card-top">
           <div class="col-9">
-            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="board?.body?.name">{{board?.body?.name}} <small class="time">{{board?.body?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
+            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="board?.body?.name">{{board?.body?.name}} <small class="time">{{board?.body?.ts / 1000000 | date: 'M/d/y H:mm'}}</small></a>
 
           </div>
           <div class="col-3">
@@ -25,7 +25,7 @@
       <div class="card-block">
         <div class="row card-top">
           <div class="col-9">
-            <a href="javascript:void(0);" class="title tooltip-normal  break-line" [attr.aria-label]="board?.body?.name">{{board?.body?.name}}<small class="time">{{board?.body?.created / 1000000 | date: 'M/d/y H:mm'}}</small></a>
+            <a href="javascript:void(0);" class="title tooltip-normal  break-line" [attr.aria-label]="board?.body?.name">{{board?.body?.name}}<small class="time">{{board?.body?.ts / 1000000 | date: 'M/d/y H:mm'}}</small></a>
 
           </div>
           <div class="col-3">

@@ -5,7 +5,7 @@ import { PopupStack, PopUpOptions } from './popup-stack';
 export class Popup {
   constructor(private stack: PopupStack) {
   }
-  open(content: any, opts: PopUpOptions = { isAutoLeave: true, isDialog: true }) {
+  open(content: any, opts: PopUpOptions = { isAutoLeave: true, isDialog: true, canClickBackdrop: true }) {
     return this.stack.open(content, opts);
   }
 }

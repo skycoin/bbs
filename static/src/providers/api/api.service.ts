@@ -113,7 +113,12 @@ export class ApiService {
   newPost(jsonStr: string) {
     return this.submit(jsonStr, 'post');
   }
-
+  addThreadVote(jsonStr: string) {
+    return this.submit(jsonStr, 'thread_vote');
+  }
+  addPostVote(jsonStr: string) {
+    return this.submit(jsonStr, 'post_vote');
+  }
   // Other
   newUser(data: FormData) {
     return this.common.handlePost(this.userUrl + 'new', data);
@@ -154,16 +159,11 @@ export class ApiService {
   addOldThreadVote(data: FormData) {
     return this.common.handlePost(this.voteUrl + 'vote_thread', data);
   }
-  addThreadVote(jsonStr: string) {
-    return this.submit(jsonStr, 'thread_vote');
-  }
 
   addOldPostVote(data: FormData) {
     return this.common.handlePost(this.voteUrl + 'vote_post', data);
   }
-  addPostVote(jsonStr: string) {
-    return this.submit(jsonStr, 'post_vote');
-  }
+
 
   getUserVotes(data: FormData) {
     return this.common.handlePost(this.baseUrl + 'threads/votes/get', data);

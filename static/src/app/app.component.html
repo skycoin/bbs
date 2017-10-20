@@ -23,7 +23,9 @@
               placeholder="Input Your Alias">
             <div class="auto-alias" *ngIf="showAilas">
               <ul>
-                <li *ngFor="let user of autoAilas" (click)="selectAlias($event)"><a #aliasItem href="javascript:void(0);">{{user?.alias}}</a></li>
+                <li *ngFor="let user of autoAilas" (click)="selectAlias($event)">
+                  <a #aliasItem href="javascript:void(0);">{{user?.alias}}</a>
+                </li>
               </ul>
             </div>
           </div>
@@ -47,22 +49,26 @@
   <div>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
       aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <!-- <a class="btn btn-light" href="#" role="button">Login</a>
     <a class="use-status-box small-status-box" href="javascript:void(0);" (click)="userAction($event)">
-        <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
-        <div class="pop-box" *ngIf="userMenu">
-            <ul>
-    <!-- <li><a href="javascript:void(0);" (click)="openFollow($event,page)">Follow Page</a></li> -->
-    <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
-    </ul>
-  </div>
-  </a>
+      <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
+      <div class="pop-box" *ngIf="userMenu">
+        <ul>
+          <li>
+            <a href="javascript:void(0);" (click)="logout($event)">Log Out</a>
+          </li>
+        </ul>
+      </div>
+    </a> -->
   </div>
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
       <li class="nav-item">
-        <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Boards<span class="sr-only">(current)</span></a>
+        <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Boards
+          <span class="sr-only">(current)</span>
+        </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" routerLink="/userlist" routerLinkActive="active">Users</a>
@@ -71,29 +77,79 @@
         <a class="nav-link" routerLink="/conn" routerLinkActive="active">Connections</a>
       </li>
     </ul>
+    <div class="navbar-text navbar-user-box">
+      <a class="alias" href="javascript:void(0);" (click)="openLogin($event,login)">
+        <i class="fa fa-user" aria-hidden="true"></i>
+        <span>Login</span>
+      </a>
+      <!-- <span class="">Logout</span> -->
+    </div>
   </div>
-  <a class="use-status-box big-status-box" href="javascript:void(0);" (click)="userAction($event)">
+
+  <!-- <a class="use-status-box big-status-box" href="javascript:void(0);" (click)="userAction($event)">
     <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>{{userName}}
 
     <div class="pop-box" *ngIf="userMenu">
       <ul>
-  <!-- <li><a href="javascript:void(0);" (click)="openFollow($event,page)">Follow Page</a></li> -->
-  <li><a href="javascript:void(0);" (click)="logout($event)">Log Out</a></li>
-  </ul>
-  </div>
-  </a>
+        <li>
+          <a href="javascript:void(0);" (click)="logout($event)">Log Out</a>
+        </li>
+      </ul>
+    </div>
+  </a> -->
   <div class="nav-overlay"></div>
   <div class="overlay" *ngIf="userMenu" (click)="userAction($event)">
   </div>
 </nav>
 <router-outlet></router-outlet>
+
+<ng-template #create let-c="close">
+  <div class="pop-dialog register-box" [@bounceIn]>
+    <div class="modal-header">
+      <h4 class="modal-title">Create an Identity </h4>
+    </div>
+    <div class="modal-body create-box">
+      <form>
+        <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+          <div class="input-group-addon">Alias</div>
+          <input type="text" class="form-control" id="alias">
+        </div>
+        <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+          <div class="input-group-addon">Seed</div>
+          <input type="text" class="form-control" id="seed">
+          <div class="input-group-addon">
+            <i class="fa fa-refresh" aria-hidden="true"></i>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-lg btn-block" (click)="c(false)">Close</button>
+      <button type="button" class="btn btn-lg btn-block create-btn">Create</button>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #login let-c="close">
+  <div class="pop-dialog register-box" [@bounceIn]>
+    <div class="modal-header">
+      <h4 class="modal-title">Set the active identity</h4>
+    </div>
+    <div class="modal-body">
+      Select an identity
+    </div>
+  </div>
+</ng-template>
+
+
+
 <ng-template #page let-c="close">
   <div class="pop-dialog" [@bounceIn]>
     <div class="modal-header">
       <h5 class="modal-title" id="exampleModalLongTitle">Follow Page</h5>
       <button type="button" class="close" data-dismiss="modal" aria-label="Close" (click)="c(false)">
-            <span aria-hidden="true">&times;</span>
-          </button>
+        <span aria-hidden="true">&times;</span>
+      </button>
     </div>
     <div class="modal-body">
       <p class="text-center follow-hint" *ngIf="userFollow?.following?.length <= 0 && userFollow?.avoiding?.length <= 0">No Found Following/Avoiding User</p>

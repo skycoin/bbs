@@ -1,5 +1,5 @@
 <div class="container">
-  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="threadPage?.data?.thread?.body?.body?.name != '' "
+  <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="threadPage?.data?.thread?.body?.name != '' "
     [@flyInOut]>
     <div class="content-box">
       <div class="other-block">
@@ -11,7 +11,7 @@
           <small class="text-muted">
             replies
             <span class="replies">{{threadPage?.data?.posts?.length}}</span> &nbsp;• &nbsp; created &nbsp;
-            <span>{{threadPage?.data?.thread?.body?.created / 1000000 | date:'M/d/y H:mm'}}</span>
+            <span>{{threadPage?.data?.thread?.body?.ts / 1000000 | date:'M/d/y H:mm'}}</span>
           </small>
         </div>
       </div>
@@ -38,7 +38,7 @@
             <div class="row post-title-box">
               <div class="col-10 title-content-box">
                 <a href="javascript:void(0);" class="creator tooltip-normal break-line" [attr.aria-label]="item?.body?.creator">{{item?.body?.creator}}
-                  <small class="time">{{item?.body?.created / 1000000 | date:'M/d/y H:mm'}}</small>
+                  <small class="time">{{item?.body?.ts / 1000000 | date:'M/d/y H:mm'}}</small>
                 </a>
               </div>
               <div class="col text-right other">

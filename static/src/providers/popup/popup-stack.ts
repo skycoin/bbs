@@ -23,7 +23,7 @@ export class PopupStack {
     this._windowFactory = _componentFactoryResolver.resolveComponentFactory(PopupWindow);
     this._backdropFactory = _componentFactoryResolver.resolveComponentFactory(PopupBackdrop);
   }
-  open(content: any, opts: PopUpOptions = { isAutoLeave: true, isDialog: true }) {
+  open(content: any, opts: PopUpOptions = { isAutoLeave: true, isDialog: true, canClickBackdrop: true }) {
     let windowCmpRef: ComponentRef<PopupWindow>
     const containerEl = document.body;
     const activeModal = new ActivePop();
@@ -52,6 +52,7 @@ export class PopupStack {
       containerEl.appendChild(backdropCmptRef.location.nativeElement);
       ref._backdropRef = backdropCmptRef;
       windowCmpRef.instance.ref = ref;
+      windowCmpRef.instance.canClick = opts.canClickBackdrop;
     }
     activeModal.close = (result: any) => { ref.close(result); };
     containerEl.appendChild(windowCmpRef.location.nativeElement);
@@ -65,6 +66,7 @@ export class PopupStack {
 export interface PopUpOptions {
   isDialog?: boolean;
   isAutoLeave?: boolean;
+  canClickBackdrop?: boolean;
 }
 
 

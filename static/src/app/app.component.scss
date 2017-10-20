@@ -2,6 +2,24 @@
   .nav-box {
     display: inline-block;
   }
+  .navbar-user-box {
+    a {
+      &:hover {
+        text-decoration: none;
+      }
+    }
+    .alias {
+      color: #ceea4b;
+      margin-right: .5rem;
+      &:hover {
+        color: yellow;
+      }
+    }
+    .logged {
+      border-right: 1px solid rgba(255, 255, 255, 0.5);
+      padding-right: .5rem;
+    }
+  }
   .login-register-box {
     position: absolute; // display: flex;
     right: 1%;
@@ -226,6 +244,46 @@
     }
     i {
       margin-right: 5px;
+    }
+  }
+}
+
+// other
+.register-box {
+  border-radius: .75rem;
+  .btn {
+    border-radius: .25rem;
+    margin-bottom: 1rem;
+    font-weight: normal;
+  }
+  .btn-block + .btn-block {
+    margin-top: 0;
+  }
+  input[type="text"] {
+    &:focus {
+      box-shadow: none;
+    }
+  }
+  .create-btn {
+    background-color: rgb(255, 71, 71);
+    color: #fff;
+  }
+  .modal-header {
+    justify-content: center;
+    border-bottom: none;
+  }
+  .modal-footer {
+    justify-content: center;
+    border-top: none;
+  }
+  .create-box {
+    form {
+      .input-group {
+        margin: 1.5rem 0;
+        .input-group-addon {
+          background-color: transparent;
+        }
+      }
     }
   }
 }
