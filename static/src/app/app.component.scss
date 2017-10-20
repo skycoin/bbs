@@ -251,6 +251,19 @@
 // other
 .register-box {
   border-radius: .75rem;
+  .operation {
+    cursor: pointer;
+  }
+  .input-group {
+    margin: 1.5rem 0;
+    .input-group-addon {
+      background-color: transparent;
+    }
+  }
+  .close-btn {
+    background-color: #999;
+    color: #fff;
+  }
   .hint-text {
     text-align: center;
     color: #999;
@@ -265,13 +278,16 @@
     margin-bottom: 1rem;
     font-weight: normal;
   }
-  .btn-block + .btn-block {
+  .btn-block+.btn-block {
     margin-top: 0;
   }
   input[type="text"] {
     &:focus {
       box-shadow: none;
     }
+  }
+  input[type="password"] {
+    padding: .75rem 1rem;
   }
   .create-btn {
     background-color: rgb(255, 71, 71);

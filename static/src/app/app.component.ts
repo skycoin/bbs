@@ -49,8 +49,9 @@ export class AppComponent implements OnInit {
   showAilas = false;
   autoAliasIndex = -1;
   userFollow: FollowPageDataInfo = {};
-  userList = []
+  userList = [];
   selectUser = '';
+  showPassword = false;
   constructor(
     private api: ApiService,
     public common: CommonService,
@@ -90,10 +91,22 @@ export class AppComponent implements OnInit {
     //   }
     // })
   }
+  isShowPassword(ev: Event, input: any) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.showPassword = !this.showPassword;
+    if (this.showPassword) {
+      input.type = 'text';
+    } else {
+      input.type = 'password';
+    }
+  }
   openRegister(ev: Event, content: any) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
+    this.showPassword = false;
     this.pop.open(content, { isDialog: true, canClickBackdrop: false }).result.then(result => {
     }, err => { });
   }
@@ -101,6 +114,8 @@ export class AppComponent implements OnInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
+    this.selectUser = '';
+    this.showPassword = false;
     this.pop.open(content, { isDialog: true, canClickBackdrop: false }).result.then(result => {
     }, err => { });
   }

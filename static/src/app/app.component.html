@@ -121,6 +121,13 @@
             <i class="fa fa-refresh" aria-hidden="true"></i>
           </div>
         </div>
+        <div class="input-group mb-2 mr-sm-2 mb-sm-0" *ngIf="selectUser">
+          <div class="input-group-addon">Password</div>
+          <input type="password" class="form-control" id="registerPass" #registerPass>
+          <div class="input-group-addon operation" (click)="isShowPassword($event,registerPass)">
+            <i class="fa fa-eye" aria-hidden="true" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
+          </div>
+        </div>
       </form>
     </div>
     <div class="modal-footer">
@@ -137,10 +144,21 @@
     </div>
     <div class="modal-body">
       <select-list *ngIf="userList?.length > 0" [list]="userList" [(ngModel)]="selectUser"></select-list>
+      <div class="input-group mb-2 mr-sm-2 mb-sm-0" *ngIf="selectUser">
+        <div class="input-group-addon">Password</div>
+        <input type="password" class="form-control" id="loginPass" #loginPass>
+        <div class="input-group-addon operation" (click)="isShowPassword($event,loginPass)">
+          <i class="fa fa-eye" aria-hidden="true" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
+        </div>
+      </div>
       <div *ngIf="userList?.length <= 0" class="hint-text">
         <span>You can create an identity</span>
         <i class="fa fa-plus-circle" aria-hidden="true"></i>
       </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn close-btn" (click)="c(false)">Close</button>
+      <button type="button" class="btn create-btn">Login</button>
     </div>
   </div>
 </ng-template>
