@@ -37,7 +37,7 @@ NewSubscription 7414 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7a
 
 # Add some threads.
 
-for i in {1..5}
+for i in {1..2}
 do
     NewThread 5414 "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b" \
         "Test Thread ${i}" "A description of thread ${i}." \
@@ -45,7 +45,7 @@ do
 done
 
 
-for i in {1..5}
+for i in {1..2}
 do
     NewThread 5414 "02c9d0d1faca3c852c307b4391af5f353e63a296cded08c1a819f03b7ae768530b" \
         "Test Thread ${i}" "A description of thread ${i}." \

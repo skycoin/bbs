@@ -167,24 +167,40 @@ func (bi *BoardInstance) PublishChanges() error {
 
 	// Reset header and views if needed.
 	if bi.needReset.Value() {
-		bi.h = nil
+
+		// Reset headers.
+		var e error
+		if bi.h, e = pack.NewHeaders(nil, bi.p); e != nil {
+			return boo.WrapType(e, boo.Internal, "failed to reset headers")
+		}
+
+		// Reset views.
 		bi.v = make(map[string]views.View)
 		for _, adder := range bi.adders {
 			views.Add(bi.v, adder)
 		}
-	}
-	bi.needReset.Clear()
+		for _, view := range bi.v {
+			if e := view.Init(bi.p, bi.h); e != nil {
+				return boo.WrapType(e, boo.Internal, "failed to re-initiate view")
+			}
+		}
 
-	// Update headers.
-	var e error
-	if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
-		return boo.WrapType(e, boo.Internal, "failed to generate new headers")
-	}
+		// End the need to reset.
+		bi.needReset.Clear()
 
-	// Update views.
-	for _, view := range bi.v {
-		if e := view.Update(bi.p, bi.h); e != nil {
-			return boo.WrapType(e, boo.Internal, "failed to update view")
+	} else {
+
+		// Update headers.
+		var e error
+		if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
+			return boo.WrapType(e, boo.Internal, "failed to generate new headers")
+		}
+
+		// Update views.
+		for _, view := range bi.v {
+			if e := view.Update(bi.p, bi.h); e != nil {
+				return boo.WrapType(e, boo.Internal, "failed to update view")
+			}
 		}
 	}
 
@@ -338,6 +354,7 @@ func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.Pag
 }
 
 func (bi *BoardInstance) Import(in *object.PagesJSON) (uint64, error) {
+	defer log.Println("IMPORT OKAY HERE!")
 	var goal uint64
 	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		goal = p.Root().Seq + 1
@@ -350,23 +367,3 @@ func (bi *BoardInstance) Import(in *object.PagesJSON) (uint64, error) {
 	bi.needReset.Set()
 	return goal, e
 }
-
-// Export exports root to board json file.
-//func (bi *BoardInstance) Export() (*transfer.RootRep, error) {
-//	out := new(transfer.RootRep)
-//	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
-//		pages, e := r0.GetPages(p, true, true, false, false)
-//		if e != nil {
-//			return e
-//		}
-//		return out.Fill(pages.RootPage, pages.BoardPage)
-//	})
-//	return out, e
-//}
-
-// Import imports board json file data to root.
-//func (bi *BoardInstance) Import(rep *transfer.RootRep) error {
-//	return bi.EditPack(func(p *skyobject.Pack, _ *pack.Headers) error {
-//		return rep.Dump(r0.NewGenerator(p))
-//	})
-//}

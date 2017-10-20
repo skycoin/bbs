@@ -248,8 +248,8 @@ func main() {
 					Usage: "imports a board",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
-							Name:  "public-key, pk",
-							Usage: "public key of the board to import data to",
+							Name:  "secret-key, sk",
+							Usage: "secret key of the board to import data to",
 						},
 						cli.StringFlag{
 							Name:  "file-path, fp",
@@ -257,8 +257,8 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.ImportBoard(&object.ExportBoardIO{
-							PubKeyStr: ctx.String("public-key"),
+						return call(rpc.ImportBoard(&object.ImportBoardIO{
+							SecKeyStr: ctx.String("secret-key"),
 							FilePath:  ctx.String("file-path"),
 						}))
 					},

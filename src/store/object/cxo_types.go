@@ -7,7 +7,6 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"sync"
-	"log"
 )
 
 const (
@@ -49,7 +48,7 @@ type Pages struct {
 
 type PagesJSON struct {
 	PubKey    string         `json:"public_key"`
-	SecKey    string         `json:"secret_key"`
+	SecKey    string         `json:"secret_key,omitempty"`
 	RootPage  *RootPage      `json:"root_page"`
 	BoardPage *BoardPageJSON `json:"board_page"`
 	DiffPage  *DiffPageJSON  `json:"diff_page"`
@@ -375,8 +374,6 @@ func (tp *ThreadPage) ToJSON() (*ThreadPageJSON, error) {
 	var e error
 	if out.Thread, e = tp.GetThread(); e != nil {
 		return nil, e
-	} else {
-		log.Println("GOT THEAD:", out.Thread)
 	}
 	e = tp.RangePosts(func(i int, post *Content) error {
 		out.Posts[i] = post

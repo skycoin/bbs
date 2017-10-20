@@ -152,6 +152,36 @@ NewBoard() {
         -seed="${SEED}"
 }
 
+ExportBoard() {
+    if [[ $# -ne 3 ]] ; then
+        echo "3 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; PK=$2 ; LOC=$3
+
+    pv "NODE '${PORT}': EXPORT BOARD '${PK}' TO '${LOC}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content export_board \
+        -public-key="${PK}" \
+        -file-path="${LOC}"
+}
+
+ImportBoard() {
+    if [[ $# -ne 3 ]] ; then
+        echo "3 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; SK=$2 ; LOC=$3
+
+    pv "NODE '${PORT}': IMPORT BOARD FROM '${LOC}' TO SECRET '${SK}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content import_board \
+        -secret-key="${SK}" \
+        -file-path="${LOC}"
+}
+
 NewThread() {
     if [[ $# -ne 5 ]] ; then
         echo "5 arguments required"
