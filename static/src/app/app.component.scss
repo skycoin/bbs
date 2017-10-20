@@ -251,6 +251,15 @@
 // other
 .register-box {
   border-radius: .75rem;
+  .hint-text {
+    text-align: center;
+    color: #999;
+    text-decoration: underline;
+    cursor: pointer;
+    &:hover {
+      color: #c3c2c2;
+    }
+  }
   .btn {
     border-radius: .25rem;
     margin-bottom: 1rem;

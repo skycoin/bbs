@@ -23,6 +23,7 @@ import {
   FabButton,
   ToTopComponent,
   ChipComponent,
+  SelectListComponent,
 } from '../components';
 import { SafeHTMLPipe, OrderByPipe, RepalcePipe, CutTextPipe } from '../pipes';
 import { ClipDirective, EditorDirective, FocusDirective } from '../directives/index';
@@ -59,6 +60,7 @@ import { DialogModule } from '../providers/dialog/dialog.module';
     FixedButtonComponent,
     ToTopComponent,
     ChipComponent,
+    SelectListComponent,
     // Pipes
     SafeHTMLPipe,
     OrderByPipe,

@@ -5,6 +5,7 @@ export * from './userlist/userlist.component';
 export * from './connection/connection.component';
 export * from './fixed-button/fixed-button.component';
 export * from './chip/chip.component';
+export * from './select-list/select-list.component';
 
 // Modal
 export * from './alert/alert.component';

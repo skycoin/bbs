@@ -1,0 +1,10 @@
+<div class="select-list">
+  <div class="hint-text-box" (click)="showList = !showList">
+    <span *ngIf="selectValue">{{selectValue}}</span>
+    <span class="hint-text" *ngIf="!selectValue">select-list component</span>
+    <i class="fa fa-caret-down" aria-hidden="true" *ngIf="!selectValue"></i>
+  </div>
+  <ul class="dropdown-list" *ngIf="showList">
+    <li *ngFor="let item of list" (click)="select($event,item)">{{item}}</li>
+  </ul>
+</div>

@@ -49,6 +49,8 @@ export class AppComponent implements OnInit {
   showAilas = false;
   autoAliasIndex = -1;
   userFollow: FollowPageDataInfo = {};
+  userList = []
+  selectUser = '';
   constructor(
     private api: ApiService,
     public common: CommonService,

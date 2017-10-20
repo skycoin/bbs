@@ -136,7 +136,11 @@
       <h4 class="modal-title">Set the active identity</h4>
     </div>
     <div class="modal-body">
-      Select an identity
+      <select-list *ngIf="userList?.length > 0" [list]="userList" [(ngModel)]="selectUser"></select-list>
+      <div *ngIf="userList?.length <= 0" class="hint-text">
+        <span>You can create an identity</span>
+        <i class="fa fa-plus-circle" aria-hidden="true"></i>
+      </div>
     </div>
   </div>
 </ng-template>
