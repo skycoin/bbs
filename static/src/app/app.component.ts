@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, HostListener, QueryList, ViewChildren, ElementRef, Renderer } from '@angular/core';
 import {
   ApiService,
+  UserService,
   CommonService,
   Alert,
   LoadingService,
@@ -16,6 +17,7 @@ import 'rxjs/add/operator/filter';
 import { bounceInAnimation, tabLeftAnimation, tabRightAnimation } from '../animations/common.animations';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/timer'
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 // import * as crypto from 'crypto-js';
 
@@ -52,16 +54,26 @@ export class AppComponent implements OnInit {
   userList = [];
   selectUser = '';
   showPassword = false;
+  createForm = new FormGroup({
+    alias: new FormControl('', Validators.required),
+    seed: new FormControl('', Validators.required),
+    password: new FormControl('', Validators.required)
+  });
   constructor(
     private api: ApiService,
     public common: CommonService,
     private alert: Alert,
     private loading: LoadingService,
     private pop: Popup,
-    private render: Renderer) {
+    private render: Renderer,
+    private user: UserService,
+  ) {
   }
 
   ngOnInit() {
+    this.userList = this.user.getUserList();
+    // console.log('user:', this.user.getItem('1'));
+    // this.user.setItem('1', '123123123');
     // const seed = cipher.generateSeed();
     // const keypair = cipher.generateKeyPair(seed)
     // const encryptText = crypto.AES.encrypt('nyf', '123456')
@@ -110,14 +122,31 @@ export class AppComponent implements OnInit {
     this.pop.open(content, { isDialog: true, canClickBackdrop: false }).result.then(result => {
     }, err => { });
   }
-  openLogin(ev: Event, content: any) {
+  openLogin(ev: Event, login, create: any) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
     this.selectUser = '';
     this.showPassword = false;
-    this.pop.open(content, { isDialog: true, canClickBackdrop: false }).result.then(result => {
+    this.pop.open(login, { isDialog: true, canClickBackdrop: false }).result.then(result => {
+      if (result === 'create') {
+        this.createForm.patchValue({ seed: this.user.newSeed() });
+        this.pop.open(create, { isDialog: true, canClickBackdrop: false }).result.then(createRsult => {
+          if (createRsult) {
+            const json = this.user.newKeyPair(this.createForm.get('seed').value)
+            const password = this.createForm.get('password').value;
+            const alias = this.createForm.get('alias').value;
+            this.user.setItem(alias, this.user.encrypt(JSON.stringify(json), password));
+          }
+        }, err => { });
+      }
     }, err => { });
+  }
+  newSeed(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.createForm.patchValue({ seed: this.user.newSeed() });
   }
   selectAlias(ev: Event) {
     ev.stopImmediatePropagation();

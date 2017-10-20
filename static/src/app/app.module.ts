@@ -5,7 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
-import { ApiService, CommonService } from '../providers';
+import { ApiService, CommonService, UserService } from '../providers';
 import { AppRouterRoutingModule } from '../router/app-router-routing.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -72,7 +72,7 @@ import { DialogModule } from '../providers/dialog/dialog.module';
     FocusDirective
   ],
   entryComponents: [AlertComponent, FixedButtonComponent, ToTopComponent],
-  providers: [CommonService, ApiService, {
+  providers: [CommonService, ApiService, UserService, {
     provide: HTTP_INTERCEPTORS,
     useClass: NoopInterceptor,
     multi: true,
