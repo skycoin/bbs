@@ -183,12 +183,12 @@ ImportBoard() {
 }
 
 NewThread() {
-    if [[ $# -ne 5 ]] ; then
-        echo "5 arguments required"
+    if [[ $# -ne 6 ]] ; then
+        echo "6 arguments required"
         exit 1
     fi
 
-    PORT=$1 ; BPK=$2 ; NAME=$3 ; BODY=$4 ; CSK=$5
+    PORT=$1 ; BPK=$2 ; NAME=$3 ; BODY=$4 ; CSK=$5 ; TS=$6
 
     pv "NODE '${PORT}': NEW THREAD '${NAME}'"
 
@@ -196,16 +196,17 @@ NewThread() {
         -board-public-key="${BPK}" \
         -name="${NAME}" \
         -body="${BODY}" \
-        -creator-secret-key="${CSK}"
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
 }
 
 NewPost() {
-    if [[ $# -ne 6 ]] ; then
-        echo "6 arguments required"
+    if [[ $# -ne 7 ]] ; then
+        echo "7 arguments required"
         exit 1
     fi
 
-    PORT=$1 ; BPK=$2 ; THASH=$3 ; NAME=$4 ; BODY=$5 ; CSK=$6
+    PORT=$1 ; BPK=$2 ; THASH=$3 ; NAME=$4 ; BODY=$5 ; CSK=$6 ; TS=$7
 
     pv "NODE '${PORT}': NEW POST '${NAME}'"
 
@@ -214,5 +215,6 @@ NewPost() {
         -thread-hash="${THASH}" \
         -name="${NAME}" \
         -body="${BODY}" \
-        -creator-secret-key="${CSK}"
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
 }

@@ -32,8 +32,24 @@ NewBoard 7414 "Board B" "Board with seed 'b'." "b"
 # Create threads in Board A.
 for i in {1..2}
 do
-    # RPC | BPK | NAME | BODY | USK
-    NewThread 7414 ${A_PK} "Thread ${i}" "This is a thread of index ${i}." ${USER_SK}
+    # RPC | BPK | NAME | BODY | USK | TS
+    NewThread 7414 ${A_PK} "Thread ${i}" "This is a thread of index ${i}." ${USER_SK} ${i}
+done
+
+# Thread hashes:
+T_HASH_1=2cb0aa27b98e4cdf043c5f2d9d5e2b2307e90cb216e0e36e847a7ea0cf6e603d
+T_HASH_2=d24712541878aae276edf2db957605e177c24ef843cafc8f39d87ae2ab1485d5
+
+# Create posts in threads.
+for i in {1..2}
+do
+    # RPC | BPK | T_HASH | NAME | BODY | CSK | TS
+    NewPost 7414 ${A_PK} ${T_HASH_1} "Post ${i}" "This is a post of index ${i}." ${USER_SK} ${i}
+done
+for i in {1..2}
+do
+    # RPC | BPK | T_HASH | NAME | BODY | CSK | TS
+    NewPost 7414 ${A_PK} ${T_HASH_2} "Post ${i}" "This is a post of index ${i}." ${USER_SK} ${i}
 done
 
 # Export (RPC | BPK | LOC) : Board A -> file.
@@ -46,3 +62,5 @@ ImportBoard 7414 ${B_SK} a.json
 sleep 1
 pv2 "ALL DONE"
 wait
+
+rm a.json*
