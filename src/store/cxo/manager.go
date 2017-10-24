@@ -473,14 +473,12 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 	}
 	if m.file.HasMasterSub(pk) == false {
 		nbIn := &object.NewBoardIO{
-			Name:        "Temporary Board",
-			Body:        "This is a temporary board.",
 			BoardPubKey: pk,
 			BoardSecKey: sk,
+			Content:     new(object.Content),
 		}
-		if e := nbIn.Process(m.Relay().GetKeys()); e != nil {
-			return e
-		}
+		nbIn.Content.SetHeader(&object.ContentHeaderData{})
+		nbIn.Content.SetBody(&object.Body{})
 		if e := m.NewBoard(nbIn); e != nil {
 			return e
 		}
@@ -495,48 +493,3 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 	}
 	return bi.WaitSeq(ctx, goal)
 }
-
-//func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
-//	if *m.c.Memory {
-//		return "", nil, nil
-//	}
-//	bi, e := m.compiler.GetBoard(pk)
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	out, e := bi.Export()
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	path := m.exportPath(name)
-//	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
-//		return "", nil, e
-//	}
-//	return path, out, nil
-//}
-
-//func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
-//	if *m.c.Memory {
-//		return "", nil, nil
-//	}
-//
-//	path := m.exportPath(name)
-//	out := new(transfer.RootRep)
-//	if e := file.LoadJSON(path, out); e != nil {
-//		return "", nil, e
-//	}
-//
-//	_, has := m.file.GetMasterSubSecKey(pk)
-//	if !has {
-//		return "", nil, boo.Newf(boo.NotAuthorised,
-//			"this node is not the master of board of public key '%s'", pk.Hex())
-//	}
-//	bi, e := m.compiler.GetBoard(pk)
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	if e := bi.Import(out); e != nil {
-//		return "", nil, e
-//	}
-//	return path, out, nil
-//}

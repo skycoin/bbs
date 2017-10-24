@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -39,6 +40,7 @@ const (
 	valMode         = "mode"
 	valTagStr       = "tagStr"
 	valTag          = "tag"
+	valEnsureTS     = "ts"
 )
 
 func MultiProcess(objects ...interface{}) error {
@@ -212,6 +214,12 @@ func process(tm tMap) error {
 	if address, has := tm[valAddress]; has {
 		if e := CheckAddress(address.String()); e != nil {
 			return e
+		}
+	}
+	// Ensure timestamp.
+	if ts, has := tm[valEnsureTS]; has {
+		if ts.Int() == 0 {
+			tm.set(valEnsureTS, time.Now().UnixNano())
 		}
 	}
 	return nil
