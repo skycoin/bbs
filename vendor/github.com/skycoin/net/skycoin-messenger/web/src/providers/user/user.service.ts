@@ -20,7 +20,13 @@ export class UserService {
     const zeros = new Array(len).join('0');
     return (zeros + str).slice(-len);
   }
-
+  getRandomRgb() {
+    const num = Math.round(0xffffff * Math.random());
+    const r = num >> 16;
+    const g = num >> 8 & 255;
+    const b = num & 255;
+    return [r, g, b];
+  }
   getRandomColor() {
     const color = Math.round(Math.random() * 0x1000000).toString(16);
     return '#' + this.padZero(color, 6);

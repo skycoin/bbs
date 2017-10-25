@@ -44,15 +44,8 @@ func (r *Relay) Open(compiler *state.Compiler) error {
 }
 
 func (r *Relay) Close() {
-	for {
-		select {
-		case r.quit <- struct{}{}:
-		default:
-			r.factory.Close()
-			r.wg.Wait()
-			return
-		}
-	}
+	close(r.quit)
+	r.wg.Wait()
 }
 
 func (r *Relay) Connect(address string) (cipher.PubKey, error) {
@@ -78,58 +71,62 @@ func (r *Relay) Disconnect(key cipher.PubKey) bool {
 }
 
 func (r *Relay) connectionService(conn *factory.Connection) {
-	r.wg.Add(1)
-	defer r.wg.Done()
+	r.l.Printf("service started for connection: address(%s) public_key(%s)",
+		conn.GetRemoteAddr().String(), conn.GetKey().Hex())
 
 	var (
 		address = conn.GetRemoteAddr().String()
 		pk      = conn.GetKey()
 	)
 
-	r.l.Printf("(%s:%s) connected",
-		address, pk.Hex()[:5]+"...")
+	go func(r *Relay, conn *factory.Connection) {
+		r.wg.Add(1)
+		defer r.wg.Done()
 
-	for {
-		select {
-		case <-r.quit:
-			return
-
-		case data, ok := <-conn.GetChanIn():
-
-			if !ok {
-				r.disconnectChan <- address
-				r.l.Printf("(%s:%s) disconnected",
-					address, pk.Hex()[:5]+"...")
+		for {
+			select {
+			case <-r.quit:
 				return
-			}
 
-			wrapper, e := NewWrapper(data)
-			if e != nil {
-				r.l.Printf("(%s:%s) received invalid message, error: %v",
-					address, pk.Hex()[:5]+"...", e)
-				continue
-			} else {
-				r.l.Printf("(%s:%s) received message of type '%s'",
-					address, pk.Hex()[:5]+"...", wrapper.GetType().String())
-			}
+			case data, ok := <-conn.GetChanIn():
 
-			switch wrapper.GetType() {
-			case SubmissionType:
-				e := send(conn, wrapper.GetFromPK(), SubmissionResponseType,
-					NewSubmissionResponse(r.processSubmission(conn, address, pk, wrapper)).Serialize())
-				if e != nil {
-					r.l.Println("failed to send message, error:", e)
+				if !ok {
+					r.disconnectChan <- address
+					r.l.Printf("(%s:%s) disconnected",
+						address, pk.Hex()[:5]+"...")
+					return
 				}
 
-			case SubmissionResponseType:
-				if res, e := wrapper.ToSubmissionResponse(); e != nil {
-					r.l.Println("failed to obtain submission response, error:", e)
+				wrapper, e := NewWrapper(data)
+				if e != nil {
+					r.l.Printf("(%s:%s) received invalid message, error: %v",
+						address, pk.Hex()[:5]+"...", e)
+					continue
 				} else {
-					r.incomplete.Satisfy(res)
+					r.l.Printf("(%s:%s) received message of type '%s'",
+						address, pk.Hex()[:5]+"...", wrapper.GetType().String())
+				}
+
+				switch wrapper.GetType() {
+				case SubmissionType:
+					e := send(conn, wrapper.GetFromPK(), SubmissionResponseType,
+						NewSubmissionResponse(r.processSubmission(conn, address, pk, wrapper)).Serialize())
+					if e != nil {
+						r.l.Println("failed to send message, error:", e)
+					}
+
+				case SubmissionResponseType:
+					if res, e := wrapper.ToSubmissionResponse(); e != nil {
+						r.l.Println("failed to obtain submission response, error:", e)
+					} else {
+						r.incomplete.Satisfy(res)
+					}
 				}
 			}
 		}
-	}
+	}(r, conn)
+
+	r.l.Printf("(%s:%s) connected", address, pk.Hex()[:5]+"...")
 }
 
 func (r *Relay) processSubmission(conn *factory.Connection, address string, pk cipher.PubKey, wrapper *Wrapper) (
@@ -166,8 +163,6 @@ func (r *Relay) processSubmission(conn *factory.Connection, address string, pk c
 func send(conn *factory.Connection, toPK cipher.PubKey, t Type, body []byte) error {
 	return conn.Send(toPK, append([]byte{byte(t)}, body...))
 }
-
-//func (r *Relay) NewSubmission(ctx context.Context, subKeys )
 
 func (r *Relay) SubmitToRemote(ctx context.Context, fromPK, toPK cipher.PubKey, data interface{}) (uint64, error) {
 	switch t := data.(type) {
@@ -208,6 +203,7 @@ func (r *Relay) SubmissionKeys() []*object.MessengerSubKeyTransport {
 			PubKey:  conn.GetKey(),
 		})
 	})
+	r.l.Println("got submission keys")
 	return out
 }
 

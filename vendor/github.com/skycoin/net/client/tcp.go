@@ -1,9 +1,10 @@
 package client
 
 import (
-	"github.com/skycoin/net/conn"
 	"net"
 	"time"
+
+	"github.com/skycoin/net/conn"
 )
 
 type ClientTCPConn struct {
@@ -11,11 +12,17 @@ type ClientTCPConn struct {
 }
 
 func NewClientTCPConn(c net.Conn) *ClientTCPConn {
-	return &ClientTCPConn{conn.TCPConn{TcpConn: c, ConnCommonFields: conn.NewConnCommonFileds()}}
+	return &ClientTCPConn{
+		TCPConn: conn.TCPConn{
+			TcpConn:          c,
+			ConnCommonFields: conn.NewConnCommonFileds(),
+			PendingMap:       conn.NewPendingMap(),
+		},
+	}
 }
 
 func (c *ClientTCPConn) WriteLoop() (err error) {
-	ticker := time.NewTicker(time.Second * TICK_PERIOD)
+	ticker := time.NewTicker(time.Second * conn.TCP_PINGTICK_PERIOD)
 	defer func() {
 		ticker.Stop()
 		if err != nil {
@@ -25,7 +32,6 @@ func (c *ClientTCPConn) WriteLoop() (err error) {
 	for {
 		select {
 		case <-ticker.C:
-			c.CTXLogger.Debug("ping out")
 			err := c.Ping()
 			if err != nil {
 				return err

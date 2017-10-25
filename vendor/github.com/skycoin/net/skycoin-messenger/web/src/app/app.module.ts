@@ -15,7 +15,7 @@ import {
   EditorComponent
 } from '../components';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { SocketService, UserService, EmojiService } from '../providers';
+import { SocketService, UserService, EmojiService, ModalService, ModalWindow } from '../providers';
 import { ToolService } from '../providers/tool/tool.service';
 import {
   MdCheckboxModule,
@@ -47,7 +47,8 @@ const PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
     CreateChatDialogComponent,
     AlertDialogComponent,
     ImInfoDialogComponent,
-    EditorComponent
+    EditorComponent,
+    ModalWindow
   ],
   imports: [
     HttpModule,
@@ -67,9 +68,10 @@ const PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
   entryComponents: [
     CreateChatDialogComponent,
     AlertDialogComponent,
-    ImInfoDialogComponent
+    ImInfoDialogComponent,
+    ModalWindow
   ],
-  providers: [SocketService, UserService, ToolService, EmojiService],
+  providers: [SocketService, UserService, ToolService, EmojiService, ModalService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

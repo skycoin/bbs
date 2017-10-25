@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, Input, ViewChildren, QueryList, Output, EventEmitter } from '@angular/core';
 import { ImRecentItemComponent } from '../im-recent-item/im-recent-item.component';
-import { SocketService, UserService } from '../../providers';
-import { ToolService } from '../../providers/tool/tool.service';
+import { SocketService, UserService, ModalService } from '../../providers';
+// import { ToolService } from '../../providers/tool/tool.service';
 import { MdDialog } from '@angular/material';
 import { CreateChatDialogComponent } from '../create-chat-dialog/create-chat-dialog.component';
 import { PerfectScrollbarConfigInterface } from 'ngx-perfect-scrollbar';
@@ -18,10 +18,35 @@ export class ImRecentBarComponent implements OnInit {
   chatting = '';
   @ViewChildren(ImRecentItemComponent) items: QueryList<ImRecentItemComponent>;
   @Input() list = [];
-  constructor(private socket: SocketService, private user: UserService, private dialog: MdDialog, private tool: ToolService) { }
+  constructor(
+    private socket: SocketService,
+    private user: UserService,
+    private dialog: MdDialog,
+    // private tool: ToolService,
+    private modal: ModalService) { }
+
   ngOnInit() {
   }
-
+  Test(content: any) {
+    // this.modal.open(content);
+    const body = document.querySelector('body');
+    const input = document.createElement('input');
+    const img = new Image();
+    input.type = 'file';
+    input.name = 'file';
+    input.addEventListener('change', (ev) => {
+      const read: FileReader = new FileReader();
+      read.onload = (event) => {
+        console.log('ev:', event.target['result']);
+        const blob = new Blob([event.target['result']], { type: 'image/jpeg' });
+        img.src = URL.createObjectURL(blob);
+        body.appendChild(img);
+      }
+      read.readAsArrayBuffer(ev.target['files'][0]);
+      // img.src = re
+    })
+    input.click();
+  }
   selectItem(item: ImRecentItemComponent) {
     if (item.active) {
       this.chatting = '';
@@ -46,6 +71,7 @@ export class ImRecentBarComponent implements OnInit {
     const def = this.dialog.open(CreateChatDialogComponent, { position: { top: '10%' }, width: '350px' });
     def.afterClosed().subscribe(key => {
       if (key !== '' && key) {
+        key = key.trim()
         this.items.forEach(el => {
           el.active = false;
         })
@@ -66,7 +92,7 @@ export class ImRecentBarComponent implements OnInit {
     ev.stopPropagation();
     ev.preventDefault();
     if (this.socket.key === '') {
-      this.tool.ShowDangerAlert('Faild', 'The server failed to get the key failed');
+      // this.tool.ShowDangerAlert('Faild', 'The server failed to get the key failed');
       return;
     }
     const input = document.createElement('input');

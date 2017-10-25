@@ -2,49 +2,46 @@ package main
 
 import (
 	"flag"
-	"net/http"
-
 	"fmt"
 	"net"
-
+	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/skycoin/net/skycoin-messenger/rpc"
 	"github.com/skycoin/net/skycoin-messenger/websocket"
+	"github.com/skycoin/net/skycoin-messenger/websocket/data"
 	"github.com/skycoin/skycoin/src/util/browser"
+	"github.com/skycoin/skycoin/src/util/file"
 )
 
 var (
 	webDir           string
-	rpcAddress       string
 	webSocketAddress string
 	openBrowser      bool
+	// dir path for seeds, public key and private key
+	seedPath string
 )
 
 func parseFlags() {
 	flag.StringVar(&webDir, "web-dir", "../web/dist", "directory of web files")
-	flag.StringVar(&rpcAddress, "rpc-address", "localhost:8083", "rpc address to listen on")
 	flag.StringVar(&webSocketAddress, "websocket-address", "localhost:8082", "websocket address to listen on")
 	flag.BoolVar(&openBrowser, "open-browser", true, "whether to open browser")
+	flag.StringVar(&seedPath, "seed-path", filepath.Join(file.UserHome(), ".skyim", "account"), "dir path to save seeds info")
 	flag.Parse()
 }
 
 func main() {
 	parseFlags()
 
+	if len(seedPath) < 1 {
+		seedPath = filepath.Join(file.UserHome(), ".skyim", "account")
+	}
+	data.InitData(seedPath)
+
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, os.Interrupt, os.Kill)
-
-	go func() {
-		log.Debug("listening rpc")
-		err := rpc.ServeRPC(rpcAddress)
-		if err != nil {
-			log.Error("rpc.ServeRPC: ", err)
-			os.Exit(1)
-		}
-	}()
 
 	log.Debug("listening web")
 	http.Handle("/", http.FileServer(http.Dir(webDir)))

@@ -121,20 +121,14 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 
 // Close quits the CXO manager.
 func (m *Manager) Close() {
-	for {
-		select {
-		case m.quit <- struct{}{}:
-		default:
-			m.relay.Close()
-			m.compiler.Close()
-			m.wg.Wait()
-			if e := m.node.Close(); e != nil {
-				m.l.Println("Error on close:", e.Error())
-			}
-			<-m.node.Quiting()
-			return
-		}
+	close(m.quit)
+	m.relay.Close()
+	m.compiler.Close()
+	m.wg.Wait()
+	if e := m.node.Close(); e != nil {
+		m.l.Println("Error on close:", e.Error())
 	}
+	<-m.node.Quiting()
 }
 
 // Relay obtains the messenger relay.
@@ -270,6 +264,7 @@ func (m *Manager) relayLoop() {
 		case <-m.quit:
 			return
 		case <-syncTicker.C:
+			m.l.Printf("relayLoop: syncTicker triggered: count(%d)", m.file.GetMessengersLen())
 			m.file.RangeMessengers(func(address string, pk cipher.PubKey) {
 				if pk == (cipher.PubKey{}) {
 					if pk, e := m.relay.Connect(address); e != nil {
@@ -279,13 +274,13 @@ func (m *Manager) relayLoop() {
 						m.l.Printf("SUCCESS: messenger server connection: address(%s) pk(%s)",
 							address, pk.Hex())
 						m.file.UnsafeSetMessengerPK(address, pk)
-						m.compiler.EnsureSubmissionKeys(m.relay.SubmissionKeys())
+						go m.compiler.EnsureSubmissionKeys(m.relay.SubmissionKeys())
 					}
 				}
 			})
 		case address := <-m.relay.Disconnections():
 			m.file.SetMessengerPK(address, cipher.PubKey{})
-			m.compiler.EnsureSubmissionKeys(m.relay.SubmissionKeys())
+			go m.compiler.EnsureSubmissionKeys(m.relay.SubmissionKeys())
 		}
 	}
 }

@@ -306,6 +306,11 @@ func (m *CXOFileManager) GetMessengerPK(address string) (cipher.PubKey, bool) {
 	}
 }
 
+func (m *CXOFileManager) GetMessengersLen() int {
+	defer m.lock()()
+	return m.messengers.Len()
+}
+
 /*
 	<<< HELPER FUNCTIONS >>>
 */

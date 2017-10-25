@@ -31,12 +31,15 @@ app-im-history-message {
         .bubble {
           position: relative;
           max-width: 100%;
-          font-size: 1rem;
+          font-size: 1.3rem;
           cursor: pointer;
           border-radius: .5rem;
           word-wrap: break-word;
           padding: .5rem 1rem;
           margin-top: .75rem;
+          .emojione {
+            width: 1.3rem;
+          }
           .msg {
             display: block;
           }

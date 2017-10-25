@@ -65,14 +65,8 @@ func NewCompiler(
 
 // Close closes the compiler.
 func (c *Compiler) Close() {
-	for {
-		select {
-		case c.quit <- struct{}{}:
-		default:
-			c.wg.Wait()
-			return
-		}
-	}
+	close(c.quit)
+	c.wg.Wait()
 }
 
 // Only for master boards.
