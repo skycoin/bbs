@@ -2,6 +2,7 @@ package cxo
 
 import (
 	"context"
+	"github.com/skycoin/bbs/src/accord"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
@@ -20,10 +21,9 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/accord"
-	"strings"
 )
 
 const (
@@ -69,7 +69,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 		file: object.NewCXOFileManager(&object.CXOFileManagerConfig{
 			Memory:   config.Memory,
 			Defaults: config.Defaults,
-			Dev: config.Dev,
+			Dev:      config.Dev,
 		}),
 		relay:    accord.NewRelay(),
 		newRoots: make(chan state.RootWrap, 10),
@@ -306,7 +306,7 @@ func (m *Manager) GetMessengers() []*object.MessengerConnection {
 	var out []*object.MessengerConnection
 	m.file.RangeMessengers(func(address string, pk cipher.PubKey) {
 		mc := &object.MessengerConnection{
-			Address: address,
+			Address:   address,
 			Connected: pk != (cipher.PubKey{}),
 		}
 		if mc.Connected {

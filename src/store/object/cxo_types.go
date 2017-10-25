@@ -3,12 +3,12 @@ package object
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
-	"sync"
 	"strings"
-	"github.com/skycoin/bbs/src/misc/keys"
+	"sync"
 )
 
 const (
@@ -703,15 +703,15 @@ type Connection struct {
 }
 
 type MessengerConnection struct {
-	Address string `json:"address"`
-	Connected bool `json:"connected"`
-	PubKey cipher.PubKey `json:"-"`
-	PubKeyStr string `json:"public_key,omitempty"`
+	Address   string        `json:"address"`
+	Connected bool          `json:"connected"`
+	PubKey    cipher.PubKey `json:"-"`
+	PubKeyStr string        `json:"public_key,omitempty"`
 }
 
 type MessengerSubKeyTransport struct {
 	Address string
-	PubKey cipher.PubKey
+	PubKey  cipher.PubKey
 }
 
 func (msk *MessengerSubKeyTransport) ToMessengerSubKey() MessengerSubKey {
@@ -749,7 +749,7 @@ func (msk MessengerSubKey) ToTransport() (*MessengerSubKeyTransport, error) {
 	if msk.IsValid() {
 		return &MessengerSubKeyTransport{
 			Address: msk.Address(),
-			PubKey: msk.PubKey(),
+			PubKey:  msk.PubKey(),
 		}, nil
 	} else {
 		return nil, boo.New(boo.InvalidRead, "invalid")

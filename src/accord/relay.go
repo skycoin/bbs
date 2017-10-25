@@ -1,17 +1,17 @@
 package accord
 
 import (
+	"context"
+	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/net/skycoin-messenger/factory"
+	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"log"
 	"os"
 	"sync"
-	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/bbs/src/misc/boo"
-	"context"
-	"github.com/skycoin/skycoin/src/cipher/encoder"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 const (
@@ -19,22 +19,22 @@ const (
 )
 
 type Relay struct {
-	l        *log.Logger
-	factory  *factory.MessengerFactory
-	compiler *state.Compiler
-	incomplete *Incomplete
+	l              *log.Logger
+	factory        *factory.MessengerFactory
+	compiler       *state.Compiler
+	incomplete     *Incomplete
 	disconnectChan chan string
-	quit     chan struct{}
-	wg       sync.WaitGroup
+	quit           chan struct{}
+	wg             sync.WaitGroup
 }
 
 func NewRelay() *Relay {
 	return &Relay{
-		l:       inform.NewLogger(true, os.Stdout, LogPrefix),
-		factory: factory.NewMessengerFactory(),
-		incomplete: NewIncomplete(),
+		l:              inform.NewLogger(true, os.Stdout, LogPrefix),
+		factory:        factory.NewMessengerFactory(),
+		incomplete:     NewIncomplete(),
 		disconnectChan: make(chan string),
-		quit:    make(chan struct{}),
+		quit:           make(chan struct{}),
 	}
 }
 
@@ -57,7 +57,7 @@ func (r *Relay) Close() {
 
 func (r *Relay) Connect(address string) (cipher.PubKey, error) {
 	conn, e := r.factory.ConnectWithConfig(address, &factory.ConnConfig{
-		Reconnect: false,
+		Reconnect:   false,
 		OnConnected: r.connectionService,
 	})
 	if e != nil {
@@ -83,7 +83,7 @@ func (r *Relay) connectionService(conn *factory.Connection) {
 
 	var (
 		address = conn.GetRemoteAddr().String()
-		pk = conn.GetKey()
+		pk      = conn.GetKey()
 	)
 
 	r.l.Printf("(%s:%s) connected",
@@ -205,7 +205,7 @@ func (r *Relay) SubmissionKeys() []*object.MessengerSubKeyTransport {
 	r.factory.ForEachConn(func(conn *factory.Connection) {
 		out = append(out, &object.MessengerSubKeyTransport{
 			Address: conn.GetRemoteAddr().String(),
-			PubKey: conn.GetKey(),
+			PubKey:  conn.GetKey(),
 		})
 	})
 	return out

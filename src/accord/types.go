@@ -1,11 +1,11 @@
 package accord
 
 import (
-	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/net/skycoin-messenger/factory"
+	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 )
 
 // Type determines the message type of transported data.
@@ -137,8 +137,8 @@ func NewSubmissionResponse(hash cipher.SHA256, seq uint64, e error) *SubmissionR
 		}
 	} else {
 		return &SubmissionResponse{
-			Hash: hash,
-			Okay: false,
+			Hash:   hash,
+			Okay:   false,
 			ErrTyp: int64(boo.Type(e)),
 			ErrMsg: e.Error(),
 		}

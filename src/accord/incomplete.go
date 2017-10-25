@@ -1,9 +1,9 @@
 package accord
 
 import (
-"github.com/skycoin/bbs/src/misc/boo"
-"github.com/skycoin/skycoin/src/cipher"
-"sync"
+	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/skycoin/src/cipher"
+	"sync"
 )
 
 type Elem struct {

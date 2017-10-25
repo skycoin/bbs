@@ -51,10 +51,10 @@ type CXOFileManager struct {
 // NewCXOFileManager creates a new file manager with provided configuration.
 func NewCXOFileManager(config *CXOFileManagerConfig) *CXOFileManager {
 	return &CXOFileManager{
-		c:       config,
-		l:       inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
-		masters: typ.NewList(),
-		remotes: typ.NewList(),
+		c:          config,
+		l:          inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
+		masters:    typ.NewList(),
+		remotes:    typ.NewList(),
 		messengers: typ.NewList(),
 	}
 }
