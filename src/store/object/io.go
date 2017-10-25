@@ -36,11 +36,17 @@ type NewBoardIO struct {
 	Content     *Content
 }
 
-func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
-	log.Println("Processing board, got submissions pks:", subPKs)
+func (a *NewBoardIO) Process(subKeyTrans []*MessengerSubKeyTransport) error {
+	log.Println("Processing board, got submissions keys:", subKeyTrans)
 	if e := tag.Process(a); e != nil {
 		return e
 	}
+
+	subKeys := make([]MessengerSubKey, len(subKeyTrans))
+	for i, subKey := range subKeyTrans {
+		subKeys[i] = subKey.ToMessengerSubKey()
+	}
+
 	a.Content = new(Content)
 	a.Content.SetHeader(&ContentHeaderData{})
 	a.Content.SetBody(&Body{
@@ -48,7 +54,7 @@ func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
 		TS:      a.TS,
 		Name:    a.Name,
 		Body:    a.Body,
-		SubKeys: keys.PubKeyArrayToStringArray(subPKs),
+		SubKeys: subKeys,
 		Tags:    []string{},
 	})
 	return nil

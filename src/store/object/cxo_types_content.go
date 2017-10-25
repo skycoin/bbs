@@ -39,7 +39,7 @@ type Body struct {
 	Value    int          `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
 	Tag      string       `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
 	Tags     []string     `json:"tags,omitempty"`            // board
-	SubKeys  []string     `json:"submission_keys,omitempty"` // board
+	SubKeys  []MessengerSubKey     `json:"submission_keys,omitempty"` // board
 	Creator  string       `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
 }
 
@@ -83,21 +83,21 @@ func (c *Body) GetOfUser() (cipher.PubKey, error) {
 	}
 }
 
-func (c *Body) GetSubKeys() []cipher.PubKey {
-	out := make([]cipher.PubKey, len(c.SubKeys))
-	for i, pkStr := range c.SubKeys {
+func (c *Body) GetSubKeys() []*MessengerSubKeyTransport {
+	out := make([]*MessengerSubKeyTransport, len(c.SubKeys))
+	for i, subKey := range c.SubKeys {
 		var e error
-		if out[i], e = keys.GetPubKey(pkStr); e != nil {
-			log.Printf("error obtaining 'submission_keys'[%d]", i)
+		if out[i], e = subKey.ToTransport(); e != nil {
+			log.Printf("failed to obtain 'submission_keys[%d]' with error: %v", i, e)
 		}
 	}
 	return out
 }
 
-func (c *Body) SetSubKeys(pks []cipher.PubKey) {
-	c.SubKeys = make([]string, len(pks))
-	for i, pk := range pks {
-		c.SubKeys[i] = pk.Hex()
+func (c *Body) SetSubKeys(subKeys []*MessengerSubKeyTransport) {
+	c.SubKeys = make([]MessengerSubKey, len(subKeys))
+	for i, subKey := range subKeys {
+		c.SubKeys[i] = subKey.ToMessengerSubKey()
 	}
 }
 

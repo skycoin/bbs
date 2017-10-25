@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/http"
-	"github.com/skycoin/bbs/src/msgs"
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
@@ -136,6 +135,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 					CXO: cxo.NewManager(
 						&cxo.ManagerConfig{
 							Memory:             &c.Memory,
+							Dev:                &devMode,
 							Config:             &c.ConfigDir,
 							MessengerAddresses: c.MessengerAddresses,
 							CXOPort:            &c.CXOPort,
@@ -145,10 +145,6 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 						},
 						&state.CompilerConfig{
 							UpdateInterval: &compilerInternal,
-						},
-						&msgs.RelayConfig{
-							Addresses:         c.MessengerAddresses,
-							ReconnectInterval: &messengerReconnectInterval,
 						},
 					),
 				},

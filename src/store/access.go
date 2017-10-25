@@ -72,9 +72,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 }
 
 func submitAndWait(ctx context.Context, a *Access, transport *object.Transport) (*state.BoardInstance, error) {
-	ofBoard := transport.GetOfBoard()
-
-	bi, e := a.CXO.GetBoardInstance(ofBoard)
+	bi, e := a.CXO.GetBoardInstance(transport.GetOfBoard())
 	if e != nil {
 		return nil, e
 	}
@@ -84,7 +82,7 @@ func submitAndWait(ctx context.Context, a *Access, transport *object.Transport) 
 			return nil, e
 		}
 	} else {
-		if goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), transport.Content); e != nil {
+		if goal, e = a.CXO.SubmitToRemote(ctx, bi.GetSubmissionKeys(), transport); e != nil {
 			return nil, e
 		}
 	}
@@ -153,7 +151,7 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *object.BoardIO) (*S
 */
 
 func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOutput, error) {
-	if e := in.Process(a.CXO.Relay().GetKeys()); e != nil {
+	if e := in.Process(a.CXO.Relay().SubmissionKeys()); e != nil {
 		return nil, e
 	}
 	if e := a.CXO.NewBoard(in); e != nil {
@@ -200,10 +198,6 @@ func (a *Access) ImportBoard(ctx context.Context, in *object.ImportBoardIO) (*Ex
 		return nil, e
 	}
 	return getExportBoardOutput(in.FilePath, pagesIn), nil
-}
-
-func (a *Access) GetDiscoveredBoards(ctx context.Context) ([]string, error) {
-	return a.CXO.GetDiscoveredBoards(), nil
 }
 
 /*
@@ -261,7 +255,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 		}
 	} else {
 		log.Println("NewThread: subs:", bi.GetSubmissionKeys())
-		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Transport.Content)
+		goal, e = a.CXO.SubmitToRemote(ctx, bi.GetSubmissionKeys(), in.Transport)
 		if e != nil {
 			return nil, e
 		}
@@ -302,7 +296,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 			return nil, e
 		}
 	} else {
-		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Transport.Content)
+		goal, e = a.CXO.SubmitToRemote(ctx, bi.GetSubmissionKeys(), in.Transport)
 		if e != nil {
 			return nil, e
 		}
@@ -349,7 +343,7 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 			return nil, e
 		}
 	} else {
-		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Transport.Content)
+		goal, e = a.CXO.SubmitToRemote(ctx, bi.GetSubmissionKeys(), in.Transport)
 		if e != nil {
 			return nil, e
 		}
@@ -378,7 +372,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 			return nil, e
 		}
 	} else {
-		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Transport.Content)
+		goal, e = a.CXO.SubmitToRemote(ctx, bi.GetSubmissionKeys(), in.Transport)
 		if e != nil {
 			return nil, e
 		}
@@ -406,7 +400,7 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 			return nil, e
 		}
 	} else {
-		goal, e = a.CXO.Relay().NewContent(ctx, bi.GetSubmissionKeys(), in.Transport.Content)
+		goal, e = a.CXO.SubmitToRemote(ctx, bi.GetSubmissionKeys(), in.Transport)
 		if e != nil {
 			return nil, e
 		}

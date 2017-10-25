@@ -42,7 +42,7 @@ func prepareBoard(t *testing.T, n *node.Node, seed string) (cipher.PubKey, ciphe
 		Name: fmt.Sprintf("Board of seed '%s'", seed),
 		Body: fmt.Sprintf("A test board created with seed '%s'.", seed),
 	}
-	if e := in.Process([]cipher.PubKey{}); e != nil {
+	if e := in.Process(nil); e != nil {
 		t.Fatal("failed to process new board input:", e)
 	}
 	if e := n.AddFeed(in.BoardPubKey); e != nil {

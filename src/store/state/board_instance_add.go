@@ -2,11 +2,9 @@ package state
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/skycoin/src/cipher"
 )
 
 func (bi *BoardInstance) Submit(transport *object.Transport) (uint64, error) {
@@ -206,29 +204,26 @@ func addVoteToDiffAndProfile(p *skyobject.Pack, h *pack.Headers, content *object
 	return addContentToDiffAndProfile(p, h, pages, content, creator)
 }
 
-func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
-	bi.l.Println("ensuring submission keys as:", keys.PubKeyArrayToString(pks))
+func (bi *BoardInstance) EnsureSubmissionKeys(subKeyTrans []*object.MessengerSubKeyTransport) (uint64, error) {
+	bi.l.Println("ensuring submission keys as:", subKeyTrans)
 	return bi.EditBoard(func(board *object.Content) (bool, error) {
 		body := board.GetBody()
-		if keys.ComparePubKeyArrays(body.GetSubKeys(), pks) {
-			return false, nil
-		}
-		body.SetSubKeys(pks)
+		body.SetSubKeys(subKeyTrans)
 		board.SetBody(body)
 		return true, nil
 	})
 }
 
-func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
-	var pks []cipher.PubKey
+func (bi *BoardInstance) GetSubmissionKeys() []*object.MessengerSubKeyTransport {
+	var subKeys []*object.MessengerSubKeyTransport
 	if e := bi.ViewBoard(func(board *object.Content) (bool, error) {
-		pks = board.GetBody().GetSubKeys()
+		subKeys = board.GetBody().GetSubKeys()
 		return false, nil
 	}); e != nil {
 		bi.l.Println("error obtaining submission keys:", e)
 		return nil
 	}
-	return pks
+	return subKeys
 }
 
 // BoardAction is a function in which board modification/viewing takes place.
