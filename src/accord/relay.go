@@ -77,9 +77,6 @@ func (r *Relay) Disconnect(key cipher.PubKey) bool {
 }
 
 func (r *Relay) connectionService(conn *factory.Connection) {
-	r.l.Printf("service started for connection: address(%s) public_key(%s)",
-		conn.GetRemoteAddr().String(), conn.GetKey().Hex())
-
 	var (
 		address = conn.GetRemoteAddr().String()
 		pk      = conn.GetKey()
@@ -98,18 +95,18 @@ func (r *Relay) connectionService(conn *factory.Connection) {
 
 				if !ok {
 					r.disconnectChan <- address
-					r.l.Printf("(%s:%s) disconnected",
+					r.l.Printf("(%s,%s) disconnected",
 						address, pk.Hex()[:5]+"...")
 					return
 				}
 
 				wrapper, e := NewWrapper(data)
 				if e != nil {
-					r.l.Printf("(%s:%s) received invalid message, error: %v",
+					r.l.Printf("(%s,%s) received invalid message, error: %v",
 						address, pk.Hex()[:5]+"...", e)
 					continue
 				} else {
-					r.l.Printf("(%s:%s) received message of type '%s'",
+					r.l.Printf("(%s,%s) received message of type '%s'",
 						address, pk.Hex()[:5]+"...", wrapper.GetType().String())
 				}
 
@@ -132,7 +129,7 @@ func (r *Relay) connectionService(conn *factory.Connection) {
 		}
 	}(r, conn)
 
-	r.l.Printf("(%s:%s) connected", address, pk.Hex()[:5]+"...")
+	r.l.Printf("(%s,%s) connected", address, pk.Hex()[:5]+"...")
 }
 
 func (r *Relay) processSubmission(conn *factory.Connection, address string, pk cipher.PubKey, wrapper *Wrapper) (
@@ -170,16 +167,12 @@ func send(conn *factory.Connection, toPK cipher.PubKey, t Type, body []byte) err
 	return conn.Send(toPK, append([]byte{byte(t)}, body...))
 }
 
-func (r *Relay) SubmitToRemote(ctx context.Context, fromPK, toPK cipher.PubKey, data interface{}) (uint64, error) {
+func (r *Relay) SubmitToRemote(ctx context.Context, toPK cipher.PubKey, data interface{}) (uint64, error) {
 	if r.initialised.Value() == false {
 		return 0, boo.New(boo.NotAllowed, "relay is not initialised - no available connections")
 	}
 	switch t := data.(type) {
 	case *Submission:
-		conn, ok := r.factory.GetConnection(fromPK)
-		if !ok {
-			return 0, boo.Newf(boo.NotFound, "failed to find connection of public key %s", fromPK.Hex())
-		}
 
 		hash := data.(*Submission).GetHash()
 		resChan, e := r.incomplete.Add(hash)
@@ -188,9 +181,22 @@ func (r *Relay) SubmitToRemote(ctx context.Context, fromPK, toPK cipher.PubKey, 
 		}
 		defer r.incomplete.Remove(hash)
 
-		if e := send(conn, toPK, SubmissionType, encoder.Serialize(data)); e != nil {
-			return 0, e
+		var (
+			done bool
+			eStack error
+		)
+		r.factory.ForEachConn(func(conn *factory.Connection) {
+			if e := send(conn, toPK, SubmissionType, encoder.Serialize(data)); e != nil {
+				eStack = boo.Wrap(eStack, e.Error())
+			} else {
+				done = true
+			}
+		})
+
+		if !done {
+			return 0, eStack
 		}
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -199,6 +205,7 @@ func (r *Relay) SubmitToRemote(ctx context.Context, fromPK, toPK cipher.PubKey, 
 				return res.Seq, res.Error()
 			}
 		}
+
 	default:
 		return 0, boo.Newf(boo.InvalidInput, "invalid type '%T'", t)
 	}

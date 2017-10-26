@@ -13,10 +13,10 @@ type Type byte
 
 // String obtains the string representation of the message type.
 func (t Type) String() string {
-	if int(t) >= len(MsgTypeStr) {
+	if int(t) >= len(MsgTypeStr) || int(t) < 0 {
 		return "Unknown"
 	} else {
-		return MsgTypeStr[t]
+		return MsgTypeStr[int(t)]
 	}
 }
 
@@ -68,7 +68,7 @@ func NewWrapper(raw []byte) (*Wrapper, error) {
 	if out.GetType().IsValid() == false {
 		return nil, boo.New(boo.InvalidRead, "invalid type")
 	}
-	return nil, nil
+	return out, nil
 }
 
 func (w *Wrapper) GetFromPK() cipher.PubKey {

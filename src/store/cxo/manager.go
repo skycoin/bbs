@@ -279,8 +279,8 @@ func (m *Manager) relayLoop() {
 			m.file.RangeMessengers(func(address string, pk cipher.PubKey) {
 				if pk == (cipher.PubKey{}) {
 					if pk, e := m.relay.Connect(address); e != nil {
-						m.l.Printf("FAILED: messenger server connection: address(%s)",
-							address)
+						m.l.Printf("FAILED: messenger server connection: address(%s), error: %v",
+							address, e)
 					} else {
 						m.l.Printf("SUCCESS: messenger server connection: address(%s) pk(%s)",
 							address, pk.Hex())
@@ -329,6 +329,8 @@ func (m *Manager) SubmitToRemote(
 ) (
 	uint64, error,
 ) {
+	m.l.Println("attempting to submit to remote...")
+
 	// Ensure that we can submit.
 	if len(subKeys) == 0 {
 		return 0, boo.New(boo.NotAllowed, "no submission keys are provided")
@@ -341,14 +343,23 @@ func (m *Manager) SubmitToRemote(
 	}
 
 	// See if we are connected to any of the submission keys.
-	for _, subKey := range subKeys {
+	m.l.Println("\t- looping through provided submission keys...")
+
+	for i, subKey := range subKeys {
+
+		m.l.Printf("\t\t- [%d] key '%s'", i, subKey.ToMessengerSubKey())
+
 		fromPK, ok := m.file.GetMessengerPK(subKey.Address)
 		if !ok || fromPK == (cipher.PubKey{}) {
+			m.l.Println("\t\t\t (SKIPPING)")
 			continue
 		}
+
 		// Attempt to submit.
-		goal, e := m.relay.SubmitToRemote(ctx, fromPK, subKey.PubKey, submission)
+		goal, e := m.relay.SubmitToRemote(ctx, subKey.PubKey, submission)
 		if e != nil {
+			m.l.Println("\t\t\t- Failed to submit to remote, error: %v", e)
+			m.l.Println("\t\t\t (SKIPPING)")
 			continue
 		}
 		return goal, nil
@@ -356,11 +367,10 @@ func (m *Manager) SubmitToRemote(
 
 	// Attempt manual connections.
 	for _, subKey := range subKeys {
-		fromPK, e := m.relay.Connect(subKey.Address)
-		if e != nil {
+		if _, e := m.relay.Connect(subKey.Address); e != nil {
 			continue
 		}
-		goal, e := m.relay.SubmitToRemote(ctx, fromPK, subKey.PubKey, submission)
+		goal, e := m.relay.SubmitToRemote(ctx, subKey.PubKey, submission)
 		if e != nil {
 			continue
 		}
