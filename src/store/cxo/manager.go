@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/accord"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
@@ -37,14 +38,13 @@ const (
 
 // ManagerConfig represents the configuration for CXO Manager.
 type ManagerConfig struct {
-	Memory             *bool    // Whether to enable memory mode.
-	Defaults           *bool    // Whether to have default connection / subscription.
-	Dev                *bool    // Whether dev mode.
-	MessengerAddresses []string // Messenger addresses.
-	Config             *string  // Configuration directory.
-	CXOPort            *int     // CXO listening port.
-	CXORPCEnable       *bool    // Whether to enable CXO RPC.
-	CXORPCPort         *int     // CXO RPC port.
+	Memory                     *bool    // Whether to enable memory mode.
+	EnforcedMessengerAddresses []string // Messenger addresses.
+	EnforcedSubscriptions      []string // Subscriptions
+	Config                     *string  // Configuration directory.
+	CXOPort                    *int     // CXO listening port.
+	CXORPCEnable               *bool    // Whether to enable CXO RPC.
+	CXORPCPort                 *int     // CXO RPC port.
 }
 
 // Manager manages interaction with CXO and storing/retrieving node configuration files.
@@ -67,9 +67,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 		c: config,
 		l: inform.NewLogger(true, os.Stdout, LogPrefix),
 		file: object.NewCXOFileManager(&object.CXOFileManagerConfig{
-			Memory:   config.Memory,
-			Defaults: config.Defaults,
-			Dev:      config.Dev,
+			Memory: config.Memory,
 		}),
 		relay:    accord.NewRelay(),
 		newRoots: make(chan state.RootWrap, 10),
@@ -162,7 +160,7 @@ func (m *Manager) prepareNode() error {
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
 	c.EnableListener = true
 	c.PublicServer = true
-	c.DiscoveryAddresses = m.c.MessengerAddresses
+	c.DiscoveryAddresses = m.c.EnforcedMessengerAddresses
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
 	c.EnableRPC = *m.c.CXORPCEnable
 	c.RemoteClose = false
@@ -194,6 +192,7 @@ func (m *Manager) prepareNode() error {
 	if m.node, e = node.NewNode(c); e != nil {
 		return e
 	}
+
 	return nil
 }
 
@@ -202,6 +201,19 @@ func (m *Manager) prepareFile() error {
 	if e := m.file.Load(m.filePath()); e != nil {
 		return e
 	}
+
+	// Ensure messenger addresses and subscriptions.
+	for _, address := range m.c.EnforcedMessengerAddresses {
+		m.ConnectToMessenger(address)
+	}
+	for _, pkStr := range m.c.EnforcedSubscriptions {
+		pk, e := keys.GetPubKey(pkStr)
+		if e != nil {
+			return e
+		}
+		m.SubscribeRemote(pk)
+	}
+
 	if e := m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		if r, e := m.node.Container().LastRoot(pk); e != nil {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
@@ -264,7 +276,6 @@ func (m *Manager) relayLoop() {
 		case <-m.quit:
 			return
 		case <-syncTicker.C:
-			m.l.Printf("relayLoop: syncTicker triggered: count(%d)", m.file.GetMessengersLen())
 			m.file.RangeMessengers(func(address string, pk cipher.PubKey) {
 				if pk == (cipher.PubKey{}) {
 					if pk, e := m.relay.Connect(address); e != nil {

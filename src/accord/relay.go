@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/net/skycoin-messenger/factory"
@@ -12,7 +13,6 @@ import (
 	"log"
 	"os"
 	"sync"
-	"github.com/skycoin/bbs/src/misc/typ"
 )
 
 const (
@@ -24,7 +24,7 @@ type Relay struct {
 	factory        *factory.MessengerFactory
 	compiler       *state.Compiler
 	incomplete     *Incomplete
-	initialised     typ.Bool
+	initialised    typ.Bool
 	disconnectChan chan string
 	quit           chan struct{}
 	wg             sync.WaitGroup

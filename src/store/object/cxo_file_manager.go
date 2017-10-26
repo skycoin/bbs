@@ -17,23 +17,9 @@ const (
 	cxoFileManagerLogPrefix = "CXOFILEMANAGER"
 )
 
-var (
-	defaultSubscriptions = []string{
-		"03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-	}
-	defaultMessengers = []string{
-		"messenger.skycoin.net:8080",
-	}
-	defaultDevMessengers = []string{
-		"127.0.0.1:8080",
-	}
-)
-
 // CXOFileManagerConfig configures the CXOFileManager.
 type CXOFileManagerConfig struct {
-	Memory   *bool // Whether to run in memory mode.
-	Defaults *bool
-	Dev      *bool
+	Memory *bool // Whether to run in memory mode.
 }
 
 // CXOFileManager manages the CXOFile.
@@ -323,33 +309,34 @@ func (m *CXOFileManager) load(path string) error {
 		if !os.IsNotExist(e) {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"failed to read CXO file from '%s'", path)
-		} else if *m.c.Defaults {
-			// Load defaults.
-			m.l.Println("First Run - Loading default subscriptions:")
-			for i, pkStr := range defaultSubscriptions {
-				pk, _ := keys.GetPubKey(pkStr)
-				m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
-				m.remotes.Append(pk, &Subscription{PK: pk})
-			}
-			if *m.c.Dev {
-				m.l.Println("First Run - Loading default messenger addresses (dev):")
-				for i, address := range defaultDevMessengers {
-					m.l.Printf(" - [%d] Messenger address '%s' (dev)", i, address)
-					m.messengers.Append(address, cipher.PubKey{})
-				}
-			} else {
-				m.l.Println("First Run - Loading default messenger addresses:")
-				for i, address := range defaultMessengers {
-					m.l.Printf(" - [%d] Messenger address '%s'", i, address)
-					m.messengers.Append(address, cipher.PubKey{})
-				}
-			}
-			m.tagChanges()
-			return nil
 		}
+		//} else if *m.c.Defaults {
+		//	// Load defaults.
+		//	m.l.Println("First Run - Loading default subscriptions:")
+		//	for i, pkStr := range defaultSubscriptions {
+		//		pk, _ := keys.GetPubKey(pkStr)
+		//		m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
+		//		m.remotes.Append(pk, &Subscription{PK: pk})
+		//	}
+		//	if *m.c.Dev {
+		//		m.l.Println("First Run - Loading default messenger addresses (dev):")
+		//		for i, address := range defaultDevMessengers {
+		//			m.l.Printf(" - [%d] Messenger address '%s' (dev)", i, address)
+		//			m.messengers.Append(address, cipher.PubKey{})
+		//		}
+		//	} else {
+		//		m.l.Println("First Run - Loading default messenger addresses:")
+		//		for i, address := range defaultMessengers {
+		//			m.l.Printf(" - [%d] Messenger address '%s'", i, address)
+		//			m.messengers.Append(address, cipher.PubKey{})
+		//		}
+		//	}
+		//	m.tagChanges()
+		//	return nil
+		//}
 	}
 
-	// Load to memory.
+	// LOAD TO MEMORY //
 
 	// Range master subscriptions.
 	for i, sub := range fileData.MasterSubs {

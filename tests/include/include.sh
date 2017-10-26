@@ -65,7 +65,7 @@ RunNode() {
     go run ${BBS_NODE_PATH} \
         -dev=true \
         -memory=true \
-        -defaults=false \
+        -enforced-messenger-addresses=127.0.0.1:8080 \
         -rpc-port=${PORT_RPC} \
         -cxo-port=${PORT_CXO} \
         -cxo-rpc=false \
