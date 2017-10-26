@@ -28,6 +28,7 @@ func (s *Subscription) View() SubscriptionView {
 }
 
 type CXOFile struct {
-	MasterSubs []SubscriptionView `json:"master_subscriptions"`
-	RemoteSubs []SubscriptionView `json:"remote_subscriptions"`
+	MasterSubs         []SubscriptionView `json:"master_subscriptions"`
+	RemoteSubs         []SubscriptionView `json:"remote_subscriptions"`
+	MessengerAddresses []string           `json:"messenger_addresses"`
 }

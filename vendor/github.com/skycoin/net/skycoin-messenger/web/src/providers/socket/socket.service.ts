@@ -28,16 +28,18 @@ export class SocketService {
   socket: Subject<any>;
   recent_list: Array<RecentItem> = [];
   // private history = new Collections.LinkedDictionary<string, Array<ImHistoryMessage>>()
-  private historySubject = new Subject<Map<string, Collections.LinkedList<ImHistoryMessage>>>();
+  historySubject = new Subject<Map<string, Collections.LinkedList<ImHistoryMessage>>>();
+  updateHistorySubject = new Subject()
   histories = new Map<string, Collections.LinkedList<ImHistoryMessage>>();
   userInfo = new Map<string, UserInfo>();
   chatHistorys = this.historySubject.asObservable();
   constructor(private user: UserService, private emoji: EmojiService) {
-    if (environment.production) {
-      this.url = 'ws://yiqishare.com:8082/ws';
+    if (environment.server) {
+      this.url = 'ws://messenger.skycoin.net:8082/ws';
     }
     this.historySubject.subscribe((data: Map<string, Collections.LinkedList<ImHistoryMessage>>) => {
       this.histories = data;
+      this.updateHistorySubject.next(this.histories);
     })
     this.socket = this.fromWebSocket(this.url, {
       next: () => { this.send(OP.REG, JSON.stringify({ Address: 'localhost:8080' })) },
@@ -113,7 +115,12 @@ export class SocketService {
 
     return Subject.create(observer, observable);
   }
-
+  getChatList(key?: string) {
+    if (key === '') {
+      key = this.chattingUser;
+    }
+    return this.histories.get(key);
+  }
   private getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + min);
   }
@@ -136,7 +143,8 @@ export class SocketService {
         break;
       case PUSH.REG:
         this.key = json.PublicKey;
-        this.userInfo.set(this.key, { Icon: this.user.getRandomMatch() });
+        // console.log('reg key:', this.key);
+        // this.userInfo.set(this.key, { Icon: this.user.getRandomMatch() });
         break;
       case PUSH.MSG:
         const now = new Date().getTime();

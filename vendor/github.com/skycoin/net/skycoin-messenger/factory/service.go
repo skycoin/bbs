@@ -60,6 +60,10 @@ func (sd *serviceDiscovery) pack() *NodeServices {
 
 func (sd *serviceDiscovery) register(conn *Connection, ns *NodeServices) {
 	if len(ns.Services) < 1 {
+		sd.subscription2SubscriberMutex.Lock()
+		sd._unregister(conn)
+		sd.subscription2SubscriberMutex.Unlock()
+		conn.setServices(nil)
 		return
 	}
 	sd.subscription2SubscriberMutex.Lock()

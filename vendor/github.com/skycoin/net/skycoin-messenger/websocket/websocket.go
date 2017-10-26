@@ -1,9 +1,10 @@
 package websocket
 
 import (
+	"net/http"
+
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 var upgrader = websocket.Upgrader{
@@ -20,6 +21,6 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
 		log.Error(err)
 		return
 	}
-	client := GetFactory().NewClient(conn)
+	client := getManager().newClient(conn)
 	go client.readLoop()
 }

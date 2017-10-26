@@ -7,55 +7,55 @@ import (
 
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-	"github.com/skycoin/net/skycoin-messenger/rpc"
 )
 
-type Factory struct {
-	clients      map[*Client]bool
+type manager struct {
+	clients      map[*Client]struct{}
 	clientsMutex sync.RWMutex
-}
-
-func NewFactory() *Factory {
-	return &Factory{clients: make(map[*Client]bool)}
 }
 
 var (
 	once           = &sync.Once{}
-	defaultFactory *Factory
+	defaultFactory *manager
 	wsId           uint32
 )
 
-func GetFactory() *Factory {
+func getManager() *manager {
 	once.Do(func() {
-		defaultFactory = NewFactory()
+		defaultFactory = &manager{clients: make(map[*Client]struct{})}
 		go defaultFactory.logStatus()
 	})
 	return defaultFactory
 }
 
-func (factory *Factory) NewClient(c *websocket.Conn) *Client {
+func (m *manager) newClient(c *websocket.Conn) *Client {
 	logger := log.WithField("wsId", atomic.AddUint32(&wsId, 1))
-	client := &Client{conn: c, PendingMap: PendingMap{Pending: make(map[uint32]interface{})}, Client: rpc.Client{Push: make(chan interface{}), Logger: logger}}
-	factory.clientsMutex.Lock()
-	factory.clients[client] = true
-	factory.clientsMutex.Unlock()
+	client := &Client{
+		conn:       c,
+		PendingMap: PendingMap{Pending: make(map[uint32]interface{})},
+		push:       make(chan interface{}),
+		Logger:     logger,
+	}
+	m.clientsMutex.Lock()
+	m.clients[client] = struct{}{}
+	m.clientsMutex.Unlock()
 	go func() {
 		client.writeLoop()
-		factory.clientsMutex.Lock()
-		delete(factory.clients, client)
-		factory.clientsMutex.Unlock()
+		m.clientsMutex.Lock()
+		delete(m.clients, client)
+		m.clientsMutex.Unlock()
 	}()
 	return client
 }
 
-func (factory *Factory) logStatus() {
+func (m *manager) logStatus() {
 	ticker := time.NewTicker(time.Second * 5)
 	for {
 		select {
 		case <-ticker.C:
-			factory.clientsMutex.RLock()
-			log.Debugf("websocket connection clients count:%d", len(factory.clients))
-			factory.clientsMutex.RUnlock()
+			m.clientsMutex.RLock()
+			log.Debugf("websocket connection clients count:%d", len(m.clients))
+			m.clientsMutex.RUnlock()
 		}
 	}
 }

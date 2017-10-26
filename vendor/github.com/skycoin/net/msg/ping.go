@@ -19,7 +19,7 @@ const (
 	PING_MSG_HEADER_SIZE
 )
 
-func unixMillisecond() uint64 {
+func UnixMillisecond() uint64 {
 	now := time.Now()
 	sec := now.Unix() * 1000
 	m := now.Nanosecond() / 1e6
@@ -29,6 +29,6 @@ func unixMillisecond() uint64 {
 func GenPingMsg() []byte {
 	b := make([]byte, PING_MSG_HEADER_SIZE)
 	b[PING_MSG_TYPE_BEGIN] = TYPE_PING
-	binary.BigEndian.PutUint64(b[PING_MSG_TIME_BEGIN:], unixMillisecond())
+	binary.BigEndian.PutUint64(b[PING_MSG_TIME_BEGIN:], UnixMillisecond())
 	return b
 }

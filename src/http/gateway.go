@@ -73,10 +73,10 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 		})
 
 	// Lists boards that have been discovered, but not subscribed to.
-	mux.HandleFunc("/api/discover_boards",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.GetDiscoveredBoards(r.Context()))
-		})
+	//mux.HandleFunc("/api/discover_boards",
+	//	func(w http.ResponseWriter, r *http.Request) {
+	//		send(w)(g.Access.GetDiscoveredBoards(r.Context()))
+	//	})
 
 	return nil
 }

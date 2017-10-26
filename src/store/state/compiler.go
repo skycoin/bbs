@@ -65,14 +65,8 @@ func NewCompiler(
 
 // Close closes the compiler.
 func (c *Compiler) Close() {
-	for {
-		select {
-		case c.quit <- struct{}{}:
-		default:
-			c.wg.Wait()
-			return
-		}
-	}
+	close(c.quit)
+	c.wg.Wait()
 }
 
 // Only for master boards.
@@ -140,12 +134,12 @@ func (c *Compiler) updateSingle(root *skyobject.Root) {
 
 // EnsureSubmissionKeys ranges through masters and ensures that their specified
 // submission public keys are as specified.
-func (c *Compiler) EnsureSubmissionKeys(keys []cipher.PubKey) error {
+func (c *Compiler) EnsureSubmissionKeys(subKeys []*object.MessengerSubKeyTransport) error {
 	return c.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		if bi, e := c.GetBoard(pk); e != nil {
 			c.l.Println(e)
 		} else {
-			if _, e := bi.EnsureSubmissionKeys(keys); e != nil {
+			if _, e := bi.EnsureSubmissionKeys(subKeys); e != nil {
 				c.l.Println(e)
 			}
 		}
