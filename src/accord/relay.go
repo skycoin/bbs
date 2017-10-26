@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"github.com/skycoin/bbs/src/misc/typ"
 )
 
 const (
@@ -23,6 +24,7 @@ type Relay struct {
 	factory        *factory.MessengerFactory
 	compiler       *state.Compiler
 	incomplete     *Incomplete
+	initialised     typ.Bool
 	disconnectChan chan string
 	quit           chan struct{}
 	wg             sync.WaitGroup
@@ -49,6 +51,7 @@ func (r *Relay) Close() {
 }
 
 func (r *Relay) Connect(address string) (cipher.PubKey, error) {
+	defer r.initialised.Set()
 	conn, e := r.factory.ConnectWithConfig(address, &factory.ConnConfig{
 		Reconnect:   false,
 		OnConnected: r.connectionService,
@@ -61,6 +64,9 @@ func (r *Relay) Connect(address string) (cipher.PubKey, error) {
 }
 
 func (r *Relay) Disconnect(key cipher.PubKey) bool {
+	if r.initialised.Value() == false {
+		return false
+	}
 	conn, ok := r.factory.GetConnection(key)
 	if !ok {
 		return false
@@ -165,6 +171,9 @@ func send(conn *factory.Connection, toPK cipher.PubKey, t Type, body []byte) err
 }
 
 func (r *Relay) SubmitToRemote(ctx context.Context, fromPK, toPK cipher.PubKey, data interface{}) (uint64, error) {
+	if r.initialised.Value() == false {
+		return 0, boo.New(boo.NotAllowed, "relay is not initialised - no available connections")
+	}
 	switch t := data.(type) {
 	case *Submission:
 		conn, ok := r.factory.GetConnection(fromPK)
@@ -197,13 +206,14 @@ func (r *Relay) SubmitToRemote(ctx context.Context, fromPK, toPK cipher.PubKey, 
 
 func (r *Relay) SubmissionKeys() []*object.MessengerSubKeyTransport {
 	var out []*object.MessengerSubKeyTransport
-	r.factory.ForEachConn(func(conn *factory.Connection) {
-		out = append(out, &object.MessengerSubKeyTransport{
-			Address: conn.GetRemoteAddr().String(),
-			PubKey:  conn.GetKey(),
+	if r.initialised.Value() {
+		r.factory.ForEachConn(func(conn *factory.Connection) {
+			out = append(out, &object.MessengerSubKeyTransport{
+				Address: conn.GetRemoteAddr().String(),
+				PubKey:  conn.GetKey(),
+			})
 		})
-	})
-	r.l.Println("got submission keys")
+	}
 	return out
 }
 
