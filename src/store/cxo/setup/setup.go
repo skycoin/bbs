@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/bbs/src/misc/boo"
 )
 
 // PrepareRegistry sets up the CXO Registry.
@@ -31,7 +32,7 @@ func NewBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 		node.Container().CoreRegistry().Types(),
 	)
 	if e != nil {
-		return nil, e
+		return nil, boo.Wrap(e, "failed to generate new root")
 	}
 
 	pack.Append(
@@ -48,10 +49,15 @@ func NewBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 		&r0.UsersPage{},
 	)
 	if e := pack.Save(); e != nil {
-		return nil, e
+		return nil, boo.WrapTypef(e, boo.Internal,
+			"failed to save pack of pk %s", in.BoardPubKey.Hex())
 	}
 	node.Publish(pack.Root())
 	pack.Close()
 
-	return node.Container().LastRoot(in.BoardPubKey)
+	if root, e := node.Container().LastRoot(in.BoardPubKey); e != nil {
+		return nil, boo.WrapType(e, boo.Internal, "failed to find root")
+	} else {
+		return root, nil
+	}
 }

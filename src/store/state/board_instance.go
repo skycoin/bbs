@@ -98,19 +98,40 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 			pFlags |= skyobject.ViewOnly
 		}
 
-		var e error
-		if bi.p, e = ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk); e != nil {
+		if newPack, e := ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk); e != nil {
 			bi.l.Println(" - root unpack failed with error:", e)
-			return e
+
+			if bi.p != nil && bi.IsMaster() {
+				bi.l.Println("/t- state has previous valid root and is master, attempting to fix...")
+
+				goal := r.Seq
+				bi.l.Printf("/t- invalid root is of seq %d, attempting to surpass.", goal)
+
+				for {
+					if e := bi.p.Save(); e != nil {
+						bi.l.Println("/t- FAILED:", e)
+						return e
+					}
+					if bi.p.Root().Seq > goal {
+						bi.l.Println("/t- SUCCESS!")
+						bi.needPublish.Set()
+						return nil
+					}
+				}
+			} else {
+				return e
+			}
 		} else {
 			bi.l.Println(" - root unpack succeeded.")
+			bi.p = newPack
 		}
 
-		if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
+		if newHeaders, e := pack.NewHeaders(bi.h, bi.p); e != nil {
 			bi.l.Println(" - failed to generate new headers:", e)
 			return e
 		} else {
 			bi.l.Println(" - new headers successfully generated.")
+			bi.h = newHeaders
 		}
 
 		if firstRun {

@@ -19,14 +19,14 @@ const (
 
 )
 
-func prepareNode(t *testing.T) (*node.Node) {
+func prepareNode(t *testing.T, address string) (*node.Node) {
 	c := node.NewConfig()
 	c.Skyobject.Registry = skyobject.NewRegistry(
 		setup.PrepareRegistry)
 	c.InMemoryDB = true
 	c.EnableListener = true
 	c.PublicServer = true
-	c.Listen = ListenAddress
+	c.Listen = address
 	c.EnableRPC = false
 	c.RemoteClose = false
 
@@ -61,7 +61,7 @@ func prepareInstance(t *testing.T, n *node.Node, pk cipher.PubKey) *BoardInstanc
 }
 
 func initInstance(t *testing.T, seed string) (*BoardInstance, func()) {
-	n := prepareNode(t)
+	n := prepareNode(t, ListenAddress)
 	pk, sk, r := prepareBoard(t, n, seed)
 	bi := prepareInstance(t, n, pk)
 
