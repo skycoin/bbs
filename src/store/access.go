@@ -90,6 +90,34 @@ func submitAndWait(ctx context.Context, a *Access, transport *object.Transport) 
 }
 
 /*
+	<<< CONNECTIONS : MESSENGER >>>
+*/
+
+func (a *Access) GetMessengerConnections(ctx context.Context) (*MessengersOutput, error) {
+	return getMessengers(ctx, a.CXO.GetMessengers()), nil
+}
+
+func (a *Access) NewMessengerConnection(ctx context.Context, in *object.ConnectionIO) (*MessengersOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	if e := a.CXO.ConnectToMessenger(in.Address); e != nil {
+		return nil, e
+	}
+	return a.GetMessengerConnections(ctx)
+}
+
+func (a *Access) DeleteMessengerConnection(ctx context.Context, in *object.ConnectionIO) (*MessengersOutput, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	if e := a.CXO.DisconnectFromMessenger(in.Address); e != nil {
+		return nil, e
+	}
+	return a.GetMessengerConnections(ctx)
+}
+
+/*
 	<<< CONNECTIONS >>>
 */
 

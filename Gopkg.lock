@@ -41,7 +41,7 @@
   branch = "master"
   name = "github.com/skycoin/cxo"
   packages = ["data","data/cxds","data/idxdb","node","node/gnet","node/log","node/msg","skyobject","skyobject/statutil"]
-  revision = "0956641f7ac96e7d65adc19be4bc3bfa407d7776"
+  revision = "91aab45b485ebbd52b665039bd09aab8fd82bbc4"
 
 [[projects]]
   branch = "master"
@@ -53,7 +53,7 @@
   name = "github.com/skycoin/skycoin"
   packages = ["src/cipher","src/cipher/base58","src/cipher/chacha20","src/cipher/encoder","src/cipher/go-bip39","src/cipher/ripemd160","src/cipher/secp256k1-go","src/cipher/secp256k1-go/secp256k1-go2","src/util/browser","src/util/file","src/util/logging"]
   revision = "ee33f18f2eed78515bce3b1c412d0e67b0570c24"
-  version = "0.19.1"
+  version = "v0.19.1"
 
 [[projects]]
   name = "github.com/toqueteos/webbrowser"
@@ -71,7 +71,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "f0d39a4bd5f1a0a15ef46503d12cffc780be4b9b"
+  revision = "3e3646d2c706c21b222a5dbcaa6db12b3e0cc765"
 
 [[projects]]
   name = "gopkg.in/urfave/cli.v1"

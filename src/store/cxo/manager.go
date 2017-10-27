@@ -25,6 +25,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/skycoin/net/skycoin-messenger/factory"
 )
 
 const (
@@ -301,11 +302,25 @@ func (m *Manager) relayLoop() {
 */
 
 func (m *Manager) ConnectToMessenger(address string) error {
-	return m.file.AddMessenger(strings.TrimSpace(address))
+	if e := m.file.AddMessenger(strings.TrimSpace(address)); e != nil {
+		return e
+	}
+	m.node.ConnectToMessenger(address)
+	return nil
 }
 
 func (m *Manager) DisconnectFromMessenger(address string) error {
-	return m.file.RemoveMessenger(strings.TrimSpace(address))
+	if e := m.file.RemoveMessenger(strings.TrimSpace(address)); e != nil {
+		return e
+	}
+	if sd := m.node.Discovery(); sd != nil {
+		sd.ForEachConn(func(conn *factory.Connection) {
+			if conn.GetRemoteAddr().String() == strings.TrimSpace(address) {
+				conn.Close()
+			}
+		})
+	}
+	return nil
 }
 
 func (m *Manager) GetMessengers() []*object.MessengerConnection {

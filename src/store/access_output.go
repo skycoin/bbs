@@ -6,6 +6,16 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
+type MessengersOutput struct {
+	Connections []*object.MessengerConnection `json:"connections"`
+}
+
+func getMessengers(_ context.Context, cs []*object.MessengerConnection) *MessengersOutput {
+	return &MessengersOutput{
+		Connections: cs,
+	}
+}
+
 type ConnectionsOutput struct {
 	Connections []object.Connection `json:"connections"`
 }
