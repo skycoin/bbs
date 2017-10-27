@@ -20,13 +20,32 @@ func (l *List) Len() int {
 	return len(l.keys)
 }
 
-func (l *List) Append(key interface{}, value interface{}) bool {
+func (l *List) Append(key, value interface{}) bool {
 	if _, has := l.dist[key]; has {
 		return false
+	} else {
+		l.keys = append(l.keys, key)
+		l.dist[key] = value
+		return true
 	}
-	l.keys = append(l.keys, key)
-	l.dist[key] = value
-	return true
+}
+
+func (l *List) Set(key, value interface{}) {
+	if _, has := l.dist[key]; has {
+		l.dist[key] = value
+	} else {
+		l.keys = append(l.keys, key)
+		l.dist[key] = value
+	}
+}
+
+func (l *List) Replace(key, value interface{}) bool {
+	if _, has := l.dist[key]; has {
+		l.dist[key] = value
+		return true
+	} else {
+		return false
+	}
 }
 
 func (l *List) DelOfIndex(i int) bool {

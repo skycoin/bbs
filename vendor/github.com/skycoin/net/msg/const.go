@@ -1,6 +1,17 @@
 package msg
 
 const (
+	PKG_CRC32_SIZE = 4
+)
+
+const (
+	PKG_CRC32_BEGIN = 0
+	PKG_CRC32_END   = PKG_CRC32_BEGIN + PKG_CRC32_SIZE
+
+	PKG_HEADER_SIZE
+)
+
+const (
 	MSG_TYPE_SIZE = 1
 	MSG_SEQ_SIZE  = 4
 	MSG_LEN_SIZE  = 4

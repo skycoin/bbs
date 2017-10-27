@@ -3,11 +3,15 @@
 @import 'variables';
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
 @import '../node_modules/font-awesome/scss/font-awesome';
-@import '../node_modules/emojione-assets/sprites/emojione-sprite-32.css';
 body {
-  background-color: #d5f0f3;
+  background: linear-gradient(-35deg, #00d2ff, #5895e8);
   font-size: 62.5%;
   font: 14px/20px "Lato", Arial, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 *,

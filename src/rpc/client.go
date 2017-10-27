@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/skycoin/bbs/src/store/object"
 	"net/rpc"
+	"path/filepath"
 )
 
 func Send(address string) func(method string, in interface{}) string {
@@ -77,10 +78,12 @@ func DeleteBoard(in *object.BoardIO) (string, interface{}) {
 }
 
 func ExportBoard(in *object.ExportBoardIO) (string, interface{}) {
+	in.FilePath, _ = filepath.Abs(in.FilePath)
 	return method("ExportBoard"), in
 }
 
-func ImportBoard(in *object.ExportBoardIO) (string, interface{}) {
+func ImportBoard(in *object.ImportBoardIO) (string, interface{}) {
+	in.FilePath, _ = filepath.Abs(in.FilePath)
 	return method("ImportBoard"), in
 }
 

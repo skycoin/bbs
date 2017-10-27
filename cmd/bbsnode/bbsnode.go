@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/http"
-	"github.com/skycoin/bbs/src/msgs"
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
@@ -16,7 +15,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"time"
 )
 
 const (
@@ -30,15 +28,17 @@ const (
 )
 
 var (
-	defaultMessengerAddresses = cli.StringSlice{
-		"messenger.skycoin.net:8080",
-	}
-	defaultDevMessengerAddresses = cli.StringSlice{
-		"127.0.0.1:8080",
-	}
-	devMode                    = false
-	compilerInternal           = 1
-	messengerReconnectInterval = time.Second * 3
+	//defaultSubscriptions = []string{
+	//	"03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
+	//}
+	//defaultMessengerAddresses = cli.StringSlice{
+	//	"messenger.skycoin.net:8080",
+	//}
+	//defaultDevMessengerAddresses = cli.StringSlice{
+	//	"127.0.0.1:8080",
+	//}
+	devMode          = false
+	compilerInternal = 1
 )
 
 // Config represents configuration for node.
@@ -53,38 +53,38 @@ type Config struct {
 	CXORPC     bool `json:"cxo_rpc"`                // Whether to enable CXO RPC.
 	CXORPCPort int  `json:"cxo_rpc_port,omitempty"` // Listening RPC port of CXO.
 
-	MessengerAddresses cli.StringSlice `json:"messenger_addresses"` // Addresses of messenger servers.
+	EnforcedMessengerAddresses cli.StringSlice `json:"ensured_messenger_addresses"` // Addresses of messenger servers to enforce.
+	EnforcedSubscriptions      cli.StringSlice `json:"ensured_subscriptions"`       // Subscriptions to enforce.
 
 	HTTPPort   int    `json:"http_port"`              // Port to serve HTTP API/GUI.
 	HTTPGUI    bool   `json:"http_gui"`               // Whether to enable GUI.
 	HTTPGUIDir string `json:"http_gui_dir,omitempty"` // Full path of GUI static files.
 
-	Browser  bool `json:"browser"`  // Whether to open browser on GUI start.
-	Defaults bool `json:"defaults"` // Whether to have default connections/subscriptions.
+	Browser bool `json:"browser"` // Whether to open browser on GUI start.
 }
 
 // NewDefaultConfig returns a default configuration for BBS node.
 func NewDefaultConfig() *Config {
 	return &Config{
-		Memory:             false, // Save to disk.
-		ConfigDir:          "",    // --> Action: set as '$HOME/.skybbs'
-		RPC:                true,
-		RPCPort:            defaultRPCPort,
-		CXOPort:            defaultCXOPort,
-		CXORPC:             false,
-		CXORPCPort:         defaultCXORPCPort,
-		MessengerAddresses: defaultMessengerAddresses,
-		HTTPPort:           defaultHTTPPort,
-		HTTPGUI:            true,
-		HTTPGUIDir:         "", // --> Action: set as '$HOME/.skybbs/static'
-		Browser:            true,
-		Defaults:           true,
+		Memory:                     false, // Save to disk.
+		ConfigDir:                  "",    // --> Action: set as '$HOME/.skybbs'
+		RPC:                        true,
+		RPCPort:                    defaultRPCPort,
+		CXOPort:                    defaultCXOPort,
+		CXORPC:                     false,
+		CXORPCPort:                 defaultCXORPCPort,
+		EnforcedMessengerAddresses: []string{},
+		EnforcedSubscriptions:      []string{},
+		HTTPPort:                   defaultHTTPPort,
+		HTTPGUI:                    true,
+		HTTPGUIDir:                 "", // --> Action: set as '$HOME/.skybbs/static'
+		Browser:                    true,
 	}
 }
 
 func (c *Config) Print() {
 	data, _ := json.MarshalIndent(*c, "", "    ")
-	fmt.Println(string(data))
+	log.Println(string(data))
 }
 
 // PostProcess checks the flags and processes them.
@@ -96,9 +96,6 @@ func (c *Config) PostProcess() error {
 		if e := os.MkdirAll(c.ConfigDir, os.FileMode(0700)); e != nil {
 			return e
 		}
-	}
-	if devMode {
-		c.MessengerAddresses = defaultDevMessengerAddresses
 	}
 	if c.HTTPGUI {
 		if c.HTTPGUIDir == "" {
@@ -135,20 +132,16 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 				Access: &store.Access{
 					CXO: cxo.NewManager(
 						&cxo.ManagerConfig{
-							Memory:             &c.Memory,
-							Config:             &c.ConfigDir,
-							MessengerAddresses: c.MessengerAddresses,
-							CXOPort:            &c.CXOPort,
-							CXORPCEnable:       &c.CXORPC,
-							CXORPCPort:         &c.CXORPCPort,
-							Defaults:           &c.Defaults,
+							Memory: &c.Memory,
+							Config: &c.ConfigDir,
+							EnforcedMessengerAddresses: c.EnforcedMessengerAddresses,
+							EnforcedSubscriptions:      c.EnforcedSubscriptions,
+							CXOPort:                    &c.CXOPort,
+							CXORPCEnable:               &c.CXORPC,
+							CXORPCPort:                 &c.CXORPCPort,
 						},
 						&state.CompilerConfig{
 							UpdateInterval: &compilerInternal,
-						},
-						&msgs.RelayConfig{
-							Addresses:         c.MessengerAddresses,
-							ReconnectInterval: &messengerReconnectInterval,
 						},
 					),
 				},
@@ -245,8 +238,12 @@ func main() {
 			Value:       config.CXORPCPort,
 		},
 		cli.StringSliceFlag{
-			Name:  "messenger-addresses",
-			Value: &config.MessengerAddresses,
+			Name:  "enforced-messenger-addresses",
+			Value: &config.EnforcedMessengerAddresses,
+		},
+		cli.StringSliceFlag{
+			Name:  "enforced-subscriptions",
+			Value: &config.EnforcedSubscriptions,
 		},
 		cli.IntFlag{
 			Name:        "http-port",
@@ -260,10 +257,6 @@ func main() {
 		cli.StringFlag{
 			Name:        "http-gui-dir",
 			Destination: &config.HTTPGUIDir,
-		},
-		cli.BoolTFlag{
-			Name:        "defaults",
-			Destination: &config.Defaults,
 		},
 	}
 	app := cli.NewApp()

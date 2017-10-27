@@ -3,8 +3,7 @@ package factory
 import (
 	"sync"
 
-	"fmt"
-	"sync/atomic"
+	"net"
 
 	"github.com/skycoin/skycoin/src/cipher"
 )
@@ -42,17 +41,14 @@ func init() {
 	}
 	resps[OP_BUILD_APP_CONN] = &sync.Pool{
 		New: func() interface{} {
-			return new(appConnResp)
+			return new(AppConnResp)
 		},
 	}
-}
-
-var p2pPort uint32 = 10000
-
-func genP2PAddress() (addr string) {
-	port := atomic.AddUint32(&p2pPort, 1)
-	addr = fmt.Sprintf(":%d", port)
-	return
+	resps[OP_APP_CONN_ACK] = &sync.Pool{
+		New: func() interface{} {
+			return new(connAck)
+		},
+	}
 }
 
 type appConn struct {
@@ -82,13 +78,23 @@ func (req *appConn) Execute(f *MessengerFactory, conn *Connection) (r resp, err 
 	return
 }
 
-type appConnResp struct {
-	Address string
+type AppConnResp struct {
+	Host string `json:",omitempty"`
+	Port int
 }
 
 // run on app
-func (req *appConnResp) Run(conn *Connection) (err error) {
+func (req *AppConnResp) Run(conn *Connection) (err error) {
 	conn.GetContextLogger().Debugf("recv %#v", req)
+	if conn.appConnectionInitCallback != nil {
+		addr := conn.GetRemoteAddr().String()
+		host, _, err := net.SplitHostPort(addr)
+		if err != nil {
+			return err
+		}
+		req.Host = host
+		conn.appConnectionInitCallback(req)
+	}
 	return
 }
 
@@ -108,21 +114,20 @@ func (req *buildConnResp) Execute(f *MessengerFactory, conn *Connection) (r resp
 	}
 	conn.GetContextLogger().Debugf("recv %#v tr %#v", req, tr)
 	tr.setUDPConn(conn)
-	addr := genP2PAddress()
-	fnOK := func() {
-		appConn.writeOP(OP_BUILD_APP_CONN|RESP_PREFIX, &appConnResp{Address: addr})
+	conn.writeOP(OP_APP_CONN_ACK|RESP_PREFIX, &connAck{})
+	fnOK := func(port int) {
+		appConn.writeOP(OP_BUILD_APP_CONN|RESP_PREFIX, &AppConnResp{Port: port})
 	}
-	err = tr.ListenForApp(addr, fnOK)
-	for err != nil {
+	err = tr.ListenForApp(fnOK)
+	if err != nil {
 		conn.GetContextLogger().Debugf("ListenForApp err %v", err)
-		addr = genP2PAddress()
-		err = tr.ListenForApp(addr, fnOK)
+		return
 	}
 	err = ErrDetach
 	return
 }
 
-// run on node A
+// run on node A, from manager udp
 func (req *buildConnResp) Run(conn *Connection) (err error) {
 	tr, ok := conn.getTransport(req.App)
 	if !ok {
@@ -140,7 +145,7 @@ type forwardNodeConn struct {
 	FromNode cipher.PubKey
 }
 
-// run on manager, conn is udp conn
+// run on manager, conn is udp conn from node A
 func (req *forwardNodeConn) Execute(f *MessengerFactory, conn *Connection) (r resp, err error) {
 	c, ok := f.GetConnection(req.Node)
 	if !ok {
@@ -172,13 +177,7 @@ type forwardNodeConnResp forwardNodeConn
 func (req *forwardNodeConnResp) Execute(f *MessengerFactory, conn *Connection) (r resp, err error) {
 	c, ok := f.GetConnection(req.FromNode)
 	if !ok {
-		conn.GetContextLogger().Debugf("node %x not exists", req.Node)
-		return
-	}
-
-	_, ok = c.getService(req.FromApp)
-	if !ok {
-		conn.GetContextLogger().Debugf("node %x app %x not exists", req.Node, req.App)
+		conn.GetContextLogger().Debugf("node %x not exists", req.FromNode)
 		return
 	}
 
@@ -224,5 +223,14 @@ func (req *buildConn) Run(conn *Connection) (err error) {
 		return
 	}
 	err = tr.Connect(req.Address, s.Address)
+	return
+}
+
+type connAck struct {
+}
+
+// run on node b from node a udp
+func (req *connAck) Run(conn *Connection) (err error) {
+	err = ErrDetach
 	return
 }

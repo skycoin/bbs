@@ -41,5 +41,4 @@ func main() {
 			log.Debugln("exit by signal Kill")
 		}
 	}
-
 }

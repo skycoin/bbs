@@ -7,10 +7,12 @@ import { ImRecentItemComponent } from '../components';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent implements OnDestroy, OnInit {
+
   constructor(public ws: SocketService, private user: UserService) {
   }
-
+  ngOnInit() {
+  }
   ngOnDestroy() {
     this.ws.socket.unsubscribe();
   }

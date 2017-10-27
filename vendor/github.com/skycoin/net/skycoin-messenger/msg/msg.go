@@ -1,13 +1,13 @@
 package msg
 
 import (
-	"github.com/skycoin/net/skycoin-messenger/factory"
 	"sync"
+
+	"github.com/skycoin/net/skycoin-messenger/factory"
 )
 
 var (
-	OP_POOL       = make([]*sync.Pool, OP_SIZE)
-	op_pool_mutex = new(sync.RWMutex)
+	OP_POOL = make([]*sync.Pool, OP_SIZE)
 )
 
 type OP interface {
@@ -15,30 +15,35 @@ type OP interface {
 }
 
 type OPer interface {
-	GetConnection() *factory.Connection
-	SetConnection(*factory.Connection)
+	GetFactory() *factory.MessengerFactory
+	SetFactory(factory *factory.MessengerFactory)
 	PushLoop(*factory.Connection)
+	Push(op byte, d interface{})
 }
 
-func GetOP(opn int) OP {
+func GetOP(opn int) (op OP) {
 	if opn < 0 || opn > OP_SIZE {
-		return nil
+		return
 	}
 
-	op_pool_mutex.RLock()
-	op, ok := OP_POOL[opn].Get().(OP)
-	op_pool_mutex.RUnlock()
-	if !ok {
-		return nil
+	pool := OP_POOL[opn]
+	if pool == nil {
+		return
 	}
-	return op
+	op, ok := pool.Get().(OP)
+	if !ok {
+		return
+	}
+	return
 }
 
 func PutOP(opn int, op OP) {
 	if opn < 0 || opn > OP_SIZE {
 		return
 	}
-	op_pool_mutex.Lock()
-	OP_POOL[opn].Put(op)
-	op_pool_mutex.Unlock()
+	pool := OP_POOL[opn]
+	if pool == nil {
+		return
+	}
+	pool.Put(op)
 }

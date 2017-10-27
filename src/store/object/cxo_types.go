@@ -3,9 +3,11 @@ package object
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
+	"strings"
 	"sync"
 )
 
@@ -48,7 +50,7 @@ type Pages struct {
 
 type PagesJSON struct {
 	PubKey    string         `json:"public_key"`
-	SecKey    string         `json:"secret_key"`
+	SecKey    string         `json:"secret_key,omitempty"`
 	RootPage  *RootPage      `json:"root_page"`
 	BoardPage *BoardPageJSON `json:"board_page"`
 	DiffPage  *DiffPageJSON  `json:"diff_page"`
@@ -698,6 +700,60 @@ type UserView struct {
 type Connection struct {
 	Address string `json:"address"`
 	State   string `json:"state"`
+}
+
+type MessengerConnection struct {
+	Address   string        `json:"address"`
+	Connected bool          `json:"connected"`
+	PubKey    cipher.PubKey `json:"-"`
+	PubKeyStr string        `json:"public_key,omitempty"`
+}
+
+type MessengerSubKeyTransport struct {
+	Address string
+	PubKey  cipher.PubKey
+}
+
+func (msk *MessengerSubKeyTransport) ToMessengerSubKey() MessengerSubKey {
+	return NewMessengerSubKey(msk)
+}
+
+type MessengerSubKey string
+
+func NewMessengerSubKey(transport *MessengerSubKeyTransport) MessengerSubKey {
+	return MessengerSubKey(
+		strings.TrimSpace(transport.Address) + "," + transport.PubKey.Hex())
+}
+
+func (msk MessengerSubKey) IsValid() bool {
+	split := strings.Split(string(msk), ",")
+	if len(split) != 2 {
+		return false
+	}
+	if _, e := keys.GetPubKey(split[1]); e != nil {
+		return false
+	}
+	return true
+}
+
+func (msk MessengerSubKey) Address() string {
+	return strings.Split(string(msk), ",")[0]
+}
+
+func (msk MessengerSubKey) PubKey() cipher.PubKey {
+	pk, _ := keys.GetPubKey(strings.Split(string(msk), ",")[1])
+	return pk
+}
+
+func (msk MessengerSubKey) ToTransport() (*MessengerSubKeyTransport, error) {
+	if msk.IsValid() {
+		return &MessengerSubKeyTransport{
+			Address: msk.Address(),
+			PubKey:  msk.PubKey(),
+		}, nil
+	} else {
+		return nil, boo.New(boo.InvalidRead, "invalid")
+	}
 }
 
 /*

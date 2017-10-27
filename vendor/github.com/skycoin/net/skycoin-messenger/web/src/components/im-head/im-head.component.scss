@@ -1,11 +1,13 @@
 app-im-head {
   display: inline-block;
   cursor: pointer;
+  img {
+    border-radius: .25rem;
+  }
   .inner {
     width: 52px;
     height: 52px;
     margin: .25rem auto;
-    border-radius: 50%;
     line-height: 50px;
     font-size: 2rem;
     text-align: center;

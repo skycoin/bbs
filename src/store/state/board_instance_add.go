@@ -2,11 +2,9 @@ package state
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/skycoin/src/cipher"
 )
 
 func (bi *BoardInstance) Submit(transport *object.Transport) (uint64, error) {
@@ -43,6 +41,8 @@ func (bi *BoardInstance) Submit(transport *object.Transport) (uint64, error) {
 }
 
 func submitThread(bi *BoardInstance, goal *uint64, thread *object.Content) error {
+	body := thread.GetBody()
+
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 
 		// Set goal sequence.
@@ -73,13 +73,8 @@ func submitThread(bi *BoardInstance, goal *uint64, thread *object.Content) error
 			return e
 		}
 
-		// Add thread to diff page.
-		if e := pages.DiffPage.Add(thread); e != nil {
-			return e
-		}
-
 		// Save changes.
-		return pages.Save(p)
+		return addContentToDiffAndProfile(p, h, pages, thread, body.Creator)
 	})
 }
 
@@ -106,7 +101,7 @@ func submitPost(bi *BoardInstance, goal *uint64, post *object.Content) error {
 			RootPage:  false,
 			BoardPage: true,
 			DiffPage:  true,
-			UsersPage: false,
+			UsersPage: true,
 		})
 		if e != nil {
 			return e
@@ -127,13 +122,8 @@ func submitPost(bi *BoardInstance, goal *uint64, post *object.Content) error {
 		// Modify headers.
 		h.SetThread(body.OfThread, tpRef.Hash)
 
-		// Add post to diff.
-		if e := pages.DiffPage.Add(post); e != nil {
-			return e
-		}
-
 		// Save changes.
-		return pages.Save(p)
+		return addContentToDiffAndProfile(p, h, pages, post, body.Creator)
 	})
 }
 
@@ -149,7 +139,7 @@ func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *object.Content) er
 				"thread of hash '%s' is not found", body.OfThread)
 		}
 
-		return addVoteToProfile(p, h, tVote, body.Creator)
+		return addVoteToDiffAndProfile(p, h, tVote, body.Creator)
 	})
 }
 
@@ -158,7 +148,7 @@ func submitPostVote(bi *BoardInstance, goal *uint64, pVote *object.Content) erro
 
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		*goal = p.Root().Seq + 1
-		return addVoteToProfile(p, h, pVote, body.Creator)
+		return addVoteToDiffAndProfile(p, h, pVote, body.Creator)
 	})
 }
 
@@ -166,11 +156,39 @@ func submitUserVote(bi *BoardInstance, goal *uint64, uVote *object.Content) erro
 	body := uVote.GetBody()
 	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
 		*goal = p.Root().Seq + 1
-		return addVoteToProfile(p, h, uVote, body.Creator)
+		return addVoteToDiffAndProfile(p, h, uVote, body.Creator)
 	})
 }
 
-func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *object.Content, creator string) error {
+func addContentToDiffAndProfile(p *skyobject.Pack, h *pack.Headers,
+	pages *object.Pages, content *object.Content, creator string,
+) error {
+
+	// Get profile page (create if not exist).
+	profileHash, ok := h.GetUserProfileHash(creator)
+	if !ok {
+		var e error
+		if profileHash, e = pages.UsersPage.NewUserProfile(creator); e != nil {
+			return e
+		}
+		h.SetUser(creator, profileHash)
+	}
+
+	// Add content to appropriate user profile.
+	newProfileHash, e := pages.UsersPage.AddUserSubmission(profileHash, content)
+	if e != nil {
+		return e
+	}
+	h.SetUser(creator, newProfileHash)
+
+	// Add to diff page.
+	if e := pages.DiffPage.Add(content); e != nil {
+		return e
+	}
+	return pages.Save(p)
+}
+
+func addVoteToDiffAndProfile(p *skyobject.Pack, h *pack.Headers, content *object.Content, creator string) error {
 
 	// Get root children pages.
 	pages, e := object.GetPages(p, &object.GetPagesIn{
@@ -183,53 +201,29 @@ func addVoteToProfile(p *skyobject.Pack, h *pack.Headers, content *object.Conten
 		return e
 	}
 
-	// Get profile page (create if not exist).
-	profileHash, ok := h.GetUserProfileHash(creator)
-	if !ok {
-		if profileHash, e = pages.UsersPage.NewUserProfile(creator); e != nil {
-			return e
-		}
-		h.SetUser(creator, profileHash)
-	}
-
-	// Add vote to appropriate user profile.
-	newProfileHash, e := pages.UsersPage.AddUserSubmission(profileHash, content)
-	if e != nil {
-		return e
-	}
-	h.SetUser(creator, newProfileHash)
-
-	// Add to diff.
-	if e := pages.DiffPage.Add(content); e != nil {
-		return e
-	}
-
-	return pages.Save(p)
+	return addContentToDiffAndProfile(p, h, pages, content, creator)
 }
 
-func (bi *BoardInstance) EnsureSubmissionKeys(pks []cipher.PubKey) (uint64, error) {
-	bi.l.Println("ensuring submission keys as:", keys.PubKeyArrayToString(pks))
+func (bi *BoardInstance) EnsureSubmissionKeys(subKeyTrans []*object.MessengerSubKeyTransport) (uint64, error) {
+	bi.l.Println("ensuring submission keys as:", subKeyTrans)
 	return bi.EditBoard(func(board *object.Content) (bool, error) {
 		body := board.GetBody()
-		if keys.ComparePubKeyArrays(body.GetSubKeys(), pks) {
-			return false, nil
-		}
-		body.SetSubKeys(pks)
+		body.SetSubKeys(subKeyTrans)
 		board.SetBody(body)
 		return true, nil
 	})
 }
 
-func (bi *BoardInstance) GetSubmissionKeys() []cipher.PubKey {
-	var pks []cipher.PubKey
+func (bi *BoardInstance) GetSubmissionKeys() []*object.MessengerSubKeyTransport {
+	var subKeys []*object.MessengerSubKeyTransport
 	if e := bi.ViewBoard(func(board *object.Content) (bool, error) {
-		pks = board.GetBody().GetSubKeys()
+		subKeys = board.GetBody().GetSubKeys()
 		return false, nil
 	}); e != nil {
 		bi.l.Println("error obtaining submission keys:", e)
 		return nil
 	}
-	return pks
+	return subKeys
 }
 
 // BoardAction is a function in which board modification/viewing takes place.

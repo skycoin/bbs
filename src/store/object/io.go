@@ -7,7 +7,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
-	"time"
 )
 
 type SubmissionIO struct {
@@ -33,22 +32,29 @@ type NewBoardIO struct {
 	Seed        string        `bbs:"bSeed"`
 	BoardPubKey cipher.PubKey `bbs:"bpk"`
 	BoardSecKey cipher.SecKey `bbs:"bsk"`
+	TS          int64         `bbs:"ts"`
 	Content     *Content
 }
 
-func (a *NewBoardIO) Process(subPKs []cipher.PubKey) error {
-	log.Println("Processing board, got submissions pks:", subPKs)
+func (a *NewBoardIO) Process(subKeyTrans []*MessengerSubKeyTransport) error {
+	log.Println("Processing board, got submissions keys:", subKeyTrans)
 	if e := tag.Process(a); e != nil {
 		return e
 	}
+
+	subKeys := make([]MessengerSubKey, len(subKeyTrans))
+	for i, subKey := range subKeyTrans {
+		subKeys[i] = subKey.ToMessengerSubKey()
+	}
+
 	a.Content = new(Content)
 	a.Content.SetHeader(&ContentHeaderData{})
 	a.Content.SetBody(&Body{
 		Type:    V5BoardType,
-		TS:      time.Now().UnixNano(),
+		TS:      a.TS,
 		Name:    a.Name,
 		Body:    a.Body,
-		SubKeys: keys.PubKeyArrayToStringArray(subPKs),
+		SubKeys: subKeys,
 		Tags:    []string{},
 	})
 	return nil
@@ -63,6 +69,7 @@ type NewThreadIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
+	TS               int64 `bbs:"ts"`
 	Transport        *Transport
 }
 
@@ -73,7 +80,7 @@ func (a *NewThreadIO) Process() error {
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	tData := &Body{
 		Type:    V5ThreadType,
-		TS:      time.Now().UnixNano(),
+		TS:      a.TS,
 		OfBoard: a.BoardPubKey.Hex(),
 		Name:    a.Name,
 		Body:    a.Body,
@@ -104,6 +111,7 @@ type NewPostIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
+	TS               int64 `bbs:"ts"`
 	Transport        *Transport
 }
 
@@ -119,7 +127,7 @@ func (a *NewPostIO) Process() error {
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	pData := &Body{
 		Type:     V5PostType,
-		TS:       time.Now().UnixNano(),
+		TS:       a.TS,
 		OfBoard:  a.BoardPubKey.Hex(),
 		OfThread: a.ThreadRef.Hex(),
 		OfPost:   a.PostRef.Hex(),
@@ -194,6 +202,7 @@ type UserVoteIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
+	TS               int64 `bbs:"ts"`
 	Transport        *Transport
 }
 
@@ -204,7 +213,7 @@ func (a *UserVoteIO) Process() error {
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	vData := &Body{
 		Type:    V5UserVoteType,
-		TS:      time.Now().UnixNano(),
+		TS:      a.TS,
 		OfBoard: a.BoardPubKeyStr,
 		OfUser:  a.UserPubKeyStr,
 		Value:   int(a.Mode),
@@ -236,6 +245,7 @@ type ThreadVoteIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
+	TS               int64 `bbs:"ts"`
 	Transport        *Transport
 }
 
@@ -246,7 +256,7 @@ func (a *ThreadVoteIO) Process() error {
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	vData := &Body{
 		Type:     V5ThreadVoteType,
-		TS:       time.Now().UnixNano(),
+		TS:       a.TS,
 		OfBoard:  a.BoardPubKeyStr,
 		OfThread: a.ThreadRefStr,
 		Value:    int(a.Mode),
@@ -276,6 +286,7 @@ type PostVoteIO struct {
 	CreatorSecKeyStr string        `bbs:"uskStr"`
 	CreatorSecKey    cipher.SecKey `bbs:"usk"`
 	CreatorPubKey    cipher.PubKey
+	TS               int64 `bbs:"ts"`
 	Transport        *Transport
 }
 
@@ -286,7 +297,7 @@ func (a *PostVoteIO) Process() error {
 	a.CreatorPubKey = cipher.PubKeyFromSecKey(a.CreatorSecKey)
 	vData := &Body{
 		Type:    V5PostVoteType,
-		TS:      time.Now().UnixNano(),
+		TS:      a.TS,
 		OfBoard: a.BoardPubKeyStr,
 		OfPost:  a.PostRefStr,
 		Value:   int(a.Mode),

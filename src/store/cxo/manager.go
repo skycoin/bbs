@@ -2,9 +2,10 @@ package cxo
 
 import (
 	"context"
+	"github.com/skycoin/bbs/src/accord"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/msgs"
+	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
@@ -21,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -36,13 +38,13 @@ const (
 
 // ManagerConfig represents the configuration for CXO Manager.
 type ManagerConfig struct {
-	Memory             *bool    // Whether to enable memory mode.
-	Defaults           *bool    // Whether to have default connection / subscription.
-	MessengerAddresses []string // Messenger addresses.
-	Config             *string  // Configuration directory.
-	CXOPort            *int     // CXO listening port.
-	CXORPCEnable       *bool    // Whether to enable CXO RPC.
-	CXORPCPort         *int     // CXO RPC port.
+	Memory                     *bool    // Whether to enable memory mode.
+	EnforcedMessengerAddresses []string // Messenger addresses.
+	EnforcedSubscriptions      []string // Subscriptions
+	Config                     *string  // Configuration directory.
+	CXOPort                    *int     // CXO listening port.
+	CXORPCEnable               *bool    // Whether to enable CXO RPC.
+	CXORPCPort                 *int     // CXO RPC port.
 }
 
 // Manager manages interaction with CXO and storing/retrieving node configuration files.
@@ -53,22 +55,21 @@ type Manager struct {
 	file     *object.CXOFileManager
 	node     *node.Node
 	compiler *state.Compiler
-	relay    *msgs.Relay
+	relay    *accord.Relay
 	wg       sync.WaitGroup
 	newRoots chan state.RootWrap
 	quit     chan struct{}
 }
 
 // NewManager creates a new CXO manager.
-func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig, relayConfig *msgs.RelayConfig) *Manager {
+func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Manager {
 	manager := &Manager{
 		c: config,
 		l: inform.NewLogger(true, os.Stdout, LogPrefix),
 		file: object.NewCXOFileManager(&object.CXOFileManagerConfig{
-			Memory:   config.Memory,
-			Defaults: config.Defaults,
+			Memory: config.Memory,
 		}),
-		relay:    msgs.NewRelay(relayConfig),
+		relay:    accord.NewRelay(),
 		newRoots: make(chan state.RootWrap, 10),
 		quit:     make(chan struct{}),
 	}
@@ -112,29 +113,24 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig, rel
 	}
 
 	go manager.retryLoop()
+	go manager.relayLoop()
 	return manager
 }
 
 // Close quits the CXO manager.
 func (m *Manager) Close() {
-	for {
-		select {
-		case m.quit <- struct{}{}:
-		default:
-			m.relay.Close()
-			m.compiler.Close()
-			m.wg.Wait()
-			if e := m.node.Close(); e != nil {
-				m.l.Println("Error on close:", e.Error())
-			}
-			<-m.node.Quiting()
-			return
-		}
+	close(m.quit)
+	m.relay.Close()
+	m.compiler.Close()
+	m.wg.Wait()
+	if e := m.node.Close(); e != nil {
+		m.l.Println("Error on close:", e.Error())
 	}
+	<-m.node.Quiting()
 }
 
 // Relay obtains the messenger relay.
-func (m *Manager) Relay() *msgs.Relay {
+func (m *Manager) Relay() *accord.Relay {
 	return m.relay
 }
 
@@ -164,7 +160,7 @@ func (m *Manager) prepareNode() error {
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
 	c.EnableListener = true
 	c.PublicServer = true
-	c.DiscoveryAddresses = m.c.MessengerAddresses
+	c.DiscoveryAddresses = m.c.EnforcedMessengerAddresses
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
 	c.EnableRPC = *m.c.CXORPCEnable
 	c.RemoteClose = false
@@ -196,6 +192,7 @@ func (m *Manager) prepareNode() error {
 	if m.node, e = node.NewNode(c); e != nil {
 		return e
 	}
+
 	return nil
 }
 
@@ -204,6 +201,19 @@ func (m *Manager) prepareFile() error {
 	if e := m.file.Load(m.filePath()); e != nil {
 		return e
 	}
+
+	// Ensure messenger addresses and subscriptions.
+	for _, address := range m.c.EnforcedMessengerAddresses {
+		m.ConnectToMessenger(address)
+	}
+	for _, pkStr := range m.c.EnforcedSubscriptions {
+		pk, e := keys.GetPubKey(pkStr)
+		if e != nil {
+			return e
+		}
+		m.SubscribeRemote(pk)
+	}
+
 	if e := m.file.RangeMasterSubs(func(pk cipher.PubKey, sk cipher.SecKey) {
 		if r, e := m.node.Container().LastRoot(pk); e != nil {
 			m.l.Println("prepareFile() LastRoot failed with error:", e)
@@ -252,6 +262,122 @@ func (m *Manager) retryLoop() {
 			m.file.Save(m.filePath())
 		}
 	}
+}
+
+func (m *Manager) relayLoop() {
+	m.wg.Add(1)
+	defer m.wg.Done()
+
+	syncTicker := time.NewTicker(time.Second * 2)
+	defer syncTicker.Stop()
+
+	for {
+		select {
+		case <-m.quit:
+			return
+		case <-syncTicker.C:
+			m.file.RangeMessengers(func(address string, pk cipher.PubKey) {
+				if pk == (cipher.PubKey{}) {
+					if pk, e := m.relay.Connect(address); e != nil {
+						m.l.Printf("FAILED: messenger server connection: address(%s), error: %v",
+							address, e)
+					} else {
+						m.l.Printf("SUCCESS: messenger server connection: address(%s) pk(%s)",
+							address, pk.Hex())
+						m.file.UnsafeSetMessengerPK(address, pk)
+						go m.compiler.EnsureSubmissionKeys(m.relay.SubmissionKeys())
+					}
+				}
+			})
+		case address := <-m.relay.Disconnections():
+			m.file.SetMessengerPK(address, cipher.PubKey{})
+			go m.compiler.EnsureSubmissionKeys(m.relay.SubmissionKeys())
+		}
+	}
+}
+
+/*
+	<<< MESSENGER >>>
+*/
+
+func (m *Manager) ConnectToMessenger(address string) error {
+	return m.file.AddMessenger(strings.TrimSpace(address))
+}
+
+func (m *Manager) DisconnectFromMessenger(address string) error {
+	return m.file.RemoveMessenger(strings.TrimSpace(address))
+}
+
+func (m *Manager) GetMessengers() []*object.MessengerConnection {
+	var out []*object.MessengerConnection
+	m.file.RangeMessengers(func(address string, pk cipher.PubKey) {
+		mc := &object.MessengerConnection{
+			Address:   address,
+			Connected: pk != (cipher.PubKey{}),
+		}
+		if mc.Connected {
+			mc.PubKey = pk
+			mc.PubKeyStr = pk.Hex()
+		}
+		out = append(out, mc)
+	})
+	return out
+}
+
+func (m *Manager) SubmitToRemote(
+	ctx context.Context, subKeys []*object.MessengerSubKeyTransport, transport *object.Transport,
+) (
+	uint64, error,
+) {
+	m.l.Println("attempting to submit to remote...")
+
+	// Ensure that we can submit.
+	if len(subKeys) == 0 {
+		return 0, boo.New(boo.NotAllowed, "no submission keys are provided")
+	}
+
+	// Obtain submission.
+	submission := &accord.Submission{
+		Raw: transport.Content.Body,
+		Sig: transport.Header.GetSig(),
+	}
+
+	// See if we are connected to any of the submission keys.
+	m.l.Println("\t- looping through provided submission keys...")
+
+	for i, subKey := range subKeys {
+
+		m.l.Printf("\t\t- [%d] key '%s'", i, subKey.ToMessengerSubKey())
+
+		fromPK, ok := m.file.GetMessengerPK(subKey.Address)
+		if !ok || fromPK == (cipher.PubKey{}) {
+			m.l.Println("\t\t\t (SKIPPING)")
+			continue
+		}
+
+		// Attempt to submit.
+		goal, e := m.relay.SubmitToRemote(ctx, subKey.PubKey, submission)
+		if e != nil {
+			m.l.Println("\t\t\t- Failed to submit to remote, error: %v", e)
+			m.l.Println("\t\t\t (SKIPPING)")
+			continue
+		}
+		return goal, nil
+	}
+
+	// Attempt manual connections.
+	for _, subKey := range subKeys {
+		if _, e := m.relay.Connect(subKey.Address); e != nil {
+			continue
+		}
+		goal, e := m.relay.SubmitToRemote(ctx, subKey.PubKey, submission)
+		if e != nil {
+			continue
+		}
+		return goal, nil
+	}
+
+	return 0, boo.New(boo.NotFound, "a valid connection to messenger server is not found")
 }
 
 /*
@@ -440,16 +566,6 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	<<< ADMIN >>>
 */
 
-//func (m *Manager) GetObject(hash cipher.SHA256)
-
-/*
-	<<< DISCOVERER >>>
-*/
-
-func (m *Manager) GetDiscoveredBoards() []string {
-	return m.relay.GetBoards()
-}
-
 /*
 	<<< IMPORT / EXPORT >>>
 */
@@ -473,14 +589,12 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 	}
 	if m.file.HasMasterSub(pk) == false {
 		nbIn := &object.NewBoardIO{
-			Name:        "Temporary Board",
-			Body:        "This is a temporary board.",
 			BoardPubKey: pk,
 			BoardSecKey: sk,
+			Content:     new(object.Content),
 		}
-		if e := nbIn.Process(m.Relay().GetKeys()); e != nil {
-			return e
-		}
+		nbIn.Content.SetHeader(&object.ContentHeaderData{})
+		nbIn.Content.SetBody(&object.Body{})
 		if e := m.NewBoard(nbIn); e != nil {
 			return e
 		}
@@ -495,48 +609,3 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 	}
 	return bi.WaitSeq(ctx, goal)
 }
-
-//func (m *Manager) ExportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
-//	if *m.c.Memory {
-//		return "", nil, nil
-//	}
-//	bi, e := m.compiler.GetBoard(pk)
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	out, e := bi.Export()
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	path := m.exportPath(name)
-//	if e := file.SaveJSON(path, out, os.FileMode(0600)); e != nil {
-//		return "", nil, e
-//	}
-//	return path, out, nil
-//}
-
-//func (m *Manager) ImportBoard(pk cipher.PubKey, name string) (string, *transfer.RootRep, error) {
-//	if *m.c.Memory {
-//		return "", nil, nil
-//	}
-//
-//	path := m.exportPath(name)
-//	out := new(transfer.RootRep)
-//	if e := file.LoadJSON(path, out); e != nil {
-//		return "", nil, e
-//	}
-//
-//	_, has := m.file.GetMasterSubSecKey(pk)
-//	if !has {
-//		return "", nil, boo.Newf(boo.NotAuthorised,
-//			"this node is not the master of board of public key '%s'", pk.Hex())
-//	}
-//	bi, e := m.compiler.GetBoard(pk)
-//	if e != nil {
-//		return "", nil, e
-//	}
-//	if e := bi.Import(out); e != nil {
-//		return "", nil, e
-//	}
-//	return path, out, nil
-//}

@@ -65,7 +65,7 @@ RunNode() {
     go run ${BBS_NODE_PATH} \
         -dev=true \
         -memory=true \
-        -defaults=false \
+        -enforced-messenger-addresses=127.0.0.1:8080 \
         -rpc-port=${PORT_RPC} \
         -cxo-port=${PORT_CXO} \
         -cxo-rpc=false \
@@ -152,13 +152,43 @@ NewBoard() {
         -seed="${SEED}"
 }
 
-NewThread() {
-    if [[ $# -ne 5 ]] ; then
-        echo "5 arguments required"
+ExportBoard() {
+    if [[ $# -ne 3 ]] ; then
+        echo "3 arguments required"
         exit 1
     fi
 
-    PORT=$1 ; BPK=$2 ; NAME=$3 ; BODY=$4 ; CSK=$5
+    PORT=$1 ; PK=$2 ; LOC=$3
+
+    pv "NODE '${PORT}': EXPORT BOARD '${PK}' TO '${LOC}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content export_board \
+        -public-key="${PK}" \
+        -file-path="${LOC}"
+}
+
+ImportBoard() {
+    if [[ $# -ne 3 ]] ; then
+        echo "3 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; SK=$2 ; LOC=$3
+
+    pv "NODE '${PORT}': IMPORT BOARD FROM '${LOC}' TO SECRET '${SK}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content import_board \
+        -secret-key="${SK}" \
+        -file-path="${LOC}"
+}
+
+NewThread() {
+    if [[ $# -ne 6 ]] ; then
+        echo "6 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; NAME=$3 ; BODY=$4 ; CSK=$5 ; TS=$6
 
     pv "NODE '${PORT}': NEW THREAD '${NAME}'"
 
@@ -166,16 +196,17 @@ NewThread() {
         -board-public-key="${BPK}" \
         -name="${NAME}" \
         -body="${BODY}" \
-        -creator-secret-key="${CSK}"
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
 }
 
 NewPost() {
-    if [[ $# -ne 6 ]] ; then
-        echo "6 arguments required"
+    if [[ $# -ne 7 ]] ; then
+        echo "7 arguments required"
         exit 1
     fi
 
-    PORT=$1 ; BPK=$2 ; THASH=$3 ; NAME=$4 ; BODY=$5 ; CSK=$6
+    PORT=$1 ; BPK=$2 ; THASH=$3 ; NAME=$4 ; BODY=$5 ; CSK=$6 ; TS=$7
 
     pv "NODE '${PORT}': NEW POST '${NAME}'"
 
@@ -184,5 +215,6 @@ NewPost() {
         -thread-hash="${THASH}" \
         -name="${NAME}" \
         -body="${BODY}" \
-        -creator-secret-key="${CSK}"
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
 }

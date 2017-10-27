@@ -27,20 +27,20 @@ type ImageData struct {
 }
 
 type Body struct {
-	Type     ContentType  `json:"type"`                      // ALL
-	TS       int64        `json:"ts"`                        // ALL
-	OfBoard  string       `json:"of_board,omitempty"`        // thread, post, thread_vote, post_vote, user_vote
-	OfThread string       `json:"of_thread,omitempty"`       // post, thread_vote
-	OfPost   string       `json:"of_post,omitempty"`         // post (optional), post_vote
-	OfUser   string       `json:"of_user,omitempty"`         // vote
-	Name     string       `json:"name,omitempty"`            // board, thread, post
-	Body     string       `json:"body,omitempty"`            // board, thread, post
-	Images   []*ImageData `json:"images,omitempty"`          // post (optional)
-	Value    int          `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
-	Tag      string       `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
-	Tags     []string     `json:"tags,omitempty"`            // board
-	SubKeys  []string     `json:"submission_keys,omitempty"` // board
-	Creator  string       `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
+	Type     ContentType       `json:"type"`                      // ALL
+	TS       int64             `json:"ts"`                        // ALL
+	OfBoard  string            `json:"of_board,omitempty"`        // thread, post, thread_vote, post_vote, user_vote
+	OfThread string            `json:"of_thread,omitempty"`       // post, thread_vote
+	OfPost   string            `json:"of_post,omitempty"`         // post (optional), post_vote
+	OfUser   string            `json:"of_user,omitempty"`         // vote
+	Name     string            `json:"name,omitempty"`            // board, thread, post
+	Body     string            `json:"body,omitempty"`            // board, thread, post
+	Images   []*ImageData      `json:"images,omitempty"`          // post (optional)
+	Value    int               `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
+	Tag      string            `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
+	Tags     []string          `json:"tags,omitempty"`            // board
+	SubKeys  []MessengerSubKey `json:"submission_keys,omitempty"` // board
+	Creator  string            `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
 }
 
 func NewBody(raw []byte) (*Body, error) {
@@ -83,21 +83,21 @@ func (c *Body) GetOfUser() (cipher.PubKey, error) {
 	}
 }
 
-func (c *Body) GetSubKeys() []cipher.PubKey {
-	out := make([]cipher.PubKey, len(c.SubKeys))
-	for i, pkStr := range c.SubKeys {
+func (c *Body) GetSubKeys() []*MessengerSubKeyTransport {
+	out := make([]*MessengerSubKeyTransport, len(c.SubKeys))
+	for i, subKey := range c.SubKeys {
 		var e error
-		if out[i], e = keys.GetPubKey(pkStr); e != nil {
-			log.Printf("error obtaining 'submission_keys'[%d]", i)
+		if out[i], e = subKey.ToTransport(); e != nil {
+			log.Printf("failed to obtain 'submission_keys[%d]' with error: %v", i, e)
 		}
 	}
 	return out
 }
 
-func (c *Body) SetSubKeys(pks []cipher.PubKey) {
-	c.SubKeys = make([]string, len(pks))
-	for i, pk := range pks {
-		c.SubKeys[i] = pk.Hex()
+func (c *Body) SetSubKeys(subKeys []*MessengerSubKeyTransport) {
+	c.SubKeys = make([]MessengerSubKey, len(subKeys))
+	for i, subKey := range subKeys {
+		c.SubKeys[i] = subKey.ToMessengerSubKey()
 	}
 }
 
@@ -110,8 +110,8 @@ func (c *Body) GetCreator() (cipher.PubKey, error) {
 }
 
 type Content struct {
-	Header []byte `json:"header,string"` // Contains type, creator public key and signature.
-	Body   []byte `json:"header,string"` // Contains actual content.
+	Header []byte `json:"header"` // Contains type, creator public key and signature.
+	Body   []byte `json:"body"`   // Contains actual content.
 }
 
 func (c *Content) String() string {

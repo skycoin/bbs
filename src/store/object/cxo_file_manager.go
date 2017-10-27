@@ -4,6 +4,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/util/file"
@@ -16,19 +17,9 @@ const (
 	cxoFileManagerLogPrefix = "CXOFILEMANAGER"
 )
 
-var (
-	defaultConnections = []string{
-		"34.204.161.180:8210",
-	}
-	defaultSubscriptions = []string{
-		"03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-	}
-)
-
 // CXOFileManagerConfig configures the CXOFileManager.
 type CXOFileManagerConfig struct {
-	Memory   *bool // Whether to run in memory mode.
-	Defaults *bool
+	Memory *bool // Whether to run in memory mode.
 }
 
 // CXOFileManager manages the CXOFile.
@@ -40,15 +31,17 @@ type CXOFileManager struct {
 	hasChanges bool // has changes.
 	masters    *typ.List
 	remotes    *typ.List
+	messengers *typ.List
 }
 
 // NewCXOFileManager creates a new file manager with provided configuration.
 func NewCXOFileManager(config *CXOFileManagerConfig) *CXOFileManager {
 	return &CXOFileManager{
-		c:       config,
-		l:       inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
-		masters: typ.NewList(),
-		remotes: typ.NewList(),
+		c:          config,
+		l:          inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
+		masters:    typ.NewList(),
+		remotes:    typ.NewList(),
+		messengers: typ.NewList(),
 	}
 }
 
@@ -237,6 +230,73 @@ func (m *CXOFileManager) GetMasterSubSecKey(pk cipher.PubKey) (cipher.SecKey, bo
 	return v.(*Subscription).SK, true
 }
 
+// AddMessenger adds a messenger server address to connect to.
+func (m *CXOFileManager) AddMessenger(address string) error {
+	defer m.lock()()
+
+	// Append.
+	if m.messengers.Append(address, cipher.PubKey{}) == false {
+		return boo.Newf(boo.AlreadyExists,
+			"address '%s' already exists in messenger servers",
+			address)
+	}
+
+	// Record changes and return.
+	m.tagChanges()
+	return nil
+}
+
+// RemoveMessenger removes a messenger server address.
+func (m *CXOFileManager) RemoveMessenger(address string) error {
+	defer m.lock()()
+
+	m.messengers.DelOfKey(address)
+	m.tagChanges()
+	return nil
+}
+
+// MessengerAction represents an action to perform on a messenger address and key.
+type MessengerAction func(address string, pk cipher.PubKey)
+
+// RangeMessengers ranges the list of messenger server addresses.
+func (m *CXOFileManager) RangeMessengers(action MessengerAction) error {
+	defer m.lock()()
+	m.messengers.Range(typ.Ascending, func(i int, key, value interface{}) (bool, error) {
+		action(key.(string), value.(cipher.PubKey))
+		return false, nil
+	})
+	return nil
+}
+
+// SetMessengerPK sets the messenger's public key.
+func (m *CXOFileManager) SetMessengerPK(address string, pk cipher.PubKey) error {
+	defer m.lock()()
+	return m.UnsafeSetMessengerPK(address, pk)
+}
+
+func (m *CXOFileManager) UnsafeSetMessengerPK(address string, pk cipher.PubKey) error {
+	if m.messengers.Replace(address, pk) == false {
+		return boo.Newf(boo.InvalidInput,
+			"messenger server address '%s' is not found", address)
+	}
+	return nil
+}
+
+// GetMessengerPK gets the messenger's public key.
+func (m *CXOFileManager) GetMessengerPK(address string) (cipher.PubKey, bool) {
+	defer m.lock()()
+	if pk, ok := m.messengers.GetOfKey(address); !ok {
+		return cipher.PubKey{}, false
+	} else {
+		return pk.(cipher.PubKey), true
+	}
+}
+
+func (m *CXOFileManager) GetMessengersLen() int {
+	defer m.lock()()
+	return m.messengers.Len()
+}
+
 /*
 	<<< HELPER FUNCTIONS >>>
 */
@@ -249,20 +309,34 @@ func (m *CXOFileManager) load(path string) error {
 		if !os.IsNotExist(e) {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"failed to read CXO file from '%s'", path)
-		} else if *m.c.Defaults {
-			// Load default.
-			m.l.Println("First Run - Loading defaults:")
-			for i, pkStr := range defaultSubscriptions {
-				pk, _ := keys.GetPubKey(pkStr)
-				m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
-				m.remotes.Append(pk, &Subscription{PK: pk})
-			}
-			m.tagChanges()
-			return nil
 		}
+		//} else if *m.c.Defaults {
+		//	// Load defaults.
+		//	m.l.Println("First Run - Loading default subscriptions:")
+		//	for i, pkStr := range defaultSubscriptions {
+		//		pk, _ := keys.GetPubKey(pkStr)
+		//		m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
+		//		m.remotes.Append(pk, &Subscription{PK: pk})
+		//	}
+		//	if *m.c.Dev {
+		//		m.l.Println("First Run - Loading default messenger addresses (dev):")
+		//		for i, address := range defaultDevMessengers {
+		//			m.l.Printf(" - [%d] Messenger address '%s' (dev)", i, address)
+		//			m.messengers.Append(address, cipher.PubKey{})
+		//		}
+		//	} else {
+		//		m.l.Println("First Run - Loading default messenger addresses:")
+		//		for i, address := range defaultMessengers {
+		//			m.l.Printf(" - [%d] Messenger address '%s'", i, address)
+		//			m.messengers.Append(address, cipher.PubKey{})
+		//		}
+		//	}
+		//	m.tagChanges()
+		//	return nil
+		//}
 	}
 
-	// Load to memory.
+	// LOAD TO MEMORY //
 
 	// Range master subscriptions.
 	for i, sub := range fileData.MasterSubs {
@@ -299,6 +373,15 @@ func (m *CXOFileManager) load(path string) error {
 		m.remotes.Append(pk, &Subscription{PK: pk})
 	}
 
+	// Range messenger addresses.
+	for i, address := range fileData.MessengerAddresses {
+		if e := tag.CheckAddress(address); e != nil {
+			return boo.WrapType(e, boo.InvalidRead,
+				"invalid address in file at messenger_addresses[%d]", i)
+		}
+		m.messengers.Append(address, cipher.PubKey{})
+	}
+
 	return nil
 }
 
@@ -314,6 +397,12 @@ func (m *CXOFileManager) save(path string) error {
 	fileData.RemoteSubs = make([]SubscriptionView, m.remotes.Len())
 	m.remotes.Range(typ.Ascending, func(i int, _, v interface{}) (bool, error) {
 		fileData.RemoteSubs[i] = v.(*Subscription).View()
+		return false, nil
+	})
+
+	fileData.MessengerAddresses = make([]string, m.messengers.Len())
+	m.messengers.Range(typ.Ascending, func(i int, k, _ interface{}) (bool, error) {
+		fileData.MessengerAddresses[i] = k.(string)
 		return false, nil
 	})
 

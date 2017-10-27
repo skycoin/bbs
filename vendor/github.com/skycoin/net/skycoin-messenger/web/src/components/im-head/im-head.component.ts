@@ -2,6 +2,8 @@ import { Component, OnInit, ViewEncapsulation, Input, HostListener } from '@angu
 import { HeadColorMatch, SocketService } from '../../providers';
 import { MdDialog } from '@angular/material';
 import { ImInfoDialogComponent } from '../im-info-dialog/im-info-dialog.component';
+import * as jdenticon from 'jdenticon';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-im-head',
@@ -13,22 +15,23 @@ export class ImHeadComponent implements OnInit {
   @Input() key = '';
   @Input() canClick = true;
   name = '';
+  img;
   icon: HeadColorMatch = { bg: '#fff', color: '#000' };
-  constructor(private socket: SocketService, private dialog: MdDialog) { }
+  constructor(private socket: SocketService, private dialog: MdDialog, private _domsanitizer: DomSanitizer) { }
 
   ngOnInit() {
     if (this.key === '') {
       this.name = '?';
     } else {
-      const size = this.key.length;
-      this.name = this.key.substr(size - 1, size).toUpperCase();
-    }
-    if (this.socket.userInfo.get(this.key) !== undefined) {
-      const icon = this.socket.userInfo.get(this.key).Icon;
-      if (icon !== undefined) {
-        this.icon = icon;
+      if (this.socket.userInfo.get(this.key) !== undefined) {
+        const icon = this.socket.userInfo.get(this.key).Icon;
+        if (icon !== undefined) {
+          this.icon = icon;
+        }
       }
+      this.img = this._domsanitizer.bypassSecurityTrustHtml(jdenticon.toSvg(this.key, 52));
     }
+
   }
 
   @HostListener('click', ['$event'])
