@@ -98,27 +98,49 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 			pFlags |= skyobject.ViewOnly
 		}
 
+		var (
+			oldHas bool
+			oldSeq uint64
+		)
+
+		// Find old.
+		if bi.p != nil {
+			oldHas = true
+			oldSeq = bi.h.GetRootSeq()
+			bi.p.Close()
+		}
+
 		if newPack, e := ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk); e != nil {
 			bi.l.Println(" - root unpack failed with error:", e)
 
-			if bi.p != nil && bi.IsMaster() {
-				bi.l.Println("/t- state has previous valid root and is master, attempting to fix...")
+			if oldHas && bi.isMaster() {
+				var goal = r.Seq
+				bi.l.Printf("\t- invalid root is of seq %d, attempting to surpass.", goal)
 
-				goal := r.Seq
-				bi.l.Printf("/t- invalid root is of seq %d, attempting to surpass.", goal)
+				r, e := bi.n.Container().Root(r.Pub, oldSeq)
+				if e != nil {
+					bi.l.Println("\t- FAILED:", e)
+					return e
+				}
 
-				for {
-					if e := bi.p.Save(); e != nil {
-						bi.l.Println("/t- FAILED:", e)
+				newPack, e := ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk)
+				if e != nil {
+					bi.l.Println("\t- FAILED:", e)
+					return e
+				}
+
+				for i := oldSeq; i <= goal; i++ {
+					if e := newPack.Save(); e != nil {
+						bi.l.Println("\t- FAILED:", e)
 						return e
 					}
-					if bi.p.Root().Seq > goal {
-						bi.l.Println("/t- SUCCESS!")
-						bi.needPublish.Set()
-						return nil
-					}
 				}
+				bi.l.Println("\t- SUCCESS!")
+				bi.needPublish.Set()
+				bi.p = newPack
+
 			} else {
+				bi.l.Println("\t- unable to fix, returning...")
 				return e
 			}
 		} else {
@@ -222,6 +244,10 @@ func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (interface{
 func (bi *BoardInstance) IsMaster() bool {
 	bi.mux.RLock()
 	defer bi.mux.RUnlock()
+	return bi.isMaster()
+}
+
+func (bi *BoardInstance) isMaster() bool {
 	return bi.p != nil && bi.p.Flags()&skyobject.ViewOnly == 0
 }
 

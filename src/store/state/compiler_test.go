@@ -119,6 +119,89 @@ func subscribeMaster(c *Compiler, pk cipher.PubKey, sk cipher.SecKey) error {
 	return c.node.AddFeed(pk)
 }
 
+type Woops struct {
+	Situation string
+	Annoyance uint64
+}
+
+type Haha struct {
+	Situation string
+	Humour    uint64
+	Dicks     skyobject.Refs `skyobject:"schema=Dick"`
+}
+
+type Dick struct {
+	Name string
+	Age  uint64
+}
+
+func prepareFaggot(t *testing.T, address string, discoveryAddresses []string) *node.Node {
+	c := node.NewConfig()
+	{
+		c.Skyobject.Registry = skyobject.NewRegistry(func(r *skyobject.Reg) {
+			r.Register("Woops", Woops{})
+			r.Register("Haha", Haha{})
+			r.Register("Dick", Dick{})
+		})
+		c.InMemoryDB = true
+		c.EnableListener = true
+		c.PublicServer = true
+		c.Listen = address
+		c.EnableRPC = false
+		c.RemoteClose = false
+		c.DiscoveryAddresses = discoveryAddresses
+	}
+	cxo, e := node.NewNode(c)
+	if e != nil {
+		t.Fatal(e)
+	}
+	return cxo
+}
+
+func performFaggotOperation(t *testing.T, n *node.Node, pk cipher.PubKey, sk cipher.SecKey) error {
+	if e := n.AddFeed(pk); e != nil {
+		return e
+	}
+	time.Sleep(time.Second)
+	r, e := n.Container().LastRoot(pk)
+	if e != nil {
+		return e
+	}
+	goal := r.Seq
+
+	p, e := n.Container().NewRoot(pk, sk, 0, n.Container().CoreRegistry().Types())
+	if e != nil {
+		return e
+	}
+	p.Append(
+		&Woops{
+			Situation: "Coffee Spill",
+			Annoyance: 26,
+		},
+		&Haha{
+			Situation: "Tripped Over Banana",
+			Humour: 5,
+			Dicks: p.Refs(
+				&Dick{
+					Name: "Sudo",
+					Age:  16,
+				},
+				&Dick{
+					Name: "Bash",
+					Age:  21,
+				},
+			),
+		},
+	)
+	p.Root().Seq = goal + 1
+	if e := p.Save(); e != nil {
+		return e
+	}
+
+	n.Publish(p.Root())
+	return nil
+}
+
 func TestNewCompiler(t *testing.T) {
 	const (
 		MessengerServerAddress = "[::]:11001"
@@ -128,21 +211,25 @@ func TestNewCompiler(t *testing.T) {
 	)
 	var (
 		f         = prepareMessengerServer(t, MessengerServerAddress)
-		compiler1 = prepareCompiler(t, Node1Address, []string{MessengerServerAddress})
-		compiler2 = prepareCompiler(t, Node2Address, []string{MessengerServerAddress})
+		compiler  = prepareCompiler(t, Node1Address, []string{MessengerServerAddress})
+		faggot    = prepareFaggot(t, Node2Address, []string{MessengerServerAddress})
 	)
 	defer f.Close()
-	defer closeCompiler(t, compiler1)
-	defer closeCompiler(t, compiler2)
+	defer closeCompiler(t, compiler)
+	defer faggot.Close()
 
-	in, e := newBoard(compiler1, BoardSeed, "Test Board V1", "A test board (v1).")
+	in, e := newBoard(compiler, BoardSeed, "Test Board V1", "A test board (v1).")
 	if e != nil {
+		t.Fatal(e)
+	}
+
+	if e := faggot.AddFeed(in.BoardPubKey); e != nil {
 		t.Fatal(e)
 	}
 
 	time.Sleep(time.Second)
 
-	if e := subscribeMaster(compiler2, in.BoardPubKey, in.BoardSecKey); e != nil {
+	if e := performFaggotOperation(t, faggot, in.BoardPubKey, in.BoardSecKey); e != nil {
 		t.Fatal(e)
 	}
 
