@@ -152,3 +152,71 @@ func TestBoardInstance_Init(t *testing.T) {
 	_, close := initInstance(t, bSeed)
 	close()
 }
+
+func TestBoardInstance_UpdateWithReceived(t *testing.T) {
+	const (
+		MessengerServerAddress = "[::]:11001"
+		Node1Address           = "[::]:11002"
+		Node2Address           = "[::]:11003"
+		BoardSeed              = "a"
+	)
+	var (
+		f         = prepareMessengerServer(t, MessengerServerAddress)
+		compilerRootChan = make(chan *skyobject.Root)
+		compiler  = prepareCompiler(t, Node1Address, []string{MessengerServerAddress},
+			func(c *node.Conn, root *skyobject.Root) {
+				go func() {
+					compilerRootChan <- root
+				}()
+			})
+		disruptorRootChan = make(chan *skyobject.Root)
+		disruptor = prepareDisruptor(t, Node2Address, []string{MessengerServerAddress},
+			func(c *node.Conn, root *skyobject.Root) {
+				go func() {
+					disruptorRootChan <- root
+				}()
+			})
+	)
+	defer f.Close()
+	defer closeCompiler(t, compiler)
+	defer disruptor.Close()
+
+	in, e := newBoard(compiler, BoardSeed, "Test Board V1", "A test board (v1).")
+	if e != nil {
+		t.Fatal(e)
+	}
+
+	if e := disruptor.AddFeed(in.BoardPubKey); e != nil {
+		t.Fatal(e)
+	}
+
+	// Wait for valid root to be received by disruptor.
+	{
+		root := <- disruptorRootChan
+		if len(root.Refs) != r0.RootChildrenCount {
+			t.Fatalf("disruptor received invalid root: child_count(%d) expected(%d)",
+				len(root.Refs), r0.RootChildrenCount)
+		}
+	}
+
+	if e := performDisruption(t, disruptor, in.BoardPubKey, in.BoardSecKey); e != nil {
+		t.Fatal(e)
+	}
+
+	// Wait for invalid root to be received by compiler.
+	{
+		root := <- compilerRootChan
+		if len(root.Refs) == r0.RootChildrenCount {
+			t.Fatal("compiler received valid root, when expecting something invalid")
+		}
+	}
+
+	// Wait for valid root to be received by disruptor.
+	{
+		root := <- disruptorRootChan
+		if len(root.Refs) != r0.RootChildrenCount {
+			t.Fatalf("disruptor received invalid root: child_count(%d) expected(%d)",
+				len(root.Refs), r0.RootChildrenCount)
+		}
+	}
+}

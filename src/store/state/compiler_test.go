@@ -23,7 +23,7 @@ func prepareMessengerServer(t *testing.T, address string) *factory.MessengerFact
 	return f
 }
 
-func prepareCompiler(t *testing.T, address string, discoveryAddresses []string) *Compiler {
+func prepareCompiler(t *testing.T, address string, discoveryAddresses []string, cb func(c *node.Conn, root *skyobject.Root)) *Compiler {
 	var (
 		memMode = true
 		haveDefaults = false
@@ -60,6 +60,7 @@ func prepareCompiler(t *testing.T, address string, discoveryAddresses []string) 
 		c.OnRootFilled = func(c *node.Conn, root *skyobject.Root) {
 			root.IsFull = true
 			newRootsChan <- RootWrap{Root: root}
+			cb(c, root)
 		}
 	}
 
@@ -135,7 +136,7 @@ type Participant struct {
 	Age  uint64
 }
 
-func prepareDisruptor(t *testing.T, address string, discoveryAddresses []string) *node.Node {
+func prepareDisruptor(t *testing.T, address string, discoveryAddresses []string, cb func(c *node.Conn, root *skyobject.Root)) *node.Node {
 	c := node.NewConfig()
 	{
 		c.Skyobject.Registry = skyobject.NewRegistry(func(r *skyobject.Reg) {
@@ -150,6 +151,7 @@ func prepareDisruptor(t *testing.T, address string, discoveryAddresses []string)
 		c.EnableRPC = false
 		c.RemoteClose = false
 		c.DiscoveryAddresses = discoveryAddresses
+		c.OnRootFilled = cb
 	}
 	cxo, e := node.NewNode(c)
 	if e != nil {
@@ -202,36 +204,3 @@ func performDisruption(t *testing.T, n *node.Node, pk cipher.PubKey, sk cipher.S
 	return nil
 }
 
-func TestNewCompiler(t *testing.T) {
-	const (
-		MessengerServerAddress = "[::]:11001"
-		Node1Address           = "[::]:11002"
-		Node2Address           = "[::]:11003"
-		BoardSeed              = "a"
-	)
-	var (
-		f         = prepareMessengerServer(t, MessengerServerAddress)
-		compiler  = prepareCompiler(t, Node1Address, []string{MessengerServerAddress})
-		disruptor = prepareDisruptor(t, Node2Address, []string{MessengerServerAddress})
-	)
-	defer f.Close()
-	defer closeCompiler(t, compiler)
-	defer disruptor.Close()
-
-	in, e := newBoard(compiler, BoardSeed, "Test Board V1", "A test board (v1).")
-	if e != nil {
-		t.Fatal(e)
-	}
-
-	if e := disruptor.AddFeed(in.BoardPubKey); e != nil {
-		t.Fatal(e)
-	}
-
-	time.Sleep(time.Second)
-
-	if e := performDisruption(t, disruptor, in.BoardPubKey, in.BoardSecKey); e != nil {
-		t.Fatal(e)
-	}
-
-	time.Sleep(10 * time.Second)
-}
