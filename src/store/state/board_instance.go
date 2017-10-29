@@ -107,10 +107,12 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 		if bi.p != nil {
 			oldHas = true
 			oldSeq = bi.h.GetRootSeq()
+			bi.l.Printf("was ready with seq(%d), hence closed.", oldSeq)
 			bi.p.Close()
 		}
 
-		if newPack, e := ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk); e != nil {
+		newPack, e := ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk)
+		if e != nil {
 			bi.l.Println(" - root unpack failed with error:", e)
 
 			if oldHas && bi.isMaster() {
@@ -123,38 +125,38 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 					return e
 				}
 
-				newPack, e := ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk)
+				newPack, e = ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk)
 				if e != nil {
 					bi.l.Println("\t- FAILED:", e)
 					return e
 				}
 
-				for i := oldSeq; i <= goal; i++ {
+				for i := oldSeq; i < goal; i++ {
 					if e := newPack.Save(); e != nil {
 						bi.l.Println("\t- FAILED:", e)
 						return e
 					}
 				}
-				bi.l.Println("\t- SUCCESS!")
+				bi.l.Println("\t- SUCCESS!", newPack.Root().Seq)
 				bi.needPublish.Set()
-				bi.p = newPack
 
 			} else {
 				bi.l.Println("\t- unable to fix, returning...")
 				return e
 			}
-		} else {
-			bi.l.Println(" - root unpack succeeded.")
-			bi.p = newPack
 		}
 
-		if newHeaders, e := pack.NewHeaders(bi.h, bi.p); e != nil {
+		bi.l.Println(" - root unpack succeeded.")
+		bi.p = newPack
+
+		newHeaders, e := pack.NewHeaders(bi.h, bi.p);
+		if  e != nil {
 			bi.l.Println(" - failed to generate new headers:", e)
 			return e
-		} else {
-			bi.l.Println(" - new headers successfully generated.")
-			bi.h = newHeaders
 		}
+
+		bi.l.Println(" - new headers successfully generated.")
+		bi.h = newHeaders
 
 		if firstRun {
 			i := 1

@@ -125,23 +125,23 @@ type Woops struct {
 }
 
 type Haha struct {
-	Situation string
-	Humour    uint64
-	Dicks     skyobject.Refs `skyobject:"schema=Dick"`
+	Situation    string
+	Humour       uint64
+	Participants skyobject.Refs `skyobject:"schema=Participant"`
 }
 
-type Dick struct {
+type Participant struct {
 	Name string
 	Age  uint64
 }
 
-func prepareFaggot(t *testing.T, address string, discoveryAddresses []string) *node.Node {
+func prepareDisruptor(t *testing.T, address string, discoveryAddresses []string) *node.Node {
 	c := node.NewConfig()
 	{
 		c.Skyobject.Registry = skyobject.NewRegistry(func(r *skyobject.Reg) {
 			r.Register("Woops", Woops{})
 			r.Register("Haha", Haha{})
-			r.Register("Dick", Dick{})
+			r.Register("Participant", Participant{})
 		})
 		c.InMemoryDB = true
 		c.EnableListener = true
@@ -158,7 +158,7 @@ func prepareFaggot(t *testing.T, address string, discoveryAddresses []string) *n
 	return cxo
 }
 
-func performFaggotOperation(t *testing.T, n *node.Node, pk cipher.PubKey, sk cipher.SecKey) error {
+func performDisruption(t *testing.T, n *node.Node, pk cipher.PubKey, sk cipher.SecKey) error {
 	if e := n.AddFeed(pk); e != nil {
 		return e
 	}
@@ -181,12 +181,12 @@ func performFaggotOperation(t *testing.T, n *node.Node, pk cipher.PubKey, sk cip
 		&Haha{
 			Situation: "Tripped Over Banana",
 			Humour: 5,
-			Dicks: p.Refs(
-				&Dick{
+			Participants: p.Refs(
+				&Participant{
 					Name: "Sudo",
 					Age:  16,
 				},
-				&Dick{
+				&Participant{
 					Name: "Bash",
 					Age:  21,
 				},
@@ -212,24 +212,24 @@ func TestNewCompiler(t *testing.T) {
 	var (
 		f         = prepareMessengerServer(t, MessengerServerAddress)
 		compiler  = prepareCompiler(t, Node1Address, []string{MessengerServerAddress})
-		faggot    = prepareFaggot(t, Node2Address, []string{MessengerServerAddress})
+		disruptor = prepareDisruptor(t, Node2Address, []string{MessengerServerAddress})
 	)
 	defer f.Close()
 	defer closeCompiler(t, compiler)
-	defer faggot.Close()
+	defer disruptor.Close()
 
 	in, e := newBoard(compiler, BoardSeed, "Test Board V1", "A test board (v1).")
 	if e != nil {
 		t.Fatal(e)
 	}
 
-	if e := faggot.AddFeed(in.BoardPubKey); e != nil {
+	if e := disruptor.AddFeed(in.BoardPubKey); e != nil {
 		t.Fatal(e)
 	}
 
 	time.Sleep(time.Second)
 
-	if e := performFaggotOperation(t, faggot, in.BoardPubKey, in.BoardSecKey); e != nil {
+	if e := performDisruption(t, disruptor, in.BoardPubKey, in.BoardSecKey); e != nil {
 		t.Fatal(e)
 	}
 
