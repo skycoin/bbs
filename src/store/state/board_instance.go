@@ -98,20 +98,65 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 			pFlags |= skyobject.ViewOnly
 		}
 
-		var e error
-		if bi.p, e = ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk); e != nil {
-			bi.l.Println(" - root unpack failed with error:", e)
-			return e
-		} else {
-			bi.l.Println(" - root unpack succeeded.")
+		var (
+			oldHas bool
+			oldSeq uint64
+		)
+
+		// Find old.
+		if bi.p != nil {
+			oldHas = true
+			oldSeq = bi.h.GetRootSeq()
+			bi.l.Printf("was ready with seq(%d), hence closed.", oldSeq)
+			bi.p.Close()
 		}
 
-		if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
+		newPack, e := ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk)
+		if e != nil {
+			bi.l.Println(" - root unpack failed with error:", e)
+
+			if oldHas && bi.isMaster() {
+				var goal = r.Seq
+				bi.l.Printf("\t- invalid root is of seq %d, attempting to surpass.", goal)
+
+				r, e := bi.n.Container().Root(r.Pub, oldSeq)
+				if e != nil {
+					bi.l.Println("\t- FAILED:", e)
+					return e
+				}
+
+				newPack, e = ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk)
+				if e != nil {
+					bi.l.Println("\t- FAILED:", e)
+					return e
+				}
+
+				for i := oldSeq; i < goal; i++ {
+					if e := newPack.Save(); e != nil {
+						bi.l.Println("\t- FAILED:", e)
+						return e
+					}
+				}
+				bi.l.Println("\t- SUCCESS!", newPack.Root().Seq)
+				bi.needPublish.Set()
+
+			} else {
+				bi.l.Println("\t- unable to fix, returning...")
+				return e
+			}
+		}
+
+		bi.l.Println(" - root unpack succeeded.")
+		bi.p = newPack
+
+		newHeaders, e := pack.NewHeaders(bi.h, bi.p);
+		if  e != nil {
 			bi.l.Println(" - failed to generate new headers:", e)
 			return e
-		} else {
-			bi.l.Println(" - new headers successfully generated.")
 		}
+
+		bi.l.Println(" - new headers successfully generated.")
+		bi.h = newHeaders
 
 		if firstRun {
 			i := 1
@@ -201,6 +246,10 @@ func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (interface{
 func (bi *BoardInstance) IsMaster() bool {
 	bi.mux.RLock()
 	defer bi.mux.RUnlock()
+	return bi.isMaster()
+}
+
+func (bi *BoardInstance) isMaster() bool {
 	return bi.p != nil && bi.p.Flags()&skyobject.ViewOnly == 0
 }
 
