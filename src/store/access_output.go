@@ -16,6 +16,20 @@ func getMessengers(_ context.Context, cs []*object.MessengerConnection) *Messeng
 	}
 }
 
+type AvailableBoardsOutput struct {
+	Boards []string `json:"boards"`
+}
+
+func getAvailableBoards(pks []cipher.PubKey) *AvailableBoardsOutput {
+	out := &AvailableBoardsOutput{
+		Boards: make([]string, len(pks)),
+	}
+	for i, pk := range pks {
+		out.Boards[i] = pk.Hex()
+	}
+	return out
+}
+
 type ConnectionsOutput struct {
 	Connections []object.Connection `json:"connections"`
 }

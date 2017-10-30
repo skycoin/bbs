@@ -151,6 +151,13 @@ func main() {
 						}))
 					},
 				},
+				{
+					Name: "discover",
+					Usage: "discovers available boards that we can subscribe to",
+					Action: func(ctx *cli.Context) error {
+						return call(rpc.Discover())
+					},
+				},
 			},
 		},
 		{

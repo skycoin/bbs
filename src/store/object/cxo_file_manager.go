@@ -310,30 +310,6 @@ func (m *CXOFileManager) load(path string) error {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"failed to read CXO file from '%s'", path)
 		}
-		//} else if *m.c.Defaults {
-		//	// Load defaults.
-		//	m.l.Println("First Run - Loading default subscriptions:")
-		//	for i, pkStr := range defaultSubscriptions {
-		//		pk, _ := keys.GetPubKey(pkStr)
-		//		m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
-		//		m.remotes.Append(pk, &Subscription{PK: pk})
-		//	}
-		//	if *m.c.Dev {
-		//		m.l.Println("First Run - Loading default messenger addresses (dev):")
-		//		for i, address := range defaultDevMessengers {
-		//			m.l.Printf(" - [%d] Messenger address '%s' (dev)", i, address)
-		//			m.messengers.Append(address, cipher.PubKey{})
-		//		}
-		//	} else {
-		//		m.l.Println("First Run - Loading default messenger addresses:")
-		//		for i, address := range defaultMessengers {
-		//			m.l.Printf(" - [%d] Messenger address '%s'", i, address)
-		//			m.messengers.Append(address, cipher.PubKey{})
-		//		}
-		//	}
-		//	m.tagChanges()
-		//	return nil
-		//}
 	}
 
 	// LOAD TO MEMORY //
