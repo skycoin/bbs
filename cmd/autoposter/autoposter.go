@@ -12,15 +12,13 @@ func main() {
 	app.Usage = "Used for testing Skycoin BBS"
 	app.Flags = cli.FlagsByName{
 		cli.IntFlag{
-			Name: "http-port,p",
+			Name:        "http-port,p",
 			Destination: &HTTPPort,
-			Value: HTTPPort,
+			Value:       HTTPPort,
 		},
 	}
 	app.Commands = cli.Commands{
-		{
-
-		},
+		{},
 	}
 	app.Action = cli.ActionFunc(func(ctx *cli.Context) error {
 		return nil

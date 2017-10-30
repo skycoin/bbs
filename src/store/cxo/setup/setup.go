@@ -1,11 +1,11 @@
 package setup
 
 import (
-	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/bbs/src/store/object/revisions/r0"
-	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/cxo/skyobject"
 )
 
 // PrepareRegistry sets up the CXO Registry.

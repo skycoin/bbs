@@ -1,25 +1,24 @@
 package state
 
 import (
-	"github.com/skycoin/cxo/node"
-	"github.com/skycoin/bbs/src/store/cxo/setup"
-	"github.com/skycoin/cxo/skyobject"
-	"testing"
-	"github.com/skycoin/skycoin/src/cipher"
-	"github.com/skycoin/bbs/src/store/state/views"
-	"github.com/skycoin/bbs/src/store/object"
 	"fmt"
-	"github.com/skycoin/bbs/src/store/state/pack"
+	"github.com/skycoin/bbs/src/store/cxo/setup"
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
+	"github.com/skycoin/bbs/src/store/state/pack"
+	"github.com/skycoin/bbs/src/store/state/views"
+	"github.com/skycoin/cxo/node"
+	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
 	"log"
+	"testing"
 )
 
 const (
 	ListenAddress = "[::]:18998"
-
 )
 
-func prepareNode(t *testing.T, address string) (*node.Node) {
+func prepareNode(t *testing.T, address string) *node.Node {
 	c := node.NewConfig()
 	c.Skyobject.Registry = skyobject.NewRegistry(
 		setup.PrepareRegistry)
@@ -115,8 +114,8 @@ func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte) uint64 {
 	in := &object.NewThreadIO{
 		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
-		Name: fmt.Sprintf("Thread %d", threadIndex),
-		Body: fmt.Sprintf("A test thread created of index %d.", threadIndex),
+		Name:           fmt.Sprintf("Thread %d", threadIndex),
+		Body:           fmt.Sprintf("A test thread created of index %d.", threadIndex),
 	}
 	if e := in.Process(cipher.GenerateDeterministicKeyPair(userSeed)); e != nil {
 		t.Fatal("failed to process new thread input:", e)
@@ -131,9 +130,9 @@ func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte
 func addPost(t *testing.T, bi *BoardInstance, threadHash cipher.SHA256, postIndex int, userSeed []byte) uint64 {
 	in := &object.NewPostIO{
 		BoardPubKeyStr: obtainBoardPubKey(t, bi).Hex(),
-		ThreadRefStr: threadHash.Hex(),
-		Name: fmt.Sprintf("Post %d", postIndex),
-		Body: fmt.Sprintf("A test post created of index %d.", postIndex),
+		ThreadRefStr:   threadHash.Hex(),
+		Name:           fmt.Sprintf("Post %d", postIndex),
+		Body:           fmt.Sprintf("A test post created of index %d.", postIndex),
 	}
 	if e := in.Process(cipher.GenerateDeterministicKeyPair(userSeed)); e != nil {
 		t.Fatal("failed to process new post input:", e)
@@ -156,21 +155,31 @@ func TestBoardInstance_Init(t *testing.T) {
 func TestBoardInstance_UpdateWithReceived(t *testing.T) {
 	const (
 		MessengerServerAddress = "[::]:11001"
-		Node1Address           = "[::]:11002"
-		Node2Address           = "[::]:11003"
-		BoardSeed              = "a"
+		Compiler1Address       = "[::]:11002"
+		Compiler2Address       = "[::]:11003"
+		DisruptorAddress       = "[::]:11004"
+		BoardSeedA             = "board a"
+		BoardSeedB             = "board b"
+
 	)
 	var (
-		f         = prepareMessengerServer(t, MessengerServerAddress)
-		compilerRootChan = make(chan *skyobject.Root)
-		compiler  = prepareCompiler(t, Node1Address, []string{MessengerServerAddress},
+		f                 = prepareMessengerServer(t, MessengerServerAddress)
+		compiler1RootChan = make(chan *skyobject.Root)
+		compiler1         = prepareCompiler(t, Compiler1Address, []string{MessengerServerAddress},
 			func(c *node.Conn, root *skyobject.Root) {
 				go func() {
-					compilerRootChan <- root
+					compiler1RootChan <- root
+				}()
+			})
+		compiler2RootChan = make(chan *skyobject.Root)
+		compiler2         = prepareCompiler(t, Compiler2Address, []string{MessengerServerAddress},
+			func(c *node.Conn, root *skyobject.Root) {
+				go func() {
+					compiler2RootChan <- root
 				}()
 			})
 		disruptorRootChan = make(chan *skyobject.Root)
-		disruptor = prepareDisruptor(t, Node2Address, []string{MessengerServerAddress},
+		disruptor         = prepareDisruptor(t, DisruptorAddress, []string{MessengerServerAddress},
 			func(c *node.Conn, root *skyobject.Root) {
 				go func() {
 					disruptorRootChan <- root
@@ -178,45 +187,67 @@ func TestBoardInstance_UpdateWithReceived(t *testing.T) {
 			})
 	)
 	defer f.Close()
-	defer closeCompiler(t, compiler)
+	defer closeCompiler(t, compiler1)
+	defer closeCompiler(t, compiler2)
 	defer disruptor.Close()
 
-	in, e := newBoard(compiler, BoardSeed, "Test Board V1", "A test board (v1).")
-	if e != nil {
-		t.Fatal(e)
-	}
+	t.Run("node_deals_with_invalid_master_root", func(t *testing.T) {
+		in, e := newBoard(compiler1, BoardSeedA, "Test Board A", "A test board (A).")
+		if e != nil {
+			t.Fatal(e)
+		}
 
-	if e := disruptor.AddFeed(in.BoardPubKey); e != nil {
-		t.Fatal(e)
-	}
+		if e := disruptor.AddFeed(in.BoardPubKey); e != nil {
+			t.Fatal(e)
+		}
 
-	// Wait for valid root to be received by disruptor.
-	{
-		root := <- disruptorRootChan
+		// Wait for valid root to be received by disruptor.
+		root := <-disruptorRootChan
 		if len(root.Refs) != r0.RootChildrenCount {
 			t.Fatalf("disruptor received invalid root: child_count(%d) expected(%d)",
 				len(root.Refs), r0.RootChildrenCount)
 		}
-	}
 
-	if e := performDisruption(t, disruptor, in.BoardPubKey, in.BoardSecKey); e != nil {
-		t.Fatal(e)
-	}
+		if e := performDisruption(t, disruptor, in.BoardPubKey, in.BoardSecKey); e != nil {
+			t.Fatal(e)
+		}
 
-	// Wait for invalid root to be received by compiler.
-	{
-		root := <- compilerRootChan
+		// Wait for invalid root to be received by compiler1.
+		root = <-compiler1RootChan
 		if len(root.Refs) == r0.RootChildrenCount {
-			t.Fatal("compiler received valid root, when expecting something invalid")
+			t.Fatal("compiler1 received valid root, when expecting something invalid")
 		}
-	}
 
-	// Wait for valid root to be received by disruptor.
-	{
-		root := <- disruptorRootChan
+
+		// Wait for valid root to be received by disruptor.
+		root = <-disruptorRootChan
 		if len(root.Refs) != r0.RootChildrenCount {
 			t.Fatalf("disruptor received invalid root: child_count(%d) expected(%d)",
 				len(root.Refs), r0.RootChildrenCount)
 		}
-	}
+	})
+
+	t.Run("node_deals_with_invalid_remote_root", func(t *testing.T) {
+		in, e := newBoard(compiler1, BoardSeedB, "Test Board B", "A test board (B).")
+		if e != nil {
+			t.Fatal(e)
+		}
+
+		if e := disruptor.AddFeed(in.BoardPubKey); e != nil {
+			t.Fatal(e)
+		}
+		<-disruptorRootChan
+
+		if e := subscribeRemote(compiler2, in.BoardPubKey); e != nil {
+			t.Fatal(e)
+		}
+		<-compiler2RootChan
+
+		for i := 0; i < 10; i++ {
+			if e := performDisruption(t, disruptor, in.BoardPubKey, in.BoardSecKey); e != nil {
+				t.Fatal(e)
+			}
+			<-compiler1RootChan
+		}
+	})
 }

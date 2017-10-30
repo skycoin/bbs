@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/msgs"
+	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/object/revisions/r0"
 	"github.com/skycoin/bbs/src/store/object/transfer"
@@ -25,7 +26,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/store/cxo/setup"
 )
 
 const (
@@ -470,7 +470,7 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 	<<< DISCOVERER >>>
 */
 
-func (m *Manager) GetDiscoveredBoards() ([]string) {
+func (m *Manager) GetDiscoveredBoards() []string {
 	return m.relay.GetBoards()
 }
 

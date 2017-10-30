@@ -54,11 +54,11 @@ type RelayConfig struct {
 }
 
 type Relay struct {
-	c           *RelayConfig
-	l           *log.Logger
-	factory     *factory.MessengerFactory
-	compiler    *state.Compiler
-	incomplete  *Incomplete
+	c          *RelayConfig
+	l          *log.Logger
+	factory    *factory.MessengerFactory
+	compiler   *state.Compiler
+	incomplete *Incomplete
 	//discoverer  *BoardDiscoverer
 	in          chan *BBSMessage
 	onConnected chan struct{}
@@ -208,16 +208,16 @@ func (r *Relay) service() {
 			}
 
 		//case <-nodeRefreshTicker.C:
-			//r.discoverer.ClearNodes()
-			//r.factory.ForEachConn(func(conn *factory.Connection) {
-			//	if e := conn.FindServiceNodesByAttributes(ServiceName); e != nil {
-			//		r.l.Printf("failed to find services of '%s'", ServiceName)
-			//	}
-			//})
-			//go func() {
-			//	time.Sleep(nodeInterval/2)
-				//r.discoverer.SendAsk()
-			//}()
+		//r.discoverer.ClearNodes()
+		//r.factory.ForEachConn(func(conn *factory.Connection) {
+		//	if e := conn.FindServiceNodesByAttributes(ServiceName); e != nil {
+		//		r.l.Printf("failed to find services of '%s'", ServiceName)
+		//	}
+		//})
+		//go func() {
+		//	time.Sleep(nodeInterval/2)
+		//r.discoverer.SendAsk()
+		//}()
 
 		case <-r.onConnected:
 			if e := r.compiler.EnsureSubmissionKeys(r.GetKeys()); e != nil {
