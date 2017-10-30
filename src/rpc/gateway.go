@@ -27,6 +27,22 @@ func (g *Gateway) Quit(code int, ok *bool) error {
 }
 
 /*
+	<<< CONNECTIONS : MESSENGER >>>
+*/
+
+func (g *Gateway) GetMessengerConnections(_ *struct{}, out *string) error {
+	return send(out)(g.Access.GetMessengerConnections(context.Background()))
+}
+
+func (g *Gateway) NewMessengerConnection(in *object.ConnectionIO, out *string) error {
+	return send(out)(g.Access.NewMessengerConnection(context.Background(), in))
+}
+
+func (g *Gateway) DeleteMessengerConnection(in *object.ConnectionIO, out *string) error {
+	return send(out)(g.Access.DeleteMessengerConnection(context.Background(), in))
+}
+
+/*
 	<<< CONNECTIONS >>>
 */
 

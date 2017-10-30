@@ -34,6 +34,22 @@ func Do(out interface{}, e error) string {
 }
 
 /*
+	<<< CONNECTIONS : MESSENGER >>>
+*/
+
+func GetMessengerConnections() (string, interface{}) {
+	return method("GetMessengerConnections"), empty()
+}
+
+func NewMessengerConnection(in *object.ConnectionIO) (string, interface{}) {
+	return method("NewMessengerConnection"), in
+}
+
+func DeleteMessengerConnection(in *object.ConnectionIO) (string, interface{}) {
+	return method("DeleteMessengerConnection"), in
+}
+
+/*
 	<<< CONNECTIONS >>>
 */
 

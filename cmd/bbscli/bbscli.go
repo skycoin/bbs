@@ -111,6 +111,49 @@ func main() {
 			},
 		},
 		{
+			Name: "messengers",
+			Usage: "manages messenger connections of the node",
+			Subcommands: cli.Commands{
+				{
+					Name: "list",
+					Usage: "lists all messenger connections",
+					Action: func(ctx *cli.Context) error {
+						return call(rpc.GetMessengerConnections())
+					},
+				},
+				{
+					Name: "new",
+					Usage: "adds a new messenger connection",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name: "address, a",
+							Usage: "messenger address to add",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return call(rpc.NewMessengerConnection(&object.ConnectionIO{
+							Address: ctx.String("address"),
+						}))
+					},
+				},
+				{
+					Name: "delete",
+					Usage: "removes a messenger connection",
+					Flags: cli.FlagsByName{
+						cli.StringFlag{
+							Name: "address, a",
+							Usage: "messenger address to remove",
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return call(rpc.DeleteMessengerConnection(&object.ConnectionIO{
+							Address: ctx.String("address"),
+						}))
+					},
+				},
+			},
+		},
+		{
 			Name:  "connections",
 			Usage: "manages connections of the node",
 			Subcommands: cli.Commands{
