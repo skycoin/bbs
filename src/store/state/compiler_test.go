@@ -1,17 +1,17 @@
 package state
 
 import (
-	"testing"
+	"context"
+	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
-	"github.com/skycoin/bbs/src/store/cxo/setup"
-	"github.com/skycoin/skycoin/src/cipher"
-	"context"
 	"github.com/skycoin/net/skycoin-messenger/factory"
+	"github.com/skycoin/skycoin/src/cipher"
+	"testing"
 	"time"
-	"github.com/skycoin/bbs/src/misc/boo"
 )
 
 func prepareMessengerServer(t *testing.T, address string) *factory.MessengerFactory {
@@ -25,8 +25,8 @@ func prepareMessengerServer(t *testing.T, address string) *factory.MessengerFact
 
 func prepareCompiler(t *testing.T, address string, discoveryAddresses []string, cb func(c *node.Conn, root *skyobject.Root)) *Compiler {
 	var (
-		memMode = true
-		haveDefaults = false
+		memMode        = true
+		haveDefaults   = false
 		updateInterval = 1
 	)
 
@@ -182,7 +182,7 @@ func performDisruption(t *testing.T, n *node.Node, pk cipher.PubKey, sk cipher.S
 		},
 		&Haha{
 			Situation: "Tripped Over Banana",
-			Humour: 5,
+			Humour:    5,
 			Participants: p.Refs(
 				&Participant{
 					Name: "Sudo",
@@ -203,4 +203,3 @@ func performDisruption(t *testing.T, n *node.Node, pk cipher.PubKey, sk cipher.S
 	n.Publish(p.Root())
 	return nil
 }
-

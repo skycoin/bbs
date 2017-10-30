@@ -1,17 +1,17 @@
 package state
 
 import (
-	"testing"
-	"sync"
-	"time"
-	"math/rand"
 	"github.com/skycoin/skycoin/src/cipher"
+	"math/rand"
+	"sync"
+	"testing"
+	"time"
 )
 
 func TestBoardInstance_NewThread(t *testing.T) {
 	const (
 		boardSeed = "a" // Seed for board creation.
-		userSeed = "b" // Seed for user generation.
+		userSeed  = "b" // Seed for user generation.
 	)
 
 	bi, quit := initInstance(t, boardSeed)
@@ -113,8 +113,8 @@ func TestBoardInstance_NewThread(t *testing.T) {
 
 	t.Run("add content while modifying board", func(t *testing.T) {
 		const (
-			threadCount = 30
-			postCount = 100
+			threadCount   = 30
+			postCount     = 100
 			maxSubPKCount = 5
 		)
 

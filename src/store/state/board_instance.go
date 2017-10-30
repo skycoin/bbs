@@ -98,59 +98,23 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 			pFlags |= skyobject.ViewOnly
 		}
 
-		var (
-			oldHas bool
-			oldSeq uint64
-		)
-
-		// Find old.
-		if bi.p != nil {
-			oldHas = true
-			oldSeq = bi.h.GetRootSeq()
-			bi.l.Printf("was ready with seq(%d), hence closed.", oldSeq)
-			bi.p.Close()
-		}
-
 		newPack, e := ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk)
 		if e != nil {
 			bi.l.Println(" - root unpack failed with error:", e)
-
-			if oldHas && bi.isMaster() {
-				var goal = r.Seq
-				bi.l.Printf("\t- invalid root is of seq %d, attempting to surpass.", goal)
-
-				r, e := bi.n.Container().Root(r.Pub, oldSeq)
-				if e != nil {
-					bi.l.Println("\t- FAILED:", e)
-					return e
-				}
-
-				newPack, e = ct.Unpack(r, pFlags, ct.CoreRegistry().Types(), sk)
-				if e != nil {
-					bi.l.Println("\t- FAILED:", e)
-					return e
-				}
-
-				for i := oldSeq; i < goal; i++ {
-					if e := newPack.Save(); e != nil {
-						bi.l.Println("\t- FAILED:", e)
-						return e
-					}
-				}
+			if newPack, e = bi.fixRoot(firstRun, pFlags, r.Seq, r.Pub, sk); e != nil {
+				bi.l.Println("\t- FAILED:", e)
+				return e
+			} else {
 				bi.l.Println("\t- SUCCESS!", newPack.Root().Seq)
 				bi.needPublish.Set()
-
-			} else {
-				bi.l.Println("\t- unable to fix, returning...")
-				return e
 			}
 		}
 
 		bi.l.Println(" - root unpack succeeded.")
 		bi.p = newPack
 
-		newHeaders, e := pack.NewHeaders(bi.h, bi.p);
-		if  e != nil {
+		newHeaders, e := pack.NewHeaders(bi.h, bi.p)
+		if e != nil {
 			bi.l.Println(" - failed to generate new headers:", e)
 			return e
 		}
@@ -182,6 +146,48 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	}
 
 	return nil
+}
+
+func (bi *BoardInstance) fixRoot(firstRun bool, flags skyobject.Flag, goal uint64, pk cipher.PubKey, sk cipher.SecKey) (*skyobject.Pack, error) {
+	var (
+		ct        = bi.n.Container()
+		isMaster  = sk != (cipher.SecKey{})
+		validPack *skyobject.Pack
+	)
+
+	// If we don't have old, find it.
+	if firstRun == false {
+		for i := goal; i >= 0; i-- {
+			if tempRoot, e := ct.Root(pk, i); e != nil || len(tempRoot.Refs) != r0.RootChildrenCount {
+				continue
+			} else if tempPack, e := ct.Unpack(tempRoot, flags, ct.CoreRegistry().Types(), sk); e != nil {
+				continue
+			} else {
+				// TODO: Need to check root.
+				validPack = tempPack
+				break
+			}
+		}
+	}
+	if validPack == nil {
+		return nil, boo.New(boo.InvalidRead,
+			"failed to find a valid root that can represent a board")
+	}
+
+	// Return if we are unable to change most recent root.
+	if isMaster == false {
+		return validPack, nil
+	}
+
+	// Surpass sequence.
+	oldSeq := validPack.Root().Seq
+	for i := oldSeq; i < goal; i++ {
+		if e := validPack.Save(); e != nil {
+			return nil, boo.WrapTypef(e, boo.Internal, "failed to surpass seq(%d)", oldSeq)
+		}
+	}
+
+	return validPack, nil
 }
 
 // PublishChanges publishes changes to CXO.
