@@ -163,7 +163,7 @@ func (bi *BoardInstance) fixRoot(firstRun bool, flags skyobject.Flag, goal uint6
 			} else if tempPack, e := ct.Unpack(tempRoot, flags, ct.CoreRegistry().Types(), sk); e != nil {
 				continue
 			} else {
-				// TODO: Need to check root.
+				// TODO (evanlinjin) : Need to check root.
 				validPack = tempPack
 				break
 			}
