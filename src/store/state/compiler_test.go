@@ -120,6 +120,13 @@ func subscribeMaster(c *Compiler, pk cipher.PubKey, sk cipher.SecKey) error {
 	return c.node.AddFeed(pk)
 }
 
+func subscribeRemote(c *Compiler, pk cipher.PubKey) error {
+	if e := c.file.AddRemoteSub(pk); e != nil {
+		return e
+	}
+	return c.node.AddFeed(pk)
+}
+
 type Woops struct {
 	Situation string
 	Annoyance uint64
