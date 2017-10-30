@@ -117,6 +117,10 @@ func (a *Access) DeleteMessengerConnection(ctx context.Context, in *object.Conne
 	return a.GetMessengerConnections(ctx)
 }
 
+func (a *Access) GetAvailableBoards(ctx context.Context) (*AvailableBoardsOutput, error) {
+	return getAvailableBoards(a.CXO.GetAvailableBoards()), nil
+}
+
 /*
 	<<< CONNECTIONS >>>
 */

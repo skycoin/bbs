@@ -395,6 +395,26 @@ func (m *Manager) SubmitToRemote(
 	return 0, boo.New(boo.NotFound, "a valid connection to messenger server is not found")
 }
 
+func (m *Manager) GetAvailableBoards() []cipher.PubKey {
+
+	temp := make(map[cipher.PubKey]struct{})
+	if discovery := m.node.Discovery(); discovery != nil {
+		discovery.ForEachConn(func(conn *factory.Connection) {
+			for _, service := range conn.GetServices().Services {
+				temp[service.Key] = struct{}{}
+			}
+		})
+	}
+
+	out := make([]cipher.PubKey, len(temp))
+	i := 0
+	for pk := range temp {
+		out[i] = pk
+		i += 1
+	}
+	return out
+}
+
 /*
 	<<< CONNECTION >>>
 */

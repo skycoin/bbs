@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+GOPATH=${HOME}/go
+
 inMac() {
     if ! type "curl" > /dev/null; then
         echo "curl is not installed."

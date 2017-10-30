@@ -49,6 +49,10 @@ func DeleteMessengerConnection(in *object.ConnectionIO) (string, interface{}) {
 	return method("DeleteMessengerConnection"), in
 }
 
+func Discover() (string, interface{}) {
+	return method("Discover"), empty()
+}
+
 /*
 	<<< CONNECTIONS >>>
 */

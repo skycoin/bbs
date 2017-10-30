@@ -42,6 +42,10 @@ func (g *Gateway) DeleteMessengerConnection(in *object.ConnectionIO, out *string
 	return send(out)(g.Access.DeleteMessengerConnection(context.Background(), in))
 }
 
+func (g *Gateway) Discover(_ *struct{}, out *string) error {
+	return send(out)(g.Access.GetAvailableBoards(context.Background()))
+}
+
 /*
 	<<< CONNECTIONS >>>
 */

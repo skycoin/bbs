@@ -31,9 +31,9 @@ var (
 	//defaultSubscriptions = []string{
 	//	"03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
 	//}
-	//defaultMessengerAddresses = cli.StringSlice{
-	//	"messenger.skycoin.net:8080",
-	//}
+	defaultMessengerAddresses = cli.StringSlice{
+		"messenger.skycoin.net:8080",
+	}
 	//defaultDevMessengerAddresses = cli.StringSlice{
 	//	"127.0.0.1:8080",
 	//}
@@ -73,7 +73,7 @@ func NewDefaultConfig() *Config {
 		CXOPort:                    defaultCXOPort,
 		CXORPC:                     false,
 		CXORPCPort:                 defaultCXORPCPort,
-		EnforcedMessengerAddresses: []string{},
+		EnforcedMessengerAddresses: defaultMessengerAddresses,
 		EnforcedSubscriptions:      []string{},
 		HTTPPort:                   defaultHTTPPort,
 		HTTPGUI:                    true,
