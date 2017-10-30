@@ -63,17 +63,18 @@ func (r *Relay) Connect(address string) (cipher.PubKey, error) {
 	}
 }
 
-func (r *Relay) Disconnect(key cipher.PubKey) bool {
+func (r *Relay) Disconnect(address string) bool {
 	if r.initialised.Value() == false {
 		return false
 	}
-	conn, ok := r.factory.GetConnection(key)
-	if !ok {
-		return false
-	} else {
-		conn.Close()
-		return true
-	}
+	var out bool
+	r.factory.ForEachConn(func(conn *factory.Connection) {
+		if conn.GetRemoteAddr().String() == address {
+			conn.Close()
+			out = true
+		}
+	})
+	return out
 }
 
 func (r *Relay) connectionService(conn *factory.Connection) {
