@@ -34,7 +34,7 @@ func prepareCompiler(t *testing.T, address string, discoveryAddresses []string, 
 	}
 
 	fileManager := object.NewCXOFileManager(&object.CXOFileManagerConfig{
-		Memory:   &memMode,
+		Memory: &memMode,
 	})
 
 	newRootsChan := make(chan RootWrap)

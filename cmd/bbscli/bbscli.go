@@ -111,22 +111,22 @@ func main() {
 			},
 		},
 		{
-			Name: "messengers",
+			Name:  "messengers",
 			Usage: "manages messenger connections of the node",
 			Subcommands: cli.Commands{
 				{
-					Name: "list",
+					Name:  "list",
 					Usage: "lists all messenger connections",
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.GetMessengerConnections())
 					},
 				},
 				{
-					Name: "new",
+					Name:  "new",
 					Usage: "adds a new messenger connection",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
-							Name: "address, a",
+							Name:  "address, a",
 							Usage: "messenger address to add",
 						},
 					},
@@ -137,11 +137,11 @@ func main() {
 					},
 				},
 				{
-					Name: "delete",
+					Name:  "delete",
 					Usage: "removes a messenger connection",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
-							Name: "address, a",
+							Name:  "address, a",
 							Usage: "messenger address to remove",
 						},
 					},
@@ -152,7 +152,7 @@ func main() {
 					},
 				},
 				{
-					Name: "discover",
+					Name:  "discover",
 					Usage: "discovers available boards that we can subscribe to",
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.Discover())

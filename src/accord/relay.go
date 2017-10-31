@@ -183,7 +183,7 @@ func (r *Relay) SubmitToRemote(ctx context.Context, toPK cipher.PubKey, data int
 		defer r.incomplete.Remove(hash)
 
 		var (
-			done bool
+			done   bool
 			eStack error
 		)
 		r.factory.ForEachConn(func(conn *factory.Connection) {

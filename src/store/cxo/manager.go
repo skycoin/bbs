@@ -15,6 +15,7 @@ import (
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/skycoin/src/cipher"
 	"io/ioutil"
 	log2 "log"
@@ -25,7 +26,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/skycoin/net/skycoin-messenger/factory"
 )
 
 const (

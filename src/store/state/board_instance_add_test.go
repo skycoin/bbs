@@ -1,12 +1,12 @@
 package state
 
 import (
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 	"math/rand"
 	"sync"
 	"testing"
 	"time"
-	"github.com/skycoin/bbs/src/store/object"
 )
 
 func TestBoardInstance_NewThread(t *testing.T) {
@@ -176,7 +176,7 @@ func TestBoardInstance_NewThread(t *testing.T) {
 						pk, _ := cipher.GenerateKeyPair()
 						subKeys[i] = &object.MessengerSubKeyTransport{
 							Address: ListenAddress,
-							PubKey: pk,
+							PubKey:  pk,
 						}
 
 					}

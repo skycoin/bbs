@@ -174,7 +174,6 @@ func TestBoardInstance_UpdateWithReceived(t *testing.T) {
 		DisruptorAddress       = "[::]:11004"
 		BoardSeedA             = "board a"
 		BoardSeedB             = "board b"
-
 	)
 	var (
 		f                 = prepareMessengerServer(t, MessengerServerAddress)
@@ -231,7 +230,6 @@ func TestBoardInstance_UpdateWithReceived(t *testing.T) {
 		if len(root.Refs) == object.RootChildrenCount {
 			t.Fatal("compiler1 received valid root, when expecting something invalid")
 		}
-
 
 		// Wait for valid root to be received by disruptor.
 		root = <-disruptorRootChan
