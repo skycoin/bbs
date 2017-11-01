@@ -1,9 +1,9 @@
 package paginatedtypes
 
 import (
-	"testing"
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/typ"
+	"testing"
 )
 
 func TestSimple_Get(t *testing.T) {
@@ -15,7 +15,7 @@ func TestSimple_Get(t *testing.T) {
 	}
 
 	t.Run("expect error when start_index > data_count", func(t *testing.T) {
-		if _, e := p.Get(&typ.PaginatedInput{StartIndex: count+1}); e != nil {
+		if _, e := p.Get(&typ.PaginatedInput{StartIndex: count + 1}); e != nil {
 			t.Log("error as expected:", e)
 		} else {
 			t.Error("expected error when start_index > data_count")
@@ -33,8 +33,8 @@ func TestSimple_Get(t *testing.T) {
 	t.Run("get", func(t *testing.T) {
 		out, e := p.Get(&typ.PaginatedInput{
 			StartIndex: 2,
-			MaxCount: 6,
-			Reverse: false,
+			MaxCount:   6,
+			Reverse:    false,
 		})
 		if e != nil {
 			t.Error(e)

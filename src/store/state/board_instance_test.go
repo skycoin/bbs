@@ -5,8 +5,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state/pack"
-	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -56,7 +54,7 @@ func prepareBoard(t *testing.T, n *node.Node, seed string) (cipher.PubKey, ciphe
 }
 
 func prepareInstance(_ *testing.T, n *node.Node, pk cipher.PubKey) *BoardInstance {
-	return new(BoardInstance).Init(n, pk, views.AddContent(), views.AddFollow())
+	return new(BoardInstance).Init(n, pk)
 }
 
 func initInstance(t *testing.T, seed string) (*BoardInstance, func()) {
@@ -76,7 +74,7 @@ func initInstance(t *testing.T, seed string) (*BoardInstance, func()) {
 
 func obtainBoardPubKey(t *testing.T, bi *BoardInstance) cipher.PubKey {
 	var pk cipher.PubKey
-	e := bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.ViewPack(func(p *skyobject.Pack, h *Headers) error {
 		if p == nil {
 			log.Println("*skyobject.Pack is empty")
 		}
@@ -95,7 +93,7 @@ func obtainBoardPubKey(t *testing.T, bi *BoardInstance) cipher.PubKey {
 
 func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 	var threads []cipher.SHA256
-	bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	bi.ViewPack(func(p *skyobject.Pack, h *Headers) error {
 		pages, e := object.GetPages(p, &object.GetPagesIn{
 			RootPage:  false,
 			BoardPage: true,

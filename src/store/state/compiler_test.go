@@ -5,7 +5,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/net/skycoin-messenger/factory"
@@ -72,8 +71,6 @@ func prepareCompiler(t *testing.T, address string, discoveryAddresses []string, 
 		fileManager,
 		newRootsChan,
 		cxo,
-		views.AddContent(),
-		views.AddFollow(),
 	)
 
 	return compiler

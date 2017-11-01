@@ -4,7 +4,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
@@ -111,7 +110,7 @@ func NewViewer(pack *skyobject.Pack, pInit typ.PaginatedCreator) (*Viewer, error
 	return v, nil
 }
 
-func (v *Viewer) Update(pack *skyobject.Pack, headers *pack.Headers) error {
+func (v *Viewer) Update(pack *skyobject.Pack, headers *Headers) error {
 	if v == nil {
 		return ErrViewerNotInitialized
 	}
@@ -257,14 +256,14 @@ func (v *Viewer) GetBoard() (*object.ContentRep, error) {
 }
 
 type BoardPageIn struct {
-	Perspective string
+	Perspective    string
 	PaginatedInput typ.PaginatedInput
 }
 
 type BoardPageOut struct {
-	Board   *object.ContentRep   `json:"board"`
+	Board       *object.ContentRep   `json:"board"`
 	ThreadsMeta *typ.PaginatedOutput `json:"threads_meta"`
-	Threads []*object.ContentRep `json:"threads"`
+	Threads     []*object.ContentRep `json:"threads"`
 }
 
 func (v *Viewer) GetBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
@@ -298,10 +297,10 @@ type ThreadPageIn struct {
 }
 
 type ThreadPageOut struct {
-	Board *object.ContentRep `json:"board"`
-	Thread *object.ContentRep `json:"thread"`
+	Board     *object.ContentRep   `json:"board"`
+	Thread    *object.ContentRep   `json:"thread"`
 	PostsMeta *typ.PaginatedOutput `json:"posts_meta"`
-	Posts []*object.ContentRep `json:"posts"`
+	Posts     []*object.ContentRep `json:"posts"`
 }
 
 func (v *Viewer) GetThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {

@@ -6,8 +6,8 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/typ"
+	"github.com/skycoin/bbs/src/misc/typ/paginatedtypes"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -15,7 +15,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/misc/typ/paginatedtypes"
 )
 
 var (
@@ -34,7 +33,7 @@ type BoardInstance struct {
 	mux sync.RWMutex // Only use (RLock/RUnlock) with reading root sequence.
 	n   *node.Node
 	p   *skyobject.Pack
-	h   *pack.Headers
+	h   *Headers
 	v   *Viewer
 
 	needPublish typ.Bool // Whether there are changes that need to be published.
@@ -110,7 +109,7 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	bi.l.Println(" - root unpack succeeded.")
 	bi.p = newPack
 
-	newHeaders, e := pack.NewHeaders(bi.h, bi.p)
+	newHeaders, e := NewHeaders(bi.h, bi.p)
 	if e != nil {
 		bi.l.Println(" - failed to generate new headers:", e)
 		return e
@@ -204,7 +203,7 @@ func (bi *BoardInstance) PublishChanges() error {
 
 		// Reset headers.
 		var e error
-		if bi.h, e = pack.NewHeaders(nil, bi.p); e != nil {
+		if bi.h, e = NewHeaders(nil, bi.p); e != nil {
 			return boo.WrapType(e, boo.Internal, "failed to reset headers")
 		}
 
@@ -220,7 +219,7 @@ func (bi *BoardInstance) PublishChanges() error {
 
 		// Update headers.
 		var e error
-		if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
+		if bi.h, e = NewHeaders(bi.h, bi.p); e != nil {
 			return boo.WrapType(e, boo.Internal, "failed to generate new headers")
 		}
 
@@ -299,7 +298,7 @@ func (bi *BoardInstance) WaitSeq(ctx context.Context, goal uint64) error {
 }
 
 // PackAction represents an action applied to a root pack.
-type PackAction func(p *skyobject.Pack, h *pack.Headers) error
+type PackAction func(p *skyobject.Pack, h *Headers) error
 
 // EditPack ensures safe modification to the pack.
 func (bi *BoardInstance) EditPack(action PackAction) error {
@@ -351,7 +350,7 @@ func (bi *BoardInstance) IsReady() bool {
 
 func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.PagesJSON, error) {
 	var out *object.PagesJSON
-	var e = bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	var e = bi.ViewPack(func(p *skyobject.Pack, h *Headers) error {
 		pages, e := object.GetPages(p, &object.GetPagesIn{
 			RootPage:  true,
 			BoardPage: true,
@@ -369,7 +368,7 @@ func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.Pag
 
 func (bi *BoardInstance) Import(in *object.PagesJSON) (uint64, error) {
 	var goal uint64
-	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 		goal = p.Root().Seq + 1
 		pages, e := object.NewPages(p, in)
 		if e != nil {

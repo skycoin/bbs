@@ -22,9 +22,9 @@ func (p *Simple) Get(in *typ.PaginatedInput) (*typ.PaginatedOutput, error) {
 
 	var action func(v uint) uint
 	if in.Reverse {
-		action = func(v uint) uint { return v-1 }
+		action = func(v uint) uint { return v - 1 }
 	} else {
-		action = func(v uint) uint { return v+1 }
+		action = func(v uint) uint { return v + 1 }
 	}
 	for i, j := uint(0), in.StartIndex; i < out.ObtainedCount; i, j = i+1, action(j) {
 		out.Data[i] = p.list[j]

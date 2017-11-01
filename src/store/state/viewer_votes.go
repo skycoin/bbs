@@ -1,8 +1,8 @@
 package state
 
 import (
-	"github.com/skycoin/bbs/src/store/object"
 	"encoding/json"
+	"github.com/skycoin/bbs/src/store/object"
 )
 
 type VotesRep struct {

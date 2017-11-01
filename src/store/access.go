@@ -3,15 +3,15 @@ package store
 import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/file"
 	"log"
+	"math"
 	"os"
 	"time"
-	"github.com/skycoin/bbs/src/misc/typ"
-	"math"
 )
 
 type Access struct {
@@ -266,7 +266,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interfac
 		return nil, e
 	}
 	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
-		Perspective: in.UserPubKeyStr,
+		Perspective:    in.UserPubKeyStr,
 		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
@@ -295,7 +295,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 		return nil, e
 	}
 	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
-		Perspective: in.CreatorPubKey.Hex(),
+		Perspective:    in.CreatorPubKey.Hex(),
 		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
@@ -309,8 +309,8 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interf
 		return nil, e
 	}
 	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
-		Perspective: in.UserPubKeyStr,
-		ThreadHash:  in.ThreadRefStr,
+		Perspective:    in.UserPubKeyStr,
+		ThreadHash:     in.ThreadRefStr,
 		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
@@ -338,8 +338,8 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 		return nil, e
 	}
 	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
-		Perspective: in.CreatorPubKey.Hex(),
-		ThreadHash:  in.ThreadRefStr,
+		Perspective:    in.CreatorPubKey.Hex(),
+		ThreadHash:     in.ThreadRefStr,
 		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }

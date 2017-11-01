@@ -1,4 +1,4 @@
-package pack
+package state
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
