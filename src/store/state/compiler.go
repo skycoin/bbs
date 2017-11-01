@@ -5,7 +5,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state/views"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -34,7 +33,6 @@ type Compiler struct {
 
 	mux    sync.Mutex
 	boards map[cipher.PubKey]*BoardInstance
-	adders []views.Adder
 
 	newRoots chan RootWrap
 	quit     chan struct{}
@@ -47,7 +45,6 @@ func NewCompiler(
 	file *object.CXOFileManager,
 	newRoots chan RootWrap,
 	node *node.Node,
-	adders ...views.Adder,
 ) *Compiler {
 	compiler := &Compiler{
 		c:        config,
@@ -55,7 +52,6 @@ func NewCompiler(
 		node:     node,
 		file:     file,
 		boards:   make(map[cipher.PubKey]*BoardInstance),
-		adders:   adders,
 		newRoots: newRoots,
 		quit:     make(chan struct{}),
 	}
@@ -223,7 +219,7 @@ func (c *Compiler) ensureBoard(pk cipher.PubKey) *BoardInstance {
 
 	bi, has := c.boards[pk]
 	if !has {
-		bi = new(BoardInstance).Init(c.node, pk, c.adders...)
+		bi = new(BoardInstance).Init(c.node, pk)
 		c.boards[pk] = bi
 	}
 	bi.SetReceived()

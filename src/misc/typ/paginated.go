@@ -18,11 +18,11 @@ type PaginatedInput struct {
 }
 
 type PaginatedOutput struct {
-	StartIndex     uint
-	ObtainedCount  uint
-	RemainingCount uint
-	IsReversed     bool
-	Data           []string
+	StartIndex     uint `json:"start_index"`
+	ObtainedCount  uint `json:"obtained_count"`
+	RemainingCount uint `json:"remaining_count"`
+	IsReversed     bool `json:"is_reversed"`
+	Data           []string `json:"-"`
 }
 
 func NewPaginatedOutput(in *PaginatedInput, dataCount uint) (*PaginatedOutput, error) {

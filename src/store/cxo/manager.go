@@ -9,8 +9,6 @@ import (
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
-	"github.com/skycoin/bbs/src/store/state/views"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/node/log"
@@ -81,11 +79,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	}
 
 	// Prepare CXO compiler.
-	manager.compiler = state.NewCompiler(
-		compilerConfig, manager.file, manager.newRoots, manager.node,
-		views.AddContent(),
-		views.AddFollow(),
-	)
+	manager.compiler = state.NewCompiler(compilerConfig, manager.file, manager.newRoots, manager.node)
 
 	// Prepare messenger relay.
 	if e := manager.relay.Open(manager.compiler); e != nil {
@@ -554,7 +548,7 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 			m.l.Println(e)
 			return
 		}
-		bView, e := bi.Get(views.Content, content_view.Board)
+		bView, e := bi.Viewer().GetBoard()
 		if e != nil {
 			m.l.Println(e)
 			return
@@ -569,7 +563,7 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 			m.l.Println(e)
 			return
 		}
-		bView, e := bi.Get(views.Content, content_view.Board)
+		bView, e := bi.Viewer().GetBoard()
 		if e != nil {
 			m.l.Println(e)
 			return

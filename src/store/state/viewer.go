@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+var ErrViewerNotInitialized = boo.New(boo.NotFound, "viewer is not initialized")
+
 /*
 	<<< INDEXER >>>
 */
@@ -55,7 +57,7 @@ type Viewer struct {
 	pInit typ.PaginatedCreator
 }
 
-func NewViewer(pack *skyobject.Pack, headers *pack.Headers, pInit typ.PaginatedCreator) (*Viewer, error) {
+func NewViewer(pack *skyobject.Pack, pInit typ.PaginatedCreator) (*Viewer, error) {
 	v := &Viewer{
 		pk:    pack.Root().Pub,
 		i:     NewIndexer(pInit),
@@ -107,6 +109,47 @@ func NewViewer(pack *skyobject.Pack, headers *pack.Headers, pInit typ.PaginatedC
 	}
 
 	return v, nil
+}
+
+func (v *Viewer) Update(pack *skyobject.Pack, headers *pack.Headers) error {
+	if v == nil {
+		return ErrViewerNotInitialized
+	}
+	defer v.lock()()
+
+	pages, e := object.GetPages(pack, &object.GetPagesIn{
+		RootPage:  false,
+		BoardPage: true,
+		DiffPage:  false,
+		UsersPage: false,
+	})
+	if e != nil {
+		return e
+	}
+
+	board, e := pages.BoardPage.GetBoard()
+	if e != nil {
+		return e
+	}
+	v.setBoard(board)
+
+	for _, content := range headers.GetChanges().New {
+		switch content.GetBody().Type {
+		case object.V5ThreadType:
+			if _, e := v.addThread(content); e != nil {
+				return e
+			}
+		case object.V5PostType:
+			tHash, _ := content.GetBody().GetOfThread()
+			if e := v.addPost(tHash, content); e != nil {
+				return e
+			}
+		case object.V5ThreadVoteType, object.V5PostVoteType:
+			v.processVote(content)
+		}
+	}
+
+	return nil
 }
 
 func (v *Viewer) lock() func() {
@@ -199,6 +242,127 @@ func (v *Viewer) processVote(c *object.Content) error {
 	voteRep.Add(c)
 
 	return nil
+}
+
+/*
+	<<< GET >>>
+*/
+
+func (v *Viewer) GetBoard() (*object.ContentRep, error) {
+	if v == nil {
+		return nil, ErrViewerNotInitialized
+	}
+	defer v.lock()()
+	return v.c.content[v.i.Board], nil
+}
+
+type BoardPageIn struct {
+	Perspective string
+	PaginatedInput typ.PaginatedInput
+}
+
+type BoardPageOut struct {
+	Board   *object.ContentRep   `json:"board"`
+	ThreadsMeta *typ.PaginatedOutput `json:"threads_meta"`
+	Threads []*object.ContentRep `json:"threads"`
+}
+
+func (v *Viewer) GetBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
+	if v == nil {
+		return nil, ErrViewerNotInitialized
+	}
+	defer v.lock()()
+
+	tHashes, e := v.i.Threads.Get(&in.PaginatedInput)
+	if e != nil {
+		return nil, e
+	}
+
+	out := new(BoardPageOut)
+	out.Board = v.c.content[v.i.Board]
+	out.ThreadsMeta = tHashes
+	out.Threads = make([]*object.ContentRep, len(tHashes.Data))
+	for i, tHash := range tHashes.Data {
+		out.Threads[i] = v.c.content[tHash]
+		if votes, ok := v.c.votes[tHash]; ok {
+			out.Threads[i].Votes = votes.View(in.Perspective)
+		}
+	}
+	return out, nil
+}
+
+type ThreadPageIn struct {
+	Perspective    string
+	ThreadHash     string
+	PaginatedInput typ.PaginatedInput
+}
+
+type ThreadPageOut struct {
+	Board *object.ContentRep `json:"board"`
+	Thread *object.ContentRep `json:"thread"`
+	PostsMeta *typ.PaginatedOutput `json:"posts_meta"`
+	Posts []*object.ContentRep `json:"posts"`
+}
+
+func (v *Viewer) GetThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
+	if v == nil {
+		return nil, ErrViewerNotInitialized
+	}
+	defer v.lock()()
+	out := new(ThreadPageOut)
+	out.Board = v.c.content[v.i.Board]
+	out.Thread = v.c.content[in.ThreadHash]
+
+	if out.Thread == nil {
+		return nil, boo.Newf(boo.NotFound, "thread of hash '%s' is not found in board '%s'",
+			in.ThreadHash, v.pk.Hex())
+	}
+	if votes, ok := v.c.votes[in.ThreadHash]; ok {
+		out.Thread.Votes = votes.View(in.Perspective)
+	}
+
+	pHashes, e := v.i.Posts[in.ThreadHash].Get(&in.PaginatedInput)
+	if e != nil {
+		return nil, e
+	}
+	out.Posts = make([]*object.ContentRep, len(pHashes.Data))
+	for i, pHash := range pHashes.Data {
+		out.Posts[i] = v.c.content[pHash]
+		if votes, ok := v.c.votes[pHash]; ok {
+			out.Posts[i].Votes = votes.View(in.Perspective)
+		}
+	}
+
+	return out, nil
+}
+
+type ContentVotesIn struct {
+	Perspective string
+	ContentHash string
+}
+
+type ContentVotesOut struct {
+	Votes *VoteRepView `json:"votes"`
+}
+
+func (v *Viewer) GetVotes(in *ContentVotesIn) (*ContentVotesOut, error) {
+	if v == nil {
+		return nil, ErrViewerNotInitialized
+	}
+	defer v.lock()()
+	out := new(ContentVotesOut)
+	if votes, ok := v.c.votes[in.ContentHash]; ok {
+		out.Votes = votes.View(in.Perspective)
+		return out, nil
+	}
+	if _, ok := v.c.content[in.ContentHash]; ok {
+		out.Votes = &VoteRepView{
+			Ref: in.ContentHash,
+		}
+		return out, nil
+	}
+	return nil, boo.Newf(boo.NotFound, "content of hash '%s' is not found",
+		in.ContentHash)
 }
 
 /*

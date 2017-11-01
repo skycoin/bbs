@@ -6,13 +6,12 @@ import (
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
-	"github.com/skycoin/bbs/src/store/state/views"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
-	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"github.com/skycoin/skycoin/src/util/file"
 	"log"
 	"os"
 	"time"
+	"github.com/skycoin/bbs/src/misc/typ"
+	"math"
 )
 
 type Access struct {
@@ -36,34 +35,33 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 
 	switch transport.Body.Type {
 	case object.V5ThreadType:
-		return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
-			Perspective: transport.Body.Creator,
+		return bi.Viewer().GetBoardPage(&state.BoardPageIn{
+			Perspective:    transport.Body.Creator,
+			PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 		})
 
 	case object.V5PostType:
-		return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
-			Perspective: transport.Body.Creator,
-			ThreadHash:  transport.Body.OfThread,
+		return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
+			Perspective:    transport.Body.Creator,
+			ThreadHash:     transport.Body.OfThread,
+			PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 		})
 
 	case object.V5ThreadVoteType:
-		return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+		return bi.Viewer().GetVotes(&state.ContentVotesIn{
 			Perspective: transport.Body.Creator,
 			ContentHash: transport.Body.OfThread,
 		})
 
 	case object.V5PostVoteType:
-		return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+		return bi.Viewer().GetVotes(&state.ContentVotesIn{
 			Perspective: transport.Body.Creator,
 			ContentHash: transport.Body.OfPost,
 		})
 
 	case object.V5UserVoteType:
-		out, e := bi.Get(views.Follow, follow_view.FollowPage, transport.Body.Creator)
-		if e != nil {
-			return nil, e
-		}
-		return getFollowPageOutput(out), nil
+		// TODO (evanlinjin) : Implement.
+		return getFollowPageOutput(nil), nil
 
 	default:
 		return nil, boo.Newf(boo.InvalidInput,
@@ -252,7 +250,7 @@ func (a *Access) GetBoard(ctx context.Context, in *object.BoardIO) (*BoardOutput
 	if e != nil {
 		return nil, e
 	}
-	board, e := bi.Get(views.Content, content_view.Board)
+	board, e := bi.Viewer().GetBoard()
 	if e != nil {
 		return nil, e
 	}
@@ -267,8 +265,9 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interfac
 	if e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
+	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
 		Perspective: in.UserPubKeyStr,
+		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
 
@@ -295,8 +294,9 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
+	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
 		Perspective: in.CreatorPubKey.Hex(),
+		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
 
@@ -308,9 +308,10 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interf
 	if e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
+	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
 		Perspective: in.UserPubKeyStr,
 		ThreadHash:  in.ThreadRefStr,
+		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
 
@@ -336,9 +337,10 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
+	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
 		Perspective: in.CreatorPubKey.Hex(),
 		ThreadHash:  in.ThreadRefStr,
+		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
 
@@ -350,15 +352,16 @@ func (a *Access) GetFollowPage(ctx context.Context, in *object.UserIO) (interfac
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
-	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	_, e := a.CXO.GetBoardInstance(in.BoardPubKey)
 	if e != nil {
 		return nil, e
 	}
-	out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
-	if e != nil {
-		return nil, e
-	}
-	return getFollowPageOutput(out), nil
+	// TODO (evanlinjin) : implement
+	//out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
+	//if e != nil {
+	//	return nil, e
+	//}
+	return getFollowPageOutput(nil), nil
 }
 
 func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface{}, error) {
@@ -383,11 +386,12 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
-	if e != nil {
-		return nil, e
-	}
-	return getFollowPageOutput(out), nil
+	// TODO (evanlinjin) : implement
+	//out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
+	//if e != nil {
+	//	return nil, e
+	//}
+	return getFollowPageOutput(nil), nil
 }
 
 func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (interface{}, error) {
@@ -412,7 +416,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+	return bi.Viewer().GetVotes(&state.ContentVotesIn{
 		Perspective: in.CreatorPubKey.Hex(),
 		ContentHash: in.ThreadRefStr,
 	})
@@ -440,7 +444,7 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+	return bi.Viewer().GetVotes(&state.ContentVotesIn{
 		Perspective: in.CreatorPubKey.Hex(),
 		ContentHash: in.PostRefStr,
 	})
