@@ -2,7 +2,6 @@ package state
 
 import (
 	"fmt"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
@@ -10,6 +9,9 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"log"
 	"testing"
+	"time"
+	"github.com/skycoin/bbs/src/misc/tag"
+	"encoding/json"
 )
 
 const (
@@ -36,21 +38,32 @@ func prepareNode(t *testing.T) *node.Node {
 }
 
 func prepareBoard(t *testing.T, n *node.Node, seed string) (cipher.PubKey, cipher.SecKey, *skyobject.Root) {
-	in := &object.NewBoardIO{
+	bpk, bsk := cipher.GenerateDeterministicKeyPair([]byte(seed))
+	content := new(object.Content)
+	content.SetBody(&object.Body{
+		Type: object.V5BoardType,
 		Name: fmt.Sprintf("Board of seed '%s'", seed),
 		Body: fmt.Sprintf("A test board created with seed '%s'.", seed),
-	}
-	if e := in.Process(nil); e != nil {
-		t.Fatal("failed to process new board input:", e)
-	}
-	if e := n.AddFeed(in.BoardPubKey); e != nil {
+		TS:   time.Now().UnixNano(),
+	})
+	var (
+		hash = cipher.SumSHA256(content.Body)
+		sig  = cipher.SignHash(hash, bsk)
+	)
+	content.SetHeader(&object.ContentHeaderData{
+		Hash: hash.Hex(),
+		Sig:  sig.Hex(),
+	})
+
+	if e := n.AddFeed(bpk); e != nil {
 		t.Fatal("failed to add feed:", e)
 	}
-	out, e := setup.NewBoard(n, in)
+
+	out, e := setup.NewBoard(n, content, bpk, bsk)
 	if e != nil {
 		t.Fatal("failed to create new board:", e)
 	}
-	return in.BoardPubKey, in.BoardSecKey, out
+	return bpk, bsk, out
 }
 
 func prepareInstance(_ *testing.T, n *node.Node, pk cipher.PubKey) *BoardInstance {
@@ -119,37 +132,50 @@ func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 }
 
 func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte) (cipher.SHA256, uint64) {
-	_, csk := cipher.GenerateDeterministicKeyPair(userSeed)
-	in := &object.NewThreadIO{
-		BoardPubKeyStr:   obtainBoardPubKey(t, bi).Hex(),
-		Name:             fmt.Sprintf("Thread %d", threadIndex),
-		Body:             fmt.Sprintf("A test thread created of index %d.", threadIndex),
-		CreatorSecKeyStr: csk.Hex(),
+	cpk, csk := cipher.GenerateDeterministicKeyPair(userSeed)
+	body := &object.Body{
+		Type: object.V5ThreadType,
+		TS:   time.Now().UnixNano(),
+		OfBoard: obtainBoardPubKey(t, bi).Hex(),
+		Name: fmt.Sprintf("Thread %d", threadIndex),
+		Body: fmt.Sprintf("A test thread created of index %d.", threadIndex),
+		Creator: cpk.Hex(),
 	}
-	if e := in.Process(); e != nil {
-		t.Fatal("failed to process new thread input:", e)
+	raw, _ := json.Marshal(body)
+	sig := cipher.SignHash(cipher.SumSHA256(raw), csk)
+	transport, e := object.NewTransport(raw, sig)
+	if e != nil {
+		t.Fatal("failed to generate transport:", e)
 	}
-	goal, e := bi.Submit(in.Transport)
+	goal, e := bi.Submit(transport)
 	if e != nil {
 		t.Fatal("failed to create new thread:", e)
 	}
-	hash, _ := keys.GetHash(in.Transport.Header.Hash)
+	hash, e := tag.GetHash(transport.Header.Hash)
+	if e != nil {
+		t.Fatal("")
+	}
 	return hash, goal
 }
 
 func addPost(t *testing.T, bi *BoardInstance, threadHash cipher.SHA256, postIndex int, userSeed []byte) uint64 {
-	_, csk := cipher.GenerateDeterministicKeyPair(userSeed)
-	in := &object.NewPostIO{
-		BoardPubKeyStr:   obtainBoardPubKey(t, bi).Hex(),
-		ThreadRefStr:     threadHash.Hex(),
-		Name:             fmt.Sprintf("Post %d", postIndex),
-		Body:             fmt.Sprintf("A test post created of index %d.", postIndex),
-		CreatorSecKeyStr: csk.Hex(),
+	cpk, csk := cipher.GenerateDeterministicKeyPair(userSeed)
+	body := &object.Body{
+		Type: object.V5PostType,
+		TS: time.Now().UnixNano(),
+		OfBoard: obtainBoardPubKey(t, bi).Hex(),
+		OfThread: threadHash.Hex(),
+		Name: fmt.Sprintf("Post %d", postIndex),
+		Body: fmt.Sprintf("A test post created of index %d.", postIndex),
+		Creator: cpk.Hex(),
 	}
-	if e := in.Process(); e != nil {
-		t.Fatal("failed to process new post input:", e)
+	raw, _ := json.Marshal(body)
+	sig := cipher.SignHash(cipher.SumSHA256(raw), csk)
+	transport, e := object.NewTransport(raw, sig)
+	if e != nil {
+		t.Fatal("failed to generate transport:", e)
 	}
-	goal, e := bi.Submit(in.Transport)
+	goal, e := bi.Submit(transport)
 	if e != nil {
 		t.Fatal("failed to create new post:", e)
 	}
@@ -203,12 +229,12 @@ func TestBoardInstance_UpdateWithReceived(t *testing.T) {
 	defer disruptor.Close()
 
 	t.Run("node_deals_with_invalid_master_root", func(t *testing.T) {
-		in, e := newBoard(compiler1, BoardSeedA, "Test Board A", "A test board (A).")
+		bpk, bsk, e := newBoard(compiler1, BoardSeedA, "Test Board A", "A test board (A).")
 		if e != nil {
 			t.Fatal(e)
 		}
 
-		if e := disruptor.AddFeed(in.BoardPubKey); e != nil {
+		if e := disruptor.AddFeed(bpk); e != nil {
 			t.Fatal(e)
 		}
 
@@ -219,7 +245,7 @@ func TestBoardInstance_UpdateWithReceived(t *testing.T) {
 				len(root.Refs), object.RootChildrenCount)
 		}
 
-		if e := performDisruption(t, disruptor, in.BoardPubKey, in.BoardSecKey); e != nil {
+		if e := performDisruption(t, disruptor, bpk, bsk); e != nil {
 			t.Fatal(e)
 		}
 
@@ -238,23 +264,23 @@ func TestBoardInstance_UpdateWithReceived(t *testing.T) {
 	})
 
 	t.Run("node_deals_with_invalid_remote_root", func(t *testing.T) {
-		in, e := newBoard(compiler1, BoardSeedB, "Test Board B", "A test board (B).")
+		bpk, bsk, e := newBoard(compiler1, BoardSeedB, "Test Board B", "A test board (B).")
 		if e != nil {
 			t.Fatal(e)
 		}
 
-		if e := disruptor.AddFeed(in.BoardPubKey); e != nil {
+		if e := disruptor.AddFeed(bpk); e != nil {
 			t.Fatal(e)
 		}
 		<-disruptorRootChan
 
-		if e := subscribeRemote(compiler2, in.BoardPubKey); e != nil {
+		if e := subscribeRemote(compiler2, bpk); e != nil {
 			t.Fatal(e)
 		}
 		<-compiler2RootChan
 
 		for i := 0; i < 10; i++ {
-			if e := performDisruption(t, disruptor, in.BoardPubKey, in.BoardSecKey); e != nil {
+			if e := performDisruption(t, disruptor, bpk, bsk); e != nil {
 				t.Fatal(e)
 			}
 			<-compiler1RootChan

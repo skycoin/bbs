@@ -11,6 +11,7 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"testing"
 	"time"
+	"github.com/skycoin/skycoin/src/cipher/encoder"
 )
 
 func prepareMessengerServer(t *testing.T, address string) *factory.MessengerFactory {
@@ -83,29 +84,33 @@ func closeCompiler(t *testing.T, c *Compiler) {
 	}
 }
 
-func newBoard(c *Compiler, seed, name, body string) (*object.NewBoardIO, error) {
-	in := &object.NewBoardIO{
+func newBoard(c *Compiler, seed, name, body string) (cipher.PubKey, cipher.SecKey, error) {
+	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
+	data := &object.Body{
+		Type: object.V5BoardType,
+		TS: time.Now().UnixNano(),
 		Name: name,
 		Body: body,
-		Seed: seed,
 	}
-	if e := in.Process([]*object.MessengerSubKeyTransport{}); e != nil {
-		return in, boo.Wrap(e, "in.Process")
+	content := new(object.Content)
+	content.SetBody(data)
+	content.SetHeader(&object.ContentHeaderData{
+		Hash: cipher.SumSHA256(encoder.Serialize(data)).Hex(),
+	})
+
+	if e := c.file.AddMasterSub(pk, sk); e != nil {
+		return cipher.PubKey{}, cipher.SecKey{}, e
+	}
+	if e := c.node.AddFeed(pk); e != nil {
+		return cipher.PubKey{}, cipher.SecKey{}, e
 	}
 
-	if e := c.file.AddMasterSub(in.BoardPubKey, in.BoardSecKey); e != nil {
-		return in, e
-	}
-	if e := c.node.AddFeed(in.BoardPubKey); e != nil {
-		return in, e
-	}
-
-	r, e := setup.NewBoard(c.node, in)
+	r, e := setup.NewBoard(c.node, content, pk, sk)
 	if e != nil {
-		return in, boo.Wrap(e, "setup.NewBoard")
+		return cipher.PubKey{}, cipher.SecKey{}, boo.Wrap(e, "setup.NewBoard")
 	}
 	c.UpdateBoardWithContext(context.Background(), r)
-	return in, nil
+	return pk, sk, nil
 }
 
 func subscribeMaster(c *Compiler, pk cipher.PubKey, sk cipher.SecKey) error {

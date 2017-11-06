@@ -18,7 +18,7 @@ type Access struct {
 	CXO *cxo.Manager
 }
 
-func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (interface{}, error) {
+func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -61,7 +61,7 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 
 	case object.V5UserVoteType:
 		// TODO (evanlinjin) : Implement.
-		return getFollowPageOutput(nil), nil
+		return getFollowPageOut(nil), nil
 
 	default:
 		return nil, boo.Newf(boo.InvalidInput,
@@ -91,11 +91,11 @@ func submitAndWait(ctx context.Context, a *Access, transport *object.Transport) 
 	<<< CONNECTIONS : MESSENGER >>>
 */
 
-func (a *Access) GetMessengerConnections(ctx context.Context) (*MessengersOutput, error) {
-	return getMessengers(ctx, a.CXO.GetMessengers()), nil
+func (a *Access) GetMessengerConnections(ctx context.Context) (*MessengersOut, error) {
+	return getMessengersOut(ctx, a.CXO.GetMessengers()), nil
 }
 
-func (a *Access) NewMessengerConnection(ctx context.Context, in *object.ConnectionIO) (*MessengersOutput, error) {
+func (a *Access) NewMessengerConnection(ctx context.Context, in *ConnectionIn) (*MessengersOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -105,7 +105,7 @@ func (a *Access) NewMessengerConnection(ctx context.Context, in *object.Connecti
 	return a.GetMessengerConnections(ctx)
 }
 
-func (a *Access) DeleteMessengerConnection(ctx context.Context, in *object.ConnectionIO) (*MessengersOutput, error) {
+func (a *Access) DeleteMessengerConnection(ctx context.Context, in *ConnectionIn) (*MessengersOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -115,19 +115,19 @@ func (a *Access) DeleteMessengerConnection(ctx context.Context, in *object.Conne
 	return a.GetMessengerConnections(ctx)
 }
 
-func (a *Access) GetAvailableBoards(ctx context.Context) (*AvailableBoardsOutput, error) {
-	return getAvailableBoards(a.CXO.GetAvailableBoards()), nil
+func (a *Access) GetAvailableBoards(ctx context.Context) (*AvailableBoardsOut, error) {
+	return getAvailableBoardsOut(a.CXO.GetAvailableBoards()), nil
 }
 
 /*
 	<<< CONNECTIONS >>>
 */
 
-func (a *Access) GetConnections(ctx context.Context) (*ConnectionsOutput, error) {
-	return getConnections(ctx, a.CXO.GetConnections()), nil
+func (a *Access) GetConnections(ctx context.Context) (*ConnectionsOut, error) {
+	return getConnectionsOut(ctx, a.CXO.GetConnections()), nil
 }
 
-func (a *Access) NewConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
+func (a *Access) NewConnection(ctx context.Context, in *ConnectionIn) (*ConnectionsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -138,7 +138,7 @@ func (a *Access) NewConnection(ctx context.Context, in *object.ConnectionIO) (*C
 	return a.GetConnections(ctx)
 }
 
-func (a *Access) DeleteConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
+func (a *Access) DeleteConnection(ctx context.Context, in *ConnectionIn) (*ConnectionsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -152,11 +152,11 @@ func (a *Access) DeleteConnection(ctx context.Context, in *object.ConnectionIO) 
 	<<< SUBSCRIPTIONS >>>
 */
 
-func (a *Access) GetSubscriptions(ctx context.Context) (*SubscriptionsOutput, error) {
-	return getSubscriptions(ctx, a.CXO.GetSubscriptions()), nil
+func (a *Access) GetSubscriptions(ctx context.Context) (*SubscriptionsOut, error) {
+	return getSubscriptionsOut(ctx, a.CXO.GetSubscriptions()), nil
 }
 
-func (a *Access) NewSubscription(ctx context.Context, in *object.BoardIO) (*SubscriptionsOutput, error) {
+func (a *Access) NewSubscription(ctx context.Context, in *BoardIn) (*SubscriptionsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -166,7 +166,7 @@ func (a *Access) NewSubscription(ctx context.Context, in *object.BoardIO) (*Subs
 	return a.GetSubscriptions(ctx)
 }
 
-func (a *Access) DeleteSubscription(ctx context.Context, in *object.BoardIO) (*SubscriptionsOutput, error) {
+func (a *Access) DeleteSubscription(ctx context.Context, in *BoardIn) (*SubscriptionsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -180,17 +180,17 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *object.BoardIO) (*S
 	<<< CONTENT : ADMIN >>>
 */
 
-func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOutput, error) {
+func (a *Access) NewBoard(ctx context.Context, in *NewBoardIn) (*BoardsOut, error) {
 	if e := in.Process(a.CXO.Relay().SubmissionKeys()); e != nil {
 		return nil, e
 	}
-	if e := a.CXO.NewBoard(in); e != nil {
+	if e := a.CXO.NewBoard(in.Content, in.BoardPubKey, in.BoardSecKey); e != nil {
 		return nil, e
 	}
 	return a.GetBoards(ctx)
 }
 
-func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOutput, error) {
+func (a *Access) DeleteBoard(ctx context.Context, in *BoardIn) (*BoardsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -202,7 +202,7 @@ func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOu
 	return a.GetBoards(ctx)
 }
 
-func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
+func (a *Access) ExportBoard(ctx context.Context, in *ExportBoardIn) (*ExportBoardOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -213,10 +213,10 @@ func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*Ex
 	if e := file.SaveJSON(in.FilePath, out, os.FileMode(0600)); e != nil {
 		return nil, e
 	}
-	return getExportBoardOutput(in.FilePath, out), nil
+	return getExportBoardOut(in.FilePath, out), nil
 }
 
-func (a *Access) ImportBoard(ctx context.Context, in *object.ImportBoardIO) (*ExportBoardOutput, error) {
+func (a *Access) ImportBoard(ctx context.Context, in *ImportBoardIn) (*ExportBoardOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -227,22 +227,22 @@ func (a *Access) ImportBoard(ctx context.Context, in *object.ImportBoardIO) (*Ex
 	if e := a.CXO.ImportBoard(ctx, pagesIn, in.PubKey, in.SecKey); e != nil {
 		return nil, e
 	}
-	return getExportBoardOutput(in.FilePath, pagesIn), nil
+	return getExportBoardOut(in.FilePath, pagesIn), nil
 }
 
 /*
 	<<< CONTENT >>>
 */
 
-func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
+func (a *Access) GetBoards(ctx context.Context) (*BoardsOut, error) {
 	m, r, e := a.CXO.GetBoards(ctx)
 	if e != nil {
 		return nil, e
 	}
-	return getBoardsOutput(ctx, m, r), nil
+	return getBoardsOut(ctx, m, r), nil
 }
 
-func (a *Access) GetBoard(ctx context.Context, in *object.BoardIO) (*BoardOutput, error) {
+func (a *Access) GetBoard(ctx context.Context, in *BoardIn) (*BoardOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -254,10 +254,10 @@ func (a *Access) GetBoard(ctx context.Context, in *object.BoardIO) (*BoardOutput
 	if e != nil {
 		return nil, e
 	}
-	return getBoardOutput(board), nil
+	return getBoardOut(board), nil
 }
 
-func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interface{}, error) {
+func (a *Access) GetBoardPage(ctx context.Context, in *BoardIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -271,7 +271,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interfac
 	})
 }
 
-func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interface{}, error) {
+func (a *Access) NewThread(ctx context.Context, in *NewThreadIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -300,7 +300,7 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 	})
 }
 
-func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interface{}, error) {
+func (a *Access) GetThreadPage(ctx context.Context, in *ThreadIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -315,7 +315,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interf
 	})
 }
 
-func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}, error) {
+func (a *Access) NewPost(ctx context.Context, in *NewPostIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -348,7 +348,7 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	<<< VOTES >>>
 */
 
-func (a *Access) GetFollowPage(ctx context.Context, in *object.UserIO) (interface{}, error) {
+func (a *Access) GetFollowPage(ctx context.Context, in *UserIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -361,10 +361,10 @@ func (a *Access) GetFollowPage(ctx context.Context, in *object.UserIO) (interfac
 	//if e != nil {
 	//	return nil, e
 	//}
-	return getFollowPageOutput(nil), nil
+	return getFollowPageOut(nil), nil
 }
 
-func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface{}, error) {
+func (a *Access) VoteUser(ctx context.Context, in *VoteUserIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -391,10 +391,10 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 	//if e != nil {
 	//	return nil, e
 	//}
-	return getFollowPageOutput(nil), nil
+	return getFollowPageOut(nil), nil
 }
 
-func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (interface{}, error) {
+func (a *Access) VoteThread(ctx context.Context, in *VoteThreadIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -422,7 +422,7 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 	})
 }
 
-func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface{}, error) {
+func (a *Access) VotePost(ctx context.Context, in *VotePostIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}

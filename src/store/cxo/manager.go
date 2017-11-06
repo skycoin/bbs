@@ -5,7 +5,6 @@ import (
 	"github.com/skycoin/bbs/src/accord"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
@@ -24,6 +23,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/skycoin/bbs/src/misc/tag"
 )
 
 const (
@@ -202,7 +202,7 @@ func (m *Manager) prepareFile() error {
 		m.ConnectToMessenger(address)
 	}
 	for _, pkStr := range m.c.EnforcedSubscriptions {
-		pk, e := keys.GetPubKey(pkStr)
+		pk, e := tag.GetPubKey(pkStr)
 		if e != nil {
 			return e
 		}
@@ -574,16 +574,16 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 	return masterOut, remoteOut, nil
 }
 
-func (m *Manager) NewBoard(in *object.NewBoardIO) error {
+func (m *Manager) NewBoard(content *object.Content, pk cipher.PubKey, sk cipher.SecKey) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	if e := m.file.AddMasterSub(in.BoardPubKey, in.BoardSecKey); e != nil {
+	if e := m.file.AddMasterSub(pk, sk); e != nil {
 		return e
 	}
-	m.subscribeNode(in.BoardPubKey)
+	m.subscribeNode(pk)
 
-	if r, e := setup.NewBoard(m.node, in); e != nil {
+	if r, e := setup.NewBoard(m.node, content, pk, sk); e != nil {
 		return e
 	} else {
 		m.compiler.UpdateBoardWithContext(context.Background(), r)
@@ -617,14 +617,10 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 		m.unsubscribeNode(pk)
 	}
 	if m.file.HasMasterSub(pk) == false {
-		nbIn := &object.NewBoardIO{
-			BoardPubKey: pk,
-			BoardSecKey: sk,
-			Content:     new(object.Content),
-		}
-		nbIn.Content.SetHeader(&object.ContentHeaderData{})
-		nbIn.Content.SetBody(&object.Body{})
-		if e := m.NewBoard(nbIn); e != nil {
+		content := new(object.Content)
+		content.SetHeader(&object.ContentHeaderData{})
+		content.SetBody(&object.Body{})
+		if e := m.NewBoard(content, pk, sk); e != nil {
 			return e
 		}
 	}

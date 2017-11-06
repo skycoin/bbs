@@ -3,6 +3,7 @@ package state
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/typ"
+	"github.com/skycoin/bbs/src/misc/typ/paginatedtypes"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -16,16 +17,23 @@ var ErrViewerNotInitialized = boo.New(boo.NotFound, "viewer is not initialized")
 */
 
 type Indexer struct {
-	Board   string
-	Threads typ.Paginated
-	Posts   map[string]typ.Paginated // key (hash of thread or post), value (list of posts)
+	Board         string
+	Threads       typ.Paginated
+	PostsOfThread map[string]typ.Paginated // key (hash of thread or post), value (list of posts)
+	Users         typ.Paginated
 }
 
-func NewIndexer(init typ.PaginatedCreator) *Indexer {
+func NewIndexer() *Indexer {
 	return &Indexer{
-		Threads: init(),
-		Posts:   make(map[string]typ.Paginated),
+		Threads:       paginatedtypes.NewSimple(),
+		PostsOfThread: make(map[string]typ.Paginated),
+		Users:         paginatedtypes.NewMapped(),
 	}
+}
+
+func (i *Indexer) EnsureUsersOfUserVoteBody(body *object.Body) {
+	i.Users.Append(body.Creator)
+	i.Users.Append(body.OfUser)
 }
 
 /*
@@ -33,14 +41,26 @@ func NewIndexer(init typ.PaginatedCreator) *Indexer {
 */
 
 type Container struct {
-	content map[string]*object.ContentRep
-	votes   map[string]*VotesRep
+	content  map[string]*object.ContentRep
+	votes    map[string]*VotesRep
+	profiles map[string]*Profile
 }
 
 func NewContainer() *Container {
 	return &Container{
-		content: make(map[string]*object.ContentRep),
-		votes:   make(map[string]*VotesRep),
+		content:  make(map[string]*object.ContentRep),
+		votes:    make(map[string]*VotesRep),
+		profiles: make(map[string]*Profile),
+	}
+}
+
+func (c *Container) GetProfile(upk string) *Profile {
+	if profile, ok := c.profiles[upk]; ok {
+		return profile
+	} else {
+		profile = NewProfile()
+		c.profiles[upk] = profile
+		return profile
 	}
 }
 
@@ -53,15 +73,13 @@ type Viewer struct {
 	pk    cipher.PubKey
 	i     *Indexer
 	c     *Container
-	pInit typ.PaginatedCreator
 }
 
-func NewViewer(pack *skyobject.Pack, pInit typ.PaginatedCreator) (*Viewer, error) {
+func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 	v := &Viewer{
 		pk:    pack.Root().Pub,
-		i:     NewIndexer(pInit),
+		i:     NewIndexer(),
 		c:     NewContainer(),
-		pInit: pInit,
 	}
 
 	pages, e := object.GetPages(pack, &object.GetPagesIn{
@@ -100,7 +118,10 @@ func NewViewer(pack *skyobject.Pack, pInit typ.PaginatedCreator) (*Viewer, error
 
 	e = pages.UsersPage.RangeUserProfiles(func(i int, uap *object.UserProfile) error {
 		return uap.RangeSubmissions(func(i int, c *object.Content) error {
-			return v.processVote(c)
+			if e := v.processVote(c); e != nil {
+				return e
+			}
+			return nil
 		})
 	})
 	if e != nil {
@@ -175,7 +196,7 @@ func (v *Viewer) addThread(tc *object.Content) (cipher.SHA256, error) {
 	tHash := tc.GetHeader().GetHash()
 	v.i.Threads.Append(tHash.Hex())
 	v.c.content[tHash.Hex()] = tc.ToRep()
-	v.i.Posts[tHash.Hex()] = v.pInit()
+	v.i.PostsOfThread[tHash.Hex()] = paginatedtypes.NewMapped()
 	return tHash, nil
 }
 
@@ -193,14 +214,19 @@ func (v *Viewer) addPost(tHash cipher.SHA256, pc *object.Content) error {
 	}
 
 	pHash := pc.GetHeader().Hash
-	v.i.Posts[tHash.Hex()].Append(pHash)
-	v.c.content[pHash] = pc.ToRep()
+	if posts, ok := v.i.PostsOfThread[tHash.Hex()]; !ok {
+		return boo.Newf(boo.Internal, "thread of hash %s not found", tHash.Hex())
+	} else {
+		posts.Append(pHash)
+		v.c.content[pHash] = pc.ToRep()
+	}
+
 
 	if ofPost, _ := body.GetOfPost(); ofPost != (cipher.SHA256{}) {
-		pList, ok := v.i.Posts[ofPost.Hex()]
+		pList, ok := v.i.PostsOfThread[ofPost.Hex()]
 		if !ok {
-			pList = v.pInit()
-			v.i.Posts[ofPost.Hex()] = pList
+			pList = paginatedtypes.NewMapped()
+			v.i.PostsOfThread[ofPost.Hex()] = pList
 		}
 		pList.Append(pHash)
 	}
@@ -222,7 +248,8 @@ func (v *Viewer) processVote(c *object.Content) error {
 		cHash = c.GetBody().OfPost
 		cType = object.V5PostVoteType
 
-		// TODO: User vote.
+	case object.V5UserVoteType:
+		return v.processUserVote(c)
 
 	default:
 		return nil
@@ -240,6 +267,40 @@ func (v *Viewer) processVote(c *object.Content) error {
 	}
 	voteRep.Add(c)
 
+	return nil
+}
+
+func (v *Viewer) processUserVote(c *object.Content) error {
+	var (
+		b              = c.GetBody()
+		creatorProfile = v.c.GetProfile(b.Creator)
+		ofUserProfile  = v.c.GetProfile(b.OfUser)
+	)
+
+	creatorProfile.ClearVotesFor(b.OfUser)
+	ofUserProfile.ClearVotesBy(b.Creator)
+
+	switch b.Value {
+	case +1:
+		if b.HasTag(object.TrustTag) {
+			v.i.EnsureUsersOfUserVoteBody(b)
+			creatorProfile.Trusted[b.OfUser] = struct{}{}
+			ofUserProfile.TrustedBy[b.Creator] = struct{}{}
+		}
+	case -1:
+		if b.HasTag(object.SpamTag) {
+			v.i.EnsureUsersOfUserVoteBody(b)
+			creatorProfile.MarkedAsSpam[b.OfUser] = struct{}{}
+			ofUserProfile.MarkedAsSpamBy[b.Creator] = struct{}{}
+		}
+		if b.HasTag(object.BlockTag) {
+			v.i.EnsureUsersOfUserVoteBody(b)
+			creatorProfile.Blocked[b.OfUser] = struct{}{}
+			ofUserProfile.BlockedBy[b.Creator] = struct{}{}
+		}
+	case 0:
+		v.i.EnsureUsersOfUserVoteBody(b)
+	}
 	return nil
 }
 
@@ -320,7 +381,7 @@ func (v *Viewer) GetThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
 		out.Thread.Votes = votes.View(in.Perspective)
 	}
 
-	pHashes, e := v.i.Posts[in.ThreadHash].Get(&in.PaginatedInput)
+	pHashes, e := v.i.PostsOfThread[in.ThreadHash].Get(&in.PaginatedInput)
 	if e != nil {
 		return nil, e
 	}

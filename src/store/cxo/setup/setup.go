@@ -4,6 +4,7 @@ import (
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 // PrepareRegistry sets up the CXO Registry.
@@ -38,10 +39,10 @@ func PrepareRegistry(r *skyobject.Reg) {
 }
 
 // NewBoard generates a new board.
-func NewBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
+func NewBoard(node *node.Node, content *object.Content, pk cipher.PubKey, sk cipher.SecKey) (*skyobject.Root, error) {
 	pack, e := node.Container().NewRoot(
-		in.BoardPubKey,
-		in.BoardSecKey,
+		pk,
+		sk,
 		skyobject.HashTableIndex|skyobject.EntireTree,
 		node.Container().CoreRegistry().Types(),
 	)
@@ -49,26 +50,26 @@ func NewBoard(node *node.Node, in *object.NewBoardIO) (*skyobject.Root, error) {
 		return nil, e
 	}
 
-	if e := SetBoard(pack, in); e != nil {
+	if e := SetBoard(pack, content); e != nil {
 		return nil, e
 	}
 	node.Publish(pack.Root())
 	pack.Close()
 
-	return node.Container().LastRoot(in.BoardPubKey)
+	return node.Container().LastRoot(pk)
 }
 
-func SetBoard(pack *skyobject.Pack, in *object.NewBoardIO) error {
+func SetBoard(pack *skyobject.Pack, content *object.Content) error {
 	pack.Clear()
 	pack.Append(
 		&object.RootPage{
 			Typ: object.RootTypeBoard,
 			Rev: 0,
 			Del: false,
-			Sum: in.Content.Body,
+			Sum: content.Body,
 		},
 		&object.BoardPage{
-			Board: pack.Ref(in.Content),
+			Board: pack.Ref(content),
 		},
 		&object.DiffPage{},
 		&object.UsersPage{},

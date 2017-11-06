@@ -6,7 +6,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/typ"
-	"github.com/skycoin/bbs/src/misc/typ/paginatedtypes"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
@@ -46,7 +45,6 @@ type BoardInstance struct {
 func (bi *BoardInstance) Init(n *node.Node, pk cipher.PubKey) *BoardInstance {
 	bi.l = inform.NewLogger(true, os.Stdout, "INSTANCE:"+pk.Hex()[:5]+"...")
 	bi.n = n
-	//bi.v
 
 	return bi
 }
@@ -119,7 +117,7 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	bi.h = newHeaders
 
 	if firstRun {
-		if bi.v, e = NewViewer(bi.p, paginatedtypes.NewSimple); e != nil {
+		if bi.v, e = NewViewer(bi.p); e != nil {
 			return e
 		}
 	} else {
@@ -208,7 +206,7 @@ func (bi *BoardInstance) PublishChanges() error {
 		}
 
 		// Reset views.
-		if bi.v, e = NewViewer(bi.p, paginatedtypes.NewSimple); e != nil {
+		if bi.v, e = NewViewer(bi.p); e != nil {
 			return boo.WrapType(e, boo.Internal, "failed to reset view")
 		}
 

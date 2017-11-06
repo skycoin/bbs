@@ -1,9 +1,10 @@
-package keys
+package tag
 
 import (
-	"encoding/hex"
-	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"strconv"
+	"strings"
+	"encoding/hex"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
@@ -63,39 +64,26 @@ func GetSig(s string) (cipher.Sig, error) {
 	return sig, nil
 }
 
-func PubKeyToSlice(pk cipher.PubKey) []byte {
-	out := make([]byte, 33)
-	for i, v := range [33]byte(pk) {
-		out[i] = v
+func GetVoteValue(v string) (int8, error) {
+	value, e := strconv.Atoi(v)
+	if e != nil {
+		return 0, boo.WrapType(e, boo.InvalidInput, "invalid vote value")
 	}
-	return out
+	switch value {
+	case -1, 0, +1:
+	default:
+		return 0, boo.New(boo.InvalidInput, "invalid vote value")
+	}
+	return int8(value), nil
 }
 
-func PubKeyArrayToString(pks []cipher.PubKey) string {
-	pkStrs := make([]string, len(pks))
-	for i, pk := range pks {
-		pkStrs[i] = pk.Hex()
-	}
-	data, _ := json.Marshal(pkStrs)
-	return string(data)
-}
-
-func PubKeyArrayToStringArray(pks []cipher.PubKey) []string {
-	out := make([]string, len(pks))
-	for i, pk := range pks {
-		out[i] = pk.Hex()
-	}
-	return out
-}
-
-func ComparePubKeyArrays(a, b []cipher.PubKey) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := 0; i < len(a); i++ {
-		if a[i] != b[i] {
-			return false
+func GetTags(v string) ([]string, error) {
+	tags := strings.Split(v, ",")
+	for i := len(tags) - 1; i >= 0; i-- {
+		tags[i] = strings.TrimSpace(tags[i])
+		if tags[i] == "" {
+			tags = append(tags[:i], tags[i+1:]...)
 		}
 	}
-	return true
+	return tags, nil
 }

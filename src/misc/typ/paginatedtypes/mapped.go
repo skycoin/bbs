@@ -2,28 +2,31 @@ package paginatedtypes
 
 import "github.com/skycoin/bbs/src/misc/typ"
 
-func NewSimple() typ.Paginated {
-	return new(Simple)
+func NewMapped() typ.Paginated {
+	return &Mapped{
+		dict: make(map[string]struct{}),
+	}
 }
 
-type Simple struct {
+type Mapped struct {
 	list []string
+	dict map[string]struct{}
 }
 
-func (p *Simple) Append(v string) {
+func (p *Mapped) Append(v string) {
+	if p.Has(v) {
+		return
+	}
+	p.dict[v] = struct{}{}
 	p.list = append(p.list, v)
 }
 
-func (p *Simple) Has(v string) bool {
-	for _, elem := range p.list {
-		if elem == v {
-			return true
-		}
-	}
-	return false
+func (p *Mapped) Has(v string) bool {
+	_, ok := p.dict[v]
+	return ok
 }
 
-func (p *Simple) Get(in *typ.PaginatedInput) (*typ.PaginatedOutput, error) {
+func (p *Mapped) Get(in *typ.PaginatedInput) (*typ.PaginatedOutput, error) {
 	out, e := typ.NewPaginatedOutput(in, uint(len(p.list)))
 	if e != nil {
 		return nil, e
@@ -42,10 +45,11 @@ func (p *Simple) Get(in *typ.PaginatedInput) (*typ.PaginatedOutput, error) {
 	return out, nil
 }
 
-func (p *Simple) Len() int {
+func (p *Mapped) Len() int {
 	return len(p.list)
 }
 
-func (p *Simple) Clear() {
+func (p *Mapped) Clear() {
 	p.list = []string{}
+	p.dict = make(map[string]struct{})
 }

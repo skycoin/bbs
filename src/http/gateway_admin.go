@@ -1,8 +1,8 @@
 package http
 
 import (
-	"github.com/skycoin/bbs/src/store/object"
 	"net/http"
+	"github.com/skycoin/bbs/src/store"
 )
 
 func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
@@ -34,7 +34,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Creates a new connection.
 	mux.HandleFunc("/api/admin/connections/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.NewConnection(r.Context(), &object.ConnectionIO{
+			send(w)(g.Access.NewConnection(r.Context(), &store.ConnectionIn{
 				Address: r.FormValue("address"),
 			}))
 		})
@@ -42,7 +42,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Deletes a connection.
 	mux.HandleFunc("/api/admin/connections/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.DeleteConnection(r.Context(), &object.ConnectionIO{
+			send(w)(g.Access.DeleteConnection(r.Context(), &store.ConnectionIn{
 				Address: r.FormValue("address"),
 			}))
 		})
@@ -61,7 +61,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Creates a new subscription.
 	mux.HandleFunc("/api/admin/subscriptions/new",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.NewSubscription(r.Context(), &object.BoardIO{
+			send(w)(g.Access.NewSubscription(r.Context(), &store.BoardIn{
 				PubKeyStr: r.FormValue("public_key"),
 			}))
 		})
@@ -69,7 +69,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Deletes a subscription.
 	mux.HandleFunc("/api/admin/subscriptions/delete",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.DeleteSubscription(r.Context(), &object.BoardIO{
+			send(w)(g.Access.DeleteSubscription(r.Context(), &store.BoardIn{
 				PubKeyStr: r.FormValue("public_key"),
 			}))
 		})
@@ -82,7 +82,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Creates and hosts a new board on this node.
 	mux.HandleFunc("/api/admin/content/new_board",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.NewBoard(r.Context(), &object.NewBoardIO{
+			send(w)(g.Access.NewBoard(r.Context(), &store.NewBoardIn{
 				Seed: r.FormValue("seed"),
 				Name: r.FormValue("name"),
 				Body: r.FormValue("body"),
@@ -92,7 +92,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Deletes a hosted board from this node.
 	mux.HandleFunc("/api/admin/content/delete_board",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.DeleteBoard(r.Context(), &object.BoardIO{
+			send(w)(g.Access.DeleteBoard(r.Context(), &store.BoardIn{
 				PubKeyStr: r.FormValue("board_public_key"),
 			}))
 		})
@@ -100,7 +100,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Exports an entire board root to file.
 	mux.HandleFunc("/api/admin/content/export_board",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.ExportBoard(r.Context(), &object.ExportBoardIO{
+			send(w)(g.Access.ExportBoard(r.Context(), &store.ExportBoardIn{
 				FilePath:  r.FormValue("file_path"),
 				PubKeyStr: r.FormValue("board_public_key"),
 			}))
@@ -109,7 +109,7 @@ func RegisterAdminHandlers(mux *http.ServeMux, g *Gateway) {
 	// Imports an entire board root from file to CXO.
 	mux.HandleFunc("/api/admin/content/import_board",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.ImportBoard(r.Context(), &object.ImportBoardIO{
+			send(w)(g.Access.ImportBoard(r.Context(), &store.ImportBoardIn{
 				FilePath:  r.FormValue("file_path"),
 				SecKeyStr: r.FormValue("board_secret_key"),
 			}))

@@ -3,12 +3,12 @@ package object
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strings"
 	"sync"
+	"github.com/skycoin/bbs/src/misc/tag"
 )
 
 const (
@@ -353,11 +353,11 @@ func (tp *ThreadPage) RangePosts(action func(i int, post *Content) error) error 
 func (tp *ThreadPage) AddPost(cxoPostHash cipher.SHA256, post *Content) error {
 	if elem, _ := tp.Posts.RefByHash(cxoPostHash); elem != nil {
 		return boo.Newf(boo.AlreadyExists,
-			"post of hash '%s' already exists in 'ThreadPage.Posts'", cxoPostHash.Hex())
+			"post of hash '%s' already exists in 'ThreadPage.PostsOfThread'", cxoPostHash.Hex())
 	}
 	if e := tp.Posts.Append(post); e != nil {
 		return boo.WrapTypef(e, boo.Internal,
-			"failed to append %v to 'ThreadPage.Posts'", post)
+			"failed to append %v to 'ThreadPage.PostsOfThread'", post)
 	}
 	return nil
 }
@@ -730,7 +730,7 @@ func (msk MessengerSubKey) IsValid() bool {
 	if len(split) != 2 {
 		return false
 	}
-	if _, e := keys.GetPubKey(split[1]); e != nil {
+	if _, e := tag.GetPubKey(split[1]); e != nil {
 		return false
 	}
 	return true
@@ -741,7 +741,7 @@ func (msk MessengerSubKey) Address() string {
 }
 
 func (msk MessengerSubKey) PubKey() cipher.PubKey {
-	pk, _ := keys.GetPubKey(strings.Split(string(msk), ",")[1])
+	pk, _ := tag.GetPubKey(strings.Split(string(msk), ",")[1])
 	return pk
 }
 

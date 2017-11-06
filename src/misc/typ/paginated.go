@@ -6,6 +6,7 @@ type PaginatedCreator func() Paginated
 
 type Paginated interface {
 	Append(v string)
+	Has(v string) bool
 	Get(in *PaginatedInput) (*PaginatedOutput, error)
 	Len() int
 	Clear()

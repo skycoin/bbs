@@ -18,6 +18,12 @@ const (
 	LogPrefix = "COMPILER"
 )
 
+// RootWrap transports a cxo root.
+type RootWrap struct {
+	Done chan struct{}
+	Root *skyobject.Root
+}
+
 // CompilerConfig configure the Compiler.
 type CompilerConfig struct {
 	UpdateInterval *int // In seconds.

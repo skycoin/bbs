@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/rpc"
-	"github.com/skycoin/bbs/src/store/object"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
 	"strconv"
+	"github.com/skycoin/bbs/src/misc/tag"
+	"github.com/skycoin/bbs/src/store"
 )
 
 const (
@@ -55,7 +55,7 @@ func main() {
 					Name:  "generate_seed",
 					Usage: "generates a random unique seed",
 					Action: func(ctx *cli.Context) error {
-						return do(keys.GenerateSeed())
+						return do(tag.GenerateSeed())
 					},
 				},
 				{
@@ -68,7 +68,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(keys.GenerateKeyPair(&keys.GenerateKeyPairIn{
+						return do(tag.GenerateKeyPair(&tag.GenerateKeyPairIn{
 							Seed: ctx.String("seed"),
 						}))
 					},
@@ -83,7 +83,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(keys.SumSHA256(&keys.SumSHA256In{
+						return do(tag.SumSHA256(&tag.SumSHA256In{
 							Data: ctx.String("data"),
 						}))
 					},
@@ -102,7 +102,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return do(keys.SignHash(&keys.SignHashIn{
+						return do(tag.SignHash(&tag.SignHashIn{
 							Hash:   ctx.String("hash"),
 							SecKey: ctx.String("secret_key"),
 						}))
@@ -131,7 +131,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.NewMessengerConnection(&object.ConnectionIO{
+						return call(rpc.NewMessengerConnection(&store.ConnectionIn{
 							Address: ctx.String("address"),
 						}))
 					},
@@ -146,7 +146,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.DeleteMessengerConnection(&object.ConnectionIO{
+						return call(rpc.DeleteMessengerConnection(&store.ConnectionIn{
 							Address: ctx.String("address"),
 						}))
 					},
@@ -181,7 +181,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.NewConnection(&object.ConnectionIO{
+						return call(rpc.NewConnection(&store.ConnectionIn{
 							Address: ctx.String("address"),
 						}))
 					},
@@ -196,7 +196,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.DeleteConnection(&object.ConnectionIO{
+						return call(rpc.DeleteConnection(&store.ConnectionIn{
 							Address: ctx.String("address"),
 						}))
 					},
@@ -223,7 +223,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.NewSubscription(&object.BoardIO{
+						return call(rpc.NewSubscription(&store.BoardIn{
 							PubKeyStr: ctx.String("public-key"),
 						}))
 					},
@@ -237,7 +237,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.DeleteSubscription(&object.BoardIO{
+						return call(rpc.DeleteSubscription(&store.BoardIn{
 							PubKeyStr: ctx.String("public-key"),
 						}))
 					},
@@ -270,7 +270,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.NewBoard(&object.NewBoardIO{
+						return call(rpc.NewBoard(&store.NewBoardIn{
 							Name: ctx.String("name"),
 							Body: ctx.String("body"),
 							TS:   ctx.Int64("timestamp"),
@@ -288,7 +288,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.DeleteBoard(&object.BoardIO{
+						return call(rpc.DeleteBoard(&store.BoardIn{
 							PubKeyStr: ctx.String("public-key"),
 						}))
 					},
@@ -307,7 +307,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.ExportBoard(&object.ExportBoardIO{
+						return call(rpc.ExportBoard(&store.ExportBoardIn{
 							PubKeyStr: ctx.String("public-key"),
 							FilePath:  ctx.String("file-path"),
 						}))
@@ -327,7 +327,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.ImportBoard(&object.ImportBoardIO{
+						return call(rpc.ImportBoard(&store.ImportBoardIn{
 							SecKeyStr: ctx.String("secret-key"),
 							FilePath:  ctx.String("file-path"),
 						}))
@@ -350,7 +350,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.GetBoard(&object.BoardIO{
+						return call(rpc.GetBoard(&store.BoardIn{
 							PubKeyStr: ctx.String("board-public-key"),
 						}))
 					},
@@ -365,7 +365,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.GetBoardPage(&object.BoardIO{
+						return call(rpc.GetBoardPage(&store.BoardIn{
 							PubKeyStr: ctx.String("board-public-key"),
 						}))
 					},
@@ -384,7 +384,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.GetThreadPage(&object.ThreadIO{
+						return call(rpc.GetThreadPage(&store.ThreadIn{
 							BoardPubKeyStr: ctx.String("board-public-key"),
 							ThreadRefStr:   ctx.String("thread-hash"),
 						}))
@@ -404,7 +404,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.GetFollowPage(&object.UserIO{
+						return call(rpc.GetFollowPage(&store.UserIn{
 							BoardPubKeyStr: ctx.String("board-public-key"),
 							UserPubKeyStr:  ctx.String("user-public-key"),
 						}))
@@ -436,7 +436,7 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.NewThread(&object.NewThreadIO{
+						return call(rpc.NewThread(&store.NewThreadIn{
 							BoardPubKeyStr:   ctx.String("board-public-key"),
 							Name:             ctx.String("name"),
 							Body:             ctx.String("body"),
@@ -480,7 +480,7 @@ func main() {
 					},
 					Action: func(ctx *cli.Context) error {
 						// TODO: Have images too.
-						return call(rpc.NewPost(&object.NewPostIO{
+						return call(rpc.NewPost(&store.NewPostIn{
 							BoardPubKeyStr:   ctx.String("board-public-key"),
 							ThreadRefStr:     ctx.String("thread-hash"),
 							PostRefStr:       ctx.String("post-hash"),
@@ -508,8 +508,8 @@ func main() {
 							Usage: "value of the vote (+1, 0, -1)",
 						},
 						cli.StringFlag{
-							Name:  "tag, t",
-							Usage: "the vote's tag",
+							Name:  "tags, t",
+							Usage: "the vote's tags",
 						},
 						cli.Int64Flag{
 							Name:  "timestamp, ts",
@@ -521,11 +521,11 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.VoteThread(&object.ThreadVoteIO{
+						return call(rpc.VoteThread(&store.VoteThreadIn{
 							BoardPubKeyStr:   ctx.String("board-public-key"),
 							ThreadRefStr:     ctx.String("thread-hash"),
-							ModeStr:          ctx.String("value"),
-							TagStr:           ctx.String("tag"),
+							ValueStr:         ctx.String("value"),
+							TagsStr:          ctx.String("tags"),
 							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
@@ -548,8 +548,8 @@ func main() {
 							Usage: "value of the vote (+1, 0, -1)",
 						},
 						cli.StringFlag{
-							Name:  "tag, t",
-							Usage: "the vote's tag",
+							Name:  "tags, t",
+							Usage: "the vote's tags",
 						},
 						cli.Int64Flag{
 							Name:  "timestamp, ts",
@@ -561,11 +561,11 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.VotePost(&object.PostVoteIO{
+						return call(rpc.VotePost(&store.VotePostIn{
 							BoardPubKeyStr:   ctx.String("board-public-key"),
 							PostRefStr:       ctx.String("post-hash"),
-							ModeStr:          ctx.String("value"),
-							TagStr:           ctx.String("tag"),
+							ValueStr:          ctx.String("value"),
+							TagsStr:           ctx.String("tags"),
 							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
@@ -588,8 +588,8 @@ func main() {
 							Usage: "value of the vote (+1, 0, -1)",
 						},
 						cli.StringFlag{
-							Name:  "tag, t",
-							Usage: "the vote's tag",
+							Name:  "tags, t",
+							Usage: "the vote's tags",
 						},
 						cli.Int64Flag{
 							Name:  "timestamp, ts",
@@ -601,11 +601,11 @@ func main() {
 						},
 					},
 					Action: func(ctx *cli.Context) error {
-						return call(rpc.VoteUser(&object.UserVoteIO{
+						return call(rpc.VoteUser(&store.VoteUserIn{
 							BoardPubKeyStr:   ctx.String("board-public-key"),
 							UserPubKeyStr:    ctx.String("user-public-key"),
-							ModeStr:          ctx.String("value"),
-							TagStr:           ctx.String("tag"),
+							ValueStr:          ctx.String("value"),
+							TagsStr:           ctx.String("tags"),
 							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
