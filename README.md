@@ -1,3 +1,5 @@
+![skycoin bbs logo](https://user-images.githubusercontent.com/26845312/32426755-274b72b0-c282-11e7-989f-dc8870f4635e.png)
+
 # Skycoin BBS
 
 [![GoReportCard](https://goreportcard.com/badge/skycoin/bbs)](https://goreportcard.com/report/skycoin/bbs)
