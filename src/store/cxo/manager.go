@@ -30,7 +30,7 @@ import (
 
 const (
 	LogPrefix     = "CXO"
-	SubDir        = "cxo_r1"
+	SubDir        = "cxo_v4_r2"
 	FileName      = "bbs.json"
 	ExportSubDir  = "exports"
 	ExportFileExt = ".export"

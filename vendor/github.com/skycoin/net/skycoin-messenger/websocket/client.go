@@ -4,16 +4,24 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
+	net "github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/net/skycoin-messenger/msg"
-	"github.com/skycoin/net/skycoin-messenger/rpc"
+	_ "github.com/skycoin/net/skycoin-messenger/op"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 type Client struct {
-	rpc.Client
+	sync.RWMutex
+	factory *net.MessengerFactory
+
+	push   chan interface{}
+	Logger *log.Entry
 
 	seq uint32
 	PendingMap
@@ -21,14 +29,73 @@ type Client struct {
 	conn *websocket.Conn
 }
 
+func (c *Client) GetFactory() *net.MessengerFactory {
+	c.RLock()
+	defer c.RUnlock()
+	return c.factory
+}
+
+func (c *Client) SetFactory(factory *net.MessengerFactory) {
+	c.Lock()
+	if c.factory != nil {
+		c.factory.Close()
+	}
+	c.factory = factory
+	c.Unlock()
+}
+
+type pushMsg struct {
+	op   byte
+	data interface{}
+}
+
+var pushMsgPool = &sync.Pool{
+	New: func() interface{} {
+		return new(pushMsg)
+	},
+}
+
+func (c *Client) Push(op byte, d interface{}) {
+	p := pushMsgPool.Get().(*pushMsg)
+	p.op = op
+	p.data = d
+	c.push <- p
+}
+
+func (c *Client) PushLoop(conn *net.Connection) {
+	defer func() {
+		if err := recover(); err != nil {
+			c.Logger.Errorf("PushLoop recovered err %v", err)
+		}
+	}()
+	key := conn.GetKey()
+	c.Push(msg.OP_LOGIN, &msg.Reg{PublicKey: key.Hex()})
+	for {
+		select {
+		case m, ok := <-conn.GetChanIn():
+			if !ok || len(m) < net.MSG_HEADER_END {
+				return
+			}
+			op := m[net.MSG_OP_BEGIN]
+			switch op {
+			case net.OP_SEND:
+				if len(m) < net.SEND_MSG_META_END {
+					continue
+				}
+				key := cipher.NewPubKey(m[net.SEND_MSG_PUBLIC_KEY_BEGIN:net.SEND_MSG_PUBLIC_KEY_END])
+				c.Push(msg.OP_SEND, msg.GetPushMsg(key.Hex(), string(m[net.SEND_MSG_META_END:])))
+			}
+		}
+	}
+}
+
 func (c *Client) readLoop() {
 	defer func() {
 		if err := recover(); err != nil {
 			c.Logger.Errorf("readLoop recovered err %v", err)
 		}
-		c.SetConnection(nil)
 		c.conn.Close()
-		close(c.Push)
+		close(c.push)
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -79,12 +146,11 @@ func (c *Client) writeLoop() (err error) {
 			c.Logger.Errorf("writeLoop recovered err %v", err)
 		}
 		ticker.Stop()
-		c.SetConnection(nil)
 		c.conn.Close()
 	}()
 	for {
 		select {
-		case message, ok := <-c.Push:
+		case message, ok := <-c.push:
 			c.Logger.Debug("Push", message)
 			if !ok {
 				c.Logger.Debug("closed c.Push")
@@ -102,10 +168,12 @@ func (c *Client) writeLoop() (err error) {
 				return err
 			}
 			switch m := message.(type) {
-			case *msg.PushMsg:
-				err = c.write(w, msg.PUSH_MSG, m)
-			case *msg.Reg:
-				err = c.write(w, msg.PUSH_REG, m)
+			case *pushMsg:
+				err = c.write(w, m.op, m.data)
+				if _, ok := m.data.(*msg.PushMsg); ok {
+					msg.PutPushMsg(m.data)
+				}
+				pushMsgPool.Put(m)
 			default:
 				c.Logger.Errorf("not implemented msg %v", m)
 			}
@@ -156,7 +224,7 @@ func (c *Client) write(w io.WriteCloser, op byte, m interface{}) (err error) {
 }
 
 func (c *Client) ack(data []byte) error {
-	data[msg.MSG_OP_BEGIN] = msg.PUSH_ACK
+	data[msg.MSG_OP_BEGIN] = msg.OP_ACK
 	c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.conn.WriteMessage(websocket.BinaryMessage, data)
 }

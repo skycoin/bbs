@@ -4,3 +4,4 @@ interface NodeModule {
   id: string;
 }
 declare module 'emojione';
+declare module 'jdenticon';

@@ -16,14 +16,14 @@ type FactoryCommonFields struct {
 	connections      map[*Connection]struct{}
 	connectionsMutex sync.RWMutex
 
-	serverConnections      map[*Connection]struct{}
-	serverConnectionsMutex sync.RWMutex
+	acceptedConnections      map[*Connection]struct{}
+	acceptedConnectionsMutex sync.RWMutex
 
 	fieldsMutex sync.RWMutex
 }
 
 func NewFactoryCommonFields() FactoryCommonFields {
-	return FactoryCommonFields{connections: make(map[*Connection]struct{}), serverConnections: make(map[*Connection]struct{})}
+	return FactoryCommonFields{connections: make(map[*Connection]struct{}), acceptedConnections: make(map[*Connection]struct{})}
 }
 
 func (f *FactoryCommonFields) AddConn(conn *Connection) {
@@ -37,13 +37,13 @@ func (f *FactoryCommonFields) AddConn(conn *Connection) {
 	go conn.ReadLoop()
 }
 
-func (f *FactoryCommonFields) AddServerConn(conn *Connection) {
-	f.serverConnectionsMutex.Lock()
-	f.serverConnections[conn] = struct{}{}
-	f.serverConnectionsMutex.Unlock()
+func (f *FactoryCommonFields) AddAcceptedConn(conn *Connection) {
+	f.acceptedConnectionsMutex.Lock()
+	f.acceptedConnections[conn] = struct{}{}
+	f.acceptedConnectionsMutex.Unlock()
 	go func() {
 		conn.WriteLoop()
-		f.RemoveConn(conn)
+		f.RemoveAcceptedConn(conn)
 	}()
 	go conn.ReadLoop()
 }
@@ -78,10 +78,10 @@ func (f *FactoryCommonFields) RemoveConn(conn *Connection) {
 	f.connectionsMutex.Unlock()
 }
 
-func (f *FactoryCommonFields) RemoveServerConn(conn *Connection) {
-	f.serverConnectionsMutex.Lock()
-	delete(f.serverConnections, conn)
-	f.serverConnectionsMutex.Unlock()
+func (f *FactoryCommonFields) RemoveAcceptedConn(conn *Connection) {
+	f.acceptedConnectionsMutex.Lock()
+	delete(f.acceptedConnections, conn)
+	f.acceptedConnectionsMutex.Unlock()
 }
 
 func (f *FactoryCommonFields) Close() (err error) {

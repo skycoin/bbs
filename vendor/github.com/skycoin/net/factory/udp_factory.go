@@ -23,7 +23,7 @@ type UDPFactory struct {
 
 func NewUDPFactory() *UDPFactory {
 	udpFactory := &UDPFactory{stopGC: make(chan bool), FactoryCommonFields: NewFactoryCommonFields(), udpConnMap: make(map[string]*conn.UDPConn)}
-	//go udpFactory.GC()
+	go udpFactory.GC()
 	return udpFactory
 }
 
@@ -73,7 +73,7 @@ func (factory *UDPFactory) createConn(c *net.UDPConn, addr *net.UDPAddr) *conn.U
 	udpConn.SetStatusToConnected()
 	connection := &Connection{Connection: udpConn, factory: factory}
 	connection.SetContextLogger(connection.GetContextLogger().WithField("type", "udp"))
-	factory.AddServerConn(connection)
+	factory.AddAcceptedConn(connection)
 	go factory.AcceptedCallback(connection)
 	return udpConn
 }
@@ -91,16 +91,15 @@ func (factory *UDPFactory) createConnAfterListen(addr *net.UDPAddr) *conn.UDPCon
 	factory.fieldsMutex.Unlock()
 
 	udpConn := conn.NewUDPConn(ln, addr)
+	udpConn.SendPing = true
 	factory.udpConnMapMutex.Lock()
 	factory.udpConnMap[addr.String()] = udpConn
 	factory.udpConnMapMutex.Unlock()
 	return udpConn
 }
 
-const UDP_GC_PERIOD = 90
-
 func (factory *UDPFactory) GC() {
-	ticker := time.NewTicker(time.Second * UDP_GC_PERIOD)
+	ticker := time.NewTicker(time.Second * conn.UDP_GC_PERIOD)
 	for {
 		select {
 		case <-factory.stopGC:
@@ -110,7 +109,7 @@ func (factory *UDPFactory) GC() {
 			closed := []string{}
 			factory.udpConnMapMutex.RLock()
 			for k, udp := range factory.udpConnMap {
-				if nowUnix-udp.GetLastTime() >= UDP_GC_PERIOD {
+				if nowUnix-udp.GetLastTime() >= conn.UDP_GC_PERIOD {
 					udp.Close()
 					closed = append(closed, k)
 				}
@@ -129,12 +128,15 @@ func (factory *UDPFactory) GC() {
 }
 
 func (factory *UDPFactory) Connect(address string) (conn *Connection, err error) {
-	c, err := net.Dial("udp", address)
+	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
 		return
 	}
-	udp := c.(*net.UDPConn)
-	cn := client.NewClientUDPConn(udp)
+	udp, err := net.DialUDP("udp", nil, addr)
+	if err != nil {
+		return
+	}
+	cn := client.NewClientUDPConn(udp, addr)
 	cn.SetStatusToConnected()
 	conn = &Connection{Connection: cn, factory: factory}
 	conn.SetContextLogger(conn.GetContextLogger().WithField("type", "udp"))
@@ -150,7 +152,24 @@ func (factory *UDPFactory) ConnectAfterListen(address string) (conn *Connection,
 	cn := factory.createConnAfterListen(ra)
 	cn.SetStatusToConnected()
 	conn = &Connection{Connection: cn, factory: factory}
-	conn.SetContextLogger(conn.GetContextLogger().WithField("type", "udp"))
-	factory.AddConn(conn)
+	conn.SetContextLogger(conn.GetContextLogger().WithField("type", "udpe"))
+	factory.AddAcceptedConn(conn)
 	return
+}
+
+func (factory *UDPFactory) AddAcceptedConn(conn *Connection) {
+	factory.acceptedConnectionsMutex.Lock()
+	factory.acceptedConnections[conn] = struct{}{}
+	factory.acceptedConnectionsMutex.Unlock()
+	go func() {
+		conn.WriteLoop()
+		factory.RemoveAcceptedConn(conn)
+	}()
+}
+
+func (factory *UDPFactory) RemoveAcceptedConn(conn *Connection) {
+	factory.udpConnMapMutex.Lock()
+	delete(factory.udpConnMap, conn.GetRemoteAddr().String())
+	factory.udpConnMapMutex.Unlock()
+	factory.FactoryCommonFields.RemoveAcceptedConn(conn)
 }

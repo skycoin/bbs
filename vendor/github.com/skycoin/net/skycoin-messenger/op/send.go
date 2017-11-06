@@ -1,9 +1,11 @@
 package op
 
 import (
+	"sync"
+
+	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/net/skycoin-messenger/msg"
 	"github.com/skycoin/skycoin/src/cipher"
-	"sync"
 )
 
 type Send struct {
@@ -24,5 +26,8 @@ func (s *Send) Execute(c msg.OPer) error {
 	if err != nil {
 		return err
 	}
-	return c.GetConnection().Send(key, []byte(s.Msg))
+	c.GetFactory().ForEachConn(func(connection *factory.Connection) {
+		connection.Send(key, []byte(s.Msg))
+	})
+	return nil
 }

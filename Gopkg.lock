@@ -14,10 +14,22 @@
   revision = "4c287e3603a85571820a6a8ad100a45002150053"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/google/btree"
+  packages = ["."]
+  revision = "316fb6d3f031ae8f4d457c6c5186b9e3ded70435"
+
+[[projects]]
   name = "github.com/op/go-logging"
   packages = ["."]
   revision = "b2cb9fa56473e98db8caba80237377e83fe44db5"
   version = "v1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/petar/GoLLRB"
+  packages = ["llrb"]
+  revision = "53be0d36a84c2a886ca057d34b6aa4468df9ccb4"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -29,13 +41,13 @@
   branch = "master"
   name = "github.com/skycoin/cxo"
   packages = ["data","data/cxds","data/idxdb","node","node/gnet","node/log","node/msg","skyobject","skyobject/statutil"]
-  revision = "0956641f7ac96e7d65adc19be4bc3bfa407d7776"
+  revision = "50bccf764ee97cafa2c95957de9b4275fd4b9722"
 
 [[projects]]
   branch = "master"
   name = "github.com/skycoin/net"
   packages = ["client","conn","factory","msg","server","skycoin-messenger/factory"]
-  revision = "a4a76570fa7f5c4847dc88f2908ff4ca1e9835b5"
+  revision = "9d5901e812e8164dc16d7e37e11f71e81f0c8178"
 
 [[projects]]
   name = "github.com/skycoin/skycoin"
@@ -53,13 +65,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2","ssh/terminal"]
-  revision = "faadfbdc035307d901e69eea569f5dda451a3ee3"
+  revision = "ca1fcd4ab4c10bc58852a894bcf195fab2229efe"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "062cd7e4e68206d8bab9b18396626e855c992658"
+  revision = "8eb05f94d449fdf134ec24630ce69ada5b469c1c"
 
 [[projects]]
   name = "gopkg.in/urfave/cli.v1"

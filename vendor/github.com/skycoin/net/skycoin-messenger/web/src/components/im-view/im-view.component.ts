@@ -9,7 +9,6 @@ import {
   OnChanges
 } from '@angular/core';
 import { SocketService, ImHistoryMessage, EmojiService } from '../../providers';
-import { ToolService } from '../../providers/tool/tool.service';
 import * as Collections from 'typescript-collections';
 import { ImHistoryViewComponent } from '../im-history-view/im-history-view.component';
 import { EditorComponent } from '../editor/editor.component'
@@ -21,12 +20,18 @@ import { EditorComponent } from '../editor/editor.component'
   encapsulation: ViewEncapsulation.None
 })
 export class ImViewComponent implements OnInit, OnChanges {
-  chatList: Collections.LinkedList<ImHistoryMessage>;
+  @Input() chatList: Collections.LinkedList<ImHistoryMessage>;
   msg = '';
   @ViewChild(ImHistoryViewComponent) historyView: ImHistoryViewComponent;
   @ViewChild(EditorComponent) editor: EditorComponent;
   @Input() chatting = '';
-  constructor(public socket: SocketService, private tool: ToolService, private emoji: EmojiService) { }
+  constructor(public socket: SocketService, private emoji: EmojiService) {
+    this.socket.updateHistorySubject.subscribe(() => {
+      if (this.chatting === this.socket.chattingUser) {
+        this.chatList = this.socket.histories.get(this.socket.chattingUser);
+      }
+    })
+  }
 
   ngOnInit() {
   }
