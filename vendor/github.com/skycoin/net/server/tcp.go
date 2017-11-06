@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"encoding/binary"
 	"fmt"
+	"net"
+
 	"github.com/skycoin/net/conn"
 	"github.com/skycoin/net/msg"
-	"io"
-	"net"
 )
 
 type ServerTCPConn struct {
@@ -15,7 +15,13 @@ type ServerTCPConn struct {
 }
 
 func NewServerTCPConn(c *net.TCPConn) *ServerTCPConn {
-	return &ServerTCPConn{TCPConn: conn.TCPConn{TcpConn: c, ConnCommonFields: conn.NewConnCommonFileds()}}
+	return &ServerTCPConn{
+		TCPConn: conn.TCPConn{
+			TcpConn:          c,
+			ConnCommonFields: conn.NewConnCommonFileds(),
+			PendingMap:       conn.NewPendingMap(),
+		},
+	}
 }
 
 func (c *ServerTCPConn) ReadLoop() (err error) {
@@ -41,7 +47,7 @@ func (c *ServerTCPConn) ReadLoop() (err error) {
 		msg_t := t[msg.MSG_TYPE_BEGIN]
 		switch msg_t {
 		case msg.TYPE_ACK:
-			_, err = io.ReadAtLeast(reader, header[:msg.MSG_SEQ_END], msg.MSG_SEQ_END)
+			err = c.ReadBytes(reader, header[:msg.MSG_SEQ_END], msg.MSG_SEQ_END)
 			if err != nil {
 				return err
 			}
@@ -49,7 +55,7 @@ func (c *ServerTCPConn) ReadLoop() (err error) {
 			c.DelMsg(seq)
 			c.UpdateLastAck(seq)
 		case msg.TYPE_PING:
-			_, err = io.ReadAtLeast(reader, pingHeader, msg.PING_MSG_HEADER_SIZE)
+			err = c.ReadBytes(reader, pingHeader, msg.PING_MSG_HEADER_SIZE)
 			if err != nil {
 				return err
 			}
@@ -58,15 +64,14 @@ func (c *ServerTCPConn) ReadLoop() (err error) {
 			if err != nil {
 				return err
 			}
-			c.CTXLogger.Debug("recv ping")
 		case msg.TYPE_NORMAL:
-			_, err = io.ReadAtLeast(reader, header, msg.MSG_HEADER_SIZE)
+			err = c.ReadBytes(reader, header, msg.MSG_HEADER_SIZE)
 			if err != nil {
 				return err
 			}
 
 			m := msg.NewByHeader(header)
-			_, err = io.ReadAtLeast(reader, m.Body, int(m.Len))
+			err = c.ReadBytes(reader, m.Body, int(m.Len))
 			if err != nil {
 				return err
 			}

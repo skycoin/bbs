@@ -2,7 +2,7 @@ package factory
 
 import (
 	"encoding/json"
-	"strings"
+	"net"
 	"sync"
 )
 
@@ -30,14 +30,17 @@ func (offer *offer) UnmarshalJSON(data []byte) (err error) {
 
 func (offer *offer) Execute(f *MessengerFactory, conn *Connection) (r resp, err error) {
 	if len(offer.Services.ServiceAddress) > 0 {
-		remote := conn.GetRemoteAddr().String()
-		addr := remote[:strings.LastIndex(remote, ":")]
-		lastIndex := strings.LastIndex(offer.Services.ServiceAddress, ":")
-		if lastIndex < 0 {
+		var host, port string
+		_, port, err = net.SplitHostPort(offer.Services.ServiceAddress)
+		if err != nil {
 			return
 		}
-		addr += offer.Services.ServiceAddress[lastIndex:]
-		offer.Services.ServiceAddress = addr
+		remote := conn.GetRemoteAddr().String()
+		host, _, err = net.SplitHostPort(remote)
+		if err != nil {
+			return
+		}
+		offer.Services.ServiceAddress = net.JoinHostPort(host, port)
 	}
 	f.discoveryRegister(conn, offer.Services)
 	return

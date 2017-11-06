@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-VERSION=4.1
+VERSION=4.3
 GOARCH=amd64
 NAME=skycoin_bbs
 

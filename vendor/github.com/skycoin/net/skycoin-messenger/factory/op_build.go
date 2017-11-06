@@ -3,9 +3,9 @@ package factory
 import (
 	"sync"
 
-	"fmt"
-	"sync/atomic"
+	"net"
 
+	"fmt"
 	"github.com/skycoin/skycoin/src/cipher"
 )
 
@@ -30,6 +30,11 @@ func init() {
 			return new(forwardNodeConnResp)
 		},
 	}
+	resps[OP_FORWARD_NODE_CONN_RESP] = &sync.Pool{
+		New: func() interface{} {
+			return new(forwardNodeConnResp)
+		},
+	}
 	resps[OP_FORWARD_NODE_CONN] = &sync.Pool{
 		New: func() interface{} {
 			return new(buildConnResp)
@@ -42,17 +47,19 @@ func init() {
 	}
 	resps[OP_BUILD_APP_CONN] = &sync.Pool{
 		New: func() interface{} {
-			return new(appConnResp)
+			return new(AppConnResp)
 		},
 	}
-}
-
-var p2pPort uint32 = 10000
-
-func genP2PAddress() (addr string) {
-	port := atomic.AddUint32(&p2pPort, 1)
-	addr = fmt.Sprintf(":%d", port)
-	return
+	resps[OP_APP_CONN_ACK] = &sync.Pool{
+		New: func() interface{} {
+			return new(connAck)
+		},
+	}
+	ops[OP_APP_FEEDBACK] = &sync.Pool{
+		New: func() interface{} {
+			return new(AppFeedback)
+		},
+	}
 }
 
 type appConn struct {
@@ -78,17 +85,64 @@ func (req *appConn) Execute(f *MessengerFactory, conn *Connection) (r resp, err 
 		}
 		c.writeOP(OP_FORWARD_NODE_CONN, &forwardNodeConn{Node: req.Node, App: req.App, FromApp: fromApp, FromNode: fromNode})
 		conn.setTransport(req.App, tr)
+		tr.SetupTimeout(req.App, conn)
 	})
 	return
 }
 
-type appConnResp struct {
-	Address string
+type MsgType int
+
+const (
+	SUCCESS MsgType = iota
+	FAILED
+)
+
+type PriorityMsg struct {
+	Priority int     `json:"priority"`
+	Msg      string  `json:"msg"`
+	Type     MsgType `json:"type"`
+}
+
+type AppConnResp struct {
+	App    cipher.PubKey
+	Host   string `json:",omitempty"`
+	Port   int
+	Failed bool
+	Msg    PriorityMsg
 }
 
 // run on app
-func (req *appConnResp) Run(conn *Connection) (err error) {
+func (req *AppConnResp) Run(conn *Connection) (err error) {
 	conn.GetContextLogger().Debugf("recv %#v", req)
+	if conn.appConnectionInitCallback != nil {
+		addr := conn.GetRemoteAddr().String()
+		host, _, err := net.SplitHostPort(addr)
+		if err != nil {
+			return err
+		}
+		req.Host = host
+		fb := conn.appConnectionInitCallback(req)
+		fb.App = req.App
+		err = conn.writeOP(OP_APP_FEEDBACK, fb)
+	}
+	return
+}
+
+type AppFeedback struct {
+	App    cipher.PubKey
+	Port   int         `json:"port"`
+	Failed bool        `json:"failed"`
+	Msg    PriorityMsg `json:"msg"`
+}
+
+func (req *AppFeedback) Execute(f *MessengerFactory, conn *Connection) (r resp, err error) {
+	conn.appFeedback.Store(req)
+	tr, ok := conn.getTransport(req.App)
+	if !ok {
+		conn.GetContextLogger().Debugf("AppFeedback tr %x not found", req.App)
+		return
+	}
+	tr.StopTimeout()
 	return
 }
 
@@ -108,21 +162,30 @@ func (req *buildConnResp) Execute(f *MessengerFactory, conn *Connection) (r resp
 	}
 	conn.GetContextLogger().Debugf("recv %#v tr %#v", req, tr)
 	tr.setUDPConn(conn)
-	addr := genP2PAddress()
-	fnOK := func() {
-		appConn.writeOP(OP_BUILD_APP_CONN|RESP_PREFIX, &appConnResp{Address: addr})
+	conn.writeOP(OP_APP_CONN_ACK|RESP_PREFIX, &connAck{
+		FromApp: req.FromApp,
+		App:     req.App,
+	})
+	fnOK := func(port int) {
+		msg := fmt.Sprintf("connected app %x", req.App)
+		priorityMsg := PriorityMsg{Priority: 3, Msg: msg}
+		appConn.PutMessage(priorityMsg)
+		appConn.writeOP(OP_BUILD_APP_CONN|RESP_PREFIX, &AppConnResp{
+			App:  req.App,
+			Port: port,
+			Msg:  priorityMsg,
+		})
 	}
-	err = tr.ListenForApp(addr, fnOK)
-	for err != nil {
+	err = tr.ListenForApp(fnOK)
+	if err != nil {
 		conn.GetContextLogger().Debugf("ListenForApp err %v", err)
-		addr = genP2PAddress()
-		err = tr.ListenForApp(addr, fnOK)
+		return
 	}
 	err = ErrDetach
 	return
 }
 
-// run on node A
+// run on node A, from manager udp
 func (req *buildConnResp) Run(conn *Connection) (err error) {
 	tr, ok := conn.getTransport(req.App)
 	if !ok {
@@ -140,17 +203,20 @@ type forwardNodeConn struct {
 	FromNode cipher.PubKey
 }
 
-// run on manager, conn is udp conn
+// run on manager, conn is udp conn from node A
 func (req *forwardNodeConn) Execute(f *MessengerFactory, conn *Connection) (r resp, err error) {
 	c, ok := f.GetConnection(req.Node)
 	if !ok {
-		conn.GetContextLogger().Debugf("node %x not exists", req.Node)
-		return
-	}
-
-	_, ok = c.getService(req.App)
-	if !ok {
-		conn.GetContextLogger().Debugf("node %x app %x not exists", req.Node, req.App)
+		cause := fmt.Sprintf("node %x not exists", req.Node)
+		conn.GetContextLogger().Debugf(cause)
+		err = conn.writeOP(OP_FORWARD_NODE_CONN_RESP|RESP_PREFIX, &forwardNodeConnResp{
+			Node:     req.Node,
+			App:      req.App,
+			FromApp:  req.FromApp,
+			FromNode: req.FromNode,
+			Failed:   true,
+			Msg:      PriorityMsg{Priority: 100, Msg: cause, Type: FAILED},
+		})
 		return
 	}
 
@@ -166,30 +232,53 @@ func (req *forwardNodeConn) Execute(f *MessengerFactory, conn *Connection) (r re
 	return
 }
 
-type forwardNodeConnResp forwardNodeConn
+type forwardNodeConnResp struct {
+	Node     cipher.PubKey
+	App      cipher.PubKey
+	FromApp  cipher.PubKey
+	FromNode cipher.PubKey
+	Failed   bool
+	Msg      PriorityMsg
+}
 
-// run on manager, conn is udp conn from node B
+// run on manager, conn is tcp/udp from node B
 func (req *forwardNodeConnResp) Execute(f *MessengerFactory, conn *Connection) (r resp, err error) {
 	c, ok := f.GetConnection(req.FromNode)
 	if !ok {
-		conn.GetContextLogger().Debugf("node %x not exists", req.Node)
+		conn.GetContextLogger().Debugf("node %x not exists", req.FromNode)
 		return
 	}
 
-	_, ok = c.getService(req.FromApp)
+	err = c.writeOP(OP_FORWARD_NODE_CONN_RESP|RESP_PREFIX, req)
+	return
+}
+
+// run on node A, from manager
+func (req *forwardNodeConnResp) Run(conn *Connection) (err error) {
+	appConn, ok := conn.factory.GetConnection(req.FromApp)
 	if !ok {
-		conn.GetContextLogger().Debugf("node %x app %x not exists", req.Node, req.App)
+		conn.GetContextLogger().Debugf("forwardNodeConnResp app %x not found", req.FromApp)
 		return
 	}
-
-	err = c.writeOP(OP_FORWARD_NODE_CONN|RESP_PREFIX,
-		&buildConnResp{
-			Address:  conn.GetRemoteAddr().String(),
-			Node:     req.Node,
-			App:      req.App,
-			FromApp:  req.FromApp,
-			FromNode: req.FromNode,
-		})
+	new := appConn.PutMessage(req.Msg)
+	if !new {
+		conn.GetContextLogger().Debugf("forwardNodeConnResp recv old msg %#v", req.Msg)
+		return
+	}
+	appConn.writeOP(OP_BUILD_APP_CONN|RESP_PREFIX, &AppConnResp{
+		App:    req.App,
+		Failed: req.Failed,
+		Msg:    req.Msg,
+	})
+	tr, ok := appConn.getTransport(req.App)
+	if !ok {
+		conn.GetContextLogger().Debugf("forwardNodeConnResp tr %x not found", req.App)
+		return
+	}
+	if req.Failed {
+		tr.Close()
+		appConn.setTransport(req.App, nil)
+	}
 	return
 }
 
@@ -214,15 +303,67 @@ func (req *buildConn) Run(conn *Connection) (err error) {
 		return
 	}
 
+	if len(s.AllowNodes) > 0 {
+		allow := false
+		for _, k := range s.AllowNodes {
+			if k == req.FromNode.Hex() {
+				allow = true
+				break
+			}
+		}
+		if !allow {
+			cause := fmt.Sprintf("node %x app %x forbid %x", req.Node, req.App, req.FromNode)
+			conn.GetContextLogger().Debugf(cause)
+			err = conn.writeOP(OP_FORWARD_NODE_CONN_RESP, &forwardNodeConnResp{
+				Node:     req.Node,
+				App:      req.App,
+				FromApp:  req.FromApp,
+				FromNode: req.FromNode,
+				Failed:   true,
+				Msg:      PriorityMsg{Priority: 100, Msg: cause, Type: FAILED},
+			})
+			return
+		}
+	}
+
 	tr := NewTransport(conn.factory, req.FromNode, req.Node, req.FromApp, req.App)
 	connection, err := tr.ListenAndConnect(conn.GetRemoteAddr().String())
 	if err != nil {
 		return
 	}
-	err = connection.writeOP(OP_FORWARD_NODE_CONN_RESP, &forwardNodeConnResp{Node: req.Node, App: req.App, FromApp: req.FromApp, FromNode: req.FromNode})
+	err = connection.writeOP(OP_FORWARD_NODE_CONN_RESP, &forwardNodeConnResp{
+		Node:     req.Node,
+		App:      req.App,
+		FromApp:  req.FromApp,
+		FromNode: req.FromNode,
+		Msg:      PriorityMsg{Priority: 1, Msg: "building udp connection"},
+	})
 	if err != nil {
 		return
 	}
 	err = tr.Connect(req.Address, s.Address)
+	appConn.setTransport(req.FromApp, tr)
+	tr.SetupTimeout(req.FromApp, appConn)
+	return
+}
+
+type connAck struct {
+	FromApp, App cipher.PubKey
+}
+
+// run on node b from node a udp
+func (req *connAck) Run(conn *Connection) (err error) {
+	appConn, ok := conn.factory.GetConnection(req.App)
+	if !ok {
+		conn.GetContextLogger().Debugf("app %x not exists", req.App)
+		return
+	}
+	tr, ok := appConn.getTransport(req.FromApp)
+	if !ok {
+		conn.GetContextLogger().Debugf("tr %x not exists", tr)
+		return
+	}
+	tr.StopTimeout()
+	err = ErrDetach
 	return
 }
