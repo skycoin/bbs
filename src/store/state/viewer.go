@@ -10,12 +10,14 @@ import (
 	"sync"
 )
 
+// ErrViewerNotInitialized occurs when the Viewer is not initiated.
 var ErrViewerNotInitialized = boo.New(boo.NotFound, "viewer is not initialized")
 
 /*
 	<<< INDEXER >>>
 */
 
+// Indexer is responsible for indexing and holding hashes for content.
 type Indexer struct {
 	Board         string
 	Threads       typ.Paginated
@@ -23,6 +25,7 @@ type Indexer struct {
 	Users         typ.Paginated
 }
 
+// NewIndexer creates a new Indexer.
 func NewIndexer() *Indexer {
 	return &Indexer{
 		Threads:       paginatedtypes.NewSimple(),
@@ -31,6 +34,8 @@ func NewIndexer() *Indexer {
 	}
 }
 
+// EnsureUsersOfUserVoteBody ensures that user participants of a given vote body,
+// has associated user profile indexes saved in the Indexer.
 func (i *Indexer) EnsureUsersOfUserVoteBody(body *object.Body) {
 	i.Users.Append(body.Creator)
 	i.Users.Append(body.OfUser)
@@ -40,12 +45,14 @@ func (i *Indexer) EnsureUsersOfUserVoteBody(body *object.Body) {
 	<<< CONTAINER >>>
 */
 
+// Container contains the objects the the Indexer indexes.
 type Container struct {
 	content  map[string]*object.ContentRep
 	votes    map[string]*VotesRep
 	profiles map[string]*Profile
 }
 
+// NewContainer creates a new Container.
 func NewContainer() *Container {
 	return &Container{
 		content:  make(map[string]*object.ContentRep),
@@ -54,6 +61,8 @@ func NewContainer() *Container {
 	}
 }
 
+// GetProfile obtains a profile object from the container.
+// If the profile does not exist, it is created and the newly created profile is returned.
 func (c *Container) GetProfile(upk string) *Profile {
 	if profile, ok := c.profiles[upk]; ok {
 		return profile
@@ -68,6 +77,7 @@ func (c *Container) GetProfile(upk string) *Profile {
 	<<< VIEWER >>>
 */
 
+// Viewer generates and compiles views for the board.
 type Viewer struct {
 	mux sync.Mutex
 	pk  cipher.PubKey
@@ -75,6 +85,7 @@ type Viewer struct {
 	c   *Container
 }
 
+// NewViewer creates a new viewer with a given pack.
 func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 	v := &Viewer{
 		pk: pack.Root().Pub,
@@ -131,6 +142,7 @@ func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 	return v, nil
 }
 
+// Update updates the viewer with new pack and headers.
 func (v *Viewer) Update(pack *skyobject.Pack, headers *Headers) error {
 	if v == nil {
 		return ErrViewerNotInitialized
