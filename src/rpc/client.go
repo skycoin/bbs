@@ -2,9 +2,9 @@ package rpc
 
 import (
 	"encoding/json"
+	"github.com/skycoin/bbs/src/store"
 	"net/rpc"
 	"path/filepath"
-	"github.com/skycoin/bbs/src/store"
 )
 
 func Send(address string) func(method string, in interface{}) string {

@@ -1,8 +1,8 @@
 package http
 
 import (
-	"net/http"
 	"github.com/skycoin/bbs/src/misc/tag"
+	"net/http"
 )
 
 func RegisterToolsHandlers(mux *http.ServeMux, _ *Gateway) {

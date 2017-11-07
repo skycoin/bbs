@@ -50,4 +50,3 @@ func CheckMode(mode int8) error {
 			"invalid vote mode of %d provided", mode)
 	}
 }
-

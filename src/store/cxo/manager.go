@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/accord"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
@@ -23,7 +24,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/skycoin/bbs/src/misc/tag"
 )
 
 const (

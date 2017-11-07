@@ -442,12 +442,12 @@ func (a *VotePostIn) Process() error {
 		a.TS = time.Now().UnixNano()
 	}
 	data := &object.Body{
-		Type: object.V5PostVoteType,
-		TS: a.TS,
+		Type:    object.V5PostVoteType,
+		TS:      a.TS,
 		OfBoard: a.BoardPubKeyStr,
-		OfPost: a.PostRefStr,
-		Value: int(a.Value),
-		Tags: a.Tags,
+		OfPost:  a.PostRefStr,
+		Value:   int(a.Value),
+		Tags:    a.Tags,
 		Creator: a.CreatorPubKey.Hex(),
 	}
 	raw, e := json.Marshal(data)

@@ -1,7 +1,9 @@
 package state
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/node"
@@ -10,8 +12,6 @@ import (
 	"log"
 	"testing"
 	"time"
-	"github.com/skycoin/bbs/src/misc/tag"
-	"encoding/json"
 )
 
 const (
@@ -134,11 +134,11 @@ func obtainThreadList(t *testing.T, bi *BoardInstance) []cipher.SHA256 {
 func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte) (cipher.SHA256, uint64) {
 	cpk, csk := cipher.GenerateDeterministicKeyPair(userSeed)
 	body := &object.Body{
-		Type: object.V5ThreadType,
-		TS:   time.Now().UnixNano(),
+		Type:    object.V5ThreadType,
+		TS:      time.Now().UnixNano(),
 		OfBoard: obtainBoardPubKey(t, bi).Hex(),
-		Name: fmt.Sprintf("Thread %d", threadIndex),
-		Body: fmt.Sprintf("A test thread created of index %d.", threadIndex),
+		Name:    fmt.Sprintf("Thread %d", threadIndex),
+		Body:    fmt.Sprintf("A test thread created of index %d.", threadIndex),
 		Creator: cpk.Hex(),
 	}
 	raw, _ := json.Marshal(body)
@@ -161,13 +161,13 @@ func addThread(t *testing.T, bi *BoardInstance, threadIndex int, userSeed []byte
 func addPost(t *testing.T, bi *BoardInstance, threadHash cipher.SHA256, postIndex int, userSeed []byte) uint64 {
 	cpk, csk := cipher.GenerateDeterministicKeyPair(userSeed)
 	body := &object.Body{
-		Type: object.V5PostType,
-		TS: time.Now().UnixNano(),
-		OfBoard: obtainBoardPubKey(t, bi).Hex(),
+		Type:     object.V5PostType,
+		TS:       time.Now().UnixNano(),
+		OfBoard:  obtainBoardPubKey(t, bi).Hex(),
 		OfThread: threadHash.Hex(),
-		Name: fmt.Sprintf("Post %d", postIndex),
-		Body: fmt.Sprintf("A test post created of index %d.", postIndex),
-		Creator: cpk.Hex(),
+		Name:     fmt.Sprintf("Post %d", postIndex),
+		Body:     fmt.Sprintf("A test post created of index %d.", postIndex),
+		Creator:  cpk.Hex(),
 	}
 	raw, _ := json.Marshal(body)
 	sig := cipher.SignHash(cipher.SumSHA256(raw), csk)

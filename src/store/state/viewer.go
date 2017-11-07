@@ -69,17 +69,17 @@ func (c *Container) GetProfile(upk string) *Profile {
 */
 
 type Viewer struct {
-	mux   sync.Mutex
-	pk    cipher.PubKey
-	i     *Indexer
-	c     *Container
+	mux sync.Mutex
+	pk  cipher.PubKey
+	i   *Indexer
+	c   *Container
 }
 
 func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 	v := &Viewer{
-		pk:    pack.Root().Pub,
-		i:     NewIndexer(),
-		c:     NewContainer(),
+		pk: pack.Root().Pub,
+		i:  NewIndexer(),
+		c:  NewContainer(),
 	}
 
 	pages, e := object.GetPages(pack, &object.GetPagesIn{
@@ -220,7 +220,6 @@ func (v *Viewer) addPost(tHash cipher.SHA256, pc *object.Content) error {
 		posts.Append(pHash)
 		v.c.content[pHash] = pc.ToRep()
 	}
-
 
 	if ofPost, _ := body.GetOfPost(); ofPost != (cipher.SHA256{}) {
 		pList, ok := v.i.PostsOfThread[ofPost.Hex()]

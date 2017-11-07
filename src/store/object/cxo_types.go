@@ -3,12 +3,12 @@ package object
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
 	"strings"
 	"sync"
-	"github.com/skycoin/bbs/src/misc/tag"
 )
 
 const (

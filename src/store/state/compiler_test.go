@@ -11,7 +11,6 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"testing"
 	"time"
-	"github.com/skycoin/skycoin/src/cipher/encoder"
 )
 
 func prepareMessengerServer(t *testing.T, address string) *factory.MessengerFactory {
@@ -88,14 +87,14 @@ func newBoard(c *Compiler, seed, name, body string) (cipher.PubKey, cipher.SecKe
 	pk, sk := cipher.GenerateDeterministicKeyPair([]byte(seed))
 	data := &object.Body{
 		Type: object.V5BoardType,
-		TS: time.Now().UnixNano(),
+		TS:   time.Now().UnixNano(),
 		Name: name,
 		Body: body,
 	}
 	content := new(object.Content)
 	content.SetBody(data)
 	content.SetHeader(&object.ContentHeaderData{
-		Hash: cipher.SumSHA256(encoder.Serialize(data)).Hex(),
+		Hash: cipher.SumSHA256(content.Body).Hex(),
 	})
 
 	if e := c.file.AddMasterSub(pk, sk); e != nil {

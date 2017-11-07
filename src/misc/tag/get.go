@@ -1,11 +1,11 @@
 package tag
 
 import (
+	"encoding/hex"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
 	"strings"
-	"encoding/hex"
-	"github.com/skycoin/skycoin/src/cipher"
 )
 
 // GetPubKey obtains the public key from string, avoiding panics.

@@ -1,8 +1,8 @@
 package http
 
 import (
-	"net/http"
 	"github.com/skycoin/bbs/src/store"
+	"net/http"
 )
 
 func RegisterSubmissionHandlers(mux *http.ServeMux, g *Gateway) {

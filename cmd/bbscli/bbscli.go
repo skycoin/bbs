@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/rpc"
+	"github.com/skycoin/bbs/src/store"
 	"gopkg.in/urfave/cli.v1"
 	"log"
 	"os"
 	"strconv"
-	"github.com/skycoin/bbs/src/misc/tag"
-	"github.com/skycoin/bbs/src/store"
 )
 
 const (
@@ -564,8 +564,8 @@ func main() {
 						return call(rpc.VotePost(&store.VotePostIn{
 							BoardPubKeyStr:   ctx.String("board-public-key"),
 							PostRefStr:       ctx.String("post-hash"),
-							ValueStr:          ctx.String("value"),
-							TagsStr:           ctx.String("tags"),
+							ValueStr:         ctx.String("value"),
+							TagsStr:          ctx.String("tags"),
 							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
@@ -604,8 +604,8 @@ func main() {
 						return call(rpc.VoteUser(&store.VoteUserIn{
 							BoardPubKeyStr:   ctx.String("board-public-key"),
 							UserPubKeyStr:    ctx.String("user-public-key"),
-							ValueStr:          ctx.String("value"),
-							TagsStr:           ctx.String("tags"),
+							ValueStr:         ctx.String("value"),
+							TagsStr:          ctx.String("tags"),
 							TS:               ctx.Int64("timestamp"),
 							CreatorSecKeyStr: ctx.String("creator-secret-key"),
 						}))
