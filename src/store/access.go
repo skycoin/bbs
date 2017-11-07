@@ -3,14 +3,13 @@ package store
 import (
 	"context"
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/bbs/src/store/cxo"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
-	"github.com/skycoin/bbs/src/store/state/views"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
-	"github.com/skycoin/bbs/src/store/state/views/follow_view"
 	"github.com/skycoin/skycoin/src/util/file"
 	"log"
+	"math"
 	"os"
 	"time"
 )
@@ -19,7 +18,7 @@ type Access struct {
 	CXO *cxo.Manager
 }
 
-func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (interface{}, error) {
+func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -36,34 +35,33 @@ func (a *Access) SubmitContent(ctx context.Context, in *object.SubmissionIO) (in
 
 	switch transport.Body.Type {
 	case object.V5ThreadType:
-		return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
-			Perspective: transport.Body.Creator,
+		return bi.Viewer().GetBoardPage(&state.BoardPageIn{
+			Perspective:    transport.Body.Creator,
+			PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 		})
 
 	case object.V5PostType:
-		return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
-			Perspective: transport.Body.Creator,
-			ThreadHash:  transport.Body.OfThread,
+		return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
+			Perspective:    transport.Body.Creator,
+			ThreadHash:     transport.Body.OfThread,
+			PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 		})
 
 	case object.V5ThreadVoteType:
-		return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+		return bi.Viewer().GetVotes(&state.ContentVotesIn{
 			Perspective: transport.Body.Creator,
 			ContentHash: transport.Body.OfThread,
 		})
 
 	case object.V5PostVoteType:
-		return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+		return bi.Viewer().GetVotes(&state.ContentVotesIn{
 			Perspective: transport.Body.Creator,
 			ContentHash: transport.Body.OfPost,
 		})
 
 	case object.V5UserVoteType:
-		out, e := bi.Get(views.Follow, follow_view.FollowPage, transport.Body.Creator)
-		if e != nil {
-			return nil, e
-		}
-		return getFollowPageOutput(out), nil
+		// TODO (evanlinjin) : Implement.
+		return getFollowPageOut(nil), nil
 
 	default:
 		return nil, boo.Newf(boo.InvalidInput,
@@ -93,11 +91,11 @@ func submitAndWait(ctx context.Context, a *Access, transport *object.Transport) 
 	<<< CONNECTIONS : MESSENGER >>>
 */
 
-func (a *Access) GetMessengerConnections(ctx context.Context) (*MessengersOutput, error) {
-	return getMessengers(ctx, a.CXO.GetMessengers()), nil
+func (a *Access) GetMessengerConnections(ctx context.Context) (*MessengersOut, error) {
+	return getMessengersOut(ctx, a.CXO.GetMessengers()), nil
 }
 
-func (a *Access) NewMessengerConnection(ctx context.Context, in *object.ConnectionIO) (*MessengersOutput, error) {
+func (a *Access) NewMessengerConnection(ctx context.Context, in *ConnectionIn) (*MessengersOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -107,7 +105,7 @@ func (a *Access) NewMessengerConnection(ctx context.Context, in *object.Connecti
 	return a.GetMessengerConnections(ctx)
 }
 
-func (a *Access) DeleteMessengerConnection(ctx context.Context, in *object.ConnectionIO) (*MessengersOutput, error) {
+func (a *Access) DeleteMessengerConnection(ctx context.Context, in *ConnectionIn) (*MessengersOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -117,19 +115,19 @@ func (a *Access) DeleteMessengerConnection(ctx context.Context, in *object.Conne
 	return a.GetMessengerConnections(ctx)
 }
 
-func (a *Access) GetAvailableBoards(ctx context.Context) (*AvailableBoardsOutput, error) {
-	return getAvailableBoards(a.CXO.GetAvailableBoards()), nil
+func (a *Access) GetAvailableBoards(ctx context.Context) (*AvailableBoardsOut, error) {
+	return getAvailableBoardsOut(a.CXO.GetAvailableBoards()), nil
 }
 
 /*
 	<<< CONNECTIONS >>>
 */
 
-func (a *Access) GetConnections(ctx context.Context) (*ConnectionsOutput, error) {
-	return getConnections(ctx, a.CXO.GetConnections()), nil
+func (a *Access) GetConnections(ctx context.Context) (*ConnectionsOut, error) {
+	return getConnectionsOut(ctx, a.CXO.GetConnections()), nil
 }
 
-func (a *Access) NewConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
+func (a *Access) NewConnection(ctx context.Context, in *ConnectionIn) (*ConnectionsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -140,7 +138,7 @@ func (a *Access) NewConnection(ctx context.Context, in *object.ConnectionIO) (*C
 	return a.GetConnections(ctx)
 }
 
-func (a *Access) DeleteConnection(ctx context.Context, in *object.ConnectionIO) (*ConnectionsOutput, error) {
+func (a *Access) DeleteConnection(ctx context.Context, in *ConnectionIn) (*ConnectionsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -154,11 +152,11 @@ func (a *Access) DeleteConnection(ctx context.Context, in *object.ConnectionIO) 
 	<<< SUBSCRIPTIONS >>>
 */
 
-func (a *Access) GetSubscriptions(ctx context.Context) (*SubscriptionsOutput, error) {
-	return getSubscriptions(ctx, a.CXO.GetSubscriptions()), nil
+func (a *Access) GetSubscriptions(ctx context.Context) (*SubscriptionsOut, error) {
+	return getSubscriptionsOut(ctx, a.CXO.GetSubscriptions()), nil
 }
 
-func (a *Access) NewSubscription(ctx context.Context, in *object.BoardIO) (*SubscriptionsOutput, error) {
+func (a *Access) NewSubscription(ctx context.Context, in *BoardIn) (*SubscriptionsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -168,7 +166,7 @@ func (a *Access) NewSubscription(ctx context.Context, in *object.BoardIO) (*Subs
 	return a.GetSubscriptions(ctx)
 }
 
-func (a *Access) DeleteSubscription(ctx context.Context, in *object.BoardIO) (*SubscriptionsOutput, error) {
+func (a *Access) DeleteSubscription(ctx context.Context, in *BoardIn) (*SubscriptionsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -182,17 +180,17 @@ func (a *Access) DeleteSubscription(ctx context.Context, in *object.BoardIO) (*S
 	<<< CONTENT : ADMIN >>>
 */
 
-func (a *Access) NewBoard(ctx context.Context, in *object.NewBoardIO) (*BoardsOutput, error) {
+func (a *Access) NewBoard(ctx context.Context, in *NewBoardIn) (*BoardsOut, error) {
 	if e := in.Process(a.CXO.Relay().SubmissionKeys()); e != nil {
 		return nil, e
 	}
-	if e := a.CXO.NewBoard(in); e != nil {
+	if e := a.CXO.NewBoard(in.Content, in.BoardPubKey, in.BoardSecKey); e != nil {
 		return nil, e
 	}
 	return a.GetBoards(ctx)
 }
 
-func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOutput, error) {
+func (a *Access) DeleteBoard(ctx context.Context, in *BoardIn) (*BoardsOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -204,7 +202,7 @@ func (a *Access) DeleteBoard(ctx context.Context, in *object.BoardIO) (*BoardsOu
 	return a.GetBoards(ctx)
 }
 
-func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*ExportBoardOutput, error) {
+func (a *Access) ExportBoard(ctx context.Context, in *ExportBoardIn) (*ExportBoardOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -215,10 +213,10 @@ func (a *Access) ExportBoard(ctx context.Context, in *object.ExportBoardIO) (*Ex
 	if e := file.SaveJSON(in.FilePath, out, os.FileMode(0600)); e != nil {
 		return nil, e
 	}
-	return getExportBoardOutput(in.FilePath, out), nil
+	return getExportBoardOut(in.FilePath, out), nil
 }
 
-func (a *Access) ImportBoard(ctx context.Context, in *object.ImportBoardIO) (*ExportBoardOutput, error) {
+func (a *Access) ImportBoard(ctx context.Context, in *ImportBoardIn) (*ExportBoardOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -229,22 +227,22 @@ func (a *Access) ImportBoard(ctx context.Context, in *object.ImportBoardIO) (*Ex
 	if e := a.CXO.ImportBoard(ctx, pagesIn, in.PubKey, in.SecKey); e != nil {
 		return nil, e
 	}
-	return getExportBoardOutput(in.FilePath, pagesIn), nil
+	return getExportBoardOut(in.FilePath, pagesIn), nil
 }
 
 /*
 	<<< CONTENT >>>
 */
 
-func (a *Access) GetBoards(ctx context.Context) (*BoardsOutput, error) {
+func (a *Access) GetBoards(ctx context.Context) (*BoardsOut, error) {
 	m, r, e := a.CXO.GetBoards(ctx)
 	if e != nil {
 		return nil, e
 	}
-	return getBoardsOutput(ctx, m, r), nil
+	return getBoardsOut(ctx, m, r), nil
 }
 
-func (a *Access) GetBoard(ctx context.Context, in *object.BoardIO) (*BoardOutput, error) {
+func (a *Access) GetBoard(ctx context.Context, in *BoardIn) (*BoardOut, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -252,14 +250,14 @@ func (a *Access) GetBoard(ctx context.Context, in *object.BoardIO) (*BoardOutput
 	if e != nil {
 		return nil, e
 	}
-	board, e := bi.Get(views.Content, content_view.Board)
+	board, e := bi.Viewer().GetBoard()
 	if e != nil {
 		return nil, e
 	}
-	return getBoardOutput(board), nil
+	return getBoardOut(board), nil
 }
 
-func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interface{}, error) {
+func (a *Access) GetBoardPage(ctx context.Context, in *BoardIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -267,12 +265,13 @@ func (a *Access) GetBoardPage(ctx context.Context, in *object.BoardIO) (interfac
 	if e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
-		Perspective: in.UserPubKeyStr,
+	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
+		Perspective:    in.UserPubKeyStr,
+		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
 
-func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interface{}, error) {
+func (a *Access) NewThread(ctx context.Context, in *NewThreadIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -295,12 +294,13 @@ func (a *Access) NewThread(ctx context.Context, in *object.NewThreadIO) (interfa
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.BoardPage, &content_view.BoardPageIn{
-		Perspective: in.CreatorPubKey.Hex(),
+	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
+		Perspective:    in.CreatorPubKey.Hex(),
+		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
 
-func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interface{}, error) {
+func (a *Access) GetThreadPage(ctx context.Context, in *ThreadIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -308,13 +308,14 @@ func (a *Access) GetThreadPage(ctx context.Context, in *object.ThreadIO) (interf
 	if e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
-		Perspective: in.UserPubKeyStr,
-		ThreadHash:  in.ThreadRefStr,
+	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
+		Perspective:    in.UserPubKeyStr,
+		ThreadHash:     in.ThreadRefStr,
+		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
 
-func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}, error) {
+func (a *Access) NewPost(ctx context.Context, in *NewPostIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -336,9 +337,10 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ThreadPage, &content_view.ThreadPageIn{
-		Perspective: in.CreatorPubKey.Hex(),
-		ThreadHash:  in.ThreadRefStr,
+	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
+		Perspective:    in.CreatorPubKey.Hex(),
+		ThreadHash:     in.ThreadRefStr,
+		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
 }
 
@@ -346,22 +348,23 @@ func (a *Access) NewPost(ctx context.Context, in *object.NewPostIO) (interface{}
 	<<< VOTES >>>
 */
 
-func (a *Access) GetFollowPage(ctx context.Context, in *object.UserIO) (interface{}, error) {
+func (a *Access) GetFollowPage(ctx context.Context, in *UserIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
-	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	_, e := a.CXO.GetBoardInstance(in.BoardPubKey)
 	if e != nil {
 		return nil, e
 	}
-	out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
-	if e != nil {
-		return nil, e
-	}
-	return getFollowPageOutput(out), nil
+	// TODO (evanlinjin) : implement
+	//out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
+	//if e != nil {
+	//	return nil, e
+	//}
+	return getFollowPageOut(nil), nil
 }
 
-func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface{}, error) {
+func (a *Access) VoteUser(ctx context.Context, in *VoteUserIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -383,14 +386,15 @@ func (a *Access) VoteUser(ctx context.Context, in *object.UserVoteIO) (interface
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
-	if e != nil {
-		return nil, e
-	}
-	return getFollowPageOutput(out), nil
+	// TODO (evanlinjin) : implement
+	//out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
+	//if e != nil {
+	//	return nil, e
+	//}
+	return getFollowPageOut(nil), nil
 }
 
-func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (interface{}, error) {
+func (a *Access) VoteThread(ctx context.Context, in *VoteThreadIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -412,13 +416,13 @@ func (a *Access) VoteThread(ctx context.Context, in *object.ThreadVoteIO) (inter
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+	return bi.Viewer().GetVotes(&state.ContentVotesIn{
 		Perspective: in.CreatorPubKey.Hex(),
 		ContentHash: in.ThreadRefStr,
 	})
 }
 
-func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface{}, error) {
+func (a *Access) VotePost(ctx context.Context, in *VotePostIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -440,7 +444,7 @@ func (a *Access) VotePost(ctx context.Context, in *object.PostVoteIO) (interface
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Get(views.Content, content_view.ContentVotes, &content_view.ContentVotesIn{
+	return bi.Viewer().GetVotes(&state.ContentVotesIn{
 		Perspective: in.CreatorPubKey.Hex(),
 		ContentHash: in.PostRefStr,
 	})

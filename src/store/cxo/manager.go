@@ -5,16 +5,15 @@ import (
 	"github.com/skycoin/bbs/src/accord"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
-	"github.com/skycoin/bbs/src/store/state/views"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/skycoin/src/cipher"
 	"io/ioutil"
 	log2 "log"
@@ -25,7 +24,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/skycoin/net/skycoin-messenger/factory"
 )
 
 const (
@@ -81,11 +79,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	}
 
 	// Prepare CXO compiler.
-	manager.compiler = state.NewCompiler(
-		compilerConfig, manager.file, manager.newRoots, manager.node,
-		views.AddContent(),
-		views.AddFollow(),
-	)
+	manager.compiler = state.NewCompiler(compilerConfig, manager.file, manager.newRoots, manager.node)
 
 	// Prepare messenger relay.
 	if e := manager.relay.Open(manager.compiler); e != nil {
@@ -208,7 +202,7 @@ func (m *Manager) prepareFile() error {
 		m.ConnectToMessenger(address)
 	}
 	for _, pkStr := range m.c.EnforcedSubscriptions {
-		pk, e := keys.GetPubKey(pkStr)
+		pk, e := tag.GetPubKey(pkStr)
 		if e != nil {
 			return e
 		}
@@ -554,7 +548,7 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 			m.l.Println(e)
 			return
 		}
-		bView, e := bi.Get(views.Content, content_view.Board)
+		bView, e := bi.Viewer().GetBoard()
 		if e != nil {
 			m.l.Println(e)
 			return
@@ -569,7 +563,7 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 			m.l.Println(e)
 			return
 		}
-		bView, e := bi.Get(views.Content, content_view.Board)
+		bView, e := bi.Viewer().GetBoard()
 		if e != nil {
 			m.l.Println(e)
 			return
@@ -580,16 +574,16 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 	return masterOut, remoteOut, nil
 }
 
-func (m *Manager) NewBoard(in *object.NewBoardIO) error {
+func (m *Manager) NewBoard(content *object.Content, pk cipher.PubKey, sk cipher.SecKey) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	if e := m.file.AddMasterSub(in.BoardPubKey, in.BoardSecKey); e != nil {
+	if e := m.file.AddMasterSub(pk, sk); e != nil {
 		return e
 	}
-	m.subscribeNode(in.BoardPubKey)
+	m.subscribeNode(pk)
 
-	if r, e := setup.NewBoard(m.node, in); e != nil {
+	if r, e := setup.NewBoard(m.node, content, pk, sk); e != nil {
 		return e
 	} else {
 		m.compiler.UpdateBoardWithContext(context.Background(), r)
@@ -623,14 +617,10 @@ func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk ciph
 		m.unsubscribeNode(pk)
 	}
 	if m.file.HasMasterSub(pk) == false {
-		nbIn := &object.NewBoardIO{
-			BoardPubKey: pk,
-			BoardSecKey: sk,
-			Content:     new(object.Content),
-		}
-		nbIn.Content.SetHeader(&object.ContentHeaderData{})
-		nbIn.Content.SetBody(&object.Body{})
-		if e := m.NewBoard(nbIn); e != nil {
+		content := new(object.Content)
+		content.SetHeader(&object.ContentHeaderData{})
+		content.SetBody(&object.Body{})
+		if e := m.NewBoard(content, pk, sk); e != nil {
 			return e
 		}
 	}

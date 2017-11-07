@@ -3,7 +3,6 @@ package object
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -318,14 +317,14 @@ func (m *CXOFileManager) load(path string) error {
 	for i, sub := range fileData.MasterSubs {
 
 		// Get public key of master subscription.
-		pk, e := keys.GetPubKey(sub.PK)
+		pk, e := tag.GetPubKey(sub.PK)
 		if e != nil {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"invalid public key in file at master_subscriptions[%d]", i)
 		}
 
 		// Get private key of master subscription.
-		sk, e := keys.GetSecKey(sub.SK)
+		sk, e := tag.GetSecKey(sub.SK)
 		if e != nil {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"invalid private key in file at master_subscriptions[%d]", i)
@@ -339,7 +338,7 @@ func (m *CXOFileManager) load(path string) error {
 	for i, sub := range fileData.RemoteSubs {
 
 		// Get public key of remote subscription.
-		pk, e := keys.GetPubKey(sub.PK)
+		pk, e := tag.GetPubKey(sub.PK)
 		if e != nil {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"invalid public key in file at remote_subscriptions[%d]", i)

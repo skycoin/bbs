@@ -1,4 +1,4 @@
-package keys
+package tag
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"

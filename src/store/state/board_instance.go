@@ -7,9 +7,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state/pack"
-	"github.com/skycoin/bbs/src/store/state/views"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/node"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -30,13 +27,13 @@ var (
 type BoardInstance struct {
 	l *log.Logger
 
-	adders []views.Adder // generates views.
+	//adders []views.Adder // generates views.
 
 	mux sync.RWMutex // Only use (RLock/RUnlock) with reading root sequence.
 	n   *node.Node
 	p   *skyobject.Pack
-	h   *pack.Headers
-	v   map[string]views.View
+	h   *Headers
+	v   *Viewer
 
 	needPublish typ.Bool // Whether there are changes that need to be published.
 	needReset   typ.Bool // Whether a reset is needed.
@@ -45,15 +42,9 @@ type BoardInstance struct {
 }
 
 // Init initiates the  the board instance.
-func (bi *BoardInstance) Init(n *node.Node, pk cipher.PubKey, adders ...views.Adder) *BoardInstance {
+func (bi *BoardInstance) Init(n *node.Node, pk cipher.PubKey) *BoardInstance {
 	bi.l = inform.NewLogger(true, os.Stdout, "INSTANCE:"+pk.Hex()[:5]+"...")
 	bi.n = n
-	bi.v = make(map[string]views.View)
-
-	bi.adders = adders
-	for _, adder := range bi.adders {
-		views.Add(bi.v, adder)
-	}
 
 	return bi
 }
@@ -116,7 +107,7 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	bi.l.Println(" - root unpack succeeded.")
 	bi.p = newPack
 
-	newHeaders, e := pack.NewHeaders(bi.h, bi.p)
+	newHeaders, e := NewHeaders(bi.h, bi.p)
 	if e != nil {
 		bi.l.Println(" - failed to generate new headers:", e)
 		return e
@@ -126,22 +117,12 @@ func (bi *BoardInstance) UpdateWithReceived(r *skyobject.Root, sk cipher.SecKey)
 	bi.h = newHeaders
 
 	if firstRun {
-		i := 1
-		for name, view := range bi.v {
-			if e := view.Init(bi.p, bi.h); e != nil {
-				return boo.WrapType(e, boo.Internal, "failed to generate view")
-			}
-			bi.l.Printf("(%d/%d) Loaded '%s' view.", i, len(bi.v), name)
-			i++
+		if bi.v, e = NewViewer(bi.p); e != nil {
+			return e
 		}
 	} else {
-		i := 1
-		for name, view := range bi.v {
-			if e := view.Update(bi.p, bi.h); e != nil {
-				return boo.WrapType(e, boo.Internal, "failed to update view")
-			}
-			bi.l.Printf("(%d/%d) Updated '%s' view.", i, len(bi.v), name)
-			i++
+		if e := bi.v.Update(bi.p, bi.h); e != nil {
+			return e
 		}
 	}
 
@@ -220,19 +201,13 @@ func (bi *BoardInstance) PublishChanges() error {
 
 		// Reset headers.
 		var e error
-		if bi.h, e = pack.NewHeaders(nil, bi.p); e != nil {
+		if bi.h, e = NewHeaders(nil, bi.p); e != nil {
 			return boo.WrapType(e, boo.Internal, "failed to reset headers")
 		}
 
 		// Reset views.
-		bi.v = make(map[string]views.View)
-		for _, adder := range bi.adders {
-			views.Add(bi.v, adder)
-		}
-		for _, view := range bi.v {
-			if e := view.Init(bi.p, bi.h); e != nil {
-				return boo.WrapType(e, boo.Internal, "failed to re-initiate view")
-			}
+		if bi.v, e = NewViewer(bi.p); e != nil {
+			return boo.WrapType(e, boo.Internal, "failed to reset view")
 		}
 
 		// End the need to reset.
@@ -242,15 +217,13 @@ func (bi *BoardInstance) PublishChanges() error {
 
 		// Update headers.
 		var e error
-		if bi.h, e = pack.NewHeaders(bi.h, bi.p); e != nil {
+		if bi.h, e = NewHeaders(bi.h, bi.p); e != nil {
 			return boo.WrapType(e, boo.Internal, "failed to generate new headers")
 		}
 
 		// Update views.
-		for _, view := range bi.v {
-			if e := view.Update(bi.p, bi.h); e != nil {
-				return boo.WrapType(e, boo.Internal, "failed to update view")
-			}
+		if e := bi.v.Update(bi.p, bi.h); e != nil {
+			return boo.WrapType(e, boo.Internal, "failed to update view")
 		}
 	}
 
@@ -259,21 +232,9 @@ func (bi *BoardInstance) PublishChanges() error {
 	return nil
 }
 
-// Get obtains data from views.
-func (bi *BoardInstance) Get(viewID, cmdID string, a ...interface{}) (interface{}, error) {
-	bi.mux.Lock()
-	defer bi.mux.Unlock()
-
-	if bi.v == nil {
-		return nil, ErrInstanceNotInitialized
-	}
-
-	view, has := bi.v[viewID]
-	if !has {
-		return nil, boo.Newf(boo.NotFound, "view of id '%s' is not found", viewID)
-	}
-
-	return view.Get(cmdID, a...)
+// Viewer obtains the viewer.
+func (bi *BoardInstance) Viewer() *Viewer {
+	return bi.v
 }
 
 // IsMaster determines if we are master.
@@ -296,7 +257,7 @@ func (bi *BoardInstance) GetSeq() uint64 {
 
 // GetSummary returns the board's summary in encoded json and signed with board's public key.
 func (bi *BoardInstance) GetSummary(pk cipher.PubKey, sk cipher.SecKey) (*object.BoardSummaryWrap, error) {
-	v, e := bi.Get(views.Content, content_view.Board)
+	v, e := bi.Viewer().GetBoard()
 	if e != nil {
 		return nil, e
 	}
@@ -335,7 +296,7 @@ func (bi *BoardInstance) WaitSeq(ctx context.Context, goal uint64) error {
 }
 
 // PackAction represents an action applied to a root pack.
-type PackAction func(p *skyobject.Pack, h *pack.Headers) error
+type PackAction func(p *skyobject.Pack, h *Headers) error
 
 // EditPack ensures safe modification to the pack.
 func (bi *BoardInstance) EditPack(action PackAction) error {
@@ -387,7 +348,7 @@ func (bi *BoardInstance) IsReady() bool {
 
 func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.PagesJSON, error) {
 	var out *object.PagesJSON
-	var e = bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	var e = bi.ViewPack(func(p *skyobject.Pack, h *Headers) error {
 		pages, e := object.GetPages(p, &object.GetPagesIn{
 			RootPage:  true,
 			BoardPage: true,
@@ -405,7 +366,7 @@ func (bi *BoardInstance) Export(pk cipher.PubKey, sk cipher.SecKey) (*object.Pag
 
 func (bi *BoardInstance) Import(in *object.PagesJSON) (uint64, error) {
 	var goal uint64
-	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 		goal = p.Root().Seq + 1
 		pages, e := object.NewPages(p, in)
 		if e != nil {

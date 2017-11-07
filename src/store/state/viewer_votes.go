@@ -1,13 +1,9 @@
-package content_view
+package state
 
 import (
 	"encoding/json"
 	"github.com/skycoin/bbs/src/store/object"
 )
-
-/*
-	<<< VOTES >>>
-*/
 
 type VotesRep struct {
 	Ref  string

@@ -2,7 +2,7 @@ package rpc
 
 import (
 	"encoding/json"
-	"github.com/skycoin/bbs/src/store/object"
+	"github.com/skycoin/bbs/src/store"
 	"net/rpc"
 	"path/filepath"
 )
@@ -41,11 +41,11 @@ func GetMessengerConnections() (string, interface{}) {
 	return method("GetMessengerConnections"), empty()
 }
 
-func NewMessengerConnection(in *object.ConnectionIO) (string, interface{}) {
+func NewMessengerConnection(in *store.ConnectionIn) (string, interface{}) {
 	return method("NewMessengerConnection"), in
 }
 
-func DeleteMessengerConnection(in *object.ConnectionIO) (string, interface{}) {
+func DeleteMessengerConnection(in *store.ConnectionIn) (string, interface{}) {
 	return method("DeleteMessengerConnection"), in
 }
 
@@ -61,11 +61,11 @@ func GetConnections() (string, interface{}) {
 	return method("GetConnections"), empty()
 }
 
-func NewConnection(in *object.ConnectionIO) (string, interface{}) {
+func NewConnection(in *store.ConnectionIn) (string, interface{}) {
 	return method("NewConnection"), in
 }
 
-func DeleteConnection(in *object.ConnectionIO) (string, interface{}) {
+func DeleteConnection(in *store.ConnectionIn) (string, interface{}) {
 	return method("DeleteConnection"), in
 }
 
@@ -77,11 +77,11 @@ func GetSubscriptions() (string, interface{}) {
 	return method("GetSubscriptions"), empty()
 }
 
-func NewSubscription(in *object.BoardIO) (string, interface{}) {
+func NewSubscription(in *store.BoardIn) (string, interface{}) {
 	return method("NewSubscription"), in
 }
 
-func DeleteSubscription(in *object.BoardIO) (string, interface{}) {
+func DeleteSubscription(in *store.BoardIn) (string, interface{}) {
 	return method("DeleteSubscription"), in
 }
 
@@ -89,20 +89,20 @@ func DeleteSubscription(in *object.BoardIO) (string, interface{}) {
 	<<< CONTENT : ADMIN >>>
 */
 
-func NewBoard(in *object.NewBoardIO) (string, interface{}) {
+func NewBoard(in *store.NewBoardIn) (string, interface{}) {
 	return method("NewBoard"), in
 }
 
-func DeleteBoard(in *object.BoardIO) (string, interface{}) {
+func DeleteBoard(in *store.BoardIn) (string, interface{}) {
 	return method("DeleteBoard"), in
 }
 
-func ExportBoard(in *object.ExportBoardIO) (string, interface{}) {
+func ExportBoard(in *store.ExportBoardIn) (string, interface{}) {
 	in.FilePath, _ = filepath.Abs(in.FilePath)
 	return method("ExportBoard"), in
 }
 
-func ImportBoard(in *object.ImportBoardIO) (string, interface{}) {
+func ImportBoard(in *store.ImportBoardIn) (string, interface{}) {
 	in.FilePath, _ = filepath.Abs(in.FilePath)
 	return method("ImportBoard"), in
 }
@@ -115,19 +115,19 @@ func GetBoards() (string, interface{}) {
 	return method("GetBoards"), empty()
 }
 
-func GetBoard(in *object.BoardIO) (string, interface{}) {
+func GetBoard(in *store.BoardIn) (string, interface{}) {
 	return method("GetBoard"), in
 }
 
-func GetBoardPage(in *object.BoardIO) (string, interface{}) {
+func GetBoardPage(in *store.BoardIn) (string, interface{}) {
 	return method("GetBoardPage"), in
 }
 
-func GetThreadPage(in *object.ThreadIO) (string, interface{}) {
+func GetThreadPage(in *store.ThreadIn) (string, interface{}) {
 	return method("GetThreadPage"), in
 }
 
-func GetFollowPage(in *object.UserIO) (string, interface{}) {
+func GetFollowPage(in *store.UserIn) (string, interface{}) {
 	return method("GetFollowPage"), in
 }
 
@@ -135,23 +135,23 @@ func GetFollowPage(in *object.UserIO) (string, interface{}) {
 	<<< CONTENT : SUBMISSION >>>
 */
 
-func NewThread(in *object.NewThreadIO) (string, interface{}) {
+func NewThread(in *store.NewThreadIn) (string, interface{}) {
 	return method("NewThread"), in
 }
 
-func NewPost(in *object.NewPostIO) (string, interface{}) {
+func NewPost(in *store.NewPostIn) (string, interface{}) {
 	return method("NewPost"), in
 }
 
-func VoteThread(in *object.ThreadVoteIO) (string, interface{}) {
+func VoteThread(in *store.VoteThreadIn) (string, interface{}) {
 	return method("VoteThread"), in
 }
 
-func VotePost(in *object.PostVoteIO) (string, interface{}) {
+func VotePost(in *store.VotePostIn) (string, interface{}) {
 	return method("VotePost"), in
 }
 
-func VoteUser(in *object.UserVoteIO) (string, interface{}) {
+func VoteUser(in *store.VoteUserIn) (string, interface{}) {
 	return method("VoteUser"), in
 }
 

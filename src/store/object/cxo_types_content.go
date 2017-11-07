@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -15,6 +14,12 @@ func errGetFromBody(e error, what string) error {
 	return boo.WrapTypef(e, boo.InvalidRead,
 		"failed to get '%s' from body", what)
 }
+
+const (
+	TrustTag = "trust"
+	SpamTag  = "spam"
+	BlockTag = "block"
+)
 
 type ImageData struct {
 	Name   string       `json:"name"`
@@ -37,8 +42,7 @@ type Body struct {
 	Body     string            `json:"body,omitempty"`            // board, thread, post
 	Images   []*ImageData      `json:"images,omitempty"`          // post (optional)
 	Value    int               `json:"value,omitempty"`           // thread_vote, post_vote, user_vote
-	Tag      string            `json:"tag,omitempty"`             // thread_vote, post_vote, user_vote
-	Tags     []string          `json:"tags,omitempty"`            // board
+	Tags     []string          `json:"tags,omitempty"`            // board, thread_vote, post_vote, user_vote
 	SubKeys  []MessengerSubKey `json:"submission_keys,omitempty"` // board
 	Creator  string            `json:"creator,omitempty"`         // thread, post, thread_vote, post_vote, user_vote
 }
@@ -52,7 +56,7 @@ func NewBody(raw []byte) (*Body, error) {
 }
 
 func (c *Body) GetOfBoard() (cipher.PubKey, error) {
-	if pk, e := keys.GetPubKey(c.OfBoard); e != nil {
+	if pk, e := tag.GetPubKey(c.OfBoard); e != nil {
 		return pk, errGetFromBody(e, "of_board")
 	} else {
 		return pk, nil
@@ -60,7 +64,7 @@ func (c *Body) GetOfBoard() (cipher.PubKey, error) {
 }
 
 func (c *Body) GetOfThread() (cipher.SHA256, error) {
-	if hash, e := keys.GetHash(c.OfThread); e != nil {
+	if hash, e := tag.GetHash(c.OfThread); e != nil {
 		return hash, errGetFromBody(e, "of_thread")
 	} else {
 		return hash, nil
@@ -68,7 +72,7 @@ func (c *Body) GetOfThread() (cipher.SHA256, error) {
 }
 
 func (c *Body) GetOfPost() (cipher.SHA256, error) {
-	if hash, e := keys.GetHash(c.OfPost); e != nil {
+	if hash, e := tag.GetHash(c.OfPost); e != nil {
 		return hash, errGetFromBody(e, "of_post")
 	} else {
 		return hash, nil
@@ -76,7 +80,7 @@ func (c *Body) GetOfPost() (cipher.SHA256, error) {
 }
 
 func (c *Body) GetOfUser() (cipher.PubKey, error) {
-	if pk, e := keys.GetPubKey(c.OfUser); e != nil {
+	if pk, e := tag.GetPubKey(c.OfUser); e != nil {
 		return pk, errGetFromBody(e, "of_user")
 	} else {
 		return pk, nil
@@ -102,11 +106,24 @@ func (c *Body) SetSubKeys(subKeys []*MessengerSubKeyTransport) {
 }
 
 func (c *Body) GetCreator() (cipher.PubKey, error) {
-	if pk, e := keys.GetPubKey(c.Creator); e != nil {
+	if pk, e := tag.GetPubKey(c.Creator); e != nil {
 		return pk, errGetFromBody(e, "creator")
 	} else {
 		return pk, nil
 	}
+}
+
+func (c *Body) HasTag(tag string) bool {
+	for _, v := range c.Tags {
+		if v == tag {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Body) HasValue(v int) bool {
+	return c.Value == v
 }
 
 type Content struct {
@@ -244,7 +261,7 @@ type ContentHeaderData struct {
 }
 
 func (h *ContentHeaderData) GetHash() cipher.SHA256 {
-	out, e := keys.GetHash(h.Hash)
+	out, e := tag.GetHash(h.Hash)
 	if e != nil {
 		log.Println("failed to get 'hash' from header:", e)
 	}
@@ -252,7 +269,7 @@ func (h *ContentHeaderData) GetHash() cipher.SHA256 {
 }
 
 func (h *ContentHeaderData) GetSig() cipher.Sig {
-	out, e := keys.GetSig(h.Sig)
+	out, e := tag.GetSig(h.Sig)
 	if e != nil {
 		log.Println("failed to get 'sig' from header:", e)
 	}
