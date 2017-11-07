@@ -322,7 +322,7 @@ type BoardPageIn struct {
 
 type BoardPageOut struct {
 	Board       *object.ContentRep   `json:"board"`
-	ThreadsMeta *typ.PaginatedOutput `json:"threads_meta"`
+	//ThreadsMeta *typ.PaginatedOutput `json:"threads_meta"`
 	Threads     []*object.ContentRep `json:"threads"`
 }
 
@@ -339,7 +339,7 @@ func (v *Viewer) GetBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
 
 	out := new(BoardPageOut)
 	out.Board = v.c.content[v.i.Board]
-	out.ThreadsMeta = tHashes
+	//out.ThreadsMeta = tHashes
 	out.Threads = make([]*object.ContentRep, len(tHashes.Data))
 	for i, tHash := range tHashes.Data {
 		out.Threads[i] = v.c.content[tHash]
@@ -359,7 +359,7 @@ type ThreadPageIn struct {
 type ThreadPageOut struct {
 	Board     *object.ContentRep   `json:"board"`
 	Thread    *object.ContentRep   `json:"thread"`
-	PostsMeta *typ.PaginatedOutput `json:"posts_meta"`
+	//PostsMeta *typ.PaginatedOutput `json:"posts_meta"`
 	Posts     []*object.ContentRep `json:"posts"`
 }
 
