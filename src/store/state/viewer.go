@@ -11,6 +11,7 @@ import (
 	"log"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"os"
+	"math"
 )
 
 // ErrViewerNotInitialized occurs when the Viewer is not initiated.
@@ -120,12 +121,16 @@ func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 		if e != nil {
 			return e
 		}
-		tHash, e := v.addThread(thread)
+		tBody, tHeader := thread.GetBody(), thread.GetHeader()
+		v.ensureUser(tBody.Creator)
+		tHash, e := v.addThread(thread, tBody, tHeader)
 		if e != nil {
 			return e
 		}
 		return tp.RangePosts(func(i int, post *object.Content) error {
-			return v.addPost(tHash, post)
+			pBody, pHeader := post.GetBody(), post.GetHeader()
+			v.ensureUser(pBody.Creator)
+			return v.addPost(tHash, post, pBody, pHeader)
 		})
 	})
 	if e != nil {
@@ -134,7 +139,9 @@ func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 
 	e = pages.UsersPage.RangeUserProfiles(func(i int, uap *object.UserProfile) error {
 		return uap.RangeSubmissions(func(i int, c *object.Content) error {
-			if e := v.processVote(c); e != nil {
+			vBody, vHeader := c.GetBody(), c.GetHeader()
+			v.ensureUser(vBody.Creator)
+			if e := v.processVote(c, vBody, vHeader); e != nil {
 				return e
 			}
 			return nil
@@ -171,18 +178,25 @@ func (v *Viewer) Update(pack *skyobject.Pack, headers *Headers) error {
 	v.setBoard(board)
 
 	for _, content := range headers.GetChanges().New {
-		switch content.GetBody().Type {
+		var (
+			header = content.GetHeader()
+			body = content.GetBody()
+		)
+
+		v.ensureUser(body.Creator)
+
+		switch body.Type {
 		case object.V5ThreadType:
-			if _, e := v.addThread(content); e != nil {
+			if _, e := v.addThread(content, body, header); e != nil {
 				return e
 			}
 		case object.V5PostType:
-			tHash, _ := content.GetBody().GetOfThread()
-			if e := v.addPost(tHash, content); e != nil {
+			tHash, _ := body.GetOfThread()
+			if e := v.addPost(tHash, content, body, header); e != nil {
 				return e
 			}
 		case object.V5ThreadVoteType, object.V5PostVoteType, object.V5UserVoteType:
-			v.processVote(content)
+			v.processVote(content, body, header)
 		}
 	}
 
@@ -202,36 +216,33 @@ func (v *Viewer) setBoard(bc *object.Content) {
 	v.c.content[v.i.Board] = rep
 }
 
-func (v *Viewer) addThread(tc *object.Content) (cipher.SHA256, error) {
-	body := tc.GetBody()
+func (v *Viewer) addThread(tc *object.Content, b *object.Body, h *object.ContentHeaderData) (cipher.SHA256, error) {
 
 	// Check board public key.
-	if e := checkBoardRef(v.pk, body, "thread"); e != nil {
+	if e := checkBoardRef(v.pk, b, "thread"); e != nil {
 		return cipher.SHA256{}, e
 	}
 
-	tHash := tc.GetHeader().GetHash()
+	tHash := h.GetHash()
 	v.i.Threads.Append(tHash.Hex())
 	v.c.content[tHash.Hex()] = tc.ToRep()
 	v.i.PostsOfThread[tHash.Hex()] = paginatedtypes.NewMapped()
-	v.addUser(body.Creator)
 	return tHash, nil
 }
 
-func (v *Viewer) addPost(tHash cipher.SHA256, pc *object.Content) error {
-	body := pc.GetBody()
+func (v *Viewer) addPost(tHash cipher.SHA256, pc *object.Content, b *object.Body, h *object.ContentHeaderData) error {
 
 	// Check board public key.
-	if e := checkBoardRef(v.pk, body, "post"); e != nil {
+	if e := checkBoardRef(v.pk, b, "post"); e != nil {
 		return e
 	}
 
 	// Check thread ref.
-	if e := checkThreadRef(tHash, body, "post"); e != nil {
+	if e := checkThreadRef(tHash, b, "post"); e != nil {
 		return e
 	}
 
-	pHash := pc.GetHeader().Hash
+	pHash := h.Hash
 	if posts, ok := v.i.PostsOfThread[tHash.Hex()]; !ok {
 		return boo.Newf(boo.Internal, "thread of hash %s not found", tHash.Hex())
 	} else {
@@ -239,7 +250,7 @@ func (v *Viewer) addPost(tHash cipher.SHA256, pc *object.Content) error {
 		v.c.content[pHash] = pc.ToRep()
 	}
 
-	if ofPost, _ := body.GetOfPost(); ofPost != (cipher.SHA256{}) {
+	if ofPost, _ := b.GetOfPost(); ofPost != (cipher.SHA256{}) {
 		pList, ok := v.i.PostsOfThread[ofPost.Hex()]
 		if !ok {
 			pList = paginatedtypes.NewMapped()
@@ -248,33 +259,32 @@ func (v *Viewer) addPost(tHash cipher.SHA256, pc *object.Content) error {
 		pList.Append(pHash)
 	}
 
-	v.addUser(body.Creator)
 	return nil
 }
 
-func (v *Viewer) addUser(upk string) {
+func (v *Viewer) ensureUser(upk string) {
 	v.i.Users.Append(upk)
 	if _, ok := v.c.profiles[upk]; !ok {
 		v.c.profiles[upk] = NewProfile()
 	}
 }
 
-func (v *Viewer) processVote(c *object.Content) error {
+func (v *Viewer) processVote(c *object.Content, b *object.Body, h *object.ContentHeaderData) error {
 	var cHash string
 	var cType object.ContentType
 
 	// Only if vote is for post or thread.
-	switch c.GetBody().Type {
+	switch b.Type {
 	case object.V5ThreadVoteType:
-		cHash = c.GetBody().OfThread
+		cHash = b.OfThread
 		cType = object.V5ThreadVoteType
 
 	case object.V5PostVoteType:
-		cHash = c.GetBody().OfPost
+		cHash = b.OfPost
 		cType = object.V5PostVoteType
 
 	case object.V5UserVoteType:
-		return v.processUserVote(c)
+		return v.processUserVote(c, b, h)
 
 	default:
 		return nil
@@ -295,9 +305,8 @@ func (v *Viewer) processVote(c *object.Content) error {
 	return nil
 }
 
-func (v *Viewer) processUserVote(c *object.Content) error {
+func (v *Viewer) processUserVote(c *object.Content, b *object.Body, h *object.ContentHeaderData) error {
 	var (
-		b              = c.GetBody()
 		creatorProfile = v.c.GetProfile(b.Creator)
 		ofUserProfile  = v.c.GetProfile(b.OfUser)
 	)
@@ -327,6 +336,35 @@ func (v *Viewer) processUserVote(c *object.Content) error {
 		v.i.EnsureUsersOfUserVoteBody(b)
 	}
 	return nil
+}
+
+/*
+	<<< CHECK >>>
+*/
+
+func (v *Viewer) HasUser(upk string) bool {
+	if v == nil {
+		return false
+	}
+	defer v.lock()()
+	return v.i.Users.Has(upk)
+}
+
+func (v *Viewer) HasThread(tHash string) bool {
+	if v == nil {
+		return false
+	}
+	defer v.lock()()
+	return v.i.Threads.Has(tHash)
+}
+
+func (v *Viewer) HasContent(hash string) bool {
+	if v == nil {
+		return false
+	}
+	defer v.lock()()
+	_, ok := v.c.content[hash]
+	return ok
 }
 
 /*
@@ -486,6 +524,27 @@ func (v *Viewer) GetUserProfile(in *UserProfileIn) (*UserProfileOut, error) {
 	return &UserProfileOut{
 		UserPubKey: in.UserPubKey,
 		Profile: profile.View(),
+	}, nil
+}
+
+type ParticipantsOut struct {
+	Participants []string `json:"participants"`
+}
+
+func (v *Viewer) GetParticipants() (*ParticipantsOut, error) {
+	if v == nil {
+		return nil, ErrViewerNotInitialized
+	}
+	defer v.lock()()
+	out, e := v.i.Users.Get(&typ.PaginatedInput{
+		StartIndex: 0,
+		MaxCount: math.MaxUint64,
+	})
+	if e != nil {
+		return nil, e
+	}
+	return &ParticipantsOut{
+		Participants: out.Data,
 	}, nil
 }
 

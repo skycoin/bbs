@@ -60,8 +60,9 @@ func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface
 		})
 
 	case object.V5UserVoteType:
-		// TODO (evanlinjin) : Implement.
-		return getFollowPageOut(nil), nil
+		return bi.Viewer().GetUserProfile(&state.UserProfileIn{
+			UserPubKey: transport.Body.Creator,
+		})
 
 	default:
 		return nil, boo.Newf(boo.InvalidInput,
@@ -342,6 +343,17 @@ func (a *Access) NewPost(ctx context.Context, in *NewPostIn) (interface{}, error
 		ThreadHash:     in.ThreadRefStr,
 		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
 	})
+}
+
+func (a *Access) GetParticipants(ctx context.Context, in *BoardIn) (interface{}, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.PubKey)
+	if e != nil {
+		return nil, e
+	}
+	return bi.Viewer().GetParticipants()
 }
 
 /*

@@ -93,7 +93,7 @@ func main() {
 					Usage: "generates a signature of a hash with given secret key",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
-							Name:  "hash, h",
+							Name:  "hash, hh",
 							Usage: "hash to be signed",
 						},
 						cli.StringFlag{
@@ -104,7 +104,7 @@ func main() {
 					Action: func(ctx *cli.Context) error {
 						return do(tag.SignHash(&tag.SignHashIn{
 							Hash:   ctx.String("hash"),
-							SecKey: ctx.String("secret_key"),
+							SecKey: ctx.String("secret-key"),
 						}))
 					},
 				},
