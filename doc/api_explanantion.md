@@ -98,7 +98,7 @@ The content `"header"` is the same structure for boards, threads and posts. Here
     * `5,thread_vote` - A thread vote (api v5).
     * `5,post_vote` - A post vote (api v5).
     * `5,user_vote` - A user vote (api v5).
-    
+
 * `"hash"` - This is the hash of the content being submitted. It is also used to reference the specified content. It's the hex representation of a SHA256 hash.
 
 * `"pk"` - The public key used to verify the content. This is also the public key of the user that generated the content. It's the hex representation of the public key.
@@ -113,28 +113,20 @@ This varies with the content type. Examples as above.
 
 ### Content Submission
 
-So this is the difficult part.
+The examples below have the following charactoristics:
+
+* All post content to a board of public key `02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1` which is generated with seed `seed`.
+
+* All posts are created by a user, generated with seed `c`:
+
+  ```json
+  {
+    "public_key": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+    "secret_key": "69eb49ceac75c3e0993395ecf25730578499f8091a935a59452f9fef7115dd4d"
+  }
+  ```
 
 #### Example 1 - Submitting a thread
-
-First, we need a private, public key pair that represents a user. This is generated with a seed.
-
-Given a seed.
-
-```json
-{
-  "seed": "c"
-}
-```
-
-We can generate a key pair as follows.
-
-```json
-{
-  "public_key": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
-  "secret_key": "69eb49ceac75c3e0993395ecf25730578499f8091a935a59452f9fef7115dd4d"
-}
-```
 
 Let's add a thread to board of public key `02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1`. This is the data body of such a thread.
 
@@ -175,23 +167,14 @@ And sign it with the secret key `69eb49ceac75c3e0993395ecf25730578499f8091a935a5
 
 We can then submit the data using the endpoint represented as "New Submission" in the provided Postman collection.
 
-| Key | Value |
-| --- | --- |
+| Key    | Value                                    |
+| ------ | ---------------------------------------- |
 | `body` | `{"type":"5,thread","of_board":"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1","ts":123435,"name":"Test Thread","body":"This is a test thread.","creator":"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7"}` |
-| `sig` | `086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700` |
+| `sig`  | `086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700` |
 
 #### Example 2 - Submitting a thread vote
 
-We will use the key pair generated with seed `"c"`.
-
-```json
-{
-  "public_key": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
-  "secret_key": "69eb49ceac75c3e0993395ecf25730578499f8091a935a59452f9fef7115dd4d"
-}
-```
-
-And again, we are submitting to board of public key `02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1`. We will use the above submitted thread to cast vote on. The hash of the thread is `a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b`.
+As before, we are submitting to board of public key `02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1`. We will use the above submitted thread to cast vote on. The hash of the thread is `a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b`.
 
 Hence, the thread-vote body will be as follows.
 
@@ -202,21 +185,29 @@ Hence, the thread-vote body will be as follows.
   "of_board": "02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1",
   "of_thread": "a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b",
   "value": -1,
-  "tag": "spam",
+  "tags": ["spam", "block"],
   "creator": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7"
 }
 ```
 
+Note that the `"tags"` field has no specified use right now. Only when casting a user vote is the following tags useful: `"trust"`, `"spam"` and `"block"` (more on this later).
+
 The thread-vote body represented with minimum whitespace is as follows.
 
 ```text
-{"type":"5,thread_vote","ts":12345,"of_board":"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1","of_thread":"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b","value":-1,"tag":"spam","creator":"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7"}
+{"type":"5,thread_vote","ts":12345,"of_board":"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1","of_thread":"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b","value":-1,"tags":["spam","block"],"creator":"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7"}
+```
+
+Hashing this obtains.
+
+```
+fda128e81923e7595c9b4ef276cdea3284bcdb4250576024e47b6109372dc7af
 ```
 
 And we can obtain a signature using the user's private key as follows.
 
 ```text
-eaed0a4ec843b0e871645b9be1863d56b79fa372d60498f2900ac16888f9e7de5fe503d87173e27f8c53250e9858c1429b4143af3b9aa715e0448232994edaf601
+2b43e55fdf4132cad2d96ae3d817f70e909eb21ff1200dfff63d6b1d57b57e1f016c2b8f1f5972854873044b3e2a2a3ba8ec49a8a904a026981629c9125d6f4e01
 ```
 
 #### Example 3 - Submitting a post
@@ -232,3 +223,82 @@ Signature (`sig`):
 ```text
 65677b4deabee53d00ca00de82d2e9258a39e908a2b31979a0d936b2bfd4fcde65bcf9b7364e9338b3ac32453cd0e617a763a83e54a9d0665ae04ebbdccf79ba00
 ```
+#### Example 4 - Voting on a user
+
+Within each user vote, the value of the fields `"value"` and `"tags"` will determine the nature of the vote. This is represented in the following table:
+
+| Value (`"value"`) | Tags (`"tags"`)  | Nature                                   |
+| ----------------- | ---------------- | ---------------------------------------- |
+| `1`               | `["trust"]`      | User A trusts User B.                    |
+| `-1`              | `["spam"]`       | User A determines User B as a spammer.   |
+| `-1`              | `["block"]`      | User A dislikes User B and blocks User B. |
+| `-1`              | `["spam,block"]` | User A determines User B as a spammer and blocks User B. |
+
+Let's generate 3 users to demonstate user voting.
+
+**User 1 (generated with seed `1`):**
+
+```json
+{
+  "public_key": "02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1",
+  "secret_key": "12348e8a15fcce27de6c187a5ecace09af622d495474cb3280e5e614f8b789b5"
+}
+```
+
+**User 2 (generated with seed `2`):**
+
+```json
+{
+  "public_key": "0284da18e80d5ec08cf54ed9c86bbbce6bbd2838b8c700a373a5886e4de44ce895",
+  "secret_key": "9b43b74f9737e15e36921b418ec5c31ebcc92025133240c9061b2846a88f2e0c"
+}
+```
+
+**User 3 (generated with seed `3`):**
+
+```json
+{
+  "public_key": "03f5bcfadd87e625bf62900a7d1ed673ce74034dbfc5d5c624cedd4612a8dc6d1c",
+  "secret_key": "9b40df8b560259c41af5ca5049d3fcd010e925511325fe0c11e362a9d0cada60"
+}
+```
+
+Now these three users will vote on user of public key `035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7` (generated with seed `c`).
+
+**User 1's action:**
+
+User 1 trusts user  "c" as she sees him as being human. Hence, she casts the following vote:
+
+```json
+{
+  "type": "5,user_vote",
+  "ts": 12345,
+  "of_board": "02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1",
+  "of_user": "035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7",
+  "value": 1,
+  "tags": ["trust"],
+  "creator": "02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1"
+}
+```
+
+This is the same vote but compacted:
+
+```
+{"type":"5,user_vote","ts":12345,"of_board":"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1","of_user":"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7","value":1,"tags":["trust"],"creator":"02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1"}
+```
+
+The hash of this data is `beb765b1f4cd9616e8c19139756f9033822cdaf507c4ecf65fdcb07d3c9d0eb0`.
+
+Signed with User 1's secret key (`12348e8a15fcce27de6c187a5ecace09af622d495474cb3280e5e614f8b789b5`) we get the following signature:
+
+```
+79d086bedc2757bc3572c6aa9c29d518b36356d3879a1f171dc01e753be159e14ae80e24d42adb97147775407b8fe6c98278e8ee75008122f1c80c0429dd179a01
+```
+
+**User 2's action:**
+
+*TODO* (evanlinjin)
+
+**User 3's action:**
+
+*TODO* (evanlinjin)

@@ -399,13 +399,13 @@
 					"formdata": [
 						{
 							"key": "body",
-							"value": "{\"type\":\"5,thread\",\"of_board\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"ts\":123435,\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718\"}",
+							"value": "{\"type\":\"5,user_vote\",\"ts\":12345,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_user\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"value\":1,\"tags\":[\"trust\"],\"creator\":\"02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1\"}",
 							"description": "Data body that is being submitted (best to keep the form with less whitespace).",
 							"type": "text"
 						},
 						{
 							"key": "sig",
-							"value": "6667f3088b00a3ed0de4715e96842134170b0319ddcfe65a42255c0e7660d2ff396f22a9c9a6cbccbc0641f43315a6c29c45de71aa152a588127493e78e791fb00",
+							"value": "79d086bedc2757bc3572c6aa9c29d518b36356d3879a1f171dc01e753be159e14ae80e24d42adb97147775407b8fe6c98278e8ee75008122f1c80c0429dd179a01",
 							"description": "Signature of body.",
 							"type": "text"
 						}
@@ -430,7 +430,7 @@
 			},
 			"response": [
 				{
-					"id": "24249570-26bf-492f-9777-0217e46eaf64",
+					"id": "c3cbc065-3cf2-4e9f-995b-974c2ca7310c",
 					"name": "New Thread",
 					"originalRequest": {
 						"method": "POST",
@@ -475,7 +475,7 @@
 					"header": [
 						{
 							"key": "Content-Length",
-							"value": "717",
+							"value": "826",
 							"name": "Content-Length",
 							"description": "The length of the response body in octets (8-bit bytes)"
 						},
@@ -487,17 +487,17 @@
 						},
 						{
 							"key": "Date",
-							"value": "Tue, 10 Oct 2017 22:18:07 GMT",
+							"value": "Wed, 08 Nov 2017 10:31:11 GMT",
 							"name": "Date",
 							"description": "The date and time that the message was sent"
 						}
 					],
 					"cookie": [],
-					"responseTime": 1028,
-					"body": "{\"okay\":true,\"data\":{\"board\":{\"public_key\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"header\":{},\"body\":{\"type\":\"5,board\",\"ts\":1507673817777803973,\"name\":\"Test Board\",\"body\":\"This is a test board.\"}},\"threads\":[{\"header\":{\"hash\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"sig\":\"086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700\"},\"body\":{\"type\":\"5,thread\",\"ts\":123435,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}}]}}"
+					"responseTime": 1021,
+					"body": "{\"okay\":true,\"data\":{\"board\":{\"public_key\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"header\":{},\"body\":{\"type\":\"5,board\",\"ts\":1510135351441649072,\"name\":\"Test Board\",\"body\":\"This is a test board.\",\"submission_keys\":[\"172.104.187.69:8080,027666f7b57821fe16c749470524ffa203511dbd93ff882ac0d25c13dc168bed87\"]}},\"threads\":[{\"header\":{\"hash\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"sig\":\"086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700\"},\"body\":{\"type\":\"5,thread\",\"ts\":123435,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}}]}}"
 				},
 				{
-					"id": "1681a802-c53d-4093-a41a-bceb09a7c0a1",
+					"id": "eabb61b1-ecd9-402c-900b-a411d47c946c",
 					"name": "New Thread Vote",
 					"originalRequest": {
 						"method": "POST",
@@ -507,13 +507,13 @@
 							"formdata": [
 								{
 									"key": "body",
-									"value": "{\"type\":\"5,thread_vote\",\"ts\":12345,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"value\":-1,\"tag\":\"spam\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
+									"value": "{\"type\":\"5,thread_vote\",\"ts\":12345,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"value\":-1,\"tags\":[\"spam\",\"block\"],\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
 									"description": "Data body that is being submitted (best to keep the form with less whitespace).",
 									"type": "text"
 								},
 								{
 									"key": "sig",
-									"value": "eaed0a4ec843b0e871645b9be1863d56b79fa372d60498f2900ac16888f9e7de5fe503d87173e27f8c53250e9858c1429b4143af3b9aa715e0448232994edaf601",
+									"value": "2b43e55fdf4132cad2d96ae3d817f70e909eb21ff1200dfff63d6b1d57b57e1f016c2b8f1f5972854873044b3e2a2a3ba8ec49a8a904a026981629c9125d6f4e01",
 									"description": "Signature of body.",
 									"type": "text"
 								}
@@ -554,81 +554,14 @@
 						},
 						{
 							"key": "Date",
-							"value": "Tue, 10 Oct 2017 22:19:02 GMT",
+							"value": "Wed, 08 Nov 2017 10:38:22 GMT",
 							"name": "Date",
 							"description": "The date and time that the message was sent"
 						}
 					],
 					"cookie": [],
-					"responseTime": 1021,
+					"responseTime": 1019,
 					"body": "{\"okay\":true,\"data\":{\"votes\":{\"ref\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"up_votes\":{\"voted\":false,\"count\":0},\"down_votes\":{\"voted\":true,\"count\":1}}}}"
-				},
-				{
-					"id": "a12b2e5f-b213-4c49-bd64-12ee80ff94bb",
-					"name": "New Post",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "body",
-									"value": "{\"type\":\"5,post\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"ts\":123435,\"name\":\"Test Post\",\"body\":\"This is a test post.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
-									"description": "Data body that is being submitted (best to keep the form with less whitespace).",
-									"type": "text"
-								},
-								{
-									"key": "sig",
-									"value": "65677b4deabee53d00ca00de82d2e9258a39e908a2b31979a0d936b2bfd4fcde65bcf9b7364e9338b3ac32453cd0e617a763a83e54a9d0665ae04ebbdccf79ba00",
-									"description": "Signature of body.",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://127.0.0.1:7410/api/new_submission",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "7410",
-							"path": [
-								"api",
-								"new_submission"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"_postman_previewtype": "text",
-					"header": [
-						{
-							"key": "Content-Length",
-							"value": "1432",
-							"name": "Content-Length",
-							"description": "The length of the response body in octets (8-bit bytes)"
-						},
-						{
-							"key": "Content-Type",
-							"value": "application/json",
-							"name": "Content-Type",
-							"description": "The mime type of this content"
-						},
-						{
-							"key": "Date",
-							"value": "Tue, 10 Oct 2017 22:19:59 GMT",
-							"name": "Date",
-							"description": "The date and time that the message was sent"
-						}
-					],
-					"cookie": [],
-					"responseTime": 1025,
-					"body": "{\"okay\":true,\"data\":{\"board\":{\"public_key\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"header\":{},\"body\":{\"type\":\"5,board\",\"ts\":1507673817777803973,\"name\":\"Test Board\",\"body\":\"This is a test board.\"}},\"thread\":{\"header\":{\"hash\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"sig\":\"086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700\"},\"body\":{\"type\":\"5,thread\",\"ts\":123435,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"},\"votes\":{\"ref\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"up_votes\":{\"voted\":false,\"count\":0},\"down_votes\":{\"voted\":true,\"count\":1}}},\"posts\":[{\"header\":{\"hash\":\"63b347773e1f849066007760e49ff3fc96eec297271160bfd08dc636d5b7f9e0\",\"sig\":\"65677b4deabee53d00ca00de82d2e9258a39e908a2b31979a0d936b2bfd4fcde65bcf9b7364e9338b3ac32453cd0e617a763a83e54a9d0665ae04ebbdccf79ba00\"},\"body\":{\"type\":\"5,post\",\"ts\":123435,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"name\":\"Test Post\",\"body\":\"This is a test post.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}}]}}"
 				}
 			]
 		}
