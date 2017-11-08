@@ -11,6 +11,7 @@ import (
 	"log"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"os"
+	"math"
 )
 
 // ErrViewerNotInitialized occurs when the Viewer is not initiated.
@@ -486,6 +487,27 @@ func (v *Viewer) GetUserProfile(in *UserProfileIn) (*UserProfileOut, error) {
 	return &UserProfileOut{
 		UserPubKey: in.UserPubKey,
 		Profile: profile.View(),
+	}, nil
+}
+
+type ParticipantsOut struct {
+	Participants []string `json:"participants"`
+}
+
+func (v *Viewer) GetParticipants() (*ParticipantsOut, error) {
+	if v == nil {
+		return nil, ErrViewerNotInitialized
+	}
+	defer v.lock()()
+	out, e := v.i.Users.Get(&typ.PaginatedInput{
+		StartIndex: 0,
+		MaxCount: math.MaxUint64,
+	})
+	if e != nil {
+		return nil, e
+	}
+	return &ParticipantsOut{
+		Participants: out.Data,
 	}, nil
 }
 

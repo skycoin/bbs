@@ -344,6 +344,17 @@ func (a *Access) NewPost(ctx context.Context, in *NewPostIn) (interface{}, error
 	})
 }
 
+func (a *Access) GetParticipants(ctx context.Context, in *BoardIn) (interface{}, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	bi, e := a.CXO.GetBoardInstance(in.PubKey)
+	if e != nil {
+		return nil, e
+	}
+	return bi.Viewer().GetParticipants()
+}
+
 /*
 	<<< VOTES >>>
 */

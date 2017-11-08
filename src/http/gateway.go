@@ -62,7 +62,14 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 		})
 
 	// Gets a view of following/avoiding of specified user.
-	mux.HandleFunc("/api/get_follow_page",
+	mux.HandleFunc("/api/get_follow_page", // TODO: Remove this.
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetFollowPage(r.Context(), &store.UserIn{
+				BoardPubKeyStr: r.FormValue("board_public_key"),
+				UserPubKeyStr:  r.FormValue("user_public_key"),
+			}))
+		})
+	mux.HandleFunc("/api/get_user_profile",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetFollowPage(r.Context(), &store.UserIn{
 				BoardPubKeyStr: r.FormValue("board_public_key"),
@@ -70,11 +77,19 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 			}))
 		})
 
+	// Gets a view of all participating users.
+	mux.HandleFunc("/api/get_participants",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetParticipants(r.Context(), &store.BoardIn{
+				PubKeyStr: r.FormValue("board_public_key"),
+			}))
+		})
+
 	// Lists boards that have been discovered, but not subscribed to.
-	//mux.HandleFunc("/api/discover_boards",
-	//	func(w http.ResponseWriter, r *http.Request) {
-	//		send(w)(g.Access.GetDiscoveredBoards(r.Context()))
-	//	})
+	mux.HandleFunc("/api/get_available_boards",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetAvailableBoards(r.Context()))
+		})
 
 	return nil
 }
