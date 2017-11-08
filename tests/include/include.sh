@@ -220,3 +220,58 @@ NewPost() {
         -creator-secret-key="${CSK}" \
         -timestamp=${TS}
 }
+
+VoteThread() {
+    if [[ $# -ne 6 ]] ; then
+        echo "6 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; THASH=$3 ; VALUE=$4 ; CSK=$5 ; TS=$6
+
+    pv "NODE '${PORT}': VOTE THREAD '${THASH}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content vote_thread \
+        -board-public-key="${BPK}" \
+        -thread-hash="${THASH}" \
+        -value="${VALUE}" \
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
+}
+
+VotePost() {
+    if [[ $# -ne 6 ]] ; then
+        echo "6 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; PHASH=$3 ; VALUE=$4 ; CSK=$5 ; TS=$6
+
+    pv "NODE '${PORT}': VOTE POST '${PHASH}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content vote_post \
+        -board-public-key="${BPK}" \
+        -post-hash="${PHASH}" \
+        -value="${VALUE}" \
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
+}
+
+VoteUser() {
+    if [[ $# -ne 7 ]] ; then
+        echo "7 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; UPK=$3 ; VALUE=$4 ; TAGS=$5 ; CSK=$6 ; TS=$7
+
+    pv "NODE '${PORT}': VOTE USER '${UPK}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content vote_user \
+        -board-public-key="${BPK}" \
+        -user-public-key="${UPK}" \
+        -value="${VALUE}" \
+        -tags=${TAGS} \
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
+}

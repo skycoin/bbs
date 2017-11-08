@@ -352,16 +352,13 @@ func (a *Access) GetFollowPage(ctx context.Context, in *UserIn) (interface{}, er
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
-	_, e := a.CXO.GetBoardInstance(in.BoardPubKey)
+	bi, e := a.CXO.GetBoardInstance(in.BoardPubKey)
 	if e != nil {
 		return nil, e
 	}
-	// TODO (evanlinjin) : implement
-	//out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
-	//if e != nil {
-	//	return nil, e
-	//}
-	return getFollowPageOut(nil), nil
+	return bi.Viewer().GetUserProfile(&state.UserProfileIn{
+		UserPubKey: in.UserPubKeyStr,
+	})
 }
 
 func (a *Access) VoteUser(ctx context.Context, in *VoteUserIn) (interface{}, error) {
@@ -386,12 +383,9 @@ func (a *Access) VoteUser(ctx context.Context, in *VoteUserIn) (interface{}, err
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	// TODO (evanlinjin) : implement
-	//out, e := bi.Get(views.Follow, follow_view.FollowPage, in.UserPubKeyStr)
-	//if e != nil {
-	//	return nil, e
-	//}
-	return getFollowPageOut(nil), nil
+	return bi.Viewer().GetUserProfile(&state.UserProfileIn{
+		UserPubKey: in.UserPubKeyStr,
+	})
 }
 
 func (a *Access) VoteThread(ctx context.Context, in *VoteThreadIn) (interface{}, error) {

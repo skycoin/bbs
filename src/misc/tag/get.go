@@ -6,6 +6,7 @@ import (
 	"github.com/skycoin/skycoin/src/cipher"
 	"strconv"
 	"strings"
+	"log"
 )
 
 // GetPubKey obtains the public key from string, avoiding panics.
@@ -85,5 +86,6 @@ func GetTags(v string) ([]string, error) {
 			tags = append(tags[:i], tags[i+1:]...)
 		}
 	}
+	log.Println("GetTags(v string) got:", tags)
 	return tags, nil
 }
