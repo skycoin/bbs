@@ -62,13 +62,6 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 		})
 
 	// Gets a view of following/avoiding of specified user.
-	mux.HandleFunc("/api/get_follow_page", // TODO: Remove this.
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.GetFollowPage(r.Context(), &store.UserIn{
-				BoardPubKeyStr: r.FormValue("board_public_key"),
-				UserPubKeyStr:  r.FormValue("user_public_key"),
-			}))
-		})
 	mux.HandleFunc("/api/get_user_profile",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetFollowPage(r.Context(), &store.UserIn{
