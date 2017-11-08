@@ -60,8 +60,9 @@ func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface
 		})
 
 	case object.V5UserVoteType:
-		// TODO (evanlinjin) : Implement.
-		return getFollowPageOut(nil), nil
+		return bi.Viewer().GetUserProfile(&state.UserProfileIn{
+			UserPubKey: transport.Body.Creator,
+		})
 
 	default:
 		return nil, boo.Newf(boo.InvalidInput,
