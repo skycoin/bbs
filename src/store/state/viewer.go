@@ -8,6 +8,9 @@ import (
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"sync"
+	"log"
+	"github.com/skycoin/bbs/src/misc/inform"
+	"os"
 )
 
 // ErrViewerNotInitialized occurs when the Viewer is not initiated.
@@ -80,6 +83,7 @@ func (c *Container) GetProfile(upk string) *Profile {
 // Viewer generates and compiles views for the board.
 type Viewer struct {
 	mux sync.Mutex
+	l *log.Logger
 	pk  cipher.PubKey
 	i   *Indexer
 	c   *Container
@@ -88,6 +92,7 @@ type Viewer struct {
 // NewViewer creates a new viewer with a given pack.
 func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 	v := &Viewer{
+		l: inform.NewLogger(true, os.Stdout, "STATE_VIEWER"),
 		pk: pack.Root().Pub,
 		i:  NewIndexer(),
 		c:  NewContainer(),
@@ -176,7 +181,7 @@ func (v *Viewer) Update(pack *skyobject.Pack, headers *Headers) error {
 			if e := v.addPost(tHash, content); e != nil {
 				return e
 			}
-		case object.V5ThreadVoteType, object.V5PostVoteType:
+		case object.V5ThreadVoteType, object.V5PostVoteType, object.V5UserVoteType:
 			v.processVote(content)
 		}
 	}
@@ -209,6 +214,7 @@ func (v *Viewer) addThread(tc *object.Content) (cipher.SHA256, error) {
 	v.i.Threads.Append(tHash.Hex())
 	v.c.content[tHash.Hex()] = tc.ToRep()
 	v.i.PostsOfThread[tHash.Hex()] = paginatedtypes.NewMapped()
+	v.addUser(body.Creator)
 	return tHash, nil
 }
 
@@ -242,7 +248,15 @@ func (v *Viewer) addPost(tHash cipher.SHA256, pc *object.Content) error {
 		pList.Append(pHash)
 	}
 
+	v.addUser(body.Creator)
 	return nil
+}
+
+func (v *Viewer) addUser(upk string) {
+	v.i.Users.Append(upk)
+	if _, ok := v.c.profiles[upk]; !ok {
+		v.c.profiles[upk] = NewProfile()
+	}
 }
 
 func (v *Viewer) processVote(c *object.Content) error {
@@ -319,6 +333,7 @@ func (v *Viewer) processUserVote(c *object.Content) error {
 	<<< GET >>>
 */
 
+// GetBoard gets a single board's data.
 func (v *Viewer) GetBoard() (*object.ContentRep, error) {
 	if v == nil {
 		return nil, ErrViewerNotInitialized
@@ -327,17 +342,20 @@ func (v *Viewer) GetBoard() (*object.ContentRep, error) {
 	return v.c.content[v.i.Board], nil
 }
 
+// BoardPageIn represents the input required to obtain board page.
 type BoardPageIn struct {
 	Perspective    string
 	PaginatedInput typ.PaginatedInput
 }
 
+// BoardPageOut represents the output for board page.
 type BoardPageOut struct {
 	Board       *object.ContentRep   `json:"board"`
 	//ThreadsMeta *typ.PaginatedOutput `json:"threads_meta"`
 	Threads     []*object.ContentRep `json:"threads"`
 }
 
+// GetBoardPage obtains a board page.
 func (v *Viewer) GetBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
 	if v == nil {
 		return nil, ErrViewerNotInitialized
@@ -362,12 +380,14 @@ func (v *Viewer) GetBoardPage(in *BoardPageIn) (*BoardPageOut, error) {
 	return out, nil
 }
 
+// ThreadPageIn represents the input required to obtain thread page.
 type ThreadPageIn struct {
 	Perspective    string
 	ThreadHash     string
 	PaginatedInput typ.PaginatedInput
 }
 
+// ThreadPageOut represents the output for thread page.
 type ThreadPageOut struct {
 	Board     *object.ContentRep   `json:"board"`
 	Thread    *object.ContentRep   `json:"thread"`
@@ -375,6 +395,7 @@ type ThreadPageOut struct {
 	Posts     []*object.ContentRep `json:"posts"`
 }
 
+// GetThreadPage obtains the thread page.
 func (v *Viewer) GetThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
 	if v == nil {
 		return nil, ErrViewerNotInitialized
@@ -407,15 +428,18 @@ func (v *Viewer) GetThreadPage(in *ThreadPageIn) (*ThreadPageOut, error) {
 	return out, nil
 }
 
+// ContentVotesIn represents the input required to obtain content votes.
 type ContentVotesIn struct {
 	Perspective string
 	ContentHash string
 }
 
+// ContentVotesOut represents the output for content votes.
 type ContentVotesOut struct {
 	Votes *VoteRepView `json:"votes"`
 }
 
+// GetVotes obtains content votes.
 func (v *Viewer) GetVotes(in *ContentVotesIn) (*ContentVotesOut, error) {
 	if v == nil {
 		return nil, ErrViewerNotInitialized
@@ -434,6 +458,35 @@ func (v *Viewer) GetVotes(in *ContentVotesIn) (*ContentVotesOut, error) {
 	}
 	return nil, boo.Newf(boo.NotFound, "content of hash '%s' is not found",
 		in.ContentHash)
+}
+
+type UserProfileIn struct {
+	UserPubKey string
+}
+
+type UserProfileOut struct {
+	UserPubKey string `json:"user_public_key"`
+	Profile *ProfileView `json:"profile"`
+}
+
+func (v *Viewer) GetUserProfile(in *UserProfileIn) (*UserProfileOut, error) {
+	if v == nil {
+		return nil, ErrViewerNotInitialized
+	}
+	defer v.lock()()
+	if !v.i.Users.Has(in.UserPubKey) {
+		return nil, boo.Newf(boo.NotFound,
+			"user of public key %s is not found", in.UserPubKey)
+	}
+	profile, ok := v.c.profiles[in.UserPubKey]
+	if !ok {
+		return nil, boo.Newf(boo.Internal,
+			"user of public key %s is indexed but has no profile", in.UserPubKey)
+	}
+	return &UserProfileOut{
+		UserPubKey: in.UserPubKey,
+		Profile: profile.View(),
+	}, nil
 }
 
 /*
