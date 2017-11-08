@@ -331,6 +331,35 @@ func (v *Viewer) processUserVote(c *object.Content) error {
 }
 
 /*
+	<<< CHECK >>>
+*/
+
+func (v *Viewer) HasUser(upk string) bool {
+	if v == nil {
+		return false
+	}
+	defer v.lock()()
+	return v.i.Users.Has(upk)
+}
+
+func (v *Viewer) HasThread(tHash string) bool {
+	if v == nil {
+		return false
+	}
+	defer v.lock()()
+	return v.i.Threads.Has(tHash)
+}
+
+func (v *Viewer) HasContent(hash string) bool {
+	if v == nil {
+		return false
+	}
+	defer v.lock()()
+	_, ok := v.c.content[hash]
+	return ok
+}
+
+/*
 	<<< GET >>>
 */
 

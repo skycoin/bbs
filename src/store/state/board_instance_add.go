@@ -129,6 +129,10 @@ func submitPost(bi *BoardInstance, goal *uint64, post *object.Content) error {
 func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *object.Content) error {
 	body := tVote.GetBody()
 
+	if bi.Viewer().HasThread(body.OfThread) == false {
+		return boo.Newf(boo.NotFound, "thread of hash %s is not found", body.OfThread)
+	}
+
 	return bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 		*goal = p.Root().Seq + 1
 
@@ -145,6 +149,10 @@ func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *object.Content) er
 func submitPostVote(bi *BoardInstance, goal *uint64, pVote *object.Content) error {
 	body := pVote.GetBody()
 
+	if bi.Viewer().HasContent(body.OfPost) == false {
+		return boo.Newf(boo.NotFound, "post of hash %s is not found", body.OfPost)
+	}
+
 	return bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 		*goal = p.Root().Seq + 1
 		return addVoteToDiffAndProfile(p, h, pVote, body.Creator)
@@ -153,6 +161,11 @@ func submitPostVote(bi *BoardInstance, goal *uint64, pVote *object.Content) erro
 
 func submitUserVote(bi *BoardInstance, goal *uint64, uVote *object.Content) error {
 	body := uVote.GetBody()
+
+	if bi.Viewer().HasUser(body.OfUser) == false {
+		return boo.Newf(boo.NotFound, "user of public key %s is not found", body.OfUser)
+	}
+
 	return bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 		*goal = p.Root().Seq + 1
 		return addVoteToDiffAndProfile(p, h, uVote, body.Creator)
