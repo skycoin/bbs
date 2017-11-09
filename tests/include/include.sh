@@ -71,8 +71,8 @@ RunNode() {
         -rpc-port=${PORT_RPC} \
         -cxo-port=${PORT_CXO} \
         -cxo-rpc=false \
-        -http-port=${PORT_HTTP} \
-        -http-gui=${GUI} \
+        -web-port=${PORT_HTTP} \
+        -web-gui=${GUI} \
         &
 }
 

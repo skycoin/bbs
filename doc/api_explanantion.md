@@ -234,7 +234,7 @@ Within each user vote, the value of the fields `"value"` and `"tags"` will deter
 | `-1`              | `["block"]`      | User A dislikes User B and blocks User B. |
 | `-1`              | `["spam,block"]` | User A determines User B as a spammer and blocks User B. |
 
-Let's generate 3 users to demonstate user voting.
+Let's generate 3 users to demonstrate user voting.
 
 **User 1 (generated with seed `1`):**
 
