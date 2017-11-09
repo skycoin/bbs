@@ -19,10 +19,7 @@ type Gateway struct {
 }
 
 func (g *Gateway) host(mux *http.ServeMux) error {
-	g.l = inform.NewLogger(true, os.Stdout, "")
-
-	// For administration actions to manage node.
-	//RegisterAdminHandlers(mux, g)
+	g.l = inform.NewLogger(true, os.Stdout, "GATEWAY")
 
 	// For tools.
 	RegisterToolsHandlers(mux, g)

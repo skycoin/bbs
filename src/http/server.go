@@ -6,7 +6,6 @@ import (
 	"github.com/skycoin/bbs/src/store/cxo"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"path"
@@ -15,8 +14,7 @@ import (
 )
 
 const (
-	logPrefix     = "HTTPSERVER"
-	localhost     = "127.0.0.1"
+	logPrefix     = "HTTP_SERVER"
 	indexFileName = "index.html"
 )
 
@@ -25,13 +23,16 @@ type ServerConfig struct {
 	Port      *int
 	StaticDir *string
 	EnableGUI *bool
+	EnableTLS *bool
+	TLSCertFile *string
+	TLSKeyFile *string
 }
 
 // Server represents an HTTP Server that serves static files and JSON api.
 type Server struct {
 	c    *ServerConfig
 	l    *log.Logger
-	net  net.Listener
+	srv  *http.Server
 	mux  *http.ServeMux
 	api  *Gateway
 	quit chan struct{}
@@ -39,7 +40,7 @@ type Server struct {
 
 // NewServer creates a new server.
 func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
-	server := &Server{
+	s := &Server{
 		c:    config,
 		l:    inform.NewLogger(true, os.Stdout, logPrefix),
 		mux:  http.NewServeMux(),
@@ -50,29 +51,42 @@ func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 	if *config.StaticDir, e = filepath.Abs(*config.StaticDir); e != nil {
 		return nil, e
 	}
-	host := fmt.Sprintf("%s:%d", localhost, *config.Port)
-	if server.net, e = net.Listen("tcp", host); e != nil {
+
+	if e := s.prepareMux(); e != nil {
 		return nil, e
 	}
-	if e := server.prepareMux(); e != nil {
-		return nil, e
-	}
-	go server.serve()
-	return server, nil
+	go s.serve()
+	return s, nil
 }
 
 func (s *Server) serve() {
-	for {
-		if e := http.Serve(s.net, s.mux); e != nil {
-			select {
-			case <-s.quit:
-				return
-			default:
+	s.srv = &http.Server{
+		Addr: fmt.Sprintf(":%d", *s.c.Port),
+		Handler: s.mux,
+	}
+	if *s.c.EnableTLS {
+		for {
+			if e := s.srv.ListenAndServeTLS(*s.c.TLSCertFile, *s.c.TLSKeyFile); e != nil {
+				s.l.Println("stopped with error:", e)
 				time.Sleep(100 * time.Millisecond)
 				continue
+			} else {
+				break
+			}
+		}
+	} else {
+		for {
+			if e := s.srv.ListenAndServe(); e != nil {
+				s.l.Println("stopped with error:", e)
+				time.Sleep(100 * time.Millisecond)
+				continue
+			} else {
+				break
 			}
 		}
 	}
+
+	s.srv = nil
 }
 
 func (s *Server) prepareMux() error {
@@ -87,7 +101,7 @@ func (s *Server) prepareMux() error {
 func (s *Server) prepareStatic() error {
 	appLoc := *s.c.StaticDir
 	s.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		page := path.Join(appLoc, "index.html")
+		page := path.Join(appLoc, indexFileName)
 		http.ServeFile(w, r, page)
 	})
 
@@ -112,7 +126,8 @@ func (s *Server) Close() {
 	if s.quit != nil {
 		s.CXO().Close()
 		close(s.quit)
-		s.net.Close()
-		s.net = nil
+		if s.srv != nil {
+			s.srv.Close()
+		}
 	}
 }

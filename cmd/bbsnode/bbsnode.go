@@ -24,7 +24,7 @@ const (
 	defaultRPCPort         = 8996
 	defaultCXOPort         = 8998
 	defaultCXORPCPort      = 8997
-	defaultHTTPPort        = 7410
+	defaultWebPort         = 8080
 )
 
 var (
@@ -34,9 +34,6 @@ var (
 	defaultMessengerAddresses = cli.StringSlice{
 		"messenger.skycoin.net:8080",
 	}
-	//defaultDevMessengerAddresses = cli.StringSlice{
-	//	"127.0.0.1:8080",
-	//}
 	devMode          = false
 	compilerInternal = 1
 )
@@ -56,9 +53,13 @@ type Config struct {
 	EnforcedMessengerAddresses cli.StringSlice `json:"ensured_messenger_addresses"` // Addresses of messenger servers to enforce.
 	EnforcedSubscriptions      cli.StringSlice `json:"ensured_subscriptions"`       // Subscriptions to enforce.
 
-	HTTPPort   int    `json:"http_port"`              // Port to serve HTTP API/GUI.
-	HTTPGUI    bool   `json:"http_gui"`               // Whether to enable GUI.
-	HTTPGUIDir string `json:"http_gui_dir,omitempty"` // Full path of GUI static files.
+	WebPort   int    `json:"web_port"`              // Port to serve HTTP API/GUI.
+	WebGUI    bool   `json:"web_gui"`               // Whether to enable GUI.
+	WebGUIDir string `json:"web_gui_dir,omitempty"` // Full path of GUI static files.
+	WebTLS    bool   `json:"web_tls"` // Whether to enable TLS.
+	WebTLSCertFile string `json:"web_tls_cert_file"` // Path for TLS Certificate file.
+	WebTLSKeyFile string `json:"web_tls_key_file"` // Path for TLS Key file.
+
 
 	Browser bool `json:"browser"` // Whether to open browser on GUI start.
 }
@@ -75,9 +76,9 @@ func NewDefaultConfig() *Config {
 		CXORPCPort:                 defaultCXORPCPort,
 		EnforcedMessengerAddresses: defaultMessengerAddresses,
 		EnforcedSubscriptions:      []string{},
-		HTTPPort:                   defaultHTTPPort,
-		HTTPGUI:                    true,
-		HTTPGUIDir:                 "", // --> Action: set as '$HOME/.skybbs/static'
+		WebPort:                    defaultWebPort,
+		WebGUI:                     true,
+		WebGUIDir:                  "", // --> Action: set as '$HOME/.skybbs/static'
 		Browser:                    true,
 	}
 }
@@ -97,12 +98,12 @@ func (c *Config) PostProcess() error {
 			return e
 		}
 	}
-	if c.HTTPGUI {
-		if c.HTTPGUIDir == "" {
+	if c.WebGUI {
+		if c.WebGUIDir == "" {
 			if devMode {
-				c.HTTPGUIDir = filepath.Join(os.Getenv("GOPATH"), defaultDevStaticSubDir)
+				c.WebGUIDir = filepath.Join(os.Getenv("GOPATH"), defaultDevStaticSubDir)
 			} else {
-				c.HTTPGUIDir = defaultStaticSubDir
+				c.WebGUIDir = defaultStaticSubDir
 			}
 		}
 	} else {
@@ -124,9 +125,12 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 
 		httpServer, e := http.NewServer(
 			&http.ServerConfig{
-				Port:      &c.HTTPPort,
-				StaticDir: &c.HTTPGUIDir,
-				EnableGUI: &c.HTTPGUI,
+				Port:      &c.WebPort,
+				StaticDir: &c.WebGUIDir,
+				EnableGUI: &c.WebGUI,
+				EnableTLS: &c.WebTLS,
+				TLSCertFile: &c.WebTLSCertFile,
+				TLSKeyFile: &c.WebTLSKeyFile,
 			},
 			&http.Gateway{
 				Access: &store.Access{
@@ -167,7 +171,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		defer rpcServer.Close()
 
 		if c.Browser {
-			address := fmt.Sprintf("http://127.0.0.1:%d", c.HTTPPort)
+			address := fmt.Sprintf("http://127.0.0.1:%d", c.WebPort)
 			log.Println("Opening browser at address:", address)
 			if e := browser.Open(address); e != nil {
 				log.Println("Error on browser open:", e)
@@ -246,17 +250,31 @@ func main() {
 			Value: &config.EnforcedSubscriptions,
 		},
 		cli.IntFlag{
-			Name:        "http-port",
-			Destination: &config.HTTPPort,
-			Value:       config.HTTPPort,
+			Name:        "web-port",
+			Destination: &config.WebPort,
+			Value:       config.WebPort,
 		},
 		cli.BoolTFlag{
-			Name:        "http-gui",
-			Destination: &config.HTTPGUI,
+			Name:        "web-gui",
+			Destination: &config.WebGUI,
 		},
 		cli.StringFlag{
-			Name:        "http-gui-dir",
-			Destination: &config.HTTPGUIDir,
+			Name:        "web-gui-dir",
+			Destination: &config.WebGUIDir,
+		},
+		cli.BoolFlag{
+			Name:        "web-tls",
+			Destination: &config.WebTLS,
+		},
+		cli.StringFlag{
+			Name: "web-tls-cert-file",
+			Destination: &config.WebTLSCertFile,
+			Value: config.WebTLSCertFile,
+		},
+		cli.StringFlag{
+			Name: "web-tls-key-file",
+			Destination: &config.WebTLSKeyFile,
+			Value: config.WebTLSKeyFile,
 		},
 	}
 	app := cli.NewApp()
