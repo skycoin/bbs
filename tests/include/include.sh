@@ -65,7 +65,6 @@ RunNode() {
     pv "START NODE: PORT_HTTP ${PORT_HTTP}, PORT_CXO ${PORT_CXO}, PORT_RPC ${PORT_RPC}, GUI ${GUI}..."
 
     go run ${BBS_NODE_PATH} \
-        -dev=true \
         -memory=true \
         -enforced-messenger-addresses=127.0.0.1:8080 \
         -rpc-port=${PORT_RPC} \
