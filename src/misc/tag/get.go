@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/skycoin/src/cipher"
+	"log"
 	"strconv"
 	"strings"
-	"log"
 )
 
 // GetPubKey obtains the public key from string, avoiding panics.

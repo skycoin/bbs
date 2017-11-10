@@ -2,16 +2,16 @@ package state
 
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
+	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/bbs/src/misc/typ/paginatedtypes"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
-	"sync"
 	"log"
-	"github.com/skycoin/bbs/src/misc/inform"
-	"os"
 	"math"
+	"os"
+	"sync"
 )
 
 // ErrViewerNotInitialized occurs when the Viewer is not initiated.
@@ -84,7 +84,7 @@ func (c *Container) GetProfile(upk string) *Profile {
 // Viewer generates and compiles views for the board.
 type Viewer struct {
 	mux sync.Mutex
-	l *log.Logger
+	l   *log.Logger
 	pk  cipher.PubKey
 	i   *Indexer
 	c   *Container
@@ -93,7 +93,7 @@ type Viewer struct {
 // NewViewer creates a new viewer with a given pack.
 func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 	v := &Viewer{
-		l: inform.NewLogger(true, os.Stdout, "STATE_VIEWER"),
+		l:  inform.NewLogger(true, os.Stdout, "STATE_VIEWER"),
 		pk: pack.Root().Pub,
 		i:  NewIndexer(),
 		c:  NewContainer(),
@@ -180,7 +180,7 @@ func (v *Viewer) Update(pack *skyobject.Pack, headers *Headers) error {
 	for _, content := range headers.GetChanges().New {
 		var (
 			header = content.GetHeader()
-			body = content.GetBody()
+			body   = content.GetBody()
 		)
 
 		v.ensureUser(body.Creator)
@@ -388,9 +388,9 @@ type BoardPageIn struct {
 
 // BoardPageOut represents the output for board page.
 type BoardPageOut struct {
-	Board       *object.ContentRep   `json:"board"`
+	Board *object.ContentRep `json:"board"`
 	//ThreadsMeta *typ.PaginatedOutput `json:"threads_meta"`
-	Threads     []*object.ContentRep `json:"threads"`
+	Threads []*object.ContentRep `json:"threads"`
 }
 
 // GetBoardPage obtains a board page.
@@ -427,10 +427,10 @@ type ThreadPageIn struct {
 
 // ThreadPageOut represents the output for thread page.
 type ThreadPageOut struct {
-	Board     *object.ContentRep   `json:"board"`
-	Thread    *object.ContentRep   `json:"thread"`
+	Board  *object.ContentRep `json:"board"`
+	Thread *object.ContentRep `json:"thread"`
 	//PostsMeta *typ.PaginatedOutput `json:"posts_meta"`
-	Posts     []*object.ContentRep `json:"posts"`
+	Posts []*object.ContentRep `json:"posts"`
 }
 
 // GetThreadPage obtains the thread page.
@@ -503,8 +503,8 @@ type UserProfileIn struct {
 }
 
 type UserProfileOut struct {
-	UserPubKey string `json:"user_public_key"`
-	Profile *ProfileView `json:"profile"`
+	UserPubKey string       `json:"user_public_key"`
+	Profile    *ProfileView `json:"profile"`
 }
 
 func (v *Viewer) GetUserProfile(in *UserProfileIn) (*UserProfileOut, error) {
@@ -523,7 +523,7 @@ func (v *Viewer) GetUserProfile(in *UserProfileIn) (*UserProfileOut, error) {
 	}
 	return &UserProfileOut{
 		UserPubKey: in.UserPubKey,
-		Profile: profile.View(),
+		Profile:    profile.View(),
 	}, nil
 }
 
@@ -538,7 +538,7 @@ func (v *Viewer) GetParticipants() (*ParticipantsOut, error) {
 	defer v.lock()()
 	out, e := v.i.Users.Get(&typ.PaginatedInput{
 		StartIndex: 0,
-		MaxCount: math.MaxUint64,
+		MaxCount:   math.MaxUint64,
 	})
 	if e != nil {
 		return nil, e

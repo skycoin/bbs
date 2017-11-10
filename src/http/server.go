@@ -20,12 +20,12 @@ const (
 
 // ServerConfig represents a HTTP server configuration file.
 type ServerConfig struct {
-	Port      *int
-	StaticDir *string
-	EnableGUI *bool
-	EnableTLS *bool
+	Port        *int
+	StaticDir   *string
+	EnableGUI   *bool
+	EnableTLS   *bool
 	TLSCertFile *string
-	TLSKeyFile *string
+	TLSKeyFile  *string
 }
 
 // Server represents an HTTP Server that serves static files and JSON api.
@@ -61,7 +61,7 @@ func NewServer(config *ServerConfig, api *Gateway) (*Server, error) {
 
 func (s *Server) serve() {
 	s.srv = &http.Server{
-		Addr: fmt.Sprintf(":%d", *s.c.Port),
+		Addr:    fmt.Sprintf(":%d", *s.c.Port),
 		Handler: s.mux,
 	}
 	if *s.c.EnableTLS {
