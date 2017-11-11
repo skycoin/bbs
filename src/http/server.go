@@ -85,7 +85,6 @@ func (s *Server) serve() {
 			}
 		}
 	}
-
 	s.srv = nil
 }
 

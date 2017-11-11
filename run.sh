@@ -2,7 +2,7 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo "skycoin binary dir:" "$DIR"
+echo "skycoin bbs binary dir:" "$DIR"
 
 pushd "$DIR" >/dev/null
 
