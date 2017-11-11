@@ -18,9 +18,10 @@ import (
 )
 
 const (
+	Version = "5.0"
+
 	defaultConfigSubDir    = ".skybbs"
 	defaultStaticSubDir    = "static/dist"
-	defaultDevStaticSubDir = "src/github.com/skycoin/bbs/static/dist"
 	defaultRPCPort         = 8996
 	defaultCXOPort         = 8998
 	defaultCXORPCPort      = 8997
@@ -196,7 +197,7 @@ func main() {
 		cli.BoolTFlag{
 			Name:        "rpc",
 			Destination: &config.RPC,
-			Usage:       "whether to enable RPC interface to interact with BBS node (used for bbscli)",
+			Usage:       "whether to enable RPC interface to interact with BBS node (used for bbscli) (default: true)",
 		},
 		cli.IntFlag{
 			Name:        "rpc-port",
@@ -272,6 +273,7 @@ func main() {
 	}
 	app := cli.NewApp()
 	app.Name = "bbsnode"
+	app.Version = Version
 	app.Usage = "Runs a Skycoin BBS Node"
 	app.Flags = flags
 	app.Action = config.GenerateAction()

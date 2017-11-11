@@ -7,60 +7,105 @@
 
 Skycoin BBS is a next generation decentralised social network (BBS stands for [Bulletin Board System](https://en.wikipedia.org/wiki/Bulletin_board_system)).
 
-Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) (CXO) to store and synchronise data between nodes.
+Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) (CXO) to store and synchronise data between nodes and the [Skycoin Messenger](https://github.com/skycoin/net) (net) for inter-node content submission.
 
 [![Skycoin BBS Showcase 4 - YouTube](https://i.ytimg.com/vi/6ZqwgefYauU/0.jpg)](https://youtu.be/6ZqwgefYauU)
 
-## Building Static Files
+## Installation
 
-Detailed building instructions for static files can be found in [static/README.md](https://github.com/skycoin/bbs/blob/master/static/README.md).
+### Go 1.9+ Installation and Setup
 
+[Golang 1.9+ Installation/Setup](https://github.com/skycoin/skycoin/blob/develop/Installation.md)
+
+After installation, ensure that the `GOPATH` environmental variable is set and that `$GOPATH/bin` is added to the `PATH` environment variable.
+
+### Download and Compile BBS Executables
+
+```sh
+go get https://github.com/skycoin/bbs/...
+```
+
+This will download `github.com/skycoin/bbs` to `$GOPATH/src/github.com/skycoin/bbs`.
+
+You can also clone the repo directly with `git clone https://github.com/skycoin/bbs`,
+but it must be cloned to this path: `$GOPATH/src/github.com/skycoin/bbs`.
+
+## Building Static Files For The Web Thin Client
+
+Building instructions for static files can be found in [static/README.md](./static/README.md).
 
 ## Running BBS Node
 
-#### Dependencies
+```bash
+bbsnode
+```
 
-**Go Programming Language** (https://golang.org/doc/install)
+Detailed instructions are located at [cmd/bbsnode/README.md](./cmd/bbsnode/README.md)
 
-After installation, ensure that the `GOPATH` environmental variable is set.
-
-#### Via bash script
-
-The script `run.sh` is provided to run BBS, serving static files in `static.dist`.
+The script [`run.sh`](./run.sh) is provided as a convenient to run BBS, serving static files in `static/dist`.
 
 ```bash
 bash run.sh
 ```
 
-The following flags can be used:
-
-* `-dev` (default: `false`) Serves GUI static files from Skycoin BBS location in `$GOPATH`.
-
-* `-master` (default: `false`) Enables the node to host a port for submitting content to boards.
-
-* `-memory` (default: `false`) Disables the node from saving to disk. By default; user files, cxo database, node connections and subscriptions are saved to disk.
-
-* `-config-dir` (default: `""`) Sets the directory used to store configuration files of Skycoin BBS. Leave blank to use default location of `$HOME/.skybbs`.
-
-* `-cxo-port` (default: `8998`) Port that CXO listens on (self-replication database).
-
-* `-cxo-rpc` (default: `false`) Whether to enable CXO RPC Port (for admin control).
-
-* `-cxo-rpc-port` (default: `8997`) Port used for CXO RPC (if enabled).
-
-* `-http-port` (default: `7410`) Port to serve JSON API and GUI.
-
-* `-http-gui` (default: `true`) Enables serving GUI.
-
-* `-http-gui-dir` (default: `""`) Set's directory where static files are to be served from. Leave blank to use `./static/dist` (unless if `-dev` flag is set).
-
-
 ## Using Skycoin BBS
 
 There are currently two ways of interacting with Skycoin BBS.
-* **Web interface -** By default, the flag `-http-gui` is enabled. Hence, when BBS is launched, the web gui will be opened via the system browser.
+* **Web interface thin client -** By default, the flag `-web-gui` is enabled. Hence, when BBS is launched, the web gui will be served at a port specified by `-web-port`. One can only submit and view content via the thin client.
 
-* **Restful json api -** This is ideal for controlling nodes without a graphical user interface (in a server), or for building applications or administrator tools. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [docfiles/postman_collection.json](https://raw.githubusercontent.com/skycoin/bbs/master/docfiles/postman_collection.json).
+* **Restful json api -** This is ideal for viewing/submitting content without a graphical user interface. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [doc/bbs_postman_collection.json](./doc/bbs_postman_collection.json) which can be viewed online at: [https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS](https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS). A brief written documentation is provided at [doc/api_explnation.md](./doc/api_explanantion.md).
+
+* **Command-line interface -** This is ideal for administration tools. Detailed instructions are located at [cmd/bbscli/README.md](./cmd/bbscli/README.md).
+
+## Dependency Management
+
+Dependencies are managed with [dep](https://github.com/golang/dep).
+
+To install `dep`:
+
+```sh
+go get -u github.com/golang/dep
+```
+
+`dep` vendors all dependencies into the repo.
+
+If you change the dependencies, you should update them as needed with `dep ensure`.
+
+Use `dep help` for instructions on vendoring a specific version of a dependency, or updating them.
+
+After adding a new dependency (with `dep ensure`), run `dep prune` to remove any unnecessary subpackages from the dependency.
+
+When updating or initializing, `dep` will find the latest version of a dependency that will compile.
+
+Examples:
+
+Initialize all dependencies:
+
+```sh
+dep init
+dep prune
+```
+
+Update all dependencies:
+
+```sh
+dep ensure -update -v
+dep prune
+```
+
+Add a single dependency (latest version):
+
+```sh
+dep ensure github.com/foo/bar
+dep prune
+```
+
+Add a single dependency (more specific version), or downgrade an existing dependency:
+
+```sh
+dep ensure github.com/foo/bar@tag
+dep prune
+```
 
 ## Participate
 
