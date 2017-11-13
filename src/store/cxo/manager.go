@@ -10,7 +10,6 @@ import (
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/cxo/node"
-	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/net/skycoin-messenger/factory"
@@ -177,10 +176,19 @@ func (m *Manager) prepareNode() error {
 		for _, pk := range m.node.Feeds() {
 			c.Subscribe(pk)
 		}
+		m.file.SetConnectionStatus(c.Address(), true)
 	}
 
 	c.OnCloseConnection = func(c *node.Conn) {
-		m.node.Connect(c.Address())
+		m.file.SetConnectionStatus(c.Address(), false)
+		go func() {
+			time.Sleep(time.Second * 2)
+			m.node.Connect(c.Address())
+		}()
+	}
+
+	c.OnSubscribeRemote = func(c *node.Conn, feed cipher.PubKey) error {
+		return nil
 	}
 
 	var e error
@@ -282,6 +290,12 @@ func (m *Manager) relayLoop() {
 						m.file.UnsafeSetMessengerPK(address, pk)
 						go m.compiler.EnsureSubmissionKeys(m.relay.SubmissionKeys())
 					}
+					m.node.ConnectToMessenger(address)
+				}
+			})
+			m.file.RangeConnections(func(address string, status bool) {
+				if status == false {
+					m.node.Pool().Dial(address)
 				}
 			})
 		case address := <-m.relay.Disconnections():
@@ -299,7 +313,6 @@ func (m *Manager) ConnectToMessenger(address string) error {
 	if e := m.file.AddMessenger(strings.TrimSpace(address)); e != nil {
 		return e
 	}
-	m.node.ConnectToMessenger(address)
 	return nil
 }
 
@@ -413,7 +426,7 @@ func (m *Manager) GetAvailableBoards() []cipher.PubKey {
 	<<< CONNECTION >>>
 */
 
-func (m *Manager) GetConnections() []object.Connection {
+func (m *Manager) GetActiveConnections() []object.Connection {
 	connections := m.node.Connections()
 	out := make([]object.Connection, len(connections))
 	for i, conn := range m.node.Connections() {
@@ -425,34 +438,45 @@ func (m *Manager) GetConnections() []object.Connection {
 	return out
 }
 
-func (m *Manager) Connect(address string) error {
-	if _, e := m.connectNode(address); e != nil {
-		switch boo.Type(e) {
-		case boo.AlreadyExists:
-			return nil
-		default:
-			return e
+func (m *Manager) GetSavedConnections() []object.Connection {
+	out := make([]object.Connection, 0)
+	m.file.RangeConnections(func(address string, status bool) {
+		if conn := m.node.Connection(address); conn != nil && status == true {
+			out = append(out, object.Connection{
+				Address: address,
+				State:   conn.Gnet().State().String(),
+			})
+		} else {
+			out = append(out, object.Connection{
+				Address: address,
+				State:   "CLOSED",
+			})
 		}
-	}
-	return nil
+	})
+	return out
 }
 
-func (m *Manager) connectNode(address string) (*gnet.Conn, error) {
-	if connection, e := m.node.Pool().Dial(address); e != nil {
-		switch e {
-		case gnet.ErrClosed, gnet.ErrConnectionsLimit:
-			return nil, boo.WrapType(e, boo.Internal)
-		case gnet.ErrAlreadyListen:
-			return nil, boo.WrapType(e, boo.AlreadyExists)
-		default:
-			return nil, boo.WrapType(e, boo.InvalidInput)
-		}
-	} else {
-		return connection, nil
-	}
+func (m *Manager) Connect(address string) error {
+	return m.file.AddConnection(address)
 }
+
+//func (m *Manager) connectNode(address string) (*gnet.Conn, error) {
+//	if connection, e := m.node.Pool().Dial(address); e != nil {
+//		switch e {
+//		case gnet.ErrClosed, gnet.ErrConnectionsLimit:
+//			return nil, boo.WrapType(e, boo.Internal)
+//		case gnet.ErrAlreadyListen:
+//			return nil, boo.WrapType(e, boo.AlreadyExists)
+//		default:
+//			return nil, boo.WrapType(e, boo.InvalidInput)
+//		}
+//	} else {
+//		return connection, nil
+//	}
+//}
 
 func (m *Manager) Disconnect(address string) error {
+	m.file.RemoveConnection(address)
 	if e := m.disconnectNode(address); e != nil {
 		return e
 	}
