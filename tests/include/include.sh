@@ -169,17 +169,16 @@ ExportBoard() {
 }
 
 ImportBoard() {
-    if [[ $# -ne 3 ]] ; then
-        echo "3 arguments required"
+    if [[ $# -ne 2 ]] ; then
+        echo "2 arguments required"
         exit 1
     fi
 
-    PORT=$1 ; SK=$2 ; LOC=$3
+    PORT=$1 ; LOC=$2
 
-    pv "NODE '${PORT}': IMPORT BOARD FROM '${LOC}' TO SECRET '${SK}'"
+    pv "NODE '${PORT}': IMPORT BOARD FROM '${LOC}'"
 
     go run ${BBS_CLI_PATH} -p ${PORT} content import_board \
-        -secret-key="${SK}" \
         -file-path="${LOC}"
 }
 

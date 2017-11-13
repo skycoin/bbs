@@ -125,6 +125,7 @@ func NewViewer(pack *skyobject.Pack) (*Viewer, error) {
 		v.ensureUser(tBody.Creator)
 		tHash, e := v.addThread(thread, tBody, tHeader)
 		if e != nil {
+			v.l.Println("HERE!!!!!!!!!!!!")
 			return e
 		}
 		return tp.RangePosts(func(i int, post *object.Content) error {

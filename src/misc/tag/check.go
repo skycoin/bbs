@@ -40,6 +40,11 @@ func CheckAddress(address string) error {
 	return nil
 }
 
+// CheckPath ensures validity of a path. TODO
+func CheckPath(path string) error {
+	return nil
+}
+
 // CheckMode check's the vote's mode.
 func CheckMode(mode int8) error {
 	switch mode {

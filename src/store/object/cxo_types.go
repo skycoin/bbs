@@ -50,7 +50,7 @@ type Pages struct {
 
 type PagesJSON struct {
 	PubKey    string         `json:"public_key"`
-	SecKey    string         `json:"secret_key,omitempty"`
+	SecKey    string         `json:"secret_key"`
 	RootPage  *RootPage      `json:"root_page"`
 	BoardPage *BoardPageJSON `json:"board_page"`
 	DiffPage  *DiffPageJSON  `json:"diff_page"`
@@ -58,6 +58,10 @@ type PagesJSON struct {
 }
 
 func NewPages(p *skyobject.Pack, in *PagesJSON) (*Pages, error) {
+	if in.PubKey != p.Root().Pub.Hex() {
+		return nil, boo.Newf(boo.NotAllowed,
+			"public keys do not match, expected %s", in.PubKey)
+	}
 	out := &Pages{
 		PK:       p.Root().Pub,
 		RootPage: in.RootPage,
@@ -73,6 +77,16 @@ func NewPages(p *skyobject.Pack, in *PagesJSON) (*Pages, error) {
 		return nil, e
 	}
 	return out, nil
+}
+
+func (pj *PagesJSON) GetPubKey() cipher.PubKey {
+	pk, _ := tag.GetPubKey(pj.PubKey)
+	return pk
+}
+
+func (pj *PagesJSON) GetSecKey() cipher.SecKey {
+	sk, _ := tag.GetSecKey(pj.SecKey)
+	return sk
 }
 
 type GetPagesIn struct {
