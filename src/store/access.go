@@ -125,7 +125,7 @@ func (a *Access) GetAvailableBoards(ctx context.Context) (*AvailableBoardsOut, e
 */
 
 func (a *Access) GetConnections(ctx context.Context) (*ConnectionsOut, error) {
-	return getConnectionsOut(ctx, a.CXO.GetConnections()), nil
+	return getConnectionsOut(ctx, a.CXO.GetActiveConnections(), a.CXO.GetSavedConnections()), nil
 }
 
 func (a *Access) NewConnection(ctx context.Context, in *ConnectionIn) (*ConnectionsOut, error) {

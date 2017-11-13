@@ -31,12 +31,14 @@ func getAvailableBoardsOut(pks []cipher.PubKey) *AvailableBoardsOut {
 }
 
 type ConnectionsOut struct {
-	Connections []object.Connection `json:"connections"`
+	ActiveConnections []object.Connection `json:"connections"`
+	SavedConnections []object.Connection `json:"saved_connections"`
 }
 
-func getConnectionsOut(_ context.Context, cs []object.Connection) *ConnectionsOut {
+func getConnectionsOut(_ context.Context, active, saved []object.Connection) *ConnectionsOut {
 	return &ConnectionsOut{
-		Connections: cs,
+		ActiveConnections: active,
+		SavedConnections:  saved,
 	}
 }
 
