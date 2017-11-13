@@ -24,8 +24,14 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	// For tools.
 	RegisterToolsHandlers(mux, g)
 
-	// For content submission.
-	RegisterSubmissionHandlers(mux, g)
+	// Submits content.
+	mux.HandleFunc("/api/new_submission",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.SubmitContent(r.Context(), &store.SubmissionIn{
+				Body:   []byte(r.FormValue("body")),
+				SigStr: r.FormValue("sig"),
+			}))
+		})
 
 	// Gets a list of boards; remote and master (boards that this node owns).
 	mux.HandleFunc("/api/get_boards",
@@ -37,8 +43,8 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/get_board",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetBoard(r.Context(), &store.BoardIn{
-				PubKeyStr: r.FormValue("board_public_key"),
-				UserPubKeyStr:  r.FormValue("perspective"),
+				PubKeyStr:     r.FormValue("board_public_key"),
+				UserPubKeyStr: r.FormValue("perspective"),
 			}))
 		})
 
@@ -46,8 +52,8 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	mux.HandleFunc("/api/get_board_page",
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetBoardPage(r.Context(), &store.BoardIn{
-				PubKeyStr: r.FormValue("board_public_key"),
-				UserPubKeyStr:  r.FormValue("perspective"),
+				PubKeyStr:     r.FormValue("board_public_key"),
+				UserPubKeyStr: r.FormValue("perspective"),
 			}))
 		})
 
