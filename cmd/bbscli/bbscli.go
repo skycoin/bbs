@@ -318,17 +318,12 @@ func main() {
 					Usage: "imports a board",
 					Flags: cli.FlagsByName{
 						cli.StringFlag{
-							Name:  "secret-key, sk",
-							Usage: "secret key of the board to import data to",
-						},
-						cli.StringFlag{
 							Name:  "file-path, fp",
 							Usage: "full path of file to import board data from",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.ImportBoard(&store.ImportBoardIn{
-							SecKeyStr: ctx.String("secret-key"),
 							FilePath:  ctx.String("file-path"),
 						}))
 					},

@@ -93,17 +93,12 @@ func (a *ExportBoardIn) Process() error {
 
 type ImportBoardIn struct {
 	FilePath  string
-	SecKeyStr string
-	SecKey    cipher.SecKey
-	PubKey    cipher.PubKey
 }
 
 func (a *ImportBoardIn) Process() error {
-	var e error
-	if a.SecKey, e = tag.GetSecKey(a.SecKeyStr); e != nil {
-		return ErrProcess(e, "board secret key")
+	if e := tag.CheckPath(a.FilePath); e != nil {
+		return ErrProcess(e, "file path")
 	}
-	a.PubKey = cipher.PubKeyFromSecKey(a.SecKey)
 	return nil
 }
 
@@ -165,8 +160,10 @@ func (a *ThreadIn) Process() error {
 	if a.ThreadRef, e = tag.GetHash(a.ThreadRefStr); e != nil {
 		return ErrProcess(e, "thread hash")
 	}
-	if a.UserPubKey, e = tag.GetPubKey(a.UserPubKeyStr); e != nil {
-		return ErrProcess(e, "user's public key")
+	if a.UserPubKeyStr != "" {
+		if a.UserPubKey, e = tag.GetPubKey(a.UserPubKeyStr); e != nil {
+			return ErrProcess(e, "user's public key")
+		}
 	}
 	return nil
 }

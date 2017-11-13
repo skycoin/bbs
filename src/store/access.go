@@ -207,6 +207,7 @@ func (a *Access) ExportBoard(ctx context.Context, in *ExportBoardIn) (*ExportBoa
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
+
 	out, e := a.CXO.ExportBoard(in.PubKey, in.FilePath)
 	if e != nil {
 		return nil, e
@@ -225,7 +226,7 @@ func (a *Access) ImportBoard(ctx context.Context, in *ImportBoardIn) (*ExportBoa
 	if e := file.LoadJSON(in.FilePath, pagesIn); e != nil {
 		return nil, e
 	}
-	if e := a.CXO.ImportBoard(ctx, pagesIn, in.PubKey, in.SecKey); e != nil {
+	if e := a.CXO.ImportBoard(ctx, pagesIn); e != nil {
 		return nil, e
 	}
 	return getExportBoardOut(in.FilePath, pagesIn), nil

@@ -600,19 +600,27 @@ func (m *Manager) NewBoard(content *object.Content, pk cipher.PubKey, sk cipher.
 */
 
 func (m *Manager) ExportBoard(pk cipher.PubKey, path string) (*object.PagesJSON, error) {
+	sk, _ := m.file.GetMasterSubSecKey(pk)
 	bi, e := m.GetBoardInstance(pk)
 	if e != nil {
 		return nil, e
 	}
-
-	out, e := bi.Export(pk, cipher.SecKey{})
+	out, e := bi.Export(pk, sk)
 	if e != nil {
 		return nil, e
 	}
 	return out, nil
 }
 
-func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk cipher.PubKey, sk cipher.SecKey) error {
+func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON) error {
+	var (
+		pk = in.GetPubKey()
+		sk = in.GetSecKey()
+	)
+	if cipher.PubKeyFromSecKey(sk) != pk {
+		return boo.New(boo.InvalidRead,
+			"public key does not match secret key in exported board file")
+	}
 	if m.file.HasRemoteSub(pk) {
 		m.unsubscribeNode(pk)
 	}
