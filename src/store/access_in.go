@@ -92,7 +92,7 @@ func (a *ExportBoardIn) Process() error {
 }
 
 type ImportBoardIn struct {
-	FilePath  string
+	FilePath string
 }
 
 func (a *ImportBoardIn) Process() error {

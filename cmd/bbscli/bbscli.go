@@ -324,7 +324,7 @@ func main() {
 					},
 					Action: func(ctx *cli.Context) error {
 						return call(rpc.ImportBoard(&store.ImportBoardIn{
-							FilePath:  ctx.String("file-path"),
+							FilePath: ctx.String("file-path"),
 						}))
 					},
 				},

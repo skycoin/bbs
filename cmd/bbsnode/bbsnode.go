@@ -20,12 +20,12 @@ import (
 const (
 	Version = "5.0"
 
-	defaultConfigSubDir    = ".skybbs"
-	defaultStaticSubDir    = "static/dist"
-	defaultRPCPort         = 8996
-	defaultCXOPort         = 8998
-	defaultCXORPCPort      = 8997
-	defaultWebPort         = 8080
+	defaultConfigSubDir = ".skybbs"
+	defaultStaticSubDir = "static/dist"
+	defaultRPCPort      = 8996
+	defaultCXOPort      = 8998
+	defaultCXORPCPort   = 8997
+	defaultWebPort      = 8080
 )
 
 var (
