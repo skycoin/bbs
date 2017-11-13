@@ -38,6 +38,7 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetBoard(r.Context(), &store.BoardIn{
 				PubKeyStr: r.FormValue("board_public_key"),
+				UserPubKeyStr:  r.FormValue("perspective"),
 			}))
 		})
 
@@ -46,6 +47,7 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 		func(w http.ResponseWriter, r *http.Request) {
 			send(w)(g.Access.GetBoardPage(r.Context(), &store.BoardIn{
 				PubKeyStr: r.FormValue("board_public_key"),
+				UserPubKeyStr:  r.FormValue("perspective"),
 			}))
 		})
 
@@ -55,6 +57,7 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 			send(w)(g.Access.GetThreadPage(r.Context(), &store.ThreadIn{
 				BoardPubKeyStr: r.FormValue("board_public_key"),
 				ThreadRefStr:   r.FormValue("thread_ref"),
+				UserPubKeyStr:  r.FormValue("perspective"),
 			}))
 		})
 
