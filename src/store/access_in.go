@@ -160,8 +160,10 @@ func (a *ThreadIn) Process() error {
 	if a.ThreadRef, e = tag.GetHash(a.ThreadRefStr); e != nil {
 		return ErrProcess(e, "thread hash")
 	}
-	if a.UserPubKey, e = tag.GetPubKey(a.UserPubKeyStr); e != nil {
-		return ErrProcess(e, "user's public key")
+	if a.UserPubKeyStr != "" {
+		if a.UserPubKey, e = tag.GetPubKey(a.UserPubKeyStr); e != nil {
+			return ErrProcess(e, "user's public key")
+		}
 	}
 	return nil
 }
