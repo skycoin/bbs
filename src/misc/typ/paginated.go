@@ -14,16 +14,16 @@ type Paginated interface {
 
 type PaginatedInput struct {
 	StartIndex uint `json:"start_index"` // index to start with.
-	MaxCount   uint `json:"max_count"`   // max number of elements to get.
+	PageSize   uint `json:"page_size"`   // max number of elements in a page.
 	Reverse    bool `json:"reverse"`     // whether to get elements in the opposite direction.
 }
 
 type PaginatedOutput struct {
-	StartIndex     uint     `json:"start_index"`
-	ObtainedCount  uint     `json:"obtained_count"`
-	RemainingCount uint     `json:"remaining_count"`
-	IsReversed     bool     `json:"is_reversed"`
-	Data           []string `json:"-"`
+	RecordCount uint     `json:"record_count"`
+	StartIndex  uint     `json:"start_index"`
+	PageSize    uint     `json:"page_size"`
+	IsReversed  bool     `json:"is_reversed"`
+	Data        []string `json:"-"`
 }
 
 func NewPaginatedOutput(in *PaginatedInput, dataCount uint) (*PaginatedOutput, error) {
@@ -32,38 +32,31 @@ func NewPaginatedOutput(in *PaginatedInput, dataCount uint) (*PaginatedOutput, e
 			"invalid 'start_index' provided, valid values are between %d and %d inclusive",
 			0, dataCount-1)
 	}
-	if in.MaxCount <= 0 {
+	if in.PageSize <= 0 {
 		return nil, boo.New(boo.InvalidInput,
 			"invalid 'max_count' provided, valid values are in range '>= 0'")
 	}
 
 	var obtainedCount uint
 	if in.Reverse {
-		if in.MaxCount > in.StartIndex {
+		if in.PageSize > in.StartIndex {
 			obtainedCount = in.StartIndex + 1
 		} else {
-			obtainedCount = in.MaxCount
+			obtainedCount = in.PageSize
 		}
 	} else {
-		if in.StartIndex+in.MaxCount > dataCount {
+		if in.StartIndex+in.PageSize > dataCount {
 			obtainedCount = dataCount - in.StartIndex
 		} else {
-			obtainedCount = in.MaxCount
+			obtainedCount = in.PageSize
 		}
-	}
-
-	var remainingCount uint
-	if in.Reverse {
-		remainingCount = in.StartIndex + 1 - obtainedCount
-	} else {
-		remainingCount = dataCount - in.StartIndex - obtainedCount
 	}
 
 	return &PaginatedOutput{
-		StartIndex:     in.StartIndex,
-		ObtainedCount:  obtainedCount,
-		RemainingCount: remainingCount,
-		IsReversed:     in.Reverse,
-		Data:           make([]string, obtainedCount),
+		RecordCount: obtainedCount,
+		StartIndex:  in.StartIndex,
+		PageSize:    in.PageSize,
+		IsReversed:  in.Reverse,
+		Data:        make([]string, obtainedCount),
 	}, nil
 }

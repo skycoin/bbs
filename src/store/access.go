@@ -37,14 +37,14 @@ func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface
 	case object.V5ThreadType:
 		return bi.Viewer().GetBoardPage(&state.BoardPageIn{
 			Perspective:    transport.Body.Creator,
-			PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
+			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
 		})
 
 	case object.V5PostType:
 		return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
 			Perspective:    transport.Body.Creator,
 			ThreadHash:     transport.Body.OfThread,
-			PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
+			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
 		})
 
 	case object.V5ThreadVoteType:
@@ -269,7 +269,7 @@ func (a *Access) GetBoardPage(ctx context.Context, in *BoardIn) (interface{}, er
 	}
 	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
 		Perspective:    in.UserPubKeyStr,
-		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
+		PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
 	})
 }
 
@@ -298,7 +298,7 @@ func (a *Access) NewThread(ctx context.Context, in *NewThreadIn) (interface{}, e
 	}
 	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
 		Perspective:    in.CreatorPubKey.Hex(),
-		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
+		PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
 	})
 }
 
@@ -313,7 +313,7 @@ func (a *Access) GetThreadPage(ctx context.Context, in *ThreadIn) (interface{}, 
 	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
 		Perspective:    in.UserPubKeyStr,
 		ThreadHash:     in.ThreadRefStr,
-		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
+		PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
 	})
 }
 
@@ -342,7 +342,7 @@ func (a *Access) NewPost(ctx context.Context, in *NewPostIn) (interface{}, error
 	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
 		Perspective:    in.CreatorPubKey.Hex(),
 		ThreadHash:     in.ThreadRefStr,
-		PaginatedInput: typ.PaginatedInput{MaxCount: math.MaxUint64},
+		PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
 	})
 }
 
