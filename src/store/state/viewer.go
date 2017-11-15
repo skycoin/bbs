@@ -538,7 +538,7 @@ func (v *Viewer) GetParticipants() (*ParticipantsOut, error) {
 	defer v.lock()()
 	out, e := v.i.Users.Get(&typ.PaginatedInput{
 		StartIndex: 0,
-		MaxCount:   math.MaxUint64,
+		PageSize:   math.MaxUint64,
 	})
 	if e != nil {
 		return nil, e
