@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+GOPATH=${HOME}/go
+
 inMac() {
     if ! type "curl" > /dev/null; then
         echo "curl is not installed."
@@ -63,14 +65,13 @@ RunNode() {
     pv "START NODE: PORT_HTTP ${PORT_HTTP}, PORT_CXO ${PORT_CXO}, PORT_RPC ${PORT_RPC}, GUI ${GUI}..."
 
     go run ${BBS_NODE_PATH} \
-        -dev=true \
         -memory=true \
         -enforced-messenger-addresses=127.0.0.1:8080 \
         -rpc-port=${PORT_RPC} \
         -cxo-port=${PORT_CXO} \
         -cxo-rpc=false \
-        -http-port=${PORT_HTTP} \
-        -http-gui=${GUI} \
+        -web-port=${PORT_HTTP} \
+        -web-gui=${GUI} \
         &
 }
 
@@ -168,17 +169,16 @@ ExportBoard() {
 }
 
 ImportBoard() {
-    if [[ $# -ne 3 ]] ; then
-        echo "3 arguments required"
+    if [[ $# -ne 2 ]] ; then
+        echo "2 arguments required"
         exit 1
     fi
 
-    PORT=$1 ; SK=$2 ; LOC=$3
+    PORT=$1 ; LOC=$2
 
-    pv "NODE '${PORT}': IMPORT BOARD FROM '${LOC}' TO SECRET '${SK}'"
+    pv "NODE '${PORT}': IMPORT BOARD FROM '${LOC}'"
 
     go run ${BBS_CLI_PATH} -p ${PORT} content import_board \
-        -secret-key="${SK}" \
         -file-path="${LOC}"
 }
 
@@ -215,6 +215,61 @@ NewPost() {
         -thread-hash="${THASH}" \
         -name="${NAME}" \
         -body="${BODY}" \
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
+}
+
+VoteThread() {
+    if [[ $# -ne 6 ]] ; then
+        echo "6 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; THASH=$3 ; VALUE=$4 ; CSK=$5 ; TS=$6
+
+    pv "NODE '${PORT}': VOTE THREAD '${THASH}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content vote_thread \
+        -board-public-key="${BPK}" \
+        -thread-hash="${THASH}" \
+        -value="${VALUE}" \
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
+}
+
+VotePost() {
+    if [[ $# -ne 6 ]] ; then
+        echo "6 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; PHASH=$3 ; VALUE=$4 ; CSK=$5 ; TS=$6
+
+    pv "NODE '${PORT}': VOTE POST '${PHASH}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content vote_post \
+        -board-public-key="${BPK}" \
+        -post-hash="${PHASH}" \
+        -value="${VALUE}" \
+        -creator-secret-key="${CSK}" \
+        -timestamp=${TS}
+}
+
+VoteUser() {
+    if [[ $# -ne 7 ]] ; then
+        echo "7 arguments required"
+        exit 1
+    fi
+
+    PORT=$1 ; BPK=$2 ; UPK=$3 ; VALUE=$4 ; TAGS=$5 ; CSK=$6 ; TS=$7
+
+    pv "NODE '${PORT}': VOTE USER '${UPK}'"
+
+    go run ${BBS_CLI_PATH} -p ${PORT} content vote_user \
+        -board-public-key="${BPK}" \
+        -user-public-key="${UPK}" \
+        -value="${VALUE}" \
+        -tags=${TAGS} \
         -creator-secret-key="${CSK}" \
         -timestamp=${TS}
 }

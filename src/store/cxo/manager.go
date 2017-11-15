@@ -5,16 +5,14 @@ import (
 	"github.com/skycoin/bbs/src/accord"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/store/cxo/setup"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
-	"github.com/skycoin/bbs/src/store/state/views"
-	"github.com/skycoin/bbs/src/store/state/views/content_view"
 	"github.com/skycoin/cxo/node"
-	"github.com/skycoin/cxo/node/gnet"
 	"github.com/skycoin/cxo/node/log"
 	"github.com/skycoin/cxo/skyobject"
+	"github.com/skycoin/net/skycoin-messenger/factory"
 	"github.com/skycoin/skycoin/src/cipher"
 	"io/ioutil"
 	log2 "log"
@@ -80,11 +78,7 @@ func NewManager(config *ManagerConfig, compilerConfig *state.CompilerConfig) *Ma
 	}
 
 	// Prepare CXO compiler.
-	manager.compiler = state.NewCompiler(
-		compilerConfig, manager.file, manager.newRoots, manager.node,
-		views.AddContent(),
-		views.AddFollow(),
-	)
+	manager.compiler = state.NewCompiler(compilerConfig, manager.file, manager.newRoots, manager.node)
 
 	// Prepare messenger relay.
 	if e := manager.relay.Open(manager.compiler); e != nil {
@@ -182,10 +176,19 @@ func (m *Manager) prepareNode() error {
 		for _, pk := range m.node.Feeds() {
 			c.Subscribe(pk)
 		}
+		m.file.SetConnectionStatus(c.Address(), true)
 	}
 
 	c.OnCloseConnection = func(c *node.Conn) {
-		m.node.Connect(c.Address())
+		m.file.SetConnectionStatus(c.Address(), false)
+		go func() {
+			time.Sleep(time.Second * 2)
+			m.node.Connect(c.Address())
+		}()
+	}
+
+	c.OnSubscribeRemote = func(c *node.Conn, feed cipher.PubKey) error {
+		return nil
 	}
 
 	var e error
@@ -207,7 +210,7 @@ func (m *Manager) prepareFile() error {
 		m.ConnectToMessenger(address)
 	}
 	for _, pkStr := range m.c.EnforcedSubscriptions {
-		pk, e := keys.GetPubKey(pkStr)
+		pk, e := tag.GetPubKey(pkStr)
 		if e != nil {
 			return e
 		}
@@ -287,6 +290,12 @@ func (m *Manager) relayLoop() {
 						m.file.UnsafeSetMessengerPK(address, pk)
 						go m.compiler.EnsureSubmissionKeys(m.relay.SubmissionKeys())
 					}
+					m.node.ConnectToMessenger(address)
+				}
+			})
+			m.file.RangeConnections(func(address string, status bool) {
+				if status == false {
+					m.node.Pool().Dial(address)
 				}
 			})
 		case address := <-m.relay.Disconnections():
@@ -301,11 +310,24 @@ func (m *Manager) relayLoop() {
 */
 
 func (m *Manager) ConnectToMessenger(address string) error {
-	return m.file.AddMessenger(strings.TrimSpace(address))
+	if e := m.file.AddMessenger(strings.TrimSpace(address)); e != nil {
+		return e
+	}
+	return nil
 }
 
 func (m *Manager) DisconnectFromMessenger(address string) error {
-	return m.file.RemoveMessenger(strings.TrimSpace(address))
+	if e := m.file.RemoveMessenger(strings.TrimSpace(address)); e != nil {
+		return e
+	}
+	if sd := m.node.Discovery(); sd != nil {
+		sd.ForEachConn(func(conn *factory.Connection) {
+			if conn.GetRemoteAddr().String() == strings.TrimSpace(address) {
+				conn.Close()
+			}
+		})
+	}
+	return nil
 }
 
 func (m *Manager) GetMessengers() []*object.MessengerConnection {
@@ -380,11 +402,31 @@ func (m *Manager) SubmitToRemote(
 	return 0, boo.New(boo.NotFound, "a valid connection to messenger server is not found")
 }
 
+func (m *Manager) GetAvailableBoards() []cipher.PubKey {
+
+	temp := make(map[cipher.PubKey]struct{})
+	if discovery := m.node.Discovery(); discovery != nil {
+		discovery.ForEachConn(func(conn *factory.Connection) {
+			for _, service := range conn.GetServices().Services {
+				temp[service.Key] = struct{}{}
+			}
+		})
+	}
+
+	out := make([]cipher.PubKey, len(temp))
+	i := 0
+	for pk := range temp {
+		out[i] = pk
+		i += 1
+	}
+	return out
+}
+
 /*
 	<<< CONNECTION >>>
 */
 
-func (m *Manager) GetConnections() []object.Connection {
+func (m *Manager) GetActiveConnections() []object.Connection {
 	connections := m.node.Connections()
 	out := make([]object.Connection, len(connections))
 	for i, conn := range m.node.Connections() {
@@ -396,34 +438,45 @@ func (m *Manager) GetConnections() []object.Connection {
 	return out
 }
 
-func (m *Manager) Connect(address string) error {
-	if _, e := m.connectNode(address); e != nil {
-		switch boo.Type(e) {
-		case boo.AlreadyExists:
-			return nil
-		default:
-			return e
+func (m *Manager) GetSavedConnections() []object.Connection {
+	out := make([]object.Connection, 0)
+	m.file.RangeConnections(func(address string, status bool) {
+		if conn := m.node.Connection(address); conn != nil && status == true {
+			out = append(out, object.Connection{
+				Address: address,
+				State:   conn.Gnet().State().String(),
+			})
+		} else {
+			out = append(out, object.Connection{
+				Address: address,
+				State:   "CLOSED",
+			})
 		}
-	}
-	return nil
+	})
+	return out
 }
 
-func (m *Manager) connectNode(address string) (*gnet.Conn, error) {
-	if connection, e := m.node.Pool().Dial(address); e != nil {
-		switch e {
-		case gnet.ErrClosed, gnet.ErrConnectionsLimit:
-			return nil, boo.WrapType(e, boo.Internal)
-		case gnet.ErrAlreadyListen:
-			return nil, boo.WrapType(e, boo.AlreadyExists)
-		default:
-			return nil, boo.WrapType(e, boo.InvalidInput)
-		}
-	} else {
-		return connection, nil
-	}
+func (m *Manager) Connect(address string) error {
+	return m.file.AddConnection(address)
 }
+
+//func (m *Manager) connectNode(address string) (*gnet.Conn, error) {
+//	if connection, e := m.node.Pool().Dial(address); e != nil {
+//		switch e {
+//		case gnet.ErrClosed, gnet.ErrConnectionsLimit:
+//			return nil, boo.WrapType(e, boo.Internal)
+//		case gnet.ErrAlreadyListen:
+//			return nil, boo.WrapType(e, boo.AlreadyExists)
+//		default:
+//			return nil, boo.WrapType(e, boo.InvalidInput)
+//		}
+//	} else {
+//		return connection, nil
+//	}
+//}
 
 func (m *Manager) Disconnect(address string) error {
+	m.file.RemoveConnection(address)
 	if e := m.disconnectNode(address); e != nil {
 		return e
 	}
@@ -519,7 +572,7 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 			m.l.Println(e)
 			return
 		}
-		bView, e := bi.Get(views.Content, content_view.Board)
+		bView, e := bi.Viewer().GetBoard()
 		if e != nil {
 			m.l.Println(e)
 			return
@@ -534,7 +587,7 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 			m.l.Println(e)
 			return
 		}
-		bView, e := bi.Get(views.Content, content_view.Board)
+		bView, e := bi.Viewer().GetBoard()
 		if e != nil {
 			m.l.Println(e)
 			return
@@ -545,16 +598,16 @@ func (m *Manager) GetBoards(ctx context.Context) ([]interface{}, []interface{}, 
 	return masterOut, remoteOut, nil
 }
 
-func (m *Manager) NewBoard(in *object.NewBoardIO) error {
+func (m *Manager) NewBoard(content *object.Content, pk cipher.PubKey, sk cipher.SecKey) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	if e := m.file.AddMasterSub(in.BoardPubKey, in.BoardSecKey); e != nil {
+	if e := m.file.AddMasterSub(pk, sk); e != nil {
 		return e
 	}
-	m.subscribeNode(in.BoardPubKey)
+	m.subscribeNode(pk)
 
-	if r, e := setup.NewBoard(m.node, in); e != nil {
+	if r, e := setup.NewBoard(m.node, content, pk, sk); e != nil {
 		return e
 	} else {
 		m.compiler.UpdateBoardWithContext(context.Background(), r)
@@ -571,31 +624,35 @@ func (m *Manager) NewBoard(in *object.NewBoardIO) error {
 */
 
 func (m *Manager) ExportBoard(pk cipher.PubKey, path string) (*object.PagesJSON, error) {
+	sk, _ := m.file.GetMasterSubSecKey(pk)
 	bi, e := m.GetBoardInstance(pk)
 	if e != nil {
 		return nil, e
 	}
-
-	out, e := bi.Export(pk, cipher.SecKey{})
+	out, e := bi.Export(pk, sk)
 	if e != nil {
 		return nil, e
 	}
 	return out, nil
 }
 
-func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON, pk cipher.PubKey, sk cipher.SecKey) error {
+func (m *Manager) ImportBoard(ctx context.Context, in *object.PagesJSON) error {
+	var (
+		pk = in.GetPubKey()
+		sk = in.GetSecKey()
+	)
+	if cipher.PubKeyFromSecKey(sk) != pk {
+		return boo.New(boo.InvalidRead,
+			"public key does not match secret key in exported board file")
+	}
 	if m.file.HasRemoteSub(pk) {
 		m.unsubscribeNode(pk)
 	}
 	if m.file.HasMasterSub(pk) == false {
-		nbIn := &object.NewBoardIO{
-			BoardPubKey: pk,
-			BoardSecKey: sk,
-			Content:     new(object.Content),
-		}
-		nbIn.Content.SetHeader(&object.ContentHeaderData{})
-		nbIn.Content.SetBody(&object.Body{})
-		if e := m.NewBoard(nbIn); e != nil {
+		content := new(object.Content)
+		content.SetHeader(&object.ContentHeaderData{})
+		content.SetBody(&object.Body{})
+		if e := m.NewBoard(content, pk, sk); e != nil {
 			return e
 		}
 	}

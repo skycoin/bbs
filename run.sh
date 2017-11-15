@@ -2,12 +2,15 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo "skycoin binary dir:" "$DIR"
+echo "skycoin bbs binary dir:" "$DIR"
 
 pushd "$DIR" >/dev/null
 
 go run cmd/bbsnode/bbsnode.go \
-    -http-gui-dir="${DIR}/static/dist" \
+    -web-gui-dir="${DIR}/static/dist" \
+    -enforced-messenger-addresses="messenger.skycoin.net:8080" \
+    -enforced-subscriptions="03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742" \
+    -open-browser=true
     $@
 
 popd >/dev/null

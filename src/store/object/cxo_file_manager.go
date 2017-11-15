@@ -3,7 +3,6 @@ package object
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
-	"github.com/skycoin/bbs/src/misc/keys"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/skycoin/src/cipher"
@@ -14,7 +13,7 @@ import (
 )
 
 const (
-	cxoFileManagerLogPrefix = "CXOFILEMANAGER"
+	cxoFileManagerLogPrefix = "CXO_FILE_MANAGER"
 )
 
 // CXOFileManagerConfig configures the CXOFileManager.
@@ -25,23 +24,25 @@ type CXOFileManagerConfig struct {
 // CXOFileManager manages the CXOFile.
 // This is a file containing saved connections and board keys.
 type CXOFileManager struct {
-	c          *CXOFileManagerConfig
-	l          *log.Logger
-	mux        sync.Mutex
-	hasChanges bool // has changes.
-	masters    *typ.List
-	remotes    *typ.List
-	messengers *typ.List
+	c           *CXOFileManagerConfig
+	l           *log.Logger
+	mux         sync.Mutex
+	hasChanges  bool // has changes.
+	masters     *typ.List
+	remotes     *typ.List
+	messengers  *typ.List
+	connections *typ.List
 }
 
 // NewCXOFileManager creates a new file manager with provided configuration.
 func NewCXOFileManager(config *CXOFileManagerConfig) *CXOFileManager {
 	return &CXOFileManager{
-		c:          config,
-		l:          inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
-		masters:    typ.NewList(),
-		remotes:    typ.NewList(),
-		messengers: typ.NewList(),
+		c:           config,
+		l:           inform.NewLogger(true, os.Stdout, cxoFileManagerLogPrefix),
+		masters:     typ.NewList(),
+		remotes:     typ.NewList(),
+		messengers:  typ.NewList(),
+		connections: typ.NewList(),
 	}
 }
 
@@ -237,8 +238,7 @@ func (m *CXOFileManager) AddMessenger(address string) error {
 	// Append.
 	if m.messengers.Append(address, cipher.PubKey{}) == false {
 		return boo.Newf(boo.AlreadyExists,
-			"address '%s' already exists in messenger servers",
-			address)
+			"address '%s' already exists in messenger servers", address)
 	}
 
 	// Record changes and return.
@@ -297,6 +297,63 @@ func (m *CXOFileManager) GetMessengersLen() int {
 	return m.messengers.Len()
 }
 
+// AddConnection adds a connection address.
+func (m *CXOFileManager) AddConnection(address string) error {
+	defer m.lock()()
+
+	// Append.
+	if m.connections.Append(address, false) == false {
+		return boo.Newf(boo.AlreadyExists,
+			"address '%s' already exists in connections", address)
+	}
+
+	// Record changes and return.
+	m.tagChanges()
+	return nil
+}
+
+// RemoveConnection removes a connection address.
+func (m *CXOFileManager) RemoveConnection(address string) error {
+	defer m.lock()()
+
+	m.connections.DelOfKey(address)
+	m.tagChanges()
+	return nil
+}
+
+// ConnectionAction represents an action to perform on a connection address.
+type ConnectionAction func(address string, status bool)
+
+// RangeConnections ranges the list of connections.
+func (m *CXOFileManager) RangeConnections(action ConnectionAction) error {
+	defer m.lock()()
+	m.connections.Range(typ.Ascending, func(i int, key, value interface{}) (bool, error) {
+		action(key.(string), value.(bool))
+		return false, nil
+	})
+	return nil
+}
+
+// SetConnectionStatus sets the connection status.
+func (m *CXOFileManager) SetConnectionStatus(address string, status bool) error {
+	defer m.lock()()
+	if m.connections.Replace(address, status) == false {
+		return boo.Newf(boo.InvalidInput,
+			"connection address '%s' is not found", address)
+	}
+	return nil
+}
+
+// GetConnectionStatus obtains a connection status of specified connection.
+func (m *CXOFileManager) GetConnectionStatus(address string) bool {
+	defer m.lock()()
+	if v, ok := m.connections.GetOfKey(address); !ok {
+		return false
+	} else {
+		return v.(bool)
+	}
+}
+
 /*
 	<<< HELPER FUNCTIONS >>>
 */
@@ -310,30 +367,6 @@ func (m *CXOFileManager) load(path string) error {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"failed to read CXO file from '%s'", path)
 		}
-		//} else if *m.c.Defaults {
-		//	// Load defaults.
-		//	m.l.Println("First Run - Loading default subscriptions:")
-		//	for i, pkStr := range defaultSubscriptions {
-		//		pk, _ := keys.GetPubKey(pkStr)
-		//		m.l.Printf(" - [%d] Subscription '%s'", i, pkStr[:5]+"...")
-		//		m.remotes.Append(pk, &Subscription{PK: pk})
-		//	}
-		//	if *m.c.Dev {
-		//		m.l.Println("First Run - Loading default messenger addresses (dev):")
-		//		for i, address := range defaultDevMessengers {
-		//			m.l.Printf(" - [%d] Messenger address '%s' (dev)", i, address)
-		//			m.messengers.Append(address, cipher.PubKey{})
-		//		}
-		//	} else {
-		//		m.l.Println("First Run - Loading default messenger addresses:")
-		//		for i, address := range defaultMessengers {
-		//			m.l.Printf(" - [%d] Messenger address '%s'", i, address)
-		//			m.messengers.Append(address, cipher.PubKey{})
-		//		}
-		//	}
-		//	m.tagChanges()
-		//	return nil
-		//}
 	}
 
 	// LOAD TO MEMORY //
@@ -342,14 +375,14 @@ func (m *CXOFileManager) load(path string) error {
 	for i, sub := range fileData.MasterSubs {
 
 		// Get public key of master subscription.
-		pk, e := keys.GetPubKey(sub.PK)
+		pk, e := tag.GetPubKey(sub.PK)
 		if e != nil {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"invalid public key in file at master_subscriptions[%d]", i)
 		}
 
 		// Get private key of master subscription.
-		sk, e := keys.GetSecKey(sub.SK)
+		sk, e := tag.GetSecKey(sub.SK)
 		if e != nil {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"invalid private key in file at master_subscriptions[%d]", i)
@@ -363,7 +396,7 @@ func (m *CXOFileManager) load(path string) error {
 	for i, sub := range fileData.RemoteSubs {
 
 		// Get public key of remote subscription.
-		pk, e := keys.GetPubKey(sub.PK)
+		pk, e := tag.GetPubKey(sub.PK)
 		if e != nil {
 			return boo.WrapTypef(e, boo.InvalidRead,
 				"invalid public key in file at remote_subscriptions[%d]", i)
@@ -380,6 +413,15 @@ func (m *CXOFileManager) load(path string) error {
 				"invalid address in file at messenger_addresses[%d]", i)
 		}
 		m.messengers.Append(address, cipher.PubKey{})
+	}
+
+	// Range connections.
+	for i, address := range fileData.Connections {
+		if e := tag.CheckAddress(address); e != nil {
+			return boo.WrapType(e, boo.InvalidRead,
+				"invalid address in file at connections[%d]", i)
+		}
+		m.connections.Append(address, false)
 	}
 
 	return nil
@@ -403,6 +445,12 @@ func (m *CXOFileManager) save(path string) error {
 	fileData.MessengerAddresses = make([]string, m.messengers.Len())
 	m.messengers.Range(typ.Ascending, func(i int, k, _ interface{}) (bool, error) {
 		fileData.MessengerAddresses[i] = k.(string)
+		return false, nil
+	})
+
+	fileData.Connections = make([]string, m.connections.Len())
+	m.connections.Range(typ.Ascending, func(i int, k, _ interface{}) (bool, error) {
+		fileData.Connections[i] = k.(string)
 		return false, nil
 	})
 

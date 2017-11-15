@@ -1,6 +1,7 @@
 package state
 
 import (
+	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
 	"math/rand"
 	"sync"
@@ -169,12 +170,17 @@ func TestBoardInstance_NewThread(t *testing.T) {
 				case <-quitChan:
 					return
 				case <-ticker.C:
-					pkCount := rand.Intn(maxSubPKCount)
-					pks := make([]cipher.PubKey, pkCount)
-					for i := 0; i < pkCount; i++ {
-						pks[i], _ = cipher.GenerateKeyPair()
+					subKeyCount := rand.Intn(maxSubPKCount)
+					subKeys := make([]*object.MessengerSubKeyTransport, subKeyCount)
+					for i := 0; i < subKeyCount; i++ {
+						pk, _ := cipher.GenerateKeyPair()
+						subKeys[i] = &object.MessengerSubKeyTransport{
+							Address: ListenAddress,
+							PubKey:  pk,
+						}
+
 					}
-					if _, e := bi.EnsureSubmissionKeys(pks); e != nil {
+					if _, e := bi.EnsureSubmissionKeys(subKeys); e != nil {
 						t.Fatal("failed to change board submission keys:", e)
 					}
 				}

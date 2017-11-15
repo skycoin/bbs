@@ -3,7 +3,6 @@ package state
 import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/bbs/src/store/state/pack"
 	"github.com/skycoin/cxo/skyobject"
 )
 
@@ -43,7 +42,7 @@ func (bi *BoardInstance) Submit(transport *object.Transport) (uint64, error) {
 func submitThread(bi *BoardInstance, goal *uint64, thread *object.Content) error {
 	body := thread.GetBody()
 
-	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	return bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 
 		// Set goal sequence.
 		*goal = p.Root().Seq + 1
@@ -81,7 +80,7 @@ func submitThread(bi *BoardInstance, goal *uint64, thread *object.Content) error
 func submitPost(bi *BoardInstance, goal *uint64, post *object.Content) error {
 	body := post.GetBody()
 
-	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	return bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 
 		// Set goal sequence.
 		*goal = p.Root().Seq + 1
@@ -130,7 +129,11 @@ func submitPost(bi *BoardInstance, goal *uint64, post *object.Content) error {
 func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *object.Content) error {
 	body := tVote.GetBody()
 
-	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	if bi.Viewer().HasThread(body.OfThread) == false {
+		return boo.Newf(boo.NotFound, "thread of hash %s is not found", body.OfThread)
+	}
+
+	return bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 		*goal = p.Root().Seq + 1
 
 		// Check vote.
@@ -146,7 +149,11 @@ func submitThreadVote(bi *BoardInstance, goal *uint64, tVote *object.Content) er
 func submitPostVote(bi *BoardInstance, goal *uint64, pVote *object.Content) error {
 	body := pVote.GetBody()
 
-	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	if bi.Viewer().HasContent(body.OfPost) == false {
+		return boo.Newf(boo.NotFound, "post of hash %s is not found", body.OfPost)
+	}
+
+	return bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 		*goal = p.Root().Seq + 1
 		return addVoteToDiffAndProfile(p, h, pVote, body.Creator)
 	})
@@ -154,13 +161,18 @@ func submitPostVote(bi *BoardInstance, goal *uint64, pVote *object.Content) erro
 
 func submitUserVote(bi *BoardInstance, goal *uint64, uVote *object.Content) error {
 	body := uVote.GetBody()
-	return bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+
+	if bi.Viewer().HasUser(body.OfUser) == false {
+		return boo.Newf(boo.NotFound, "user of public key %s is not found", body.OfUser)
+	}
+
+	return bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 		*goal = p.Root().Seq + 1
 		return addVoteToDiffAndProfile(p, h, uVote, body.Creator)
 	})
 }
 
-func addContentToDiffAndProfile(p *skyobject.Pack, h *pack.Headers,
+func addContentToDiffAndProfile(p *skyobject.Pack, h *Headers,
 	pages *object.Pages, content *object.Content, creator string,
 ) error {
 
@@ -188,7 +200,7 @@ func addContentToDiffAndProfile(p *skyobject.Pack, h *pack.Headers,
 	return pages.Save(p)
 }
 
-func addVoteToDiffAndProfile(p *skyobject.Pack, h *pack.Headers, content *object.Content, creator string) error {
+func addVoteToDiffAndProfile(p *skyobject.Pack, h *Headers, content *object.Content, creator string) error {
 
 	// Get root children pages.
 	pages, e := object.GetPages(p, &object.GetPagesIn{
@@ -234,7 +246,7 @@ type BoardAction func(board *object.Content) (bool, error)
 // EditBoard triggers a board action.
 func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 	var goalSeq uint64
-	e := bi.EditPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	e := bi.EditPack(func(p *skyobject.Pack, h *Headers) error {
 
 		// Set goal seq.
 		goalSeq = p.Root().Seq + 1
@@ -274,7 +286,7 @@ func (bi *BoardInstance) EditBoard(action BoardAction) (uint64, error) {
 }
 
 func (bi *BoardInstance) ViewBoard(action BoardAction) error {
-	return bi.ViewPack(func(p *skyobject.Pack, h *pack.Headers) error {
+	return bi.ViewPack(func(p *skyobject.Pack, h *Headers) error {
 		// Get root children.
 		pages, e := object.GetPages(p, &object.GetPagesIn{
 			RootPage:  false,

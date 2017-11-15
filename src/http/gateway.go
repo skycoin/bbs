@@ -6,7 +6,6 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/inform"
 	"github.com/skycoin/bbs/src/store"
-	"github.com/skycoin/bbs/src/store/object"
 	"log"
 	"net/http"
 	"os"
@@ -20,17 +19,19 @@ type Gateway struct {
 }
 
 func (g *Gateway) host(mux *http.ServeMux) error {
-	g.l = inform.NewLogger(true, os.Stdout, "")
+	g.l = inform.NewLogger(true, os.Stdout, "GATEWAY")
 
-	// Administration actions to manage node.
-	RegisterAdminHandlers(mux, g)
-
-	// Tools.
+	// For tools.
 	RegisterToolsHandlers(mux, g)
 
-	// For content submission.
-	RegisterSubmissionHandlers(mux, g)
-	RegisterLegacySubmissionsHandlers(mux, g)
+	// Submits content.
+	mux.HandleFunc("/api/new_submission",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.SubmitContent(r.Context(), &store.SubmissionIn{
+				Body:   []byte(r.FormValue("body")),
+				SigStr: r.FormValue("sig"),
+			}))
+		})
 
 	// Gets a list of boards; remote and master (boards that this node owns).
 	mux.HandleFunc("/api/get_boards",
@@ -41,42 +42,53 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	// Gets a single board.
 	mux.HandleFunc("/api/get_board",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.GetBoard(r.Context(), &object.BoardIO{
-				PubKeyStr: r.FormValue("board_public_key"),
+			send(w)(g.Access.GetBoard(r.Context(), &store.BoardIn{
+				PubKeyStr:     r.FormValue("board_public_key"),
+				UserPubKeyStr: r.FormValue("perspective"),
 			}))
 		})
 
 	// Obtains a view of a board including it's children threads.
 	mux.HandleFunc("/api/get_board_page",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.GetBoardPage(r.Context(), &object.BoardIO{
-				PubKeyStr: r.FormValue("board_public_key"),
+			send(w)(g.Access.GetBoardPage(r.Context(), &store.BoardIn{
+				PubKeyStr:     r.FormValue("board_public_key"),
+				UserPubKeyStr: r.FormValue("perspective"),
 			}))
 		})
 
 	// Gets a view of a thread including it's children posts.
 	mux.HandleFunc("/api/get_thread_page",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.GetThreadPage(r.Context(), &object.ThreadIO{
+			send(w)(g.Access.GetThreadPage(r.Context(), &store.ThreadIn{
 				BoardPubKeyStr: r.FormValue("board_public_key"),
 				ThreadRefStr:   r.FormValue("thread_ref"),
+				UserPubKeyStr:  r.FormValue("perspective"),
 			}))
 		})
 
 	// Gets a view of following/avoiding of specified user.
-	mux.HandleFunc("/api/get_follow_page",
+	mux.HandleFunc("/api/get_user_profile",
 		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.GetFollowPage(r.Context(), &object.UserIO{
+			send(w)(g.Access.GetFollowPage(r.Context(), &store.UserIn{
 				BoardPubKeyStr: r.FormValue("board_public_key"),
 				UserPubKeyStr:  r.FormValue("user_public_key"),
 			}))
 		})
 
+	// Gets a view of all participating users.
+	mux.HandleFunc("/api/get_participants",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetParticipants(r.Context(), &store.BoardIn{
+				PubKeyStr: r.FormValue("board_public_key"),
+			}))
+		})
+
 	// Lists boards that have been discovered, but not subscribed to.
-	//mux.HandleFunc("/api/discover_boards",
-	//	func(w http.ResponseWriter, r *http.Request) {
-	//		send(w)(g.Access.GetDiscoveredBoards(r.Context()))
-	//	})
+	mux.HandleFunc("/api/get_available_boards",
+		func(w http.ResponseWriter, r *http.Request) {
+			send(w)(g.Access.GetAvailableBoards(r.Context()))
+		})
 
 	return nil
 }

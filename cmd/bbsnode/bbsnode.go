@@ -18,49 +18,39 @@ import (
 )
 
 const (
-	defaultConfigSubDir    = ".skybbs"
-	defaultStaticSubDir    = "static/dist"
-	defaultDevStaticSubDir = "src/github.com/skycoin/bbs/static/dist"
-	defaultRPCPort         = 8996
-	defaultCXOPort         = 8998
-	defaultCXORPCPort      = 8997
-	defaultHTTPPort        = 7410
+	Version = "5.0"
+
+	defaultConfigSubDir = ".skybbs"
+	defaultStaticSubDir = "static/dist"
+	defaultRPCPort      = 8996
+	defaultCXOPort      = 8998
+	defaultCXORPCPort   = 8997
+	defaultWebPort      = 8080
 )
 
 var (
-	//defaultSubscriptions = []string{
-	//	"03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742",
-	//}
-	//defaultMessengerAddresses = cli.StringSlice{
-	//	"messenger.skycoin.net:8080",
-	//}
-	//defaultDevMessengerAddresses = cli.StringSlice{
-	//	"127.0.0.1:8080",
-	//}
-	devMode          = false
 	compilerInternal = 1
 )
 
 // Config represents configuration for node.
 type Config struct {
-	Memory    bool   `json:"memory"`     // Whether to run node in memory.
-	ConfigDir string `json:"config_dir"` // Full path for configuration directory.
+	Memory                     bool            `json:"memory"`                       // Whether to run node in memory.
+	ConfigDir                  string          `json:"config-dir"`                   // Full path for configuration directory.
+	RPC                        bool            `json:"rpc"`                          // Enable RPC interface for admin control.
+	RPCPort                    int             `json:"rpc-port"`                     // Listening port of node RPC.
+	CXOPort                    int             `json:"cxo-port"`                     // Listening port of CXO.
+	CXORPC                     bool            `json:"cxo-rpc"`                      // Whether to enable CXO RPC.
+	CXORPCPort                 int             `json:"cxo-rpc-port,omitempty"`       // Listening RPC port of CXO.
+	EnforcedMessengerAddresses cli.StringSlice `json:"enforced-messenger-addresses"` // Addresses of messenger servers to enforce.
+	EnforcedSubscriptions      cli.StringSlice `json:"enforced-subscriptions"`       // Subscriptions to enforce.
+	WebPort                    int             `json:"web-port"`                     // Port to serve HTTP API/GUI.
+	WebGUI                     bool            `json:"web-gui"`                      // Whether to enable GUI.
+	WebGUIDir                  string          `json:"web-gui-dir,omitempty"`        // Full path of GUI static files.
+	WebTLS                     bool            `json:"web-tls"`                      // Whether to enable TLS.
+	WebTLSCertFile             string          `json:"web-tls-cert-file"`            // Path for TLS Certificate file.
+	WebTLSKeyFile              string          `json:"web-tls-key-file"`             // Path for TLS Key file.
 
-	RPC     bool `json:"rpc"`      // Enable RPC interface for admin control.
-	RPCPort int  `json:"rpc_port"` // Listening port of node RPC.
-
-	CXOPort    int  `json:"cxo_port"`               // Listening port of CXO.
-	CXORPC     bool `json:"cxo_rpc"`                // Whether to enable CXO RPC.
-	CXORPCPort int  `json:"cxo_rpc_port,omitempty"` // Listening RPC port of CXO.
-
-	EnforcedMessengerAddresses cli.StringSlice `json:"ensured_messenger_addresses"` // Addresses of messenger servers to enforce.
-	EnforcedSubscriptions      cli.StringSlice `json:"ensured_subscriptions"`       // Subscriptions to enforce.
-
-	HTTPPort   int    `json:"http_port"`              // Port to serve HTTP API/GUI.
-	HTTPGUI    bool   `json:"http_gui"`               // Whether to enable GUI.
-	HTTPGUIDir string `json:"http_gui_dir,omitempty"` // Full path of GUI static files.
-
-	Browser bool `json:"browser"` // Whether to open browser on GUI start.
+	Browser bool `json:"open-browser"` // Whether to open browser on GUI start.
 }
 
 // NewDefaultConfig returns a default configuration for BBS node.
@@ -75,10 +65,10 @@ func NewDefaultConfig() *Config {
 		CXORPCPort:                 defaultCXORPCPort,
 		EnforcedMessengerAddresses: []string{},
 		EnforcedSubscriptions:      []string{},
-		HTTPPort:                   defaultHTTPPort,
-		HTTPGUI:                    true,
-		HTTPGUIDir:                 "", // --> Action: set as '$HOME/.skybbs/static'
-		Browser:                    true,
+		WebPort:                    defaultWebPort,
+		WebGUI:                     true,
+		WebGUIDir:                  defaultStaticSubDir, // --> Action: set as '$HOME/.skybbs/static'
+		Browser:                    false,
 	}
 }
 
@@ -97,17 +87,6 @@ func (c *Config) PostProcess() error {
 			return e
 		}
 	}
-	if c.HTTPGUI {
-		if c.HTTPGUIDir == "" {
-			if devMode {
-				c.HTTPGUIDir = filepath.Join(os.Getenv("GOPATH"), defaultDevStaticSubDir)
-			} else {
-				c.HTTPGUIDir = defaultStaticSubDir
-			}
-		}
-	} else {
-		c.Browser = false
-	}
 	return nil
 }
 
@@ -124,9 +103,12 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 
 		httpServer, e := http.NewServer(
 			&http.ServerConfig{
-				Port:      &c.HTTPPort,
-				StaticDir: &c.HTTPGUIDir,
-				EnableGUI: &c.HTTPGUI,
+				Port:        &c.WebPort,
+				StaticDir:   &c.WebGUIDir,
+				EnableGUI:   &c.WebGUI,
+				EnableTLS:   &c.WebTLS,
+				TLSCertFile: &c.WebTLSCertFile,
+				TLSKeyFile:  &c.WebTLSKeyFile,
 			},
 			&http.Gateway{
 				Access: &store.Access{
@@ -166,8 +148,8 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 		CatchError(e, "failed to start RPC server")
 		defer rpcServer.Close()
 
-		if c.Browser {
-			address := fmt.Sprintf("http://127.0.0.1:%d", c.HTTPPort)
+		if c.WebGUI && c.Browser {
+			address := fmt.Sprintf("http://127.0.0.1:%d", c.WebPort)
 			log.Println("Opening browser at address:", address)
 			if e := browser.Open(address); e != nil {
 				log.Println("Error on browser open:", e)
@@ -203,64 +185,95 @@ func main() {
 	config := NewDefaultConfig()
 	flags := []cli.Flag{
 		cli.BoolFlag{
-			Name:        "dev",
-			Destination: &devMode,
-		},
-		cli.BoolFlag{
 			Name:        "memory",
 			Destination: &config.Memory,
+			Usage:       "avoid storing BBS data on disk and use memory instead",
 		},
 		cli.StringFlag{
 			Name:        "config-dir",
 			Destination: &config.ConfigDir,
+			Usage:       "the name of the directory to store and access BBS configuration and associated cxo data (if left blank, $HOME/.skybbs will be used)",
 		},
 		cli.BoolTFlag{
 			Name:        "rpc",
 			Destination: &config.RPC,
+			Usage:       "whether to enable RPC interface to interact with BBS node (used for bbscli) (default: true)",
 		},
 		cli.IntFlag{
 			Name:        "rpc-port",
 			Destination: &config.RPCPort,
 			Value:       config.RPCPort,
+			Usage:       "port to serve BBS RPC interface",
 		},
 		cli.IntFlag{
 			Name:        "cxo-port",
 			Destination: &config.CXOPort,
 			Value:       config.CXOPort,
+			Usage:       "port to listen for CXO connections",
 		},
 		cli.BoolTFlag{
 			Name:        "cxo-rpc",
 			Destination: &config.CXORPC,
+			Usage:       "whether to enable RPC interface to interact with CXO (used for cxocli)",
 		},
 		cli.IntFlag{
 			Name:        "cxo-rpc-port",
 			Destination: &config.CXORPCPort,
 			Value:       config.CXORPCPort,
+			Usage:       "port to serve CXO RPC interface",
 		},
 		cli.StringSliceFlag{
 			Name:  "enforced-messenger-addresses",
 			Value: &config.EnforcedMessengerAddresses,
+			Usage: "list of addresses to messenger servers to enforce connections with",
 		},
 		cli.StringSliceFlag{
 			Name:  "enforced-subscriptions",
 			Value: &config.EnforcedSubscriptions,
+			Usage: "list of public keys of boards to enforce subscriptions with",
 		},
 		cli.IntFlag{
-			Name:        "http-port",
-			Destination: &config.HTTPPort,
-			Value:       config.HTTPPort,
+			Name:        "web-port",
+			Destination: &config.WebPort,
+			Value:       config.WebPort,
+			Usage:       "port to serve http api",
 		},
 		cli.BoolTFlag{
-			Name:        "http-gui",
-			Destination: &config.HTTPGUI,
+			Name:        "web-gui",
+			Destination: &config.WebGUI,
+			Usage:       "whether to enable web interface thin client",
 		},
 		cli.StringFlag{
-			Name:        "http-gui-dir",
-			Destination: &config.HTTPGUIDir,
+			Name:        "web-gui-dir",
+			Destination: &config.WebGUIDir,
+			Usage:       "directory where web interface static files are located",
+		},
+		cli.BoolFlag{
+			Name:        "web-tls",
+			Destination: &config.WebTLS,
+			Usage:       "whether to enable https for web interface thin client and api",
+		},
+		cli.StringFlag{
+			Name:        "web-tls-cert-file",
+			Destination: &config.WebTLSCertFile,
+			Value:       config.WebTLSCertFile,
+			Usage:       "path of the tls certificate file",
+		},
+		cli.StringFlag{
+			Name:        "web-tls-key-file",
+			Destination: &config.WebTLSKeyFile,
+			Value:       config.WebTLSKeyFile,
+			Usage:       "path of the tls key file",
+		},
+		cli.BoolFlag{
+			Name:        "open-browser",
+			Destination: &config.Browser,
+			Usage:       "whether to open a browser window",
 		},
 	}
 	app := cli.NewApp()
 	app.Name = "bbsnode"
+	app.Version = Version
 	app.Usage = "Runs a Skycoin BBS Node"
 	app.Flags = flags
 	app.Action = config.GenerateAction()

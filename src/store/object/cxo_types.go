@@ -3,7 +3,7 @@ package object
 import (
 	"fmt"
 	"github.com/skycoin/bbs/src/misc/boo"
-	"github.com/skycoin/bbs/src/misc/keys"
+	"github.com/skycoin/bbs/src/misc/tag"
 	"github.com/skycoin/cxo/skyobject"
 	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/cipher/encoder"
@@ -50,7 +50,7 @@ type Pages struct {
 
 type PagesJSON struct {
 	PubKey    string         `json:"public_key"`
-	SecKey    string         `json:"secret_key,omitempty"`
+	SecKey    string         `json:"secret_key"`
 	RootPage  *RootPage      `json:"root_page"`
 	BoardPage *BoardPageJSON `json:"board_page"`
 	DiffPage  *DiffPageJSON  `json:"diff_page"`
@@ -58,6 +58,10 @@ type PagesJSON struct {
 }
 
 func NewPages(p *skyobject.Pack, in *PagesJSON) (*Pages, error) {
+	if in.PubKey != p.Root().Pub.Hex() {
+		return nil, boo.Newf(boo.NotAllowed,
+			"public keys do not match, expected %s", in.PubKey)
+	}
 	out := &Pages{
 		PK:       p.Root().Pub,
 		RootPage: in.RootPage,
@@ -73,6 +77,16 @@ func NewPages(p *skyobject.Pack, in *PagesJSON) (*Pages, error) {
 		return nil, e
 	}
 	return out, nil
+}
+
+func (pj *PagesJSON) GetPubKey() cipher.PubKey {
+	pk, _ := tag.GetPubKey(pj.PubKey)
+	return pk
+}
+
+func (pj *PagesJSON) GetSecKey() cipher.SecKey {
+	sk, _ := tag.GetSecKey(pj.SecKey)
+	return sk
 }
 
 type GetPagesIn struct {
@@ -353,11 +367,11 @@ func (tp *ThreadPage) RangePosts(action func(i int, post *Content) error) error 
 func (tp *ThreadPage) AddPost(cxoPostHash cipher.SHA256, post *Content) error {
 	if elem, _ := tp.Posts.RefByHash(cxoPostHash); elem != nil {
 		return boo.Newf(boo.AlreadyExists,
-			"post of hash '%s' already exists in 'ThreadPage.Posts'", cxoPostHash.Hex())
+			"post of hash '%s' already exists in 'ThreadPage.PostsOfThread'", cxoPostHash.Hex())
 	}
 	if e := tp.Posts.Append(post); e != nil {
 		return boo.WrapTypef(e, boo.Internal,
-			"failed to append %v to 'ThreadPage.Posts'", post)
+			"failed to append %v to 'ThreadPage.PostsOfThread'", post)
 	}
 	return nil
 }
@@ -730,7 +744,7 @@ func (msk MessengerSubKey) IsValid() bool {
 	if len(split) != 2 {
 		return false
 	}
-	if _, e := keys.GetPubKey(split[1]); e != nil {
+	if _, e := tag.GetPubKey(split[1]); e != nil {
 		return false
 	}
 	return true
@@ -741,7 +755,7 @@ func (msk MessengerSubKey) Address() string {
 }
 
 func (msk MessengerSubKey) PubKey() cipher.PubKey {
-	pk, _ := keys.GetPubKey(strings.Split(string(msk), ",")[1])
+	pk, _ := tag.GetPubKey(strings.Split(string(msk), ",")[1])
 	return pk
 }
 
