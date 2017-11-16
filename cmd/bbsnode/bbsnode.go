@@ -49,8 +49,7 @@ type Config struct {
 	WebTLS                     bool            `json:"web-tls"`                      // Whether to enable TLS.
 	WebTLSCertFile             string          `json:"web-tls-cert-file"`            // Path for TLS Certificate file.
 	WebTLSKeyFile              string          `json:"web-tls-key-file"`             // Path for TLS Key file.
-
-	Browser bool `json:"open-browser"` // Whether to open browser on GUI start.
+	Browser                    bool            `json:"open-browser"`                 // Whether to open browser on GUI start.
 }
 
 // NewDefaultConfig returns a default configuration for BBS node.

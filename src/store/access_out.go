@@ -32,7 +32,7 @@ func getAvailableBoardsOut(pks []cipher.PubKey) *AvailableBoardsOut {
 
 type ConnectionsOut struct {
 	ActiveConnections []object.Connection `json:"connections"`
-	SavedConnections []object.Connection `json:"saved_connections"`
+	SavedConnections  []object.Connection `json:"saved_connections"`
 }
 
 func getConnectionsOut(_ context.Context, active, saved []object.Connection) *ConnectionsOut {
@@ -75,16 +75,6 @@ type BoardOut struct {
 func getBoardOut(v interface{}) *BoardOut {
 	return &BoardOut{
 		Board: v,
-	}
-}
-
-type FollowPageOut struct {
-	FollowPage interface{} `json:"follow_page"`
-}
-
-func getFollowPageOut(v interface{}) *FollowPageOut {
-	return &FollowPageOut{
-		FollowPage: v,
 	}
 }
 

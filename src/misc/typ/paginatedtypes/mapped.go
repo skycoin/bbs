@@ -38,7 +38,7 @@ func (p *Mapped) Get(in *typ.PaginatedInput) (*typ.PaginatedOutput, error) {
 	} else {
 		action = func(v uint) uint { return v + 1 }
 	}
-	for i, j := uint(0), in.StartIndex; i < out.ObtainedCount; i, j = i+1, action(j) {
+	for i, j := uint(0), in.StartIndex; i < uint(len(out.Data)); i, j = i+1, action(j) {
 		out.Data[i] = p.list[j]
 	}
 
