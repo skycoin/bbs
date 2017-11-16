@@ -1,6 +1,8 @@
 package typ
 
-import "github.com/skycoin/bbs/src/misc/boo"
+import (
+	"github.com/skycoin/bbs/src/misc/boo"
+)
 
 type PaginatedCreator func() Paginated
 
@@ -27,7 +29,7 @@ type PaginatedOutput struct {
 }
 
 func NewPaginatedOutput(in *PaginatedInput, dataCount uint) (*PaginatedOutput, error) {
-	if in.StartIndex < 0 || in.StartIndex >= dataCount {
+	if in.StartIndex < 0 || in.StartIndex > dataCount {
 		return nil, boo.Newf(boo.InvalidInput,
 			"invalid 'start_index' provided, valid values are between %d and %d inclusive",
 			0, dataCount-1)
