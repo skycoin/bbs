@@ -4,7 +4,14 @@ import (
 	"context"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/bbs/src/store/state"
 )
+
+type SubmissionOut struct {
+	NewSubmission   *object.ContentRep `json:"new_submission"`
+	NewVotesSummary *state.VoteRepView `json:"new_votes_summary,omitempty"`
+	NewUserProfile *state.UserProfileOut `json:"new_user_profile"`
+}
 
 type MessengersOut struct {
 	Connections []*object.MessengerConnection `json:"connections"`

@@ -33,6 +33,8 @@ func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface
 		return nil, e
 	}
 
+	transport.Content.ToRep()
+
 	switch transport.Body.Type {
 	case object.V5ThreadType:
 		return bi.Viewer().GetBoardPage(&state.BoardPageIn{
