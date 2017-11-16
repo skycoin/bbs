@@ -47,9 +47,9 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.getBoards();
-    this.api.getStats().subscribe(status => {
-      this.isRoot = status.node_is_master;
-    });
+    // this.api.getStats().subscribe(status => {
+    //   this.isRoot = status.node_is_master;
+    // });
   }
   ngAfterViewInit() {
     Observable.timer(10).subscribe(() => {
@@ -67,6 +67,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
         return;
       }
       this.boards = allBoards.data.master_boards;
+      console.log('master boards:', this.boards);
       this.remoteBoards = allBoards.data.remote_boards;
     });
   }

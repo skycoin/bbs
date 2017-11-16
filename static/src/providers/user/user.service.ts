@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as crypto from 'crypto-js';
-
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/of'
 declare var cipher: Cipher;
 
 @Injectable()
@@ -40,12 +41,15 @@ export class UserService {
     return cipher.generateKeyPair(seed);
   }
   encrypt(data, password: string) {
-    return crypto.AES.encrypt(data, password).toString();
+    return Observable.of(crypto.AES.encrypt(data, password).toString())
   }
   decrypt(data, password: string) {
     const bytes = crypto.AES.decrypt(data, password);
+    if (bytes.words[0] < 0) {
+      return Observable.of('')
+    }
     const plaintext = bytes.toString(crypto.enc.Utf8);
-    return JSON.parse(plaintext);
+    return Observable.of(JSON.parse(plaintext))
   }
 }
 

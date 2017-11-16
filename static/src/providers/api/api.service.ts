@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { CommonService } from '../common/common.service';
 import { LoginSessionUser } from './msg';
 import { Observable } from 'rxjs/Observable';
+import { environment } from './../../environments/environment';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/catch';
@@ -11,7 +12,7 @@ export class ApiService {
   static userInfo: LoginSessionUser = null;
   static sig = '';
   private version = 5;
-  private baseUrl = 'http://127.0.0.1:7410/api/';
+  private baseUrl = '/api/';
   private adminUrl = this.baseUrl + 'admin/'
   private contentUrl = this.adminUrl + 'content/';
   private sessionUrl = this.adminUrl + 'session/';
@@ -26,6 +27,9 @@ export class ApiService {
   private threadsUrl = this.baseUrl + 'threads/';
   private postsUrl = this.baseUrl + 'posts/';
   constructor(private common: CommonService) {
+    if (environment.production) {
+      this.baseUrl = '127.0.0.1:7410/api/';
+    }
   }
 
   // Board

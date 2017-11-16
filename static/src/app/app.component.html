@@ -80,7 +80,7 @@
     <div class="navbar-text navbar-user-box">
       <a class="alias" href="javascript:void(0);" (click)="openLogin($event,login,create)">
         <i class="fa fa-user" aria-hidden="true"></i>
-        <span>Login</span>
+        <span>{{userName}}</span>
       </a>
       <!-- <span class="">Logout</span> -->
     </div>
@@ -103,6 +103,7 @@
 </nav>
 <router-outlet></router-outlet>
 
+<!-- Create User Dialog -->
 <ng-template #create let-c="close">
   <div class="pop-dialog register-box" [@bounceIn]>
     <div class="modal-header">
@@ -132,33 +133,36 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-lg btn-block close-btn" (click)="c(false)">Close</button>
-      <button type="button" class="btn btn-lg btn-block create-btn" (click)="c(true)">Create</button>
+      <button type="button" class="btn btn-lg btn-block create-btn" (click)="c(true)" [disabled]="!createForm.valid">Create</button>
     </div>
   </div>
 </ng-template>
 
+<!-- Login Dialog -->
 <ng-template #login let-c="close">
   <div class="pop-dialog register-box" [@bounceIn]>
     <div class="modal-header">
       <h4 class="modal-title">Set the active identity</h4>
     </div>
     <div class="modal-body">
-      <select-list *ngIf="userList?.length > 0" [list]="userList" [(ngModel)]="selectUser"></select-list>
-      <div class="input-group mb-2 mr-sm-2 mb-sm-0" *ngIf="selectUser">
-        <div class="input-group-addon">Password</div>
-        <input type="password" class="form-control" id="loginPass" #loginPass>
-        <div class="input-group-addon operation" (click)="isShowPassword($event,loginPass)">
-          <i class="fa fa-eye" aria-hidden="true" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
+      <form [formGroup]="loginForm">
+        <select-list *ngIf="userList?.length > 0" [list]="userList" formControlName="user"></select-list>
+        <div class="input-group mb-2 mr-sm-2 mb-sm-0" *ngIf="loginForm.get('user').value">
+          <div class="input-group-addon">Password</div>
+          <input type="password" class="form-control" id="loginPass" #loginPass formControlName="pass">
+          <div class="input-group-addon operation" (click)="isShowPassword($event,loginPass)">
+            <i class="fa fa-eye" aria-hidden="true" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
+          </div>
         </div>
-      </div>
-      <div *ngIf="userList?.length <= 0" class="hint-text" (click)="c('create')">
+      </form>
+      <div class="hint-text" (click)="c('create')">
         <span>You can create an identity</span>
         <i class="fa fa-plus-circle" aria-hidden="true"></i>
       </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn close-btn" (click)="c(false)">Close</button>
-      <button type="button" class="btn create-btn">Login</button>
+      <button type="button" class="btn create-btn" (click)="c(true)">Login</button>
     </div>
   </div>
 </ng-template>

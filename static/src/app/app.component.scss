@@ -266,11 +266,12 @@
   }
   .hint-text {
     text-align: center;
-    color: #999;
+    color: rgb(255, 71, 71);
     text-decoration: underline;
+    margin-top: 1.5rem;
     cursor: pointer;
     &:hover {
-      color: #c3c2c2;
+      color: rgb(212, 49, 49);
     }
   }
   .btn {

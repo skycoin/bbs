@@ -17,6 +17,7 @@ import 'rxjs/add/operator/filter';
 import { bounceInAnimation, tabLeftAnimation, tabRightAnimation } from '../animations/common.animations';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/timer'
+import 'rxjs/add/operator/do'
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 // import * as crypto from 'crypto-js';
@@ -53,7 +54,12 @@ export class AppComponent implements OnInit {
   userFollow: FollowPageDataInfo = {};
   userList = [];
   selectUser = '';
+  selectUserPass = '';
   showPassword = false;
+  loginForm = new FormGroup({
+    user: new FormControl('', Validators.required),
+    pass: new FormControl('', Validators.required)
+  });
   createForm = new FormGroup({
     alias: new FormControl('', Validators.required),
     seed: new FormControl('', Validators.required),
@@ -72,6 +78,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.userList = this.user.getUserList();
+    console.log('userList:', this.userList);
     // console.log('user:', this.user.getItem('1'));
     // this.user.setItem('1', '123123123');
     // const seed = cipher.generateSeed();
@@ -126,7 +133,7 @@ export class AppComponent implements OnInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
-    this.selectUser = '';
+    this.loginForm.reset();
     this.showPassword = false;
     this.pop.open(login, { isDialog: true, canClickBackdrop: false }).result.then(result => {
       if (result === 'create') {
@@ -136,9 +143,24 @@ export class AppComponent implements OnInit {
             const json = this.user.newKeyPair(this.createForm.get('seed').value)
             const password = this.createForm.get('password').value;
             const alias = this.createForm.get('alias').value;
-            this.user.setItem(alias, this.user.encrypt(JSON.stringify(json), password));
+            this.user.encrypt(JSON.stringify(json), password).do(() => {
+              this.loading.start();
+            }).subscribe(data => {
+              this.user.setItem(alias, data);
+              this.userList = this.user.getUserList();
+              this.loading.close();
+            })
           }
         }, err => { });
+      } else if (result === true) {
+        const user = this.loginForm.get('user').value;
+        const hash = this.user.getItem(user);
+        this.user.decrypt(hash, this.loginForm.get('pass').value).subscribe((loginInfo: any) => {
+          if (loginInfo) {
+            console.log('login success');
+            this.userName = user;
+          }
+        })
       }
     }, err => { });
   }
