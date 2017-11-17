@@ -278,10 +278,7 @@ func (a *Access) NewThread(ctx context.Context, in *NewThreadIn) (interface{}, e
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Viewer().GetBoardPage(&state.BoardPageIn{
-		Perspective:    in.CreatorPubKey.Hex(),
-		PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
-	})
+	return getNewContentOut(in.Transport)
 }
 
 func (a *Access) GetThreadPage(ctx context.Context, in *ThreadIn) (interface{}, error) {
@@ -321,11 +318,7 @@ func (a *Access) NewPost(ctx context.Context, in *NewPostIn) (interface{}, error
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
-		Perspective:    in.CreatorPubKey.Hex(),
-		ThreadHash:     in.ThreadRefStr,
-		PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
-	})
+	return getNewContentOut(in.Transport)
 }
 
 func (a *Access) GetParticipants(ctx context.Context, in *BoardIn) (interface{}, error) {
@@ -378,9 +371,7 @@ func (a *Access) VoteUser(ctx context.Context, in *VoteUserIn) (interface{}, err
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Viewer().GetUserProfile(&state.UserProfileIn{
-		UserPubKey: in.UserPubKeyStr,
-	})
+	return getUserVoteOut(in.Transport, bi)
 }
 
 func (a *Access) VoteThread(ctx context.Context, in *VoteThreadIn) (interface{}, error) {
@@ -405,10 +396,7 @@ func (a *Access) VoteThread(ctx context.Context, in *VoteThreadIn) (interface{},
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Viewer().GetVotes(&state.ContentVotesIn{
-		Perspective: in.CreatorPubKey.Hex(),
-		ContentHash: in.ThreadRefStr,
-	})
+	return getThreadVoteOut(in.Transport, bi)
 }
 
 func (a *Access) VotePost(ctx context.Context, in *VotePostIn) (interface{}, error) {
@@ -433,8 +421,5 @@ func (a *Access) VotePost(ctx context.Context, in *VotePostIn) (interface{}, err
 	if e := bi.WaitSeq(ctx, goal); e != nil {
 		return nil, e
 	}
-	return bi.Viewer().GetVotes(&state.ContentVotesIn{
-		Perspective: in.CreatorPubKey.Hex(),
-		ContentHash: in.PostRefStr,
-	})
+	return getPostVoteOut(in.Transport, bi)
 }
