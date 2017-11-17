@@ -3,14 +3,69 @@ package store
 import (
 	"context"
 	"github.com/skycoin/bbs/src/store/object"
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/bbs/src/store/state"
+	"github.com/skycoin/skycoin/src/cipher"
 )
 
 type SubmissionOut struct {
-	NewSubmission   *object.ContentRep `json:"new_submission"`
-	NewVotesSummary *state.VoteRepView `json:"new_votes_summary,omitempty"`
-	NewUserProfile *state.UserProfileOut `json:"new_user_profile"`
+	NewSubmission      *object.ContentRep    `json:"new_submission"`
+	NewVotesSummary    *state.VoteRepView    `json:"new_votes_summary,omitempty"`
+	NewCreatorsProfile *state.UserProfileOut `json:"new_creators_profile,omitempty"`
+	NewSubjectsProfile *state.UserProfileOut `json:"new_subjects_profile,omitempty"`
+}
+
+func getNewContentOut(t *object.Transport) (*SubmissionOut, error) {
+	return &SubmissionOut{
+		NewSubmission: t.Content.ToRep(),
+	}, nil
+}
+
+func getThreadVoteOut(t *object.Transport, bi *state.BoardInstance) (*SubmissionOut, error) {
+	newVotesSummary, e := bi.Viewer().GetVotes(&state.ContentVotesIn{
+		Perspective: t.Body.Creator,
+		ContentHash: t.Body.OfThread,
+	})
+	if e != nil {
+		return nil, e
+	}
+	return &SubmissionOut{
+		NewSubmission:   t.Content.ToRep(),
+		NewVotesSummary: newVotesSummary.Votes,
+	}, nil
+}
+
+func getPostVoteOut(t *object.Transport, bi *state.BoardInstance) (*SubmissionOut, error) {
+	newVotesSummary, e := bi.Viewer().GetVotes(&state.ContentVotesIn{
+		Perspective: t.Body.Creator,
+		ContentHash: t.Body.OfPost,
+	})
+	if e != nil {
+		return nil, e
+	}
+	return &SubmissionOut{
+		NewSubmission:   t.Content.ToRep(),
+		NewVotesSummary: newVotesSummary.Votes,
+	}, nil
+}
+
+func getUserVoteOut(t *object.Transport, bi *state.BoardInstance) (*SubmissionOut, error) {
+	newCreatorsProfile, e := bi.Viewer().GetUserProfile(&state.UserProfileIn{
+		UserPubKey: t.Body.Creator,
+	})
+	if e != nil {
+		return nil, e
+	}
+	newSubjectsProfile, e := bi.Viewer().GetUserProfile(&state.UserProfileIn{
+		UserPubKey: t.Body.OfUser,
+	})
+	if e != nil {
+		return nil, e
+	}
+	return &SubmissionOut{
+		NewSubmission:      t.Content.ToRep(),
+		NewCreatorsProfile: newCreatorsProfile,
+		NewSubjectsProfile: newSubjectsProfile,
+	}, nil
 }
 
 type MessengersOut struct {

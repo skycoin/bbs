@@ -33,38 +33,18 @@ func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface
 		return nil, e
 	}
 
-	transport.Content.ToRep()
-
 	switch transport.Body.Type {
-	case object.V5ThreadType:
-		return bi.Viewer().GetBoardPage(&state.BoardPageIn{
-			Perspective:    transport.Body.Creator,
-			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
-		})
-
-	case object.V5PostType:
-		return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
-			Perspective:    transport.Body.Creator,
-			ThreadHash:     transport.Body.OfThread,
-			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
-		})
+	case object.V5ThreadType, object.V5PostType:
+		return getNewContentOut(transport)
 
 	case object.V5ThreadVoteType:
-		return bi.Viewer().GetVotes(&state.ContentVotesIn{
-			Perspective: transport.Body.Creator,
-			ContentHash: transport.Body.OfThread,
-		})
+		return getThreadVoteOut(transport, bi)
 
 	case object.V5PostVoteType:
-		return bi.Viewer().GetVotes(&state.ContentVotesIn{
-			Perspective: transport.Body.Creator,
-			ContentHash: transport.Body.OfPost,
-		})
+		return getPostVoteOut(transport, bi)
 
 	case object.V5UserVoteType:
-		return bi.Viewer().GetUserProfile(&state.UserProfileIn{
-			UserPubKey: transport.Body.Creator,
-		})
+		return getUserVoteOut(transport, bi)
 
 	default:
 		return nil, boo.Newf(boo.InvalidInput,
