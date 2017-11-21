@@ -1,5 +1,5 @@
 import { Component, HostBinding, OnInit, ViewEncapsulation, ViewChild, TemplateRef, AfterViewInit } from '@angular/core';
-import { ApiService, CommonService, AllBoards, Alert, Popup, Dialog, LoadingService } from '../../providers';
+import { ApiService, CommonService, AllBoards, Alert, Popup, Dialog, LoadingService, UserService } from '../../providers';
 import { Board } from '../../providers/api/msg';
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -42,7 +42,8 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     private pop: Popup,
     private alert: Alert,
     private dialog: Dialog,
-    private loading: LoadingService) {
+    private loading: LoadingService,
+    private user: UserService) {
   }
 
   ngOnInit(): void {
@@ -94,24 +95,22 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
   }
   openAdd(content) {
     this.addForm.reset();
-    this.api.newSeed().subscribe(seed => {
-      this.addForm.patchValue({ seed: seed.data });
-      this.pop.open(content).result.then((result) => {
-        if (result === true) {
-          if (!this.addForm.valid) {
-            this.alert.error({ content: 'Parameter error' });
-            return;
-          }
-          const data = new FormData();
-          data.append('seed', this.addForm.get('seed').value);
-          data.append('name', this.addForm.get('name').value.trim());
-          data.append('body', this.common.replaceURL(this.common.replaceHtmlEnter(this.addForm.get('body').value)));
-          this.api.addBoard(data).subscribe(res => {
-            this.getBoards();
-            this.alert.success({ content: 'Added Successfully' });
-          });
+    this.addForm.patchValue({ seed: this.user.newSeed() });
+    this.pop.open(content).result.then((result) => {
+      if (result === true) {
+        if (!this.addForm.valid) {
+          this.alert.error({ content: 'Parameter error' });
+          return;
         }
-      })
+        const data = new FormData();
+        data.append('seed', this.addForm.get('seed').value);
+        data.append('name', this.addForm.get('name').value.trim());
+        data.append('body', this.common.replaceURL(this.common.replaceHtmlEnter(this.addForm.get('body').value)));
+        this.api.addBoard(data).subscribe(res => {
+          this.getBoards();
+          this.alert.success({ content: 'Added Successfully' });
+        });
+      }
     })
   }
   copy(ev) {

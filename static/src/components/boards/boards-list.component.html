@@ -46,13 +46,12 @@
   </div>
 </div>
 
-<ng-template #fab>
+<!-- <ng-template #fab>
   <fab>
     <fa-button name="New Board" icon="fa-th-large" (click)="openAdd(add)"></fa-button>
     <fa-button name="New Subscription" icon="fa-heart" (click)="subscribe(subscribeBox)"></fa-button>
-    <!-- <fa-button name="Import Board" icon="fa-folder-open" (click)="subscribe(subscribeBox)"></fa-button> -->
   </fab>
-</ng-template>
+</ng-template> -->
 
 <!-- Subscribe Box-->
 <ng-template #subscribeBox let-c="close">
@@ -102,14 +101,6 @@
           <label for="seed">Board seed</label>
           <textarea class="form-control" rows="3" id="seed" style="resize:none" formControlName="seed"></textarea>
         </div>
-        <!-- <div class="form-group">
-          <label for="submission_addresses">Rpc Submission Url (optional)</label>
-          <textarea class="form-control" rows="3" id="addresses" formControlName="submission_addresses" placeholder='(Optional) Submission addresses separated by commas ","'></textarea>
-        </div> -->
-        <!-- <div class="form-group">
-              <label for="connections">Connections (optional)</label>
-              <textarea class="form-control" rows="3" id="addresses" formControlName="connections" placeholder='(Optional) Connections separated by commas ","'></textarea>
-            </div> -->
       </form>
     </div>
     <div class="modal-footer">

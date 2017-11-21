@@ -78,20 +78,11 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.userList = this.user.getUserList();
-    console.log('userList:', this.userList);
-    // console.log('user:', this.user.getItem('1'));
-    // this.user.setItem('1', '123123123');
-    // const seed = cipher.generateSeed();
-    // const keypair = cipher.generateKeyPair(seed)
-    // const encryptText = crypto.AES.encrypt('nyf', '123456')
-    // console.log('crypto:', encryptText.toString());
-    // const bytes = crypto.AES.decrypt(encryptText.toString(), '123456');
-    // const plaintext = bytes.toString(crypto.enc.Utf8);
-    // console.log('plaintext:', plaintext);
-    // this.api.getAllUser().subscribe(res => {
-    //   this.autoAilas = res.data.users;
-    //   this._orginAutoAilas = this.autoAilas;
-    // })
+    const loginInfo = JSON.parse(this.user.getTmpItem());
+    if (loginInfo) {
+      this.userName = loginInfo.name;
+      this.user.loginInfo = loginInfo.data;
+    }
     this.common.fb = this.fb;
     // this.api.getStats().subscribe(stats => {
     //   this.isMasterNode = stats.node_is_master;
@@ -99,16 +90,6 @@ export class AppComponent implements OnInit {
     Observable.timer(10).subscribe(() => {
       this.pop.open(ToTopComponent, { isDialog: false });
     });
-    // this.api.getSessionInfo().subscribe(info => {
-    //   if (info.okay) {
-    //     if (info.data.session && info.data.logged_in) {
-    //       this.isLogIn = info.data.logged_in;
-    //       this.userName = info.data.session.user.alias;
-    //       this.userPublicKey = info.data.session.user.public_key;
-    //       ApiService.userInfo = info.data.session.user;
-    //     }
-    //   }
-    // })
   }
   isShowPassword(ev: Event, input: any) {
     ev.stopImmediatePropagation();
@@ -129,10 +110,15 @@ export class AppComponent implements OnInit {
     this.pop.open(content, { isDialog: true, canClickBackdrop: false }).result.then(result => {
     }, err => { });
   }
-  openLogin(ev: Event, login, create: any) {
+  openLogin(ev: Event, login, create: any, isSwitch: boolean = false) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
+    if (this.user.loginInfo && !isSwitch) {
+      this.userMenu = !this.userMenu;
+      return;
+    }
+    this.userMenu = false;
     this.loginForm.reset();
     this.showPassword = false;
     this.pop.open(login, { isDialog: true, canClickBackdrop: false }).result.then(result => {
@@ -157,8 +143,10 @@ export class AppComponent implements OnInit {
         const hash = this.user.getItem(user);
         this.user.decrypt(hash, this.loginForm.get('pass').value).subscribe((loginInfo: any) => {
           if (loginInfo) {
-            console.log('login success');
+            console.log('login success', loginInfo);
             this.userName = user;
+            this.user.setTmpItem(this.userName, loginInfo);
+            this.user.loginInfo = loginInfo;
           }
         })
       }
@@ -329,13 +317,9 @@ export class AppComponent implements OnInit {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
-    this.api.logout().subscribe(res => {
-      if (res.okay) {
-        this.userName = 'LogIn';
-        this.isLogIn = res.data.logged_in;
-        this.userMenu = false;
-      }
-    })
+    this.userName = 'Login';
+    this.user.loginInfo = null;
+    this.userMenu = false;
   }
 
   openFollow(ev: Event, content: any) {

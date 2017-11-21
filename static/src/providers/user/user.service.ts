@@ -6,8 +6,27 @@ declare var cipher: Cipher;
 
 @Injectable()
 export class UserService {
-  private rootKey = 'skybbs_users'
+  private rootKey = 'skybbs_users';
+  private tmpUser = 'tmp_user';
+  loginInfo: { PublicKey?: string, SecKey?: string, Seed?: string } = null;
   constructor() { }
+
+  setTmpItem(name, data: any) {
+    const item = { name: name, data: data, timestamp: new Date().getTime() + (86400000 * 7) }
+    localStorage.setItem(this.tmpUser, JSON.stringify(item));
+  }
+
+  getTmpItem() {
+    const item = localStorage.getItem(this.tmpUser);
+    if (item) {
+      if (item['timestamp'] < new Date().getTime()) {
+        localStorage.removeItem(this.tmpUser);
+        return null;
+      }
+      return item;
+    }
+    return null;
+  }
 
   setItem(key: string, data: any) {
     let orginData = this.getOrginData();

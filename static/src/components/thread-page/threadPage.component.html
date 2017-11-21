@@ -1,6 +1,16 @@
 <div class="container">
   <div class="card thread border-top-0 border-left-0 border-right-0" *ngIf="threadPage?.data?.thread?.body?.name != '' "
     [@flyInOut]>
+    <div class="vote-box">
+      <div class="vote-content">
+        <p><a href="javascript:void(0);" (click)="addThreadVote('1',$event)"><i class="fa fa-chevron-up" aria-hidden="true"></i></a></p>
+        <p>
+          <small>100k</small>
+          <!-- <i class="fa fa-circle" aria-hidden="true" style="transform:scale(.8)"></i> -->
+        </p>
+        <p><a href="javascript:void(0);" (click)="addThreadVote('-1',$event)"><i class="fa fa-chevron-down" aria-hidden="true"></i></a></p>
+      </div>
+    </div>
     <div class="content-box">
       <div class="other-block">
         <a href="javascript:void(0)" class="img-box">
@@ -22,10 +32,10 @@
           <p class="break-line body">{{threadPage?.data?.thread?.body?.body}}</p>
         </div>
       </div>
-      <div class="card-block">
-        <chip color="#e84737" icon="fa-sort-asc" text="up vote" [count]="threadPage?.data?.thread?.votes?.up_votes?.count" (click)="addThreadVote('1',$event)"></chip>
-        <chip color="#756e6e" icon="fa-sort-desc" text="down vote" [count]="threadPage?.data?.thread?.votes?.down_votes?.count" (click)="addThreadVote('-1',$event)"></chip>
-      </div>
+      <!-- <div class="card-block">
+        <chip color="#e84737" icon="fa-sort-asc" text="up vote" [count]="threadPage?.data?.thread?.votes?.up_votes?.count" ></chip>
+        <chip color="#756e6e" icon="fa-sort-desc" text="down vote" [count]="threadPage?.data?.thread?.votes?.down_votes?.count" ></chip>
+      </div> -->
     </div>
   </div>
   <!-- Posts Box -->

@@ -39,8 +39,22 @@ app-threadpage {
         }
       }
     }
+    .vote-box {
+      width: 5%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .vote-content {
+        p {
+          margin-bottom: .25rem;
+        }
+        a {
+          color: #999;
+        }
+      }
+    }
     .content-box {
-      width: 100%; // width: 95%;
+      width: 95%; // width: 95%;
       padding: 1rem;
       .other-block {
         display: flex;

@@ -11,7 +11,7 @@ import 'rxjs/add/operator/catch';
 export class ApiService {
   static userInfo: LoginSessionUser = null;
   static sig = '';
-  private version = 5;
+  version = 5;
   private baseUrl = '/api/';
   private adminUrl = this.baseUrl + 'admin/'
   private contentUrl = this.adminUrl + 'content/';
@@ -60,12 +60,12 @@ export class ApiService {
     return this.common.handlePost(this.toolUrl + 'sign', data);
   }
 
-  hashAndSign(jsonStr: string) {
+  hashAndSign(jsonStr, secret_key: string) {
     return this.hash(jsonStr).mergeMap(hashData => {
       if (hashData.okay) {
         const data = new FormData;
         data.append('hash', hashData.data.hash);
-        data.append('secret_key', ApiService.userInfo.secret_key);
+        data.append('secret_key', secret_key);
         return this.sig(data);
       }
     })
@@ -93,11 +93,12 @@ export class ApiService {
     return this.common.handlePost(this.baseUrl + 'get_board_page', data);
   }
 
-  submit(jsonStr, action: string) {
-    return this.hashAndSign(jsonStr).mergeMap(signData => {
-      if (signData.okay && ApiService.userInfo) {
+  submit(jsonStr, secret_key) {
+    return this.hashAndSign(jsonStr, secret_key).mergeMap(signData => {
+      console.log('signData:', signData);
+      if (signData.okay) {
         const data = new FormData();
-        data.append('type', this.version + ',' + action);
+        // data.append('type', this.version + ',' + action);
         data.append('body', jsonStr);
         data.append('sig', signData.data.sig);
         return this.common.handlePost(this.submissionUrl, data);
@@ -107,21 +108,21 @@ export class ApiService {
     })
   }
 
-  newThread(jsonStr: string) {
-    return this.submit(jsonStr, 'thread');
+  newThread(jsonStr: string, secret_key: string) {
+    return this.submit(jsonStr, secret_key);
   }
   // Thread Page
   getThreadpage(data: FormData) {
     return this.common.handlePost(this.baseUrl + 'get_thread_page', data);
   }
-  newPost(jsonStr: string) {
-    return this.submit(jsonStr, 'post');
+  newPost(jsonStr, secret_key: string) {
+    return this.submit(jsonStr, secret_key);
   }
-  addThreadVote(jsonStr: string) {
-    return this.submit(jsonStr, 'thread_vote');
+  addThreadVote(jsonStr, secret_key: string) {
+    return this.submit(jsonStr, secret_key);
   }
-  addPostVote(jsonStr: string) {
-    return this.submit(jsonStr, 'post_vote');
+  addPostVote(jsonStr, secret_key: string) {
+    return this.submit(jsonStr, secret_key);
   }
   // Other
   newUser(data: FormData) {

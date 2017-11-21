@@ -22,7 +22,8 @@ import {
   Popup,
   LoadingService,
   FollowPage,
-  FollowPageData
+  FollowPageData,
+  UserService
 } from '../../providers';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -106,7 +107,8 @@ export class ThreadPageComponent implements OnInit {
     private common: CommonService,
     private alert: Alert,
     private pop: Popup,
-    private loading: LoadingService) {
+    private loading: LoadingService,
+    private user: UserService) {
   }
 
   ngOnInit() {
@@ -114,7 +116,7 @@ export class ThreadPageComponent implements OnInit {
       this.boardKey = res['boardKey'];
       this.threadKey = res['thread_ref'];
       this.threadPk = res['thread_pk'];
-      this.open(this.boardKey, this.threadKey);
+      this.getThreadPage(this.boardKey, this.threadKey);
     });
     Observable.timer(10).subscribe(() => {
       this.pop.open(this.fab, { isDialog: false });
@@ -165,17 +167,16 @@ export class ThreadPageComponent implements OnInit {
     } else {
       this.threadPage.data.thread.votes.up_votes.count += 1;
     }
-    // const jsonStr = {
-    //   creator: ApiService.userInfo.public_key,
-    //   of_board: this.boardKey,
-    //   of_thread: this.threadKey,
-    //   mode: mode
-    // }
-    const data = new FormData();
-    data.append('board_public_key', this.boardKey);
-    data.append('thread_ref', this.threadKey);
-    data.append('mode', mode);
-    this.api.addOldThreadVote(data).subscribe(voteRes => {
+    const jsonStr = {
+      type: `${this.api.version},thread_vote`,
+      ts: new Date().getTime() * 1000000,
+      of_board: this.boardKey,
+      of_thread: this.threadKey,
+      value: mode,
+      creator: this.user.loginInfo.PublicKey,
+    };
+
+    this.api.submit(JSON.stringify(jsonStr), this.user.loginInfo.SecKey).subscribe(voteRes => {
       if (voteRes.okay) {
         this.threadPage.data.thread.votes = voteRes.data.votes;
       }
@@ -187,26 +188,29 @@ export class ThreadPageComponent implements OnInit {
       }
     })
   }
-  addUserVote(ev: Event, post: Post, mode: string) {
+  addUserVote(ev: Event, ofUser: string, mode: string) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
-    const data = new FormData();
-    data.append('board_public_key', this.boardKey);
-    data.append('user_public_key', post.body.creator);
-    data.append('mode', mode);
     this.loading.start();
-    this.api.addUserVote(data).subscribe(result => {
+    const jsonStr = {
+      type: `${this.api.version},user_vote`,
+      ts: new Date().getTime() * 1000000,
+      of_board: this.boardKey,
+      of_user: ofUser,
+      value: mode,
+      creator: this.user.loginInfo.PublicKey,
+    }
+    this.api.submit(JSON.stringify(jsonStr), this.user.loginInfo.SecKey).subscribe(result => {
       if (result.okay) {
-        // this.userFollow = result.data;
         this.userTag = '';
       }
       this.loading.close();
     }, err => {
       this.loading.close();
     })
-    post.creatorMenu = false;
   }
+
   addPostVote(mode: string, post: Post, ev: Event) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
@@ -226,16 +230,14 @@ export class ThreadPageComponent implements OnInit {
       post.votes.up_votes.count += 1;
     }
     const jsonStr = {
-      creator: ApiService.userInfo.public_key,
+      type: `${this.api.version},post_vote`,
+      ts: new Date().getTime() * 1000000,
       of_board: this.boardKey,
       of_thread: post.body.of_thread,
-      mode: mode
+      value: mode,
+      creator: this.user.loginInfo.PublicKey,
     }
-    const data = new FormData();
-    data.append('board_public_key', this.boardKey);
-    data.append('post_ref', post.body.of_thread);
-    data.append('mode', mode);
-    this.api.addOldPostVote(data).subscribe(res => {
+    this.api.submit(JSON.stringify(jsonStr), this.user.loginInfo.SecKey).subscribe(res => {
       console.log('add post vote: ', res);
       if (res.okay) {
         post.votes = res.data.votes;
@@ -248,41 +250,40 @@ export class ThreadPageComponent implements OnInit {
       }
     })
   }
+
   openReply(content) {
-    this.api.getSessionInfo().subscribe(info => {
-      if (info.data.logged_in) {
-        this.postForm.reset();
-        this.pop.open(content).result.then((result) => {
-          if (result) {
-            if (!this.postForm.valid) {
-              this.alert.error({ content: 'title and content can not be empty' });
-              return;
-            }
-            const jsonStr = {
-              name: this.postForm.get('name').value,
-              body: this.common.replaceHtmlEnter(this.postForm.get('body').value),
-              creator: ApiService.userInfo.public_key,
-              of_board: this.boardKey,
-              of_thread: this.threadKey
-            };
-            this.loading.start();
-            this.api.newPost(JSON.stringify(jsonStr)).subscribe((res: ThreadPage) => {
-              console.log('new post:', res);
-              if (res.okay) {
-                this.threadPage.data.posts = res.data.posts;
-                this.alert.success({ content: 'Added successfully' });
-                this.loading.close();
-              }
-            });
+    if (this.user.loginInfo) {
+      this.postForm.reset();
+      this.pop.open(content).result.then((result) => {
+        if (result) {
+          if (!this.postForm.valid) {
+            this.alert.error({ content: 'title and content can not be empty' });
+            return;
           }
-        }, err => {
-        });
-      } else {
-        this.alert.warning({ content: 'Please Login at first' });
-      }
-    });
-
-
+          const jsonStr = {
+            type: `${this.api.version},post`,
+            name: this.postForm.get('name').value,
+            body: this.common.replaceHtmlEnter(this.postForm.get('body').value),
+            creator: this.user.loginInfo.PublicKey,
+            ts: new Date().getTime() * 1000000,
+            of_board: this.boardKey,
+            of_thread: this.threadKey
+          };
+          this.loading.start();
+          this.api.submit(JSON.stringify(jsonStr), this.user.loginInfo.SecKey).subscribe((res: ThreadPage) => {
+            console.log('new post:', res);
+            if (res.okay) {
+              this.threadPage.data.posts = res.data.posts;
+              this.alert.success({ content: 'Added successfully' });
+              this.loading.close();
+            }
+          });
+        }
+      }, err => {
+      });
+    } else {
+      this.alert.warning({ content: 'Please Login at first' });
+    }
   }
   PostAuthorMenu(post: Post, ev: Event) {
     ev.stopImmediatePropagation();
@@ -294,7 +295,7 @@ export class ThreadPageComponent implements OnInit {
       post.uiOptions.menu = !post.uiOptions.menu;
     }
   }
-  open(boardKey, ref: string) {
+  getThreadPage(boardKey, ref: string) {
     if (boardKey === '' || ref === '') {
       this.alert.error({ content: 'Parameter error!!!' });
       return;
@@ -303,7 +304,6 @@ export class ThreadPageComponent implements OnInit {
     data.append('board_public_key', boardKey);
     data.append('thread_ref', ref);
     this.api.getThreadpage(data).subscribe(res => {
-      console.log('res: ', res);
       this.threadPage = res;
     }, err => {
       // this.router.navigate(['']);

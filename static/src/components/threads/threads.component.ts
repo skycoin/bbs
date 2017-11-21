@@ -1,5 +1,5 @@
 import { Component, EventEmitter, HostBinding, OnInit, Output, ViewEncapsulation, ViewChild, TemplateRef } from '@angular/core';
-import { ApiService, Board, CommonService, Thread, Alert, BoardPage, Popup, ThreadSubmission } from '../../providers';
+import { ApiService, Board, CommonService, Thread, Alert, BoardPage, Popup, ThreadSubmission, UserService } from '../../providers';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { slideInLeftAnimation } from '../../animations/router.animations';
@@ -40,7 +40,8 @@ export class ThreadsComponent implements OnInit {
     private route: ActivatedRoute,
     private common: CommonService,
     private alert: Alert,
-    private pop: Popup) {
+    private pop: Popup,
+    private user: UserService) {
   }
 
   ngOnInit() {
@@ -71,6 +72,7 @@ export class ThreadsComponent implements OnInit {
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
     this.api.getBoardPage(data).subscribe((res: BoardPage) => {
+      console.log('board page:', res);
       this.board = res.data.board;
       this.threads = res.data.threads;
     }, err => {
@@ -86,35 +88,34 @@ export class ThreadsComponent implements OnInit {
   }
 
   openAdd(content) {
-    this.api.getSessionInfo().subscribe(info => {
-      if (info.data.logged_in) {
-        this.addForm.reset();
-        this.pop.open(content).result.then((result) => {
-          if (result) {
-            if (!this.addForm.valid) {
-              this.alert.error({ content: 'Parameter error!!!' });
-              return;
-            }
-            const data = new FormData();
-            const jsonStr = {
-              name: this.addForm.get('name').value,
-              body: this.common.replaceHtmlEnter(this.addForm.get('body').value),
-              created: new Date().getMilliseconds(),
-              creator: ApiService.userInfo.public_key,
-              of_board: this.boardKey
-            };
-            this.api.newThread(JSON.stringify(jsonStr)).subscribe(res => {
-              this.threads = res.data.threads;
-              this.alert.success({ content: 'Added successfully' });
-            })
+    if (this.user.loginInfo) {
+      this.addForm.reset();
+      this.pop.open(content).result.then((result) => {
+        if (result) {
+          if (!this.addForm.valid) {
+            this.alert.error({ content: 'Parameter error!!!' });
+            return;
           }
-        }, err => {
-        });
-      } else {
-        this.alert.warning({ content: 'Please Login' });
-      }
-    })
-
+          // get user data
+          const data = new FormData();
+          const jsonStr = {
+            type: `${this.api.version},thread`,
+            name: this.addForm.get('name').value,
+            body: this.common.replaceHtmlEnter(this.addForm.get('body').value),
+            ts: new Date().getTime() * 1000000,
+            creator: this.user.loginInfo.PublicKey,
+            of_board: this.boardKey
+          };
+          this.api.newThread(JSON.stringify(jsonStr), this.user.loginInfo.SecKey).subscribe(res => {
+            this.threads = res.data.threads;
+            this.alert.success({ content: 'Added successfully' });
+          })
+        }
+      }, err => {
+      });
+    } else {
+      this.alert.warning({ content: 'Please Login' });
+    }
   }
 
   open(ref, pk: string) {
