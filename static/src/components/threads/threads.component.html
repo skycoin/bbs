@@ -6,7 +6,7 @@
     </div>
   </div>
   <div class="container">
-    <div class="card" (click)="open(thread?.header?.hash,thread?.header?.pk)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
+    <div class="card" (click)="open(thread?.header?.hash)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
       <div class="card-block">
         <div class="row card-top">
           <div class="col">

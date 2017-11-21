@@ -118,12 +118,12 @@ export class ThreadsComponent implements OnInit {
     }
   }
 
-  open(ref, pk: string) {
+  open(ref: string) {
     if (this.boardKey === '' || ref === '') {
       this.alert.error({ content: 'Parameter error!!!' });
       return;
     }
-    this.router.navigate(['/threads/p'], { queryParams: { boardKey: this.boardKey, thread_ref: ref, thread_pk: pk } });
+    this.router.navigate(['/threads/p'], { queryParams: { boardKey: this.boardKey, thread_ref: ref} });
   }
 
   openImport(ev: Event, threadKey: string, content: any) {

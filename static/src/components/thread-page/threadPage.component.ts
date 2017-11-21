@@ -23,7 +23,8 @@ import {
   LoadingService,
   FollowPage,
   FollowPageData,
-  UserService
+  UserService,
+  Votes
 } from '../../providers';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -50,7 +51,6 @@ export class ThreadPageComponent implements OnInit {
   sort = 'esc';
   boardKey = '';
   threadKey = '';
-  threadPk = '';
   threadPage: ThreadPage;
   postForm = new FormGroup({
     name: new FormControl('', Validators.required),
@@ -58,6 +58,8 @@ export class ThreadPageComponent implements OnInit {
   });
   showUserInfoMenu = false;
   userTag = '';
+  threadVoteStyle = '';
+  postVoteStyle = '';
   editorOptions = {
     placeholderText: 'Edit Your Content Here!',
     quickInsertButtons: ['table', 'ul', 'ol', 'hr'],
@@ -115,7 +117,6 @@ export class ThreadPageComponent implements OnInit {
     this.route.queryParams.subscribe(res => {
       this.boardKey = res['boardKey'];
       this.threadKey = res['thread_ref'];
-      this.threadPk = res['thread_pk'];
       this.getThreadPage(this.boardKey, this.threadKey);
     });
     Observable.timer(10).subscribe(() => {
@@ -152,20 +153,35 @@ export class ThreadPageComponent implements OnInit {
   trackPosts(index, post: Post) {
     return post ? post.header.hash : undefined;
   }
-  addThreadVote(mode: string, ev: Event) {
+
+  countVote(votes: Votes) {
+    if (votes) {
+      const num = votes.up_votes.count - votes.down_votes.count;
+      if (num < 1000) {
+        return num;
+      }
+      return (num / 1000) + 'k'
+    }
+    return null;
+  }
+
+  addThreadVote(mode: number, ev: Event) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
+    // Init Thread Votes
     if (!this.threadPage.data.thread.votes) {
       this.threadPage.data.thread.votes = {
         up_votes: { count: 0, voted: false },
         down_votes: { count: 0, voted: false }
       }
     }
-    if (mode === '-1') {
-      this.threadPage.data.thread.votes.down_votes.count += 1;
-    } else {
+    if (mode > 0) {
+      this.threadVoteStyle = 'up-vote';
       this.threadPage.data.thread.votes.up_votes.count += 1;
+    } else {
+      this.threadVoteStyle = 'down-vote';
+      this.threadPage.data.thread.votes.down_votes.count += 1;
     }
     const jsonStr = {
       type: `${this.api.version},thread_vote`,
@@ -181,10 +197,11 @@ export class ThreadPageComponent implements OnInit {
         this.threadPage.data.thread.votes = voteRes.data.votes;
       }
     }, err => {
-      if (mode === '-1') {
-        this.threadPage.data.thread.votes.down_votes.count -= 1;
+      this.threadVoteStyle = '';
+      if (mode > 0) {
+        this.threadPage.data.thread.votes.up_votes.count += 1;
       } else {
-        this.threadPage.data.thread.votes.up_votes.count -= 1;
+        this.threadPage.data.thread.votes.down_votes.count += 1;
       }
     })
   }
@@ -211,7 +228,7 @@ export class ThreadPageComponent implements OnInit {
     })
   }
 
-  addPostVote(mode: string, post: Post, ev: Event) {
+  addPostVote(mode: number, post: Post, ev: Event) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     post.voteMenu = false;
@@ -224,16 +241,20 @@ export class ThreadPageComponent implements OnInit {
         down_votes: { count: 0, voted: false }
       }
     }
-    if (mode === '-1') {
-      post.votes.down_votes.count += 1;
-    } else {
+    console.log('test post:', post);
+    if (mode > 0) {
+      this.postVoteStyle = 'up-vote';
       post.votes.up_votes.count += 1;
+    } else {
+      this.postVoteStyle = 'down-vote';
+      post.votes.down_votes.count += 1;
     }
     const jsonStr = {
       type: `${this.api.version},post_vote`,
       ts: new Date().getTime() * 1000000,
       of_board: this.boardKey,
       of_thread: post.body.of_thread,
+      of_post: post.header.hash,
       value: mode,
       creator: this.user.loginInfo.PublicKey,
     }
@@ -243,10 +264,11 @@ export class ThreadPageComponent implements OnInit {
         post.votes = res.data.votes;
       }
     }, err => {
-      if (mode === '-1') {
-        post.votes.down_votes.count -= 1;
+      this.postVoteStyle = '';
+      if (mode > 0) {
+        post.votes.up_votes.count += 1;
       } else {
-        post.votes.up_votes.count -= 1;
+        post.votes.down_votes.count += 1;
       }
     })
   }

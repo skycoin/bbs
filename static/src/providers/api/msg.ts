@@ -81,12 +81,12 @@ export interface VotesSummary {
 }
 export interface PostBody {
   name?: string;
-  body?: string;
   creator?: string;
-  created?: number;
+  body?: string;
   of_board?: string;
   of_thread?: string;
-
+  ts?: number;
+  type?: string;
 }
 export interface Post {
   body?: PostBody;

@@ -38,6 +38,26 @@ app-threadpage {
           display: block;
         }
       }
+      .up-vote {
+        .up {
+          a {
+            color: #dc2828;
+          }
+        }
+        .mid {
+          color: #dc2828;
+        }
+      }
+      .down-vote {
+        .mid {
+          color: #dc2828;
+        }
+        .down {
+          a {
+            color: #dc2828;
+          }
+        }
+      }
     }
     .vote-box {
       width: 5%;
