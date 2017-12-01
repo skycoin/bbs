@@ -87,5 +87,6 @@ func GetTags(v string) ([]string, error) {
 		}
 	}
 	log.Println("GetTags(v string) got:", tags)
+
 	return tags, nil
 }
