@@ -14,17 +14,17 @@ type PrepareOut struct {
 }
 
 type PrepareThreadIn struct {
-	BoardPubKeyStr   string
-	Name             string
-	Body             string
-	CreatorPubKeyStr string
-	CreatorPubKey    cipher.PubKey
-	Data             *object.Body
+	OfBoardStr    string
+	Name          string
+	Body          string
+	CreatorStr    string
+	CreatorPubKey cipher.PubKey
+	Data          *object.Body
 }
 
 func (a *PrepareThreadIn) Process() error {
 	var e error
-	if _, e = tag.GetPubKey(a.BoardPubKeyStr); e != nil {
+	if _, e = tag.GetPubKey(a.OfBoardStr); e != nil {
 		return ErrProcess(e, "board public key")
 	}
 	if e = tag.CheckName(a.Name); e != nil {
@@ -33,42 +33,42 @@ func (a *PrepareThreadIn) Process() error {
 	if e = tag.CheckBody(a.Body); e != nil {
 		return ErrProcess(e, "body")
 	}
-	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorPubKeyStr); e != nil {
+	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorStr); e != nil {
 		return ErrProcess(e, "creator public key")
 	}
 	a.Data = &object.Body{
 		Type:    object.V5ThreadType,
 		TS:      time.Now().UnixNano(),
-		OfBoard: a.BoardPubKeyStr,
+		OfBoard: a.OfBoardStr,
 		Name:    a.Name,
 		Body:    a.Body,
-		Creator: a.CreatorPubKeyStr,
+		Creator: a.CreatorStr,
 	}
 	return nil
 }
 
 type PreparePostIn struct {
-	BoardPubKeyStr   string
-	ThreadHashStr    string
-	PostHashStr      string
-	Name             string
-	Body             string
-	ImagesStr        string
-	CreatorPubKeyStr string
-	CreatorPubKey    cipher.PubKey
-	Data             *object.Body
+	OfBoardStr    string
+	OfThreadStr   string
+	OfPostStr     string
+	Name          string
+	Body          string
+	ImagesStr     string
+	CreatorStr    string
+	CreatorPubKey cipher.PubKey
+	Data          *object.Body
 }
 
 func (a *PreparePostIn) Process() error {
 	var e error
-	if _, e = tag.GetPubKey(a.BoardPubKeyStr); e != nil {
+	if _, e = tag.GetPubKey(a.OfBoardStr); e != nil {
 		return ErrProcess(e, "board public key")
 	}
-	if _, e = tag.GetHash(a.ThreadHashStr); e != nil {
+	if _, e = tag.GetHash(a.OfThreadStr); e != nil {
 		return ErrProcess(e, "thread hash")
 	}
-	if a.PostHashStr != "" {
-		if _, e := tag.GetHash(a.PostHashStr); e != nil {
+	if a.OfPostStr != "" {
+		if _, e := tag.GetHash(a.OfPostStr); e != nil {
 			return ErrProcess(e, "post hash")
 		}
 	}
@@ -84,39 +84,39 @@ func (a *PreparePostIn) Process() error {
 			return ErrProcess(e, "post images")
 		}
 	}
-	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorPubKeyStr); e != nil {
+	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorStr); e != nil {
 		return ErrProcess(e, "creator's public key")
 	}
 	a.Data = &object.Body{
 		Type:     object.V5PostType,
 		TS:       time.Now().UnixNano(),
-		OfBoard:  a.BoardPubKeyStr,
-		OfThread: a.ThreadHashStr,
-		OfPost:   a.PostHashStr,
+		OfBoard:  a.OfBoardStr,
+		OfThread: a.OfThreadStr,
+		OfPost:   a.OfPostStr,
 		Name:     a.Name,
 		Body:     a.Body,
 		Images:   images,
-		Creator:  a.CreatorPubKeyStr,
+		Creator:  a.CreatorStr,
 	}
 	return nil
 }
 
 type PrepareThreadVoteIn struct {
-	BoardPubKeyStr   string
-	ThreadHashStr    string
-	ValueStr         string
-	TagsStr          string
-	CreatorPubKeyStr string
-	CreatorPubKey    cipher.PubKey
-	Data             *object.Body
+	OfBoardStr    string
+	OfThreadStr   string
+	ValueStr      string
+	TagsStr       string
+	CreatorStr    string
+	CreatorPubKey cipher.PubKey
+	Data          *object.Body
 }
 
 func (a *PrepareThreadVoteIn) Process() error {
 	var e error
-	if _, e = tag.GetPubKey(a.BoardPubKeyStr); e != nil {
+	if _, e = tag.GetPubKey(a.OfBoardStr); e != nil {
 		return ErrProcess(e, "board public key")
 	}
-	if _, e = tag.GetHash(a.ThreadHashStr); e != nil {
+	if _, e = tag.GetHash(a.OfThreadStr); e != nil {
 		return ErrProcess(e, "thread hash")
 	}
 	var value int8
@@ -127,37 +127,37 @@ func (a *PrepareThreadVoteIn) Process() error {
 	if tags, e = tag.GetTags(a.TagsStr); e != nil {
 		return ErrProcess(e, "vote tags")
 	}
-	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorPubKeyStr); e != nil {
+	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorStr); e != nil {
 		return ErrProcess(e, "creator's public key")
 	}
 	a.Data = &object.Body{
 		Type:     object.V5ThreadVoteType,
 		TS:       time.Now().UnixNano(),
-		OfBoard:  a.BoardPubKeyStr,
-		OfThread: a.ThreadHashStr,
+		OfBoard:  a.OfBoardStr,
+		OfThread: a.OfThreadStr,
 		Value:    int(value),
 		Tags:     tags,
-		Creator:  a.CreatorPubKeyStr,
+		Creator:  a.CreatorStr,
 	}
 	return nil
 }
 
 type PreparePostVoteIn struct {
-	BoardPubKeyStr   string
-	PostHashStr      string
-	ValueStr         string
-	TagsStr          string
-	CreatorPubKeyStr string
-	CreatorPubKey    cipher.PubKey
-	Data             *object.Body
+	OfBoardStr    string
+	OfPostStr     string
+	ValueStr      string
+	TagsStr       string
+	CreatorStr    string
+	CreatorPubKey cipher.PubKey
+	Data          *object.Body
 }
 
 func (a *PreparePostVoteIn) Process() error {
 	var e error
-	if _, e = tag.GetPubKey(a.BoardPubKeyStr); e != nil {
+	if _, e = tag.GetPubKey(a.OfBoardStr); e != nil {
 		return ErrProcess(e, "board public key")
 	}
-	if _, e = tag.GetHash(a.PostHashStr); e != nil {
+	if _, e = tag.GetHash(a.OfPostStr); e != nil {
 		return ErrProcess(e, "post hash")
 	}
 	var value int8
@@ -168,37 +168,37 @@ func (a *PreparePostVoteIn) Process() error {
 	if tags, e = tag.GetTags(a.TagsStr); e != nil {
 		return ErrProcess(e, "vote tags")
 	}
-	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorPubKeyStr); e != nil {
+	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorStr); e != nil {
 		return ErrProcess(e, "creator's public key")
 	}
 	a.Data = &object.Body{
 		Type:    object.V5ThreadVoteType,
 		TS:      time.Now().UnixNano(),
-		OfBoard: a.BoardPubKeyStr,
-		OfPost:  a.PostHashStr,
+		OfBoard: a.OfBoardStr,
+		OfPost:  a.OfPostStr,
 		Value:   int(value),
 		Tags:    tags,
-		Creator: a.CreatorPubKeyStr,
+		Creator: a.CreatorStr,
 	}
 	return nil
 }
 
 type PrepareUserVoteIn struct {
-	BoardPubKeyStr   string
-	UserPubKeyStr    string
-	ValueStr         string
-	TagsStr          string
-	CreatorPubKeyStr string
-	CreatorPubKey    cipher.PubKey
-	Data             *object.Body
+	OfBoardStr    string
+	OfUserStr     string
+	ValueStr      string
+	TagsStr       string
+	CreatorStr    string
+	CreatorPubKey cipher.PubKey
+	Data          *object.Body
 }
 
 func (a *PrepareUserVoteIn) Process() error {
 	var e error
-	if _, e = tag.GetPubKey(a.BoardPubKeyStr); e != nil {
+	if _, e = tag.GetPubKey(a.OfBoardStr); e != nil {
 		return ErrProcess(e, "board public key")
 	}
-	if _, e = tag.GetPubKey(a.UserPubKeyStr); e != nil {
+	if _, e = tag.GetPubKey(a.OfUserStr); e != nil {
 		return ErrProcess(e, "user public key")
 	}
 	var value int8
@@ -209,17 +209,17 @@ func (a *PrepareUserVoteIn) Process() error {
 	if tags, e = tag.GetTags(a.TagsStr); e != nil {
 		return ErrProcess(e, "vote tags")
 	}
-	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorPubKeyStr); e != nil {
+	if a.CreatorPubKey, e = tag.GetPubKey(a.CreatorStr); e != nil {
 		return ErrProcess(e, "creator's public key")
 	}
 	a.Data = &object.Body{
 		Type:    object.V5ThreadVoteType,
 		TS:      time.Now().UnixNano(),
-		OfBoard: a.BoardPubKeyStr,
-		OfUser:  a.UserPubKeyStr,
+		OfBoard: a.OfBoardStr,
+		OfUser:  a.OfUserStr,
 		Value:   int(value),
 		Tags:    tags,
-		Creator: a.CreatorPubKeyStr,
+		Creator: a.CreatorStr,
 	}
 	return nil
 }
