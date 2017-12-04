@@ -24,14 +24,8 @@ func (g *Gateway) host(mux *http.ServeMux) error {
 	// For tools.
 	RegisterToolsHandlers(mux, g)
 
-	// Submits content.
-	mux.HandleFunc("/api/new_submission",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.SubmitContent(r.Context(), &store.SubmissionIn{
-				Body:   []byte(r.FormValue("body")),
-				SigStr: r.FormValue("sig"),
-			}))
-		})
+	// For submission.
+	RegisterSubmissionHandlers(mux, g)
 
 	// Gets a list of boards; remote and master (boards that this node owns).
 	mux.HandleFunc("/api/get_boards",

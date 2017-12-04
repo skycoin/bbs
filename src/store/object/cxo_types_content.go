@@ -55,6 +55,11 @@ func NewBody(raw []byte) (*Body, error) {
 	return out, nil
 }
 
+func (c *Body) ToRaw() (cipher.SHA256, []byte) {
+	raw, _ := json.Marshal(c)
+	return cipher.SumSHA256(raw), raw
+}
+
 func (c *Body) GetOfBoard() (cipher.PubKey, error) {
 	if pk, e := tag.GetPubKey(c.OfBoard); e != nil {
 		return pk, errGetFromBody(e, "of_board")

@@ -7,6 +7,7 @@ import (
 	"github.com/skycoin/bbs/src/rpc"
 	"github.com/skycoin/bbs/src/store"
 	"github.com/skycoin/bbs/src/store/cxo"
+	"github.com/skycoin/bbs/src/store/medial"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/browser"
 	"github.com/skycoin/skycoin/src/util/file"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -125,6 +127,10 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 							UpdateInterval: &compilerInternal,
 						},
 					),
+					Medial: medial.NewServer(&medial.ServerConfig{
+						GarbageCollectionInterval: time.Minute,
+						ItemTimeoutInterval:       time.Minute * 3,
+					}),
 				},
 				QuitChan: quit,
 			},

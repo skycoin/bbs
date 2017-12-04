@@ -5,6 +5,7 @@ import (
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/typ"
 	"github.com/skycoin/bbs/src/store/cxo"
+	"github.com/skycoin/bbs/src/store/medial"
 	"github.com/skycoin/bbs/src/store/object"
 	"github.com/skycoin/bbs/src/store/state"
 	"github.com/skycoin/skycoin/src/util/file"
@@ -15,7 +16,135 @@ import (
 )
 
 type Access struct {
-	CXO *cxo.Manager
+	CXO    *cxo.Manager
+	Medial *medial.Server
+}
+
+func (a *Access) PrepareThread(ctx context.Context, in *PrepareThreadIn) (*PrepareOut, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	if hash, raw, e := a.Medial.Add(in.CreatorPubKey, in.Data); e != nil {
+		return nil, e
+	} else {
+		return &PrepareOut{
+			Hash: hash.Hex(),
+			Raw:  string(raw),
+		}, nil
+	}
+}
+
+func (a *Access) PreparePost(ctx context.Context, in *PreparePostIn) (*PrepareOut, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	if hash, raw, e := a.Medial.Add(in.CreatorPubKey, in.Data); e != nil {
+		return nil, e
+	} else {
+		return &PrepareOut{
+			Hash: hash.Hex(),
+			Raw:  string(raw),
+		}, nil
+	}
+}
+
+func (a *Access) PrepareThreadVote(ctx context.Context, in *PrepareThreadVoteIn) (*PrepareOut, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	if hash, raw, e := a.Medial.Add(in.CreatorPubKey, in.Data); e != nil {
+		return nil, e
+	} else {
+		return &PrepareOut{
+			Hash: hash.Hex(),
+			Raw:  string(raw),
+		}, nil
+	}
+}
+
+func (a *Access) PreparePostVote(ctx context.Context, in *PreparePostVoteIn) (*PrepareOut, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	if hash, raw, e := a.Medial.Add(in.CreatorPubKey, in.Data); e != nil {
+		return nil, e
+	} else {
+		return &PrepareOut{
+			Hash: hash.Hex(),
+			Raw:  string(raw),
+		}, nil
+	}
+}
+
+func (a *Access) PrepareUserVote(ctx context.Context, in *PrepareUserVoteIn) (*PrepareOut, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+	if hash, raw, e := a.Medial.Add(in.CreatorPubKey, in.Data); e != nil {
+		return nil, e
+	} else {
+		return &PrepareOut{
+			Hash: hash.Hex(),
+			Raw:  string(raw),
+		}, nil
+	}
+}
+
+func (a *Access) FinalizeSubmission(ctx context.Context, in *FinalizeSubmissionIn) (interface{}, error) {
+	if e := in.Process(); e != nil {
+		return nil, e
+	}
+
+	raw, e := a.Medial.Satisfy(in.Hash, in.Sig)
+	if e != nil {
+		return nil, e
+	}
+
+	transport, e := object.NewTransport(raw, in.Sig)
+	if e != nil {
+		return nil, e
+	}
+
+	bi, e := submitAndWait(ctx, a, transport)
+	if e != nil {
+		return nil, e
+	}
+
+	switch transport.Body.Type {
+	case object.V5ThreadType:
+		return bi.Viewer().GetBoardPage(&state.BoardPageIn{
+			Perspective:    transport.Body.Creator,
+			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
+		})
+
+	case object.V5PostType:
+		return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
+			Perspective:    transport.Body.Creator,
+			ThreadHash:     transport.Body.OfThread,
+			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
+		})
+
+	case object.V5ThreadVoteType:
+		return bi.Viewer().GetVotes(&state.ContentVotesIn{
+			Perspective: transport.Body.Creator,
+			ContentHash: transport.Body.OfThread,
+		})
+
+	case object.V5PostVoteType:
+		return bi.Viewer().GetVotes(&state.ContentVotesIn{
+			Perspective: transport.Body.Creator,
+			ContentHash: transport.Body.OfPost,
+		})
+
+	case object.V5UserVoteType:
+		return bi.Viewer().GetUserProfile(&state.UserProfileIn{
+			UserPubKey: transport.Body.Creator,
+		})
+
+	default:
+		return nil, boo.Newf(boo.InvalidInput,
+			"content submission of type '%s' is invalid", transport.Body.Type)
+	}
 }
 
 func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface{}, error) {
@@ -32,10 +161,6 @@ func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface
 	if e != nil {
 		return nil, e
 	}
-
-
-
-	transport.Content.ToRep()
 
 	switch transport.Body.Type {
 	case object.V5ThreadType:
