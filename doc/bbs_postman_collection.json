@@ -17,7 +17,7 @@
 						"header": [],
 						"body": {},
 						"url": {
-							"raw": "http://127.0.0.1:7410/api/tools/new_seed",
+							"raw": "http://127.0.0.1:8080/api/tools/new_seed",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -25,7 +25,7 @@
 								"0",
 								"1"
 							],
-							"port": "7410",
+							"port": "8080",
 							"path": [
 								"api",
 								"tools",
@@ -46,7 +46,7 @@
 							"formdata": [
 								{
 									"key": "seed",
-									"value": "c",
+									"value": "user",
 									"description": "Seed to generate key pair with. If left empty, a random key pair will be generated.",
 									"type": "text"
 								}
@@ -89,7 +89,7 @@
 							]
 						},
 						"url": {
-							"raw": "http://127.0.0.1:7410/api/tools/hash_string",
+							"raw": "http://127.0.0.1:8080/api/tools/hash_string",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -97,7 +97,7 @@
 								"0",
 								"1"
 							],
-							"port": "7410",
+							"port": "8080",
 							"path": [
 								"api",
 								"tools",
@@ -118,13 +118,13 @@
 							"formdata": [
 								{
 									"key": "hash",
-									"value": "977c140aeb453b5935a16512e5f9617fe8b49838473696c5ad285c6659841129",
+									"value": "aa3cae8136d9b669194687b1c1199c00c710e7a466d75d1a9a9b991b75a1eec0",
 									"description": "SHA256 hash to be signed (Hex representation).",
 									"type": "text"
 								},
 								{
 									"key": "secret_key",
-									"value": "69eb49ceac75c3e0993395ecf25730578499f8091a935a59452f9fef7115dd4d",
+									"value": "8705518acec973239f704aa1bdbf7f5300f006682d8f6b435976e49c8b62aab0",
 									"description": "Secret key to sig with (Hex representation).",
 									"type": "text"
 								}
@@ -144,6 +144,357 @@
 								"api",
 								"tools",
 								"sign"
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Submission",
+			"description": "In regards to submitting content via the thin client.\n\nThe preparation and finalization steps are included.",
+			"item": [
+				{
+					"name": "(Legacy) New Submission",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "body",
+									"value": "{\"type\":\"5,user_vote\",\"ts\":12345,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_user\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"value\":1,\"tags\":[\"trust\"],\"creator\":\"02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1\"}",
+									"description": "Data body that is being submitted (best to keep the form with less whitespace).",
+									"type": "text"
+								},
+								{
+									"key": "sig",
+									"value": "79d086bedc2757bc3572c6aa9c29d518b36356d3879a1f171dc01e753be159e14ae80e24d42adb97147775407b8fe6c98278e8ee75008122f1c80c0429dd179a01",
+									"description": "Signature of body.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:7410/api/new_submission",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "7410",
+							"path": [
+								"api",
+								"new_submission"
+							]
+						},
+						"description": "When user session management is implemented client-side, and the BBS node serves a website that is exposed publicly, this endpoint will be used for submitting content to boards."
+					},
+					"response": [
+						{
+							"id": "fc3e85ba-a05a-4310-9123-14296813fd2a",
+							"name": "New Thread",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "body",
+											"value": "{\"type\":\"5,thread\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"ts\":123435,\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
+											"description": "Data body that is being submitted (best to keep the form with less whitespace).",
+											"type": "text"
+										},
+										{
+											"key": "sig",
+											"value": "086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700",
+											"description": "Signature of body.",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://127.0.0.1:7410/api/new_submission",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "7410",
+									"path": [
+										"api",
+										"new_submission"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Content-Length",
+									"value": "826",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 08 Nov 2017 10:31:11 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								}
+							],
+							"cookie": [],
+							"responseTime": 1021,
+							"body": "{\"okay\":true,\"data\":{\"board\":{\"public_key\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"header\":{},\"body\":{\"type\":\"5,board\",\"ts\":1510135351441649072,\"name\":\"Test Board\",\"body\":\"This is a test board.\",\"submission_keys\":[\"172.104.187.69:8080,027666f7b57821fe16c749470524ffa203511dbd93ff882ac0d25c13dc168bed87\"]}},\"threads\":[{\"header\":{\"hash\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"sig\":\"086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700\"},\"body\":{\"type\":\"5,thread\",\"ts\":123435,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}}]}}"
+						},
+						{
+							"id": "0b425bf9-794f-4717-98d1-e5a4dd84762f",
+							"name": "New Thread Vote",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "body",
+											"value": "{\"type\":\"5,thread_vote\",\"ts\":12345,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"value\":-1,\"tags\":[\"spam\",\"block\"],\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
+											"description": "Data body that is being submitted (best to keep the form with less whitespace).",
+											"type": "text"
+										},
+										{
+											"key": "sig",
+											"value": "2b43e55fdf4132cad2d96ae3d817f70e909eb21ff1200dfff63d6b1d57b57e1f016c2b8f1f5972854873044b3e2a2a3ba8ec49a8a904a026981629c9125d6f4e01",
+											"description": "Signature of body.",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://127.0.0.1:7410/api/new_submission",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "7410",
+									"path": [
+										"api",
+										"new_submission"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"key": "Content-Length",
+									"value": "180",
+									"name": "Content-Length",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "The mime type of this content"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 08 Nov 2017 10:38:22 GMT",
+									"name": "Date",
+									"description": "The date and time that the message was sent"
+								}
+							],
+							"cookie": [],
+							"responseTime": 1019,
+							"body": "{\"okay\":true,\"data\":{\"votes\":{\"ref\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"up_votes\":{\"voted\":false,\"count\":0},\"down_votes\":{\"voted\":true,\"count\":1}}}}"
+						}
+					]
+				},
+				{
+					"name": "Prepare Thread",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "of_board",
+									"value": "032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b",
+									"description": "public key of board to submit thread to",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Test Thread",
+									"description": "name of the thread to submit",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "This is a thread.",
+									"description": "body of the thread to submit",
+									"type": "text"
+								},
+								{
+									"key": "creator",
+									"value": "0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718",
+									"description": "public key of thread creator",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:7410/api/submission/prepare_thread",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "7410",
+							"path": [
+								"api",
+								"submission",
+								"prepare_thread"
+							]
+						},
+						"description": "Prepares a new thread submission. Returns a hash that needs to be signed and submitted to finalize submission."
+					},
+					"response": []
+				},
+				{
+					"name": "Finalize Submission",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "hash",
+									"value": "aa3cae8136d9b669194687b1c1199c00c710e7a466d75d1a9a9b991b75a1eec0",
+									"description": "hash of content that needs submission finalization",
+									"type": "text"
+								},
+								{
+									"key": "sig",
+									"value": "3de2e798550e88d34b99b77c186441c9a9f9933ba27b5393272e2ad434a1b4e303fd419fa9b50237bfd11fda24d2c7d680b0004d8c9640f9ce3d3ff0dbd1d68200",
+									"description": "signature of the hash, generated with the creator's private key",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:7410/api/submission/finalize",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "7410",
+							"path": [
+								"api",
+								"submission",
+								"finalize"
+							]
+						},
+						"description": "Finalizes a submission by submitting a signature of the content."
+					},
+					"response": []
+				},
+				{
+					"name": "Prepare Post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "of_board",
+									"value": "",
+									"description": "public key of board to submit post under",
+									"type": "text"
+								},
+								{
+									"key": "of_thread",
+									"value": "",
+									"description": "hash of thread to submit post under",
+									"type": "text"
+								},
+								{
+									"key": "of_post",
+									"value": "",
+									"description": "(optional) hash of post that this post replies (if this post is a reply)",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "",
+									"description": "name of this post",
+									"type": "text"
+								},
+								{
+									"key": "body",
+									"value": "",
+									"description": "body of this post",
+									"type": "text"
+								},
+								{
+									"key": "images",
+									"value": "",
+									"description": "(optional) images of this post",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "creator",
+									"value": "",
+									"description": "public key of the creator",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:7410/api/submission/prepare_post",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "7410",
+							"path": [
+								"api",
+								"submission",
+								"prepare_post"
 							]
 						},
 						"description": ""
@@ -201,7 +552,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:7410/api/get_board",
+					"raw": "http://127.0.0.1:8080/api/get_board",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -209,7 +560,7 @@
 						"0",
 						"1"
 					],
-					"port": "7410",
+					"port": "8080",
 					"path": [
 						"api",
 						"get_board"
@@ -243,7 +594,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:7410/api/get_board_page",
+					"raw": "http://127.0.0.1:8080/api/get_board_page",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -251,7 +602,7 @@
 						"0",
 						"1"
 					],
-					"port": "7410",
+					"port": "8080",
 					"path": [
 						"api",
 						"get_board_page"
@@ -291,7 +642,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:7410/api/get_thread_page",
+					"raw": "http://127.0.0.1:8080/api/get_thread_page",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -299,7 +650,7 @@
 						"0",
 						"1"
 					],
-					"port": "7410",
+					"port": "8080",
 					"path": [
 						"api",
 						"get_thread_page"
@@ -332,7 +683,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:7410/api/get_user_profile",
+					"raw": "http://127.0.0.1:8080/api/get_user_profile",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -340,7 +691,7 @@
 						"0",
 						"1"
 					],
-					"port": "7410",
+					"port": "8080",
 					"path": [
 						"api",
 						"get_user_profile"
@@ -367,7 +718,7 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:7410/api/get_participants",
+					"raw": "http://127.0.0.1:8080/api/get_participants",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -375,7 +726,7 @@
 						"0",
 						"1"
 					],
-					"port": "7410",
+					"port": "8080",
 					"path": [
 						"api",
 						"get_participants"
@@ -392,7 +743,7 @@
 				"header": [],
 				"body": {},
 				"url": {
-					"raw": "http://127.0.0.1:7410/api/get_available_boards",
+					"raw": "http://127.0.0.1:8080/api/get_available_boards",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -400,7 +751,7 @@
 						"0",
 						"1"
 					],
-					"port": "7410",
+					"port": "8080",
 					"path": [
 						"api",
 						"get_available_boards"
@@ -409,182 +760,6 @@
 				"description": "Gets a list of boards in which are avaliable for subscription."
 			},
 			"response": []
-		},
-		{
-			"name": "New Submission",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "formdata",
-					"formdata": [
-						{
-							"key": "body",
-							"value": "{\"type\":\"5,user_vote\",\"ts\":12345,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_user\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\",\"value\":1,\"tags\":[\"trust\"],\"creator\":\"02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1\"}",
-							"description": "Data body that is being submitted (best to keep the form with less whitespace).",
-							"type": "text"
-						},
-						{
-							"key": "sig",
-							"value": "79d086bedc2757bc3572c6aa9c29d518b36356d3879a1f171dc01e753be159e14ae80e24d42adb97147775407b8fe6c98278e8ee75008122f1c80c0429dd179a01",
-							"description": "Signature of body.",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "http://127.0.0.1:7410/api/new_submission",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "7410",
-					"path": [
-						"api",
-						"new_submission"
-					]
-				},
-				"description": "When user session management is implemented client-side, and the BBS node serves a website that is exposed publicly, this endpoint will be used for submitting content to boards."
-			},
-			"response": [
-				{
-					"id": "7c145312-ed00-4fbe-80ba-e575bd266fde",
-					"name": "New Thread",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "body",
-									"value": "{\"type\":\"5,thread\",\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"ts\":123435,\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
-									"description": "Data body that is being submitted (best to keep the form with less whitespace).",
-									"type": "text"
-								},
-								{
-									"key": "sig",
-									"value": "086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700",
-									"description": "Signature of body.",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://127.0.0.1:7410/api/new_submission",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "7410",
-							"path": [
-								"api",
-								"new_submission"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"_postman_previewtype": "text",
-					"header": [
-						{
-							"key": "Content-Length",
-							"value": "826",
-							"name": "Content-Length",
-							"description": "The length of the response body in octets (8-bit bytes)"
-						},
-						{
-							"key": "Content-Type",
-							"value": "application/json",
-							"name": "Content-Type",
-							"description": "The mime type of this content"
-						},
-						{
-							"key": "Date",
-							"value": "Wed, 08 Nov 2017 10:31:11 GMT",
-							"name": "Date",
-							"description": "The date and time that the message was sent"
-						}
-					],
-					"cookie": [],
-					"responseTime": 1021,
-					"body": "{\"okay\":true,\"data\":{\"board\":{\"public_key\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"header\":{},\"body\":{\"type\":\"5,board\",\"ts\":1510135351441649072,\"name\":\"Test Board\",\"body\":\"This is a test board.\",\"submission_keys\":[\"172.104.187.69:8080,027666f7b57821fe16c749470524ffa203511dbd93ff882ac0d25c13dc168bed87\"]}},\"threads\":[{\"header\":{\"hash\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"sig\":\"086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700\"},\"body\":{\"type\":\"5,thread\",\"ts\":123435,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}}]}}"
-				},
-				{
-					"id": "3912c7c3-c966-42d3-80c7-7c93c938415f",
-					"name": "New Thread Vote",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "body",
-									"value": "{\"type\":\"5,thread_vote\",\"ts\":12345,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"of_thread\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"value\":-1,\"tags\":[\"spam\",\"block\"],\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}",
-									"description": "Data body that is being submitted (best to keep the form with less whitespace).",
-									"type": "text"
-								},
-								{
-									"key": "sig",
-									"value": "2b43e55fdf4132cad2d96ae3d817f70e909eb21ff1200dfff63d6b1d57b57e1f016c2b8f1f5972854873044b3e2a2a3ba8ec49a8a904a026981629c9125d6f4e01",
-									"description": "Signature of body.",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://127.0.0.1:7410/api/new_submission",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "7410",
-							"path": [
-								"api",
-								"new_submission"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"_postman_previewtype": "text",
-					"header": [
-						{
-							"key": "Content-Length",
-							"value": "180",
-							"name": "Content-Length",
-							"description": "The length of the response body in octets (8-bit bytes)"
-						},
-						{
-							"key": "Content-Type",
-							"value": "application/json",
-							"name": "Content-Type",
-							"description": "The mime type of this content"
-						},
-						{
-							"key": "Date",
-							"value": "Wed, 08 Nov 2017 10:38:22 GMT",
-							"name": "Date",
-							"description": "The date and time that the message was sent"
-						}
-					],
-					"cookie": [],
-					"responseTime": 1019,
-					"body": "{\"okay\":true,\"data\":{\"votes\":{\"ref\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"up_votes\":{\"voted\":false,\"count\":0},\"down_votes\":{\"voted\":true,\"count\":1}}}}"
-				}
-			]
 		}
 	]
 }
