@@ -25,7 +25,7 @@ For the following examples, we will assume the following:
 | Public Key | `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718` |
 | Private Key | `8705518acec973239f704aa1bdbf7f5300f006682d8f6b435976e49c8b62aab0` |
 
-### Submit Thread Example
+### Thread Submission Example
 
 The first step is to submit to the thread preparation endpoint (`/api/submission/prepare_thread`):
 
@@ -110,7 +110,7 @@ What is returned here would be something of this appearance (if successful):
 }
 ```
 
-### Submit Post Example
+### Post Submission Example
 
 First the post preparation endpoint (`/api/submission/prepare_post`) is used with the following values:
 
@@ -208,3 +208,55 @@ On success, this returns something of this structure:
     }
 }
 ```
+
+### Thread Vote Submission Example
+
+We first use the thread-vote preparation endpoint (`/api/submission/prepare_thread_vote`) with the following values:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `of_board` | `032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b` | public key of board in which to submit thread vote |
+| `of_thread` | `dd3314649f162aeafbc6034f61d9ef70526543b8a398a72abb9065bef1f89fe3` | hash of thread to cast vote on |
+| `value` | `+1` | vote value (-1, 0, +1) |
+| `creator` | `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718` | public key of the creator of the thread vote |
+
+Thus returning:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "hash": "e9889e73b80853fd0a907037a84bdc11a5aa6892c1b6a09e2406c8dca7ade97a",
+        "raw": "{\"type\":\"5,thread_vote\",\"ts\":1512457522020970909,\"of_board\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\",\"of_thread\":\"dd3314649f162aeafbc6034f61d9ef70526543b8a398a72abb9065bef1f89fe3\",\"value\":1,\"creator\":\"0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718\"}"
+    }
+}
+```
+
+Which we can sign and submit to `/api/submission/finalize`:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `hash` | `e9889e73b80853fd0a907037a84bdc11a5aa6892c1b6a09e2406c8dca7ade97a` | hash of content that needs submission finalization |
+| `sig` | `d6b472b711f996cb85597b11c988cfe48fc3081c5ad4fe8d0be347bd4646c6911f61edb53615320da239ab167fc7a95b1f56a32e97302330fb44f7ab52b1715b01` | signature of the hash, generated with the creator's private key |
+
+Thus returning:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "votes": {
+            "ref": "dd3314649f162aeafbc6034f61d9ef70526543b8a398a72abb9065bef1f89fe3",
+            "up_votes": {
+                "voted": true,
+                "count": 1
+            },
+            "down_votes": {
+                "voted": false,
+                "count": 0
+            }
+        }
+    }
+}
+```
+
