@@ -1,10 +1,14 @@
 import { Component, OnInit, ViewEncapsulation, OnDestroy } from '@angular/core';
-import { ApiService, Conn, ConnData, ConnsResponse } from '../../service';
+import { ApiService, Conn, ConnData, ConnsResponse, UserService } from '../../service';
 import { DataSource } from '@angular/cdk/collections';
 import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subscription } from 'rxjs/Subscription';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material';
+import 'rxjs/add/observable/timer';
 import 'rxjs/add/operator/map';
+import { Subject } from 'rxjs/Subject';
 
 @Component({
   selector: 'app-dashboard',
@@ -13,19 +17,33 @@ import 'rxjs/add/operator/map';
   encapsulation: ViewEncapsulation.None
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  displayedColumns = ['index', 'status', 'key', 'send', 'recv', 'seen'];
-  dataSource: ExampleDataSource = null;
-  dataSize = 0;
-  refreshTask = null;
-  constructor(private api: ApiService, private snackBar: MatSnackBar, private router: Router) { }
+  displayedColumns = ['index', 'label', 'status', 'key', 'send', 'recv', 'seen'];
+  dataSource: ConnDataSource | null;
+  _database = new ConnDatabase(this.api);
+  labelObj = null;
+  constructor(private api: ApiService, private snackBar: MatSnackBar, private router: Router, private user: UserService) { }
   ngOnInit() {
-    this.refresh();
-    this.refreshTask = setInterval(() => {
-      this.refresh();
-    }, 5000);
+    this.dataSource = new ConnDataSource(this._database);
+    this.labelObj = this.user.get(this.user.HOMENODELABLE);
   }
   ngOnDestroy() {
     this.close();
+  }
+  editLabel(label: string, nodeKey: string) {
+    if (!label) {
+      return;
+    }
+    this.user.saveHomeLabel(nodeKey, label);
+    this.labelObj = this.user.get(this.user.HOMENODELABLE);
+  }
+  transportsNodeBy(index, node) {
+    return node ? node.key : undefined;
+  }
+  getLabel(key: string) {
+    if (this.labelObj) {
+      return this.labelObj[key] ? this.labelObj[key] : '';
+    }
+    return '';
   }
   status(ago: number) {
     const now = new Date().getTime() / 1000;
@@ -37,7 +55,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ev.stopPropagation();
       ev.preventDefault();
     }
-    this.dataSource = new ExampleDataSource(this.api);
+    this._database.refresh();
     if (ev) {
       this.snackBar.open('Refreshed', 'Dismiss', {
         duration: 3000,
@@ -57,38 +75,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['node'], { queryParams: { key: conn.key } });
   }
   close() {
-    clearInterval(this.refreshTask);
+    this._database.close();
   }
 }
-export class ExampleDataSource extends DataSource<any> {
-  size = 0;
+
+export class ConnDatabase {
+  /** Stream that emits whenever the data has been modified. */
+  dataChange: BehaviorSubject<Conn[]> = new BehaviorSubject<Conn[]>([]);
+  timer: any;
+  task = new Subject();
+  get data(): Conn[] { return this.dataChange.value; }
+
   constructor(private api: ApiService) {
-    super();
+    // Fill up the database with 100 users.
+    this.task.debounceTime(100).subscribe(() => {
+      this.GetConns();
+    });
+    this.timer = Observable.timer(0, 5000).subscribe(() => {
+      this.task.next();
+    });
   }
-  connect(): Observable<Conn[]> {
-    return this.api.getAllNode().map((conns: Array<Conn>) => {
+  close() {
+    this.timer.unsubscribe();
+  }
+  GetConns() {
+    this.api.getAllNode().map((conns: Array<Conn>) => {
       conns.sort((a, b) => {
-        if (a.start_time < b.start_time) {
-          return 1;
-        }
-        if (a.start_time > b.start_time) {
-          return -1;
-        }
-        if (a.start_time === b.start_time) {
+        if (a.key !== b.key) {
           return a.key.localeCompare(b.key);
+        } else {
+          if (a.start_time < b.start_time) {
+            return 1;
+          }
+          if (a.start_time > b.start_time) {
+            return -1;
+          }
+          return 0;
         }
       });
       return conns;
-      // const data: Array<ConnData> = [];
-      // conns.forEach((v, i) => {
-      //   data.push({
-      //     index: i,
-      //     key: v.key,
-
-      //   })
-      // });
-      // return data;
+    }).subscribe((conns: Array<Conn>) => {
+      this.dataChange.next(conns);
     });
+  }
+  refresh() {
+    this.GetConns();
+  }
+}
+
+
+export class ConnDataSource extends DataSource<any> {
+  size = 0;
+  constructor(private _database: ConnDatabase) {
+    super();
+  }
+  connect(): Observable<Conn[]> {
+    return this._database.dataChange;
   }
 
   disconnect() { }

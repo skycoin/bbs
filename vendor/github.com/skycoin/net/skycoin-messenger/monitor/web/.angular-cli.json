@@ -26,7 +26,9 @@
       "environments": {
         "dev": "environments/environment.ts",
         "manager": "environments/environment.manager.ts",
-        "discovery": "environments/environment.discovery.ts"
+        "discovery": "environments/environment.discovery.ts",
+        "manager-dev": "environments/environment.manager-dev.ts",
+        "discovery-dev": "environments/environment.discovery-dev.ts"
       }
     }
   ],

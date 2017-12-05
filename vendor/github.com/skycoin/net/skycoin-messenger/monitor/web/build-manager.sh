@@ -2,6 +2,7 @@
 
 source "./tool.sh"
 
+version=${1}
 sysOS=`uname -s`
 if [ $sysOS == "Darwin" ];then
 	inMac
@@ -13,5 +14,12 @@ else
 fi
 
 install
-rm -rf dist-manager
-buildManager
+[[ -d dist-manager ]] && rm -rf dist-manager
+if [[ ${version:=release} == "release" ]];then
+  buildManager
+elif [[ ${version:=release} == "dev" ]]
+then
+    buildManagerDev
+else
+    echo "no vesrions"
+fi
