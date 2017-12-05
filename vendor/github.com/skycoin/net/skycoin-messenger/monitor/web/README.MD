@@ -34,6 +34,12 @@ git clone https://github.com/skycoin/net.git
 cd net/skycoin-messenger/monitor/web
 ./build.sh
 ```
+## Build The Dev Discovery Web Files
+```bash
+git clone https://github.com/skycoin/net.git
+cd net/skycoin-messenger/monitor/web
+./build.sh dev
+```
 
 ## Build The Manager Web Files
 From your command line:
@@ -41,4 +47,12 @@ From your command line:
 git clone https://github.com/skycoin/net.git
 cd net/skycoin-messenger/monitor/web
 ./build-manager.sh
+```
+
+## Build The Dev Manager Web Files
+From your command line:
+```bash
+git clone https://github.com/skycoin/net.git
+cd net/skycoin-messenger/monitor/web
+./build-manager.sh dev
 ```

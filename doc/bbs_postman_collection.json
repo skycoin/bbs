@@ -197,7 +197,7 @@
 					},
 					"response": [
 						{
-							"id": "fc3e85ba-a05a-4310-9123-14296813fd2a",
+							"id": "d282be25-07c2-4ec8-808c-28bfb15c8d82",
 							"name": "New Thread",
 							"originalRequest": {
 								"method": "POST",
@@ -238,33 +238,32 @@
 							"status": "OK",
 							"code": 200,
 							"_postman_previewlanguage": "json",
-							"_postman_previewtype": "text",
 							"header": [
 								{
 									"key": "Content-Length",
 									"value": "826",
 									"name": "Content-Length",
-									"description": "The length of the response body in octets (8-bit bytes)"
+									"description": ""
 								},
 								{
 									"key": "Content-Type",
 									"value": "application/json",
 									"name": "Content-Type",
-									"description": "The mime type of this content"
+									"description": ""
 								},
 								{
 									"key": "Date",
 									"value": "Wed, 08 Nov 2017 10:31:11 GMT",
 									"name": "Date",
-									"description": "The date and time that the message was sent"
+									"description": ""
 								}
 							],
 							"cookie": [],
-							"responseTime": 1021,
+							"responseTime": "1021",
 							"body": "{\"okay\":true,\"data\":{\"board\":{\"public_key\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"header\":{},\"body\":{\"type\":\"5,board\",\"ts\":1510135351441649072,\"name\":\"Test Board\",\"body\":\"This is a test board.\",\"submission_keys\":[\"172.104.187.69:8080,027666f7b57821fe16c749470524ffa203511dbd93ff882ac0d25c13dc168bed87\"]}},\"threads\":[{\"header\":{\"hash\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"sig\":\"086cdca50071c75a5dbf3d82c202eb7b8edeef29f98a5ebd410145f0e79cd3a574394bcf4852b04f08d47587fa10f5abca6b3263d0b9ce106e45e53e0826343700\"},\"body\":{\"type\":\"5,thread\",\"ts\":123435,\"of_board\":\"02e5be89fa161bf6b0bc64ec9ec7fe27311fbb78949c3ef9739d4c73a84920d6e1\",\"name\":\"Test Thread\",\"body\":\"This is a test thread.\",\"creator\":\"035a630a621aa3483f87cb288438982d7ba8524302ed6f293f667e6d8c9fa369a7\"}}]}}"
 						},
 						{
-							"id": "0b425bf9-794f-4717-98d1-e5a4dd84762f",
+							"id": "8a7909d3-a358-4a8c-b468-7470caf27acc",
 							"name": "New Thread Vote",
 							"originalRequest": {
 								"method": "POST",
@@ -305,29 +304,28 @@
 							"status": "OK",
 							"code": 200,
 							"_postman_previewlanguage": "json",
-							"_postman_previewtype": "text",
 							"header": [
 								{
 									"key": "Content-Length",
 									"value": "180",
 									"name": "Content-Length",
-									"description": "The length of the response body in octets (8-bit bytes)"
+									"description": ""
 								},
 								{
 									"key": "Content-Type",
 									"value": "application/json",
 									"name": "Content-Type",
-									"description": "The mime type of this content"
+									"description": ""
 								},
 								{
 									"key": "Date",
 									"value": "Wed, 08 Nov 2017 10:38:22 GMT",
 									"name": "Date",
-									"description": "The date and time that the message was sent"
+									"description": ""
 								}
 							],
 							"cookie": [],
-							"responseTime": 1019,
+							"responseTime": "1019",
 							"body": "{\"okay\":true,\"data\":{\"votes\":{\"ref\":\"a3e3850c1dd3933ec44b9f93c42f6431d4d76933a8fb7e73b2e6d3706f8ee63b\",\"up_votes\":{\"voted\":false,\"count\":0},\"down_votes\":{\"voted\":true,\"count\":1}}}}"
 						}
 					]
@@ -383,48 +381,6 @@
 							]
 						},
 						"description": "Prepares a new thread submission. Returns a hash that needs to be signed and submitted to finalize submission."
-					},
-					"response": []
-				},
-				{
-					"name": "Finalize Submission",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "hash",
-									"value": "aa3cae8136d9b669194687b1c1199c00c710e7a466d75d1a9a9b991b75a1eec0",
-									"description": "hash of content that needs submission finalization",
-									"type": "text"
-								},
-								{
-									"key": "sig",
-									"value": "3de2e798550e88d34b99b77c186441c9a9f9933ba27b5393272e2ad434a1b4e303fd419fa9b50237bfd11fda24d2c7d680b0004d8c9640f9ce3d3ff0dbd1d68200",
-									"description": "signature of the hash, generated with the creator's private key",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://127.0.0.1:7410/api/submission/finalize",
-							"protocol": "http",
-							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
-							],
-							"port": "7410",
-							"path": [
-								"api",
-								"submission",
-								"finalize"
-							]
-						},
-						"description": "Finalizes a submission by submitting a signature of the content."
 					},
 					"response": []
 				},
@@ -497,7 +453,229 @@
 								"prepare_post"
 							]
 						},
-						"description": ""
+						"description": null
+					},
+					"response": []
+				},
+				{
+					"name": "Prepare Thread Vote",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "of_board",
+									"value": "",
+									"description": "public key of board in which to submit thread vote",
+									"type": "text"
+								},
+								{
+									"key": "of_thread",
+									"value": "",
+									"description": "hash of thread to vote on",
+									"type": "text"
+								},
+								{
+									"key": "value",
+									"value": "",
+									"description": "vote value (-1, 0, +1)",
+									"type": "text"
+								},
+								{
+									"key": "tags",
+									"value": "",
+									"description": "vote tags, separated by commas",
+									"type": "text"
+								},
+								{
+									"key": "creator",
+									"value": "",
+									"description": "public key of the creator of the thread vote",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:7410/api/submission/prepare_thread_vote",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "7410",
+							"path": [
+								"api",
+								"submission",
+								"prepare_thread_vote"
+							]
+						},
+						"description": null
+					},
+					"response": []
+				},
+				{
+					"name": "Prepare Post Vote",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "of_board",
+									"value": "",
+									"description": "public key of board to submit vote on",
+									"type": "text"
+								},
+								{
+									"key": "of_post",
+									"value": "",
+									"description": "hash of post to apply vote on",
+									"type": "text"
+								},
+								{
+									"key": "value",
+									"value": "",
+									"description": "vote value (-1, 0, +1)",
+									"type": "text"
+								},
+								{
+									"key": "tags",
+									"value": "",
+									"description": "vote tags, separated by commas",
+									"type": "text"
+								},
+								{
+									"key": "creator",
+									"value": "",
+									"description": "public key of the creator of the post vote",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:7410/api/submission/prepare_post_vote",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "7410",
+							"path": [
+								"api",
+								"submission",
+								"prepare_post_vote"
+							]
+						},
+						"description": null
+					},
+					"response": []
+				},
+				{
+					"name": "Prepare User Vote",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "of_board",
+									"value": "",
+									"description": "public key of board to submit user vote in",
+									"type": "text"
+								},
+								{
+									"key": "of_user",
+									"value": "",
+									"description": "public key of user to cast vote on",
+									"type": "text"
+								},
+								{
+									"key": "value",
+									"value": "",
+									"description": "vote value (-1, 0, +1)",
+									"type": "text"
+								},
+								{
+									"key": "tags",
+									"value": "",
+									"description": "vote tags, separated by commas",
+									"type": "text"
+								},
+								{
+									"key": "creator",
+									"value": "",
+									"description": "public key of the creator of the user vote",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:7410/api/submission/prepare_user_vote",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "7410",
+							"path": [
+								"api",
+								"submission",
+								"prepare_user_vote"
+							]
+						},
+						"description": null
+					},
+					"response": []
+				},
+				{
+					"name": "Finalize Submission",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "hash",
+									"value": "aa3cae8136d9b669194687b1c1199c00c710e7a466d75d1a9a9b991b75a1eec0",
+									"description": "hash of content that needs submission finalization",
+									"type": "text"
+								},
+								{
+									"key": "sig",
+									"value": "3de2e798550e88d34b99b77c186441c9a9f9933ba27b5393272e2ad434a1b4e303fd419fa9b50237bfd11fda24d2c7d680b0004d8c9640f9ce3d3ff0dbd1d68200",
+									"description": "signature of the hash, generated with the creator's private key",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:7410/api/submission/finalize",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "7410",
+							"path": [
+								"api",
+								"submission",
+								"finalize"
+							]
+						},
+						"description": "Finalizes a submission by submitting a signature of the content."
 					},
 					"response": []
 				}

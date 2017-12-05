@@ -39,11 +39,11 @@ var (
 	// feeds because it is not public
 	ErrNonPublicPeer = errors.New(
 		"request list of feeds from non-public peer")
-	// ErrConnClosed occurs if coonection closed but an action requested
+	// ErrConnClosed occurs if connection closed but an action requested
 	ErrConnClosed = errors.New("connection closed")
 	// ErrUnsubscribed is a reason of dropping a filling Root
 	ErrUnsubscribed = errors.New("unsubscribed")
-	// ErrInvalidPubKeyLength occurs durong decoding cipher.PubKey from hex
+	// ErrInvalidPubKeyLength occurs during decoding cipher.PubKey from hex
 	ErrInvalidPubKeyLength = errors.New("invalid PubKey length")
 )
 
@@ -55,7 +55,7 @@ type Node struct {
 
 	src msg.Src // msg source
 
-	conf Config // configuratios
+	conf Config // configurations
 
 	db *data.DB             // database
 	so *skyobject.Container // skyobject
@@ -70,7 +70,7 @@ type Node struct {
 	conns  []*Conn
 	connsl []*Conn // cow
 
-	// waiting/wanted obejcts
+	// waiting/wanted objects
 	wmx sync.Mutex
 	wos map[cipher.SHA256]map[*Conn]struct{}
 
@@ -95,7 +95,7 @@ type Node struct {
 	await sync.WaitGroup
 }
 
-// NewNode creates new Node instnace using given
+// NewNode creates new Node instance using given
 // configurations. The functions creates database and
 // Container of skyobject instances internally. Use
 // Config.Skyobject to provide appropriate configuration
@@ -107,7 +107,7 @@ type Node struct {
 //
 //     node, err := NewNode(conf)
 //
-// The recommended way to use NewConfig and chagning
+// The recommended way to use NewConfig and changing
 // result, instead of "empty config" with some fields:
 //
 //     // use this if you really know what you do
@@ -565,7 +565,7 @@ func (s *Node) Close() (err error) {
 	// close database after all
 	s.db.Close() // TODO (kostyarin): error
 
-	// release the s.Closed() cahnnel
+	// release the s.Closed() channel
 	s.doneo.Do(func() {
 		close(s.done)
 	})
@@ -683,7 +683,7 @@ func (s *Node) onDial(gc *gnet.Conn, _ error) (_ error) {
 	return
 }
 
-// Quiting returns cahnnel that closed
+// Quiting returns channel that closed
 // when the Node performs closing and
 // after that. This channel can be used to
 // stop Root objects handling and
@@ -704,7 +704,7 @@ func (s *Node) Closed() <-chan struct{} {
 }
 
 // RPCAddress returns address of RPC listener
-// or an empty stirng if disabled
+// or an empty string if disabled
 func (s *Node) RPCAddress() (address string) {
 	if s.rpc != nil {
 		address = s.rpc.Address()
@@ -713,7 +713,7 @@ func (s *Node) RPCAddress() (address string) {
 }
 
 // Publish given Root (send to feed). Given Root
-// must be holded and not chagned during this call
+// must be holded and not changed during this call
 // (holded during this call only)
 func (s *Node) Publish(r *skyobject.Root) {
 
@@ -777,10 +777,10 @@ func (s *Node) ConnectOrGet(address string) (c *Conn, err error) {
 	}
 
 	// So, at this point the gc can be created by any other
-	// oroutine, but not established yet. Thus, we can't create a
+	// goroutine, but not established yet. Thus, we can't create a
 	// connection by it
 
-	// TODO (kostyarin): rid out of spinning; so, gnet chagnes required,
+	// TODO (kostyarin): rid out of spinning; so, gnet changes required,
 	//                   like DialWithValue or something like this
 
 	for {
@@ -812,7 +812,7 @@ func (s *Node) createConnection(gc *gnet.Conn) (c *Conn, err error) {
 }
 
 // AddFeed to list of feed the Node shares.
-// This method adds feed to undrlying skyobject.Container
+// This method adds feed to underlying skyobject.Container
 // and database. But it doesn't starts exchanging
 // the feed with peers. Use following code to
 // subscribe al connections to the feed

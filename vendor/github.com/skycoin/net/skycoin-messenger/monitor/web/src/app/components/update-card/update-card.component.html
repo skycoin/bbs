@@ -8,7 +8,8 @@
   <mat-progress-bar class="example-margin" [value]="progressValue" *ngIf="progressValue">
   </mat-progress-bar>
 </div>
+<p class="text-center"><strong>(current version: {{data?.tag}}_v{{data?.version}})</strong></p>
 <div mat-dialog-actions class="text-center">
-  <button mat-raised-button color="primary" tabindex="-1" [disabled]="progressValue > 0 || !hasUpdate" (click)="startDownload($event)">Download</button>
+  <button mat-raised-button color="primary" tabindex="-1" [disabled]="progressValue > 0 || !hasUpdate" (click)="startDownload($event)">Update</button>
   <button mat-raised-button tabindex="-1" mat-dialog-close [disabled]="progressValue >0 && progressValue < 100">Close</button>
 </div>

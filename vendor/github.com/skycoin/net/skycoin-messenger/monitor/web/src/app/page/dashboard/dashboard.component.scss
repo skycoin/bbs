@@ -7,6 +7,9 @@ app-dashboard {
     margin-left: .8rem;
     margin-top: .4rem;
   }
+  .mat-row {
+    border-bottom-width: 0;
+  }
   .mat-row-hover {
     cursor: pointer;
     &:hover {

@@ -28,6 +28,8 @@ const (
 	defaultCXOPort      = 8998
 	defaultCXORPCPort   = 8997
 	defaultWebPort      = 8080
+	defaultMedialGarbageCollectionInterval = time.Minute * 3
+	defaultMedialItemTimeout = time.Minute * 5
 )
 
 var (
@@ -128,8 +130,8 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 						},
 					),
 					Medial: medial.NewServer(&medial.ServerConfig{
-						GarbageCollectionInterval: time.Minute,
-						ItemTimeoutInterval:       time.Minute * 3,
+						GarbageCollectionInterval: defaultMedialGarbageCollectionInterval,
+						ItemTimeoutInterval:       defaultMedialItemTimeout,
 					}),
 				},
 				QuitChan: quit,

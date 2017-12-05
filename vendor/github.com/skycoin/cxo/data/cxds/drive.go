@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	objs    = []byte("o")       // obejcts bucket
+	objs    = []byte("o")       // objects bucket
 	meta    = []byte("m")       // meta information
 	version = []byte("version") // field with version in meta bucket
 )
@@ -22,7 +22,7 @@ type driveCXDS struct {
 	b *bolt.DB
 }
 
-// NewDriveCXDS opens existsing CXDS-database
+// NewDriveCXDS opens existing CXDS-database
 // or creates new by given file name. Underlying
 // database is boltdb (github.com/boltdb/bolt).
 // E.g. this stores data on disk
