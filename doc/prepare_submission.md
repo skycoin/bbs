@@ -260,3 +260,53 @@ Thus returning:
 }
 ```
 
+### Post Vote Submission Example
+
+We first use the post vote preparation endpoint (`/api/submission/prepare_post_vote`) with the following data:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `of_board` | `032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b` | public key of board in which to submit thread vote |
+| `of_post` | `513e46db5d45a3c3ee18b41591535e9844d27ae282b9329a65b990a58db770ae` | hash of thread to cast vote on |
+| `value` | `-1` | vote value (-1, 0, +1) |
+| `creator` | `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718` | public key of the creator of the thread vote |
+
+Something similar to the following will be returned:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "hash": "071960062b21f9bb30b8e3ff294d8d7688f0079b062c10886c24f22918f2a790",
+        "raw": "{\"type\":\"5,post_vote\",\"ts\":1512476136349103076,\"of_board\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\",\"of_post\":\"db5a12a80e10208407fb82ae075705ca967a11424e960d52af7f6056b05384af\",\"value\":-1,\"creator\":\"0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718\"}"
+    }
+}
+```
+
+We sign the returned hash with the user's secret key (like before) and send it to the finalization endpoint (`/api/submission/finalize`):
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `hash` | `071960062b21f9bb30b8e3ff294d8d7688f0079b062c10886c24f22918f2a790` | hash of content that needs submission finalization |
+| `sig` | `9909d9daf139c9b1d5b49d0a4e3a195fd81c44058573ddf6c3e43b289e423237687a2fd546c7d95f948de1a00d0bc600dcae65ade6bb90c372a8a8a425b304a100` | signature of the hash, generated with the creator's private key |
+
+Something similar to the following will be returned:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "votes": {
+            "ref": "db5a12a80e10208407fb82ae075705ca967a11424e960d52af7f6056b05384af",
+            "up_votes": {
+                "voted": false,
+                "count": 0
+            },
+            "down_votes": {
+                "voted": true,
+                "count": 1
+            }
+        }
+    }
+}
+```

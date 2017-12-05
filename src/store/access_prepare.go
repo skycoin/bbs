@@ -172,7 +172,7 @@ func (a *PreparePostVoteIn) Process() error {
 		return ErrProcess(e, "creator's public key")
 	}
 	a.Data = &object.Body{
-		Type:    object.V5ThreadVoteType,
+		Type:    object.V5PostVoteType,
 		TS:      time.Now().UnixNano(),
 		OfBoard: a.OfBoardStr,
 		OfPost:  a.OfPostStr,
@@ -213,7 +213,7 @@ func (a *PrepareUserVoteIn) Process() error {
 		return ErrProcess(e, "creator's public key")
 	}
 	a.Data = &object.Body{
-		Type:    object.V5ThreadVoteType,
+		Type:    object.V5UserVoteType,
 		TS:      time.Now().UnixNano(),
 		OfBoard: a.OfBoardStr,
 		OfUser:  a.OfUserStr,
