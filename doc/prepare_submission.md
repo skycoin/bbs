@@ -310,3 +310,268 @@ Something similar to the following will be returned:
     }
 }
 ```
+
+### User Vote Submission Example
+
+Within each user vote, the value of the fields `value` and `tags` will determine the nature of the vote. This is represented in the following table:
+
+| Value (`"value"`) | Tags (`"tags"`)  | Nature                                   |
+| ----------------- | ---------------- | ---------------------------------------- |
+| `1`               | `["trust"]`      | User A trusts User B.                    |
+| `-1`              | `["spam"]`       | User A determines User B as a spammer.   |
+| `-1`              | `["block"]`      | User A dislikes User B and blocks User B. |
+| `-1`              | `["spam,block"]` | User A determines User B as a spammer and blocks User B. |
+
+Let's generate 3 users to demonstrate user voting.
+
+**User 1 (generated with seed `1`):**
+
+```json
+{
+  "public_key": "02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1",
+  "secret_key": "12348e8a15fcce27de6c187a5ecace09af622d495474cb3280e5e614f8b789b5"
+}
+```
+
+**User 2 (generated with seed `2`):**
+
+```json
+{
+  "public_key": "0284da18e80d5ec08cf54ed9c86bbbce6bbd2838b8c700a373a5886e4de44ce895",
+  "secret_key": "9b43b74f9737e15e36921b418ec5c31ebcc92025133240c9061b2846a88f2e0c"
+}
+```
+
+**User 3 (generated with seed `3`):**
+
+```json
+{
+  "public_key": "03f5bcfadd87e625bf62900a7d1ed673ce74034dbfc5d5c624cedd4612a8dc6d1c",
+  "secret_key": "9b40df8b560259c41af5ca5049d3fcd010e925511325fe0c11e362a9d0cada60"
+}
+```
+
+Now these three users will vote on user of public key `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718` (generated with seed `user`). We will call this user "default user" for this example.
+
+**User 1's actions:**
+
+User 1 trusts the default user and hence, prepares the following vote via the `/api/submission/prepare_user_vote` endpoint:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `of_board` | `032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b` | public key of board in which to submit thread vote |
+| `of_user` | `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718` | public key of user to cast vote on |
+| `value` | `+1` | vote value (-1, 0, +1) |
+| `tags` | `trust` | vote tags, separated by commas |
+| `creator` | `02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1` | public key of the creator of the thread vote |
+
+Hence, returning:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "hash": "d87bdbd68ea221e8b8b3622f0476e555430e4a4fd5550c2a6bec8ef1685a5551",
+        "raw": "{\"type\":\"5,user_vote\",\"ts\":1512525362048762752,\"of_board\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\",\"of_user\":\"0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718\",\"value\":1,\"tags\":[\"trust\"],\"creator\":\"02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1\"}"
+    }
+}
+```
+
+As the returned data is expected and valid, User 1 finalizes the submission via `/api/submission/finalize`, using a signature that is generated with the secret key `12348e8a15fcce27de6c187a5ecace09af622d495474cb3280e5e614f8b789b5`:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `hash` | `d87bdbd68ea221e8b8b3622f0476e555430e4a4fd5550c2a6bec8ef1685a5551` | hash of content that needs submission finalization |
+| `sig` | `8b5ac5c22a75f003fb68a354ddc72ff9567c4252667de0024f87fca4c3255a27427346d0da44d524af6f20a2cae78c6041e439d3798ad716299422339537665200` | signature of the hash, generated with the creator's private key |
+
+The returned result is:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "user_public_key": "02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1",
+        "profile": {
+            "trusted_count": 1,
+            "trusted": [
+                "0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718"
+            ],
+            "marked_as_spam_count": 0,
+            "marked_as_spam": [],
+            "blocked_count": 0,
+            "blocked": [],
+            "trusted_by_count": 0,
+            "trusted_by": [],
+            "marked_as_spam_by_count": 0,
+            "marked_as_spam_by": [],
+            "blocked_by_count": 0,
+            "blocked_by": []
+        }
+    }
+}
+```
+
+This is User 1's profile. As shown, User 1 trusts one user, and that user has a public key of `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718`.
+
+**User 2's actions:**
+
+User 2 has a grudge against the default user but knows that the default user is not a spammer/bot. Hence, User 2 prepares the following vote:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `of_board` | `032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b` | public key of board in which to submit thread vote |
+| `of_user` | `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718` | public key of user to cast vote on |
+| `value` | `-1` | vote value (-1, 0, +1) |
+| `tags` | `block` | vote tags, separated by commas |
+| `creator` | `0284da18e80d5ec08cf54ed9c86bbbce6bbd2838b8c700a373a5886e4de44ce895` | public key of the creator of the thread vote |
+
+Thus, returning:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "hash": "c612955ffa7e82d51548f3cf57ad494bf4b1d735eb27a2db0341a04d2b79231a",
+        "raw": "{\"type\":\"5,user_vote\",\"ts\":1512530064808609933,\"of_board\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\",\"of_user\":\"0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718\",\"value\":-1,\"tags\":[\"block\"],\"creator\":\"0284da18e80d5ec08cf54ed9c86bbbce6bbd2838b8c700a373a5886e4de44ce895\"}"
+    }
+}
+```
+
+User 2 finalises the submission via the endpoint `/api/submission/finalize` using a signature generated with hash `c612955ffa7e82d51548f3cf57ad494bf4b1d735eb27a2db0341a04d2b79231a` and secret key `9b43b74f9737e15e36921b418ec5c31ebcc92025133240c9061b2846a88f2e0c`:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `hash` | `c612955ffa7e82d51548f3cf57ad494bf4b1d735eb27a2db0341a04d2b79231a` | hash of content that needs submission finalization |
+| `sig` | `9c34485e8b03f193499fe39ab821d9f9a591672406d07ce6555bfc2a68b4a085243cfb8f88914bff94d6397ff547a49c1f25354e53519e376268424dcd5ac7aa00` |
+
+The endpoint returns the following result:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "user_public_key": "0284da18e80d5ec08cf54ed9c86bbbce6bbd2838b8c700a373a5886e4de44ce895",
+        "profile": {
+            "trusted_count": 0,
+            "trusted": [],
+            "marked_as_spam_count": 0,
+            "marked_as_spam": [],
+            "blocked_count": 1,
+            "blocked": [
+                "0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718"
+            ],
+            "trusted_by_count": 0,
+            "trusted_by": [],
+            "marked_as_spam_by_count": 0,
+            "marked_as_spam_by": [],
+            "blocked_by_count": 0,
+            "blocked_by": []
+        }
+    }
+}
+```
+
+**User 3's actions:**
+
+User 3 is highly annoyed at the default user as User 3 deems the default user as complete scam (and possibly a bot). User 3 wishes to mark the default user as spam, and also block the default user.
+
+User 3 prepares the following submission to the endpoint `/api/submission/prepare_user_vote`:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `of_board` | `032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b` | public key of board in which to submit thread vote |
+| `of_user` | `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718` | public key of user to cast vote on |
+| `value` | `-1` | vote value (-1, 0, +1) |
+| `tags` | `block,spam` | vote tags, separated by commas |
+| `creator` | `03f5bcfadd87e625bf62900a7d1ed673ce74034dbfc5d5c624cedd4612a8dc6d1c` | public key of the creator of the thread vote |
+
+Thus, returning:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "hash": "9f3c37be48bfaaa1c0d6a0231110d46b79961a0fb85a889c23efc8005b871e36",
+        "raw": "{\"type\":\"5,user_vote\",\"ts\":1512533086034755384,\"of_board\":\"032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b\",\"of_user\":\"0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718\",\"value\":-1,\"tags\":[\"block\",\"spam\"],\"creator\":\"03f5bcfadd87e625bf62900a7d1ed673ce74034dbfc5d5c624cedd4612a8dc6d1c\"}"
+    }
+}
+```
+
+User 3 finalizes the submission via `/api/submission/finalize`:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `hash` | `9f3c37be48bfaaa1c0d6a0231110d46b79961a0fb85a889c23efc8005b871e36` | hash of content that needs submission finalization |
+| `sig` | `642c47dba5bb06069d19f6ef2fe7041c849788dcc7580d46fadb130131110cb978b0bebe4d70522d7cac83f646b2b929bd2fb285efba96c8cc98af41dab4e6c000` |
+
+Thus, returning:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "user_public_key": "03f5bcfadd87e625bf62900a7d1ed673ce74034dbfc5d5c624cedd4612a8dc6d1c",
+        "profile": {
+            "trusted_count": 0,
+            "trusted": [],
+            "marked_as_spam_count": 1,
+            "marked_as_spam": [
+                "0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718"
+            ],
+            "blocked_count": 1,
+            "blocked": [
+                "0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718"
+            ],
+            "trusted_by_count": 0,
+            "trusted_by": [],
+            "marked_as_spam_by_count": 0,
+            "marked_as_spam_by": [],
+            "blocked_by_count": 0,
+            "blocked_by": []
+        }
+    }
+}
+```
+
+Note that both `"marked_as_spam"` and `"blocked"` now have entries in User 3's profile.
+
+**Extra:**
+
+We can also now check out the default user's profile via the `/api/get_user_profile` endpoint:
+
+| Key | Value | Description |
+| --- | --- | --- |
+| `board_public_key` | `032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b` | Public key of board to extract user's follow page from. |
+| `user_public_key` | `0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718` | User's public key to extract follow page from. |
+
+Which returns the following result:
+
+```json
+{
+    "okay": true,
+    "data": {
+        "user_public_key": "0254020da01e33cbaf2ff01e7cf28de4bb6cea43b357153fad3a50a0e7dd728718",
+        "profile": {
+            "trusted_count": 0,
+            "trusted": [],
+            "marked_as_spam_count": 0,
+            "marked_as_spam": [],
+            "blocked_count": 0,
+            "blocked": [],
+            "trusted_by_count": 1,
+            "trusted_by": [
+                "02f46d2461e2c3aba0585efb5b2ddb8acb34f38a56865f8a2a3f10272e6de257c1"
+            ],
+            "marked_as_spam_by_count": 1,
+            "marked_as_spam_by": [
+                "03f5bcfadd87e625bf62900a7d1ed673ce74034dbfc5d5c624cedd4612a8dc6d1c"
+            ],
+            "blocked_by_count": 2,
+            "blocked_by": [
+                "0284da18e80d5ec08cf54ed9c86bbbce6bbd2838b8c700a373a5886e4de44ce895",
+                "03f5bcfadd87e625bf62900a7d1ed673ce74034dbfc5d5c624cedd4612a8dc6d1c"
+            ]
+        }
+    }
+}
+```
