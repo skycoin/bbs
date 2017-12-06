@@ -34,10 +34,16 @@ dev() {
 build(){
   cmd "npm run build-d"
 }
-
+buildDev(){
+  cmd "npm run build-d-dev"
+}
 buildManager(){
   cmd "npm run build-m"
 }
+buildManagerDev(){
+  cmd "npm run build-m-dev"
+}
+
 cmd() {
     echo "[ RUNNING ] '${1}' ..."
     ${1}

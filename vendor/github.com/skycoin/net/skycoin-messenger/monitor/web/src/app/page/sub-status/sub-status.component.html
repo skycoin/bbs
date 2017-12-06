@@ -1,14 +1,21 @@
 <mat-card>
   <mat-card-title>
-    <span>Node Status</span>
-    <mat-icon (click)="refresh($event)">refresh</mat-icon>
+    <div class="left-box">
+      <span>Node Status</span>
+      <mat-icon (click)="refresh($event)">refresh</mat-icon>
+    </div>
+    <div class="toolBar text-right right-box">
+      <small>Refresh:</small>
+      <span>
+        <input class="shortcut_input" shortcut-input [text]="taskTime/1000" (onEdit)="editTaskTime($event)" maxlength="5">s</span>
+    </div>
   </mat-card-title>
-  <mat-card-content>
+  <mat-card-content class="top-card-content">
     <div class="node-key">
       <p> Public Key:
         <strong>{{key}}</strong>
       </p>
-      <p>Address:
+      <p *ngIf="!isProduction">Address:
         <span style="color: red">{{status?.addr}}</span>
       </p>
     </div>
@@ -72,7 +79,7 @@
       <mat-grid-tile>
         <p class="status-box-item-title">
           <small>Shadowsocks</small>
-          <!-- <mat-icon (click)="openSettings($event,socksSettings,'Socks')" class="icon-pointer">more_vert</mat-icon> -->
+          <mat-icon (click)="openSettings($event,sockSettings,'SSH')" class="icon-pointer">more_vert</mat-icon>
         </p>
         <p class="status-box-item-content">
           <button mat-icon-button (click)="runSocketServer($event)" [ngClass]="socketColor">
@@ -111,46 +118,76 @@
           </button>
         </p>
       </mat-grid-tile>
-    </mat-grid-list>
-    <mat-grid-list cols="6" rowHeight="2:1">
       <mat-grid-tile>
         <p class="status-box-item-title">
-          <small>Shadowsocks Client</small>
+          <small>settings</small>
+          <!-- <mat-icon class="icon-pointer" (click)="discoveriesStatus($event,discoveryStatus)">info</mat-icon> -->
         </p>
         <p class="status-box-item-content">
-          <button mat-icon-button [ngClass]="socketClientColor">
-            <mat-icon aria-label="Shadowsocks">near_me</mat-icon>
+          <button mat-icon-button color="primary" (click)="openConfigSettings($event,config)">
+            <mat-icon aria-label="settings">settings</mat-icon>
           </button>
         </p>
       </mat-grid-tile>
-      <mat-grid-tile>
+      <!-- <mat-grid-tile>
         <p class="status-box-item-title">
-          <small>SSH Client</small>
+          <small>debug</small>
         </p>
         <p class="status-box-item-content">
-          <button mat-icon-button [ngClass]="sshClientColor">
-            <mat-icon aria-label="SSH" (click)="inputKeys($event,sshClientDialog)">computer</mat-icon>
+          <button mat-icon-button color="primary" (click)="openDebug($event,debugPage)">
+            <mat-icon aria-label="debug">warning</mat-icon>
           </button>
         </p>
-        <div>
-          <p>
-            {{getClientPort('sshc')}}
-          </p>
-        </div>
+      </mat-grid-tile> -->
+    </mat-grid-list>
+    <mat-grid-list cols="6" rowHeight="2:1">
+      <mat-grid-tile>
+        <p class="status-box-item-title status-item">
+          <small>Shadowsocks Client</small>
+        </p>
+        <p class="status-box-item-content status-item">
+          <button mat-icon-button (click)="inputKeys($event,socketClientDialog)" [ngClass]="socketClientColor">
+            <mat-icon aria-label="Shadowsocks">near_me</mat-icon>
+          </button>
+        </p>
+        <p class="status-item">
+          <span *ngIf="socketClientPort !== 0" style="vertical-align: sub">Port: {{socketClientPort}}</span>
+        </p>
+      </mat-grid-tile>
+      <mat-grid-tile>
+        <p class="status-box-item-title status-item">
+          <small>SSH Client</small>
+        </p>
+        <p class="status-box-item-content status-item">
+          <button mat-icon-button (click)="inputKeys($event,sshClientDialog)" [ngClass]="sshClientColor">
+            <mat-icon aria-label="SSH">computer</mat-icon>
+          </button>
+        </p>
+        <p class="status-item">
+          <span *ngIf="sshClientPort !== 0" style="vertical-align: sub">Port: {{sshClientPort}}</span>
+        </p>
       </mat-grid-tile>
     </mat-grid-list>
   </mat-card-content>
 </mat-card>
 
-<div *ngIf="transportSource">
+<div *ngIf="_transportData?.isShow">
   <h3 class="status-app-title">
     <span>Transports</span>
     <mat-icon>compare_arrows</mat-icon>
   </h3>
-  <mat-table [dataSource]="transportSource">
+  <mat-table [dataSource]="transportSource" [trackBy]="transportsTrackBy">
     <ng-container matColumnDef="index">
-      <mat-header-cell *matHeaderCellDef class="text-center" [style.flex]="'0 0 3rem'"> # </mat-header-cell>
-      <mat-cell *matCellDef="let i = index" [style.flex]="'0 0 3rem'" class="text-center"> {{i + 1}} </mat-cell>
+      <mat-header-cell *matHeaderCellDef class="text-center" [style.flex]="'0 0 2rem'"> # </mat-header-cell>
+      <mat-cell *matCellDef="let i = index" [style.flex]="'0 0 2rem'" class="text-center"> {{i + 1}} </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="upload">
+      <mat-header-cell *matHeaderCellDef class="text-center" [style.flex]="'0 0 5rem'"> Send </mat-header-cell>
+      <mat-cell *matCellDef="let data" class="transport-key" [style.flex]="'0 0 5rem'"> {{data.upload_bandwidth | byteTo}}/s </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="download">
+      <mat-header-cell *matHeaderCellDef class="text-center" [style.flex]="'0 0 5rem'"> Recv </mat-header-cell>
+      <mat-cell *matCellDef="let data" class="transport-key" [style.flex]="'0 0 5rem'"> {{data.download_bandwidth | byteTo}}/s </mat-cell>
     </ng-container>
     <ng-container matColumnDef="toNode">
       <mat-header-cell *matHeaderCellDef class="text-center"> To Node </mat-header-cell>
@@ -174,12 +211,12 @@
 </div>
 
 
-<div *ngIf="appSource">
+<div *ngIf="_appData?.isShow">
   <h3 class="status-app-title">
     <span>Apps</span>
     <mat-icon>apps</mat-icon>
   </h3>
-  <mat-table #table [dataSource]="appSource">
+  <mat-table #table [dataSource]="appSource" [trackBy]="appTrackBy">
     <ng-container matColumnDef="index">
       <mat-header-cell *matHeaderCellDef [style.flex]="'0 0 3rem'"> # </mat-header-cell>
       <mat-cell *matCellDef="let i = index" [style.flex]="'0 0 3rem'"> {{i + 1}} </mat-cell>
@@ -200,6 +237,38 @@
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
   </mat-table>
 </div>
+
+<!-- Log Dialog -->
+<ng-template #logDialog>
+  <div class="log-box">
+    <h4 class="log-title">SSH Log</h4>
+    <div class="log-content">
+      <ul class="list">
+        <li>
+          <span class="time">[2017.11.29 16:29:33]</span>
+          <span class="msg">This is 1 log.This is 1 logThis is 1 log.This is 1 log.This is 1 logThis is 1 log.This is 1 log.This is 1 logThis
+            is 1 log.</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Discovery Status Dialog -->
+<!-- <ng-template #discoveryStatus>
+  <h3>Discoveries Status</h3>
+  <ul class="discovery-status-list">
+    <li *ngFor="let kv of discoveries | iterable">
+      <div class="content">
+        <span class="url">{{kv?.key}}</span>
+        <span>
+          <mat-icon class="icon success" *ngIf="kv?.value">check</mat-icon>
+          <mat-icon class="icon error" *ngIf="!kv?.value">error</mat-icon>
+        </span>
+      </div>
+    </li>
+  </ul>
+</ng-template> -->
 
 <ng-template #sshSettings>
   <h1 mat-dialog-title>
@@ -238,7 +307,7 @@
     </mat-table>
   </div>
 </ng-template>
-<ng-template #socksSettings>
+<ng-template #sockSettings>
   <h1 mat-dialog-title>
     <span>Socks Settings</span>
     <mat-icon>settings</mat-icon>
@@ -246,26 +315,26 @@
   <div mat-dialog-content class="setting-dialog">
     <div class="dialog-form">
       <mat-form-field>
-        <textarea matInput placeholder="Input Public keys" rows="5"></textarea>
+        <textarea matInput placeholder="Input Public keys" rows="5" [(ngModel)]="sockTextarea" name="sockTextarea" ngDefaultControl></textarea>
         <mat-hint align="start" class="hint-text">Multiple public keys are separated by commas</mat-hint>
       </mat-form-field>
       <p class="text-right">
-        <button mat-raised-button color="primary">save</button>
+        <button mat-raised-button color="primary" (click)="setSock($event)">save</button>
       </p>
     </div>
-    <mat-table #table [dataSource]="sshSource">
+    <mat-table #table [dataSource]="socketSource">
       <ng-container matColumnDef="index">
         <mat-header-cell *matHeaderCellDef [style.flex]="'0 0 3rem'"> # </mat-header-cell>
         <mat-cell *matCellDef="let i = index;" [style.flex]="'0 0 3rem'"> {{i+1}} </mat-cell>
       </ng-container>
       <ng-container matColumnDef="key">
         <mat-header-cell *matHeaderCellDef [style.flex]="'0 0 30rem'"> Key </mat-header-cell>
-        <mat-cell *matCellDef="let data" [style.flex]="'0 0 30rem'"> {{data.key}} </mat-cell>
+        <mat-cell *matCellDef="let data" [style.flex]="'0 0 30rem'"> {{data}} </mat-cell>
       </ng-container>
       <ng-container matColumnDef="del">
         <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let data" class="text-right">
-          <mat-icon class="del" color="primary">delete_forever</mat-icon>
+        <mat-cell *matCellDef="let i = index;" class="text-right">
+          <mat-icon class="del" color="primary" (click)="delAllowSockNode($event,i)">delete_forever</mat-icon>
         </mat-cell>
       </ng-container>
       <mat-header-row *matHeaderRowDef="sshColumns"></mat-header-row>
@@ -282,18 +351,92 @@
   <div mat-dialog-content class="setting-dialog">
     <form [formGroup]="sshClientForm">
       <mat-form-field>
-        <input matInput placeholder="Input Node Key" formControlName="nodeKey">
+        <input matInput placeholder="Input Node Key" formControlName="nodeKey" autocomplete="off">
       </mat-form-field>
       <mat-form-field>
-        <input matInput placeholder="Input App Key" formControlName="appKey">
+        <input matInput placeholder="Input App Key" formControlName="appKey" autocomplete="off">
       </mat-form-field>
     </form>
     <p class="text-right">
       <button mat-raised-button color="primary" [disabled]="!sshClientForm.valid" (click)="connectSSH($event)">Connect</button>
     </p>
   </div>
+  <div class="quick-box" *ngIf="sshClientConnectionInfo?.length > 0">
+    <h5>Records:</h5>
+    <table class="quick-table">
+      <tr class="item" *ngFor="let info of sshClientConnectionInfo;let i=index;">
+        <td>
+          <input class="label" type="text" appLabel [text]="info?.label" [info]="info" [index]="i" [key]="user?.SSHCLIENTINFO">
+        </td>
+        <td>
+          <p class="key">{{info?.nodeKey | ellipsis:'center':8}}</p>
+        </td>
+        <td>
+          <p class="key">{{info?.appKey | ellipsis:'center':8}}</p>
+        </td>
+        <td class="actions">
+          <a href="javascript:void(0)" (click)="removeClientConnection(user?.SSHCLIENTINFO,i)">
+            <mat-icon>delete</mat-icon>
+          </a>
+          <a href="javascript:void(0)" (click)="setFormValue($event,info,'sshClient')">
+            <mat-icon>edit</mat-icon>
+          </a>
+          <a href="javascript:void(0)" (click)="connectSSH($event,info,i)">
+            <mat-icon>swap_horiz</mat-icon>
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
 </ng-template>
 
+<ng-template #socketClientDialog>
+  <h1 mat-dialog-title>
+    <span>Socket Service keys</span>
+    <mat-icon>network_locked </mat-icon>
+  </h1>
+  <div mat-dialog-content class="setting-dialog">
+    <form [formGroup]="socketClientForm">
+      <mat-form-field>
+        <input matInput placeholder="Input Node Key" formControlName="nodeKey" autocomplete="off">
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Input App Key" formControlName="appKey" autocomplete="off">
+      </mat-form-field>
+    </form>
+    <p class="text-right">
+      <button mat-raised-button color="primary" [disabled]="!socketClientForm.valid" (click)="connectSocket($event)">Connect</button>
+    </p>
+  </div>
+  <div class="quick-box" *ngIf="socketClientConnectionInfo?.length > 0">
+    <h5>Records:</h5>
+    <table class="quick-table">
+      <tr class="item" *ngFor="let info of socketClientConnectionInfo;let i=index;">
+        <td>
+          <input class="label" type="text" appLabel [text]="info?.label" [info]="info" [index]="i" [key]="user?.SOCKETCLIENTINFO" >
+        </td>
+        <td>
+          <p class="key">{{info?.nodeKey | ellipsis:'center':8}}</p>
+        </td>
+        <td>
+          <p class="key">{{info?.appKey | ellipsis:'center':8}}</p>
+        </td>
+        <td class="actions">
+          <a href="javascript:void(0)" (click)="removeClientConnection(user?.SOCKETCLIENTINFO,i)">
+            <mat-icon>delete</mat-icon>
+          </a>
+          <a href="javascript:void(0)" (click)="setFormValue($event,info,'socketClient')">
+            <mat-icon>edit</mat-icon>
+          </a>
+          <a href="javascript:void(0)" (click)="connectSocket($event,info,i)">
+            <mat-icon>swap_horiz</mat-icon>
+          </a>
+
+        </td>
+      </tr>
+    </table>
+  </div>
+</ng-template>
 <ng-template #alert>
   <h1 mat-dialog-title class="text-center">
     <span>Information</span>
@@ -306,4 +449,33 @@
     </p> -->
   </div>
 
+</ng-template>
+
+<ng-template #config>
+  <form [formGroup]="configForm">
+    <mat-form-field style="width: 100%">
+      <textarea matInput placeholder="Input discovery addresses" rows="5" formControlName="DiscoveryAddresses"></textarea>
+      <mat-hint align="start" class="hint-text">Multiple public keys are separated by commas</mat-hint>
+    </mat-form-field>
+    <p class="text-right">
+      <button mat-raised-button color="primary" [disabled]="!configForm.valid" (click)="updateSettings($event)">Update</button>
+    </p>
+  </form>
+  <ul class="discovery-status-list">
+    <li *ngFor="let kv of discoveries | iterable">
+      <div class="content">
+        <div class="url">{{kv?.key}}</div>
+        <div class="status">
+          <mat-icon class="icon success" *ngIf="kv?.value">check</mat-icon>
+          <mat-icon class="icon error" *ngIf="!kv?.value">error</mat-icon>
+        </div>
+      </div>
+    </li>
+  </ul>
+</ng-template>
+
+<ng-template #debugPage>
+  <div appDebug [innerHTML]="debugData | safeHtml">
+
+  </div>
 </ng-template>

@@ -41,37 +41,37 @@
   branch = "master"
   name = "github.com/skycoin/cxo"
   packages = ["data","data/cxds","data/idxdb","node","node/gnet","node/log","node/msg","skyobject","skyobject/statutil"]
-  revision = "50bccf764ee97cafa2c95957de9b4275fd4b9722"
+  revision = "fa779599386d09c462b4d100b037da1f61c88346"
 
 [[projects]]
   branch = "master"
   name = "github.com/skycoin/net"
   packages = ["client","conn","factory","msg","server","skycoin-messenger/factory"]
-  revision = "9d5901e812e8164dc16d7e37e11f71e81f0c8178"
+  revision = "411e56b7b06e32a5b346a5071070df15e365c5e0"
 
 [[projects]]
   name = "github.com/skycoin/skycoin"
   packages = ["src/cipher","src/cipher/base58","src/cipher/chacha20","src/cipher/encoder","src/cipher/go-bip39","src/cipher/ripemd160","src/cipher/secp256k1-go","src/cipher/secp256k1-go/secp256k1-go2","src/util/browser","src/util/file","src/util/logging"]
   revision = "ee33f18f2eed78515bce3b1c412d0e67b0570c24"
-  version = "v0.19.1"
+  version = "0.19.1"
 
 [[projects]]
   name = "github.com/toqueteos/webbrowser"
   packages = ["."]
-  revision = "21fc9f95c83442fd164094666f7cb4f9fdd56cd6"
-  version = "v1.0"
+  revision = "3232c91b8ede8ca86e8962981d881af78875542f"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["pbkdf2","ssh/terminal"]
-  revision = "ca1fcd4ab4c10bc58852a894bcf195fab2229efe"
+  revision = "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "8eb05f94d449fdf134ec24630ce69ada5b469c1c"
+  revision = "8b4580aae2a0dd0c231a45d3ccb8434ff533b840"
 
 [[projects]]
   name = "gopkg.in/urfave/cli.v1"
@@ -82,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dcceaaa84650d9c33cf080e8d41473164503a1bad361839d6834e2094549199d"
+  inputs-digest = "c8573d34cdbb8a93c927703edd83651e78c426954c715454622e6c8c025560b2"
   solver-name = "gps-cdcl"
   solver-version = 1

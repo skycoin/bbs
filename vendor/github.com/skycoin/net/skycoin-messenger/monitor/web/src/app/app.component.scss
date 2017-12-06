@@ -3,9 +3,10 @@
   width: 100vw;
   height: 100vh;
   .nav {
-    width: 100%;
+    width: 20%;
     height: 100%;
-    padding-top: 40%;
+    padding-top: 10rem;
+    float: left;
     background-color: $nav-bg;
     .nav-logo {
       max-width: 75%;
@@ -26,10 +27,11 @@
     }
   }
   .content {
-    width: 100%;
+    width: 80%;
     height: 100%;
     overflow: auto;
     padding: 1rem;
+    float: left;
     background-color: $content-bg;
   }
 }

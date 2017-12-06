@@ -2,6 +2,7 @@
 
 source "./tool.sh"
 
+version=${1}
 sysOS=`uname -s`
 if [ $sysOS == "Darwin" ];then
 	inMac
@@ -12,6 +13,13 @@ else
     exit 1
 fi
 
+[[ -d dist-dicovery ]] && rm -rf dist-dicovery
 install
-rm -rf dist-dicovery
-build
+if [[ ${version:=release} == "release" ]];then
+  build
+elif [[ ${version:=release} == "dev" ]]
+then
+    buildDev
+else
+    echo "no vesrions"
+fi

@@ -60,7 +60,7 @@ prevous version to new one, keeping data if possible
 
 Arguments are
 
-    -idxdb  path to idxdb, use :memeory: to notify the utility that
+    -idxdb  path to idxdb, use :memory: to notify the utility that
             idxdb in memory used and should not be fixed;
 
             default value is %[2]s
@@ -88,7 +88,7 @@ For example
     Perform all available fixes using default paths
 
 No way to rollback fixes, use backups if you want.
-Also, the utilit can't fix broken databases.
+Also, the utility can't fix broken databases.
 It's safe to call the utility many times.
 
 `, os.Args[0], idxdbPath, cxdsPath)
@@ -210,8 +210,8 @@ func fcxds(cxdsPath string) (err error) {
 		version++ // don't skip next fix
 	}
 
-	sdb.Close() // clsoe, ignoring error
-	ddb.Close() // clsoe, ignoring error
+	sdb.Close() // close, ignoring error
+	ddb.Close() // close, ignoring error
 
 	return os.Rename(ddbPath, cxdsPath) // replace with fixed
 }
@@ -302,8 +302,8 @@ func fidxdb(idxdbPath string) (err error) {
 		version++ // don't skip next fix
 	}
 
-	sdb.Close() // clsoe, ignoring error
-	ddb.Close() // clsoe, ignoring error
+	sdb.Close() // close, ignoring error
+	ddb.Close() // close, ignoring error
 
 	return os.Rename(ddbPath, idxdbPath) // replace with fixed
 }

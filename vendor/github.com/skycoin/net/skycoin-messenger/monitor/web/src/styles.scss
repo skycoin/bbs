@@ -3,6 +3,7 @@
 @import './app.scss';
 
 /* fallback */
+
 @font-face {
   font-family: 'Material Icons';
   font-style: normal;
@@ -25,9 +26,11 @@
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
 }
+
 .mat-icon {
   vertical-align: middle;
 }
+
 *,
 *::before,
 *::after {
@@ -96,12 +99,17 @@
   @extend .bg-success;
   @extend .monitor-chip-text;
 }
+
 .chip-primary {
   @extend .bg-primary;
   @extend .monitor-chip-text;
 }
+
 .icon-pointer {
   cursor: pointer;
+  &:hover {
+    color: #9e0000;
+  }
 }
 
 snack-bar-container {
@@ -117,5 +125,28 @@ snack-bar-container {
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
     border: 1px solid #ccc;
     border-radius: .25rem;
+  }
+}
+
+.loading {
+  .mat-dialog-container {
+    box-shadow: none;
+    border: none;
+    background-color: transparent;
+    color: #fff;
+  }
+}
+
+.shortcut_input {
+  color: #712a2a;
+  font-size: 16px;
+  width: 4rem;
+  padding: 5px;
+  border: none;
+  text-align: center;
+  background-color: transparent;
+  border-bottom: 1px solid #ccc;
+  &:focus {
+    outline: none;
   }
 }

@@ -13,6 +13,7 @@ type Connection struct {
 	*factory.Connection
 	factory *MessengerFactory
 
+	closed     bool
 	key        cipher.PubKey
 	keySetCond *sync.Cond
 	keySet     bool
@@ -24,12 +25,11 @@ type Connection struct {
 	servicesMap map[cipher.PubKey]*Service
 	fieldsMutex sync.RWMutex
 
-	in           chan []byte
-	disconnected chan struct{}
+	in chan []byte
 
 	proxyConnections map[uint32]*Connection
 
-	appTransports      map[cipher.PubKey]*transport
+	appTransports      map[cipher.PubKey]*Transport
 	appTransportsMutex sync.RWMutex
 
 	connectTime int64
@@ -37,8 +37,8 @@ type Connection struct {
 	skipFactoryReg bool
 
 	appMessages      []PriorityMsg
-	appMessagesPty   int
-	appMessagesMutex sync.Mutex
+	appMessagesPty   Priority
+	appMessagesMutex sync.RWMutex
 	appFeedback      atomic.Value
 	// callbacks
 
@@ -57,8 +57,7 @@ func newConnection(c *factory.Connection, factory *MessengerFactory) *Connection
 	connection := &Connection{
 		Connection:    c,
 		factory:       factory,
-		disconnected:  make(chan struct{}),
-		appTransports: make(map[cipher.PubKey]*transport),
+		appTransports: make(map[cipher.PubKey]*Transport),
 	}
 	c.RealObject = connection
 	connection.keySetCond = sync.NewCond(connection.fieldsMutex.RLocker())
@@ -71,9 +70,8 @@ func newClientConnection(c *factory.Connection, factory *MessengerFactory) *Conn
 		Connection:       c,
 		factory:          factory,
 		in:               make(chan []byte),
-		disconnected:     make(chan struct{}),
 		proxyConnections: make(map[uint32]*Connection),
-		appTransports:    make(map[cipher.PubKey]*transport),
+		appTransports:    make(map[cipher.PubKey]*Transport),
 	}
 	c.RealObject = connection
 	connection.keySetCond = sync.NewCond(connection.fieldsMutex.RLocker())
@@ -98,6 +96,17 @@ func newUDPClientConnection(c *factory.Connection, factory *MessengerFactory) *C
 	return connection
 }
 
+// Used by factory to spawn connections for udp server side
+func newUDPServerConnection(c *factory.Connection, factory *MessengerFactory) *Connection {
+	connection := &Connection{
+		Connection: c,
+		factory:    factory,
+	}
+	c.RealObject = connection
+	connection.keySetCond = sync.NewCond(connection.fieldsMutex.RLocker())
+	return connection
+}
+
 func (c *Connection) setProxyConnection(seq uint32, conn *Connection) {
 	c.fieldsMutex.Lock()
 	c.proxyConnections[seq] = conn
@@ -112,10 +121,6 @@ func (c *Connection) removeProxyConnection(seq uint32) (conn *Connection, ok boo
 	}
 	c.fieldsMutex.Unlock()
 	return
-}
-
-func (c *Connection) WaitForDisconnected() {
-	<-c.disconnected
 }
 
 func (c *Connection) SetKey(key cipher.PubKey) {
@@ -274,7 +279,7 @@ OUTER:
 			if !ok {
 				return
 			}
-			c.GetContextLogger().Debugf("read %x", m)
+			c.GetContextLogger().Debugf("preprocessor read %x", m)
 			if len(m) < MSG_HEADER_END {
 				return
 			}
@@ -291,6 +296,7 @@ OUTER:
 						}
 					}
 					err = r.Run(c)
+					c.GetContextLogger().Debugf("execute op %#v err %v", r, err)
 					if err != nil {
 						if err == ErrDetach {
 							err = nil
@@ -328,6 +334,10 @@ func (c *Connection) Close() {
 	c.keySetCond.Broadcast()
 	c.fieldsMutex.Lock()
 	defer c.fieldsMutex.Unlock()
+	if c.closed {
+		return
+	}
+	c.closed = true
 	if c.keySet {
 		if !c.skipFactoryReg {
 			c.factory.unregister(c.key, c)
@@ -336,13 +346,7 @@ func (c *Connection) Close() {
 	}
 	if c.in != nil {
 		close(c.in)
-		c.in = nil
 	}
-	if c.disconnected != nil {
-		close(c.disconnected)
-		c.disconnected = nil
-	}
-	c.Connection.Close()
 
 	c.appTransportsMutex.RLock()
 	defer c.appTransportsMutex.RUnlock()
@@ -351,8 +355,9 @@ func (c *Connection) Close() {
 		for _, v := range c.appTransports {
 			v.Close()
 		}
-		c.appTransports = nil
 	}
+
+	c.Connection.Close()
 }
 
 func (c *Connection) writeOPBytes(op byte, body []byte) error {
@@ -367,10 +372,11 @@ func (c *Connection) writeOP(op byte, object interface{}) error {
 	if err != nil {
 		return err
 	}
+	c.GetContextLogger().Debugf("writeOP %#v", object)
 	return c.writeOPBytes(op, js)
 }
 
-func (c *Connection) setTransport(to cipher.PubKey, tr *transport) {
+func (c *Connection) setTransport(to cipher.PubKey, tr *Transport) {
 	c.appTransportsMutex.Lock()
 	if tr == nil {
 		delete(c.appTransports, to)
@@ -380,7 +386,7 @@ func (c *Connection) setTransport(to cipher.PubKey, tr *transport) {
 	c.appTransportsMutex.Unlock()
 }
 
-func (c *Connection) getTransport(to cipher.PubKey) (tr *transport, ok bool) {
+func (c *Connection) getTransport(to cipher.PubKey) (tr *Transport, ok bool) {
 	c.appTransportsMutex.RLock()
 	tr, ok = c.appTransports[to]
 	c.appTransportsMutex.RUnlock()
@@ -408,11 +414,12 @@ func (c *Connection) IsSkipFactoryReg() (skip bool) {
 	return
 }
 
-func (c *Connection) GetTransports() (ts map[cipher.PubKey]*transport) {
+func (c *Connection) ForEachTransport(fn func(t *Transport)) {
 	c.appTransportsMutex.RLock()
-	ts = c.appTransports
+	for _, tr := range c.appTransports {
+		fn(tr)
+	}
 	c.appTransportsMutex.RUnlock()
-	return
 }
 
 func (c *Connection) StoreContext(key, value interface{}) {
@@ -435,16 +442,15 @@ func (c *Connection) PutMessage(v PriorityMsg) bool {
 	return true
 }
 
-func (c *Connection) GetMessages() []PriorityMsg {
-	c.appMessagesMutex.Lock()
-	if len(c.appMessages) < 1 {
-		c.appMessagesMutex.Unlock()
-		return nil
-	}
-	result := c.appMessages
-	c.appMessages = nil
-	c.appMessagesMutex.Unlock()
+func (c *Connection) GetMessages() (result []PriorityMsg) {
+	c.appMessagesMutex.RLock()
+	result = c.appMessages
+	c.appMessagesMutex.RUnlock()
 	return result
+}
+
+func (c *Connection) SetAppFeedback(fb *AppFeedback) {
+	c.appFeedback.Store(fb)
 }
 
 func (c *Connection) GetAppFeedback() *AppFeedback {

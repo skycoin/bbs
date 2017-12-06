@@ -1,5 +1,6 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, Inject } from '@angular/core';
 import { ApiService } from '../../service/api/api.service';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 const NOUPGRADE = 'No Upgrade Available';
 const UPGRADE = 'Upgrade Available';
@@ -15,13 +16,17 @@ export class UpdateCardComponent implements OnInit {
   progressTask = null;
   updateStatus = NOUPGRADE;
   hasUpdate = false;
-  constructor(private api: ApiService) { }
+  nodeUrl = '';
+  dialogRef: MatDialogRef<UpdateCardComponent>;
+  constructor(private api: ApiService, @Inject(MAT_DIALOG_DATA) public data: { version?: string, tag?: string }) { }
 
   ngOnInit() {
-    this.api.checkUpdate('One', '0.0.1').subscribe((res: Update) => {
+    this.api.checkUpdate(this.data.tag, this.data.version).subscribe((res: Update) => {
       this.hasUpdate = res.Update;
       if (this.hasUpdate) {
         this.updateStatus = UPGRADE;
+      } else {
+        this.updateStatus = NOUPGRADE;
       }
     });
   }
@@ -35,6 +40,9 @@ export class UpdateCardComponent implements OnInit {
         clearInterval(this.progressTask);
       }
     }, 100);
+    this.api.runNodeupdate(this.nodeUrl).subscribe(result => {
+      this.dialogRef.close(result);
+    });
   }
   getUpgradeStatus() {
     return false;

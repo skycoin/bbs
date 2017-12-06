@@ -10,13 +10,22 @@ export class ApiService {
   private connUrl = '/conn/';
   private nodeUrl = '/node';
   private callbackParm = 'callback';
+  private jsonHeader = { 'Content-Type': 'application/json' };
   constructor(private httpClient: HttpClient) { }
+
+
   getAllNode() {
     return this.handleGet(this.connUrl + 'getAll');
   }
 
   getNodeStatus(data: FormData) {
     return this.handlePost(this.connUrl + 'getNode', data);
+  }
+  setNodeConfig(data: FormData) {
+    return this.handlePost(this.connUrl + 'setNodeConfig', data);
+  }
+  updateNodeConfig(addr: string) {
+    return this.handleNodePost(addr, '/node/run/updateNode');
   }
   getMsgs(addr) {
     return this.handleNodePost(addr, '/node/getMsgs');
@@ -34,17 +43,27 @@ export class ApiService {
   connectSSHClient(addr: string, data?: FormData) {
     return this.handleNodePost(addr, '/node/run/sshc', data);
   }
+  connectSocketClicent(addr: string, data?: FormData) {
+    return this.handleNodePost(addr, '/node/run/socksc', data);
+  }
   runSSHServer(addr: string, data?: FormData) {
     return this.handleNodePost(addr, '/node/run/sshs', data);
   }
-  runSockServer(addr: string) {
-    return this.handleNodePost(addr, '/node/run/sockss');
+  runSockServer(addr: string, data?: FormData) {
+    return this.handleNodePost(addr, '/node/run/sockss', data);
+  }
+  runNodeupdate(addr: string) {
+    return this.handleNodePost(addr, '/node/run/update');
+  }
+  getDebugPage(addr: string) {
+    return this.handleNodePost(addr, '/debug/pprof');
   }
   checkUpdate(channel, vesrion: string) {
     const data = new FormData();
     data.append('addr', `http://messenger.skycoin.net:8100/api/version?c=${channel}&v=${vesrion}`);
     return this.handlePost(this.nodeUrl, data);
   }
+
   jsonp(url: string) {
     if (url === '') {
       return Observable.throw('Url is empty.');
@@ -122,6 +141,9 @@ export interface FeedBackItem {
   feedbacks?: FeedBack;
 }
 export interface NodeInfo {
+  version?: string;
+  tag?: string;
+  discoveries?: Map<string, boolean>;
   transports?: Array<Transports>;
   messages?: Array<Array<Message>>;
   app_feedbacks?: Array<FeedBackItem>;
