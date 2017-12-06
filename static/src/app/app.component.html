@@ -11,22 +11,23 @@
   </div>
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Boards
           <span class="sr-only">(current)</span>
         </a>
-      </li>
-      <li class="nav-item">
+      </li> -->
+      <!-- <li class="nav-item">
         <a class="nav-link" routerLink="/userlist" routerLinkActive="active">Users</a>
-      </li>
-      <li class="nav-item">
+      </li> -->
+      <!-- <li class="nav-item">
         <a class="nav-link" routerLink="/conn" routerLinkActive="active">Connections</a>
-      </li>
+      </li> -->
     </ul>
     <div class="navbar-text navbar-user-box">
       <a class="alias" href="javascript:void(0);" (click)="openLogin($event,login,create)">
         <i class="fa fa-user" aria-hidden="true"></i>
         <span>{{userName}}</span>
+        <span *ngIf="!userName">Login</span>
         <ul class="user-menu" *ngIf="userMenu">
           <li><a href="javascript:void(0);" (click)="openLogin($event,login,create,true)">Switch User</a></li>
           <li><a href="javascript:void(0);" (click)="logout($event)">Logout</a></li>

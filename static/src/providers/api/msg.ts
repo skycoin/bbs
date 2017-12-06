@@ -186,3 +186,12 @@ export interface ThreadSubmission {
   creator?; string;
   of_board?: string;
 }
+
+export interface PrepareRes extends Base {
+  data: PrepareData
+}
+
+export interface PrepareData {
+  hash?: string;
+  raw?: string;
+}

@@ -2,26 +2,33 @@ import { Injectable } from '@angular/core';
 import * as crypto from 'crypto-js';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of'
-declare var cipher: Cipher;
+declare var cipher: any;
 
 @Injectable()
 export class UserService {
+  // private _bbsKey = '';
   private rootKey = 'skybbs_users';
   private tmpUser = 'tmp_user';
+  private sessionUser = 'session_user';
   loginInfo: { PublicKey?: string, SecKey?: string, Seed?: string } = null;
-  constructor() { }
+  constructor() {}
 
-  setTmpItem(name, data: any) {
-    const item = { name: name, data: data, timestamp: new Date().getTime() + (86400000 * 7) }
+  setTmpItem(name: string) {
+    const item = { name: name, timestamp: new Date().getTime() + (86400000 * 7) }
     localStorage.setItem(this.tmpUser, JSON.stringify(item));
+    // sessionStorage.setItem(this.sessionUser, JSON.stringify(data));
   }
 
   getTmpItem() {
-    const item = localStorage.getItem(this.tmpUser);
+    const item = JSON.parse(localStorage.getItem(this.tmpUser));
     if (item) {
       if (item['timestamp'] < new Date().getTime()) {
         localStorage.removeItem(this.tmpUser);
         return null;
+      }
+      const info = JSON.parse(sessionStorage.getItem(this.sessionUser))
+      if (info) {
+        item.data = info;
       }
       return item;
     }
@@ -55,9 +62,14 @@ export class UserService {
   newSeed() {
     return cipher.generateSeed();
   }
-
   newKeyPair(seed: string) {
     return cipher.generateKeyPair(seed);
+  }
+  hash(data: string) {
+    return Observable.of(cipher.hash(data));
+  }
+  sig(hash: string, secKey: string) {
+    return Observable.of(cipher.sig(hash, secKey));
   }
   encrypt(data, password: string) {
     return Observable.of(crypto.AES.encrypt(data, password).toString())
@@ -75,4 +87,6 @@ export class UserService {
 export interface Cipher {
   generateSeed: Function;
   generateKeyPair: Function;
+  hash: Function;
+  sig: Function;
 }

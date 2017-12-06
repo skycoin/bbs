@@ -36,6 +36,8 @@ export class SelectListComponent implements OnInit, ControlValueAccessor {
   }
   writeValue(value: string): void {
     this.onChange(value);
+    this.selectValue = value;
+    // this.showList = false;
   }
   registerOnChange(fn: (html: string) => void): void {
     this.onChange = fn;

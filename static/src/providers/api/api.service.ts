@@ -1,17 +1,24 @@
 import { Injectable } from '@angular/core';
 import { CommonService } from '../common/common.service';
-import { LoginSessionUser } from './msg';
+import { UserService } from '../user/user.service';
+import { LoginSessionUser, PrepareRes } from './msg';
 import { Observable } from 'rxjs/Observable';
 import { environment } from './../../environments/environment';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/operator/catch';
+import 'rxjs/add/observable/of'
 
 @Injectable()
 export class ApiService {
   static userInfo: LoginSessionUser = null;
   static sig = '';
   version = 5;
+  threadType = 'thread';
+  postType = 'post';
+  threadVoteType = 'thread_vote';
+  postVoteType = 'post_vote';
+  userVoteType = 'user_vote';
   private baseUrl = '/api/';
   private adminUrl = this.baseUrl + 'admin/'
   private contentUrl = this.adminUrl + 'content/';
@@ -26,7 +33,7 @@ export class ApiService {
   private subscriptionsUrl = this.adminUrl + 'subscriptions/';
   private threadsUrl = this.baseUrl + 'threads/';
   private postsUrl = this.baseUrl + 'posts/';
-  constructor(private common: CommonService) {
+  constructor(private common: CommonService, private user: UserService) {
     if (environment.production) {
       this.baseUrl = '127.0.0.1:7410/api/';
     }
@@ -108,6 +115,26 @@ export class ApiService {
     })
   }
 
+  prepare(action: string, data: FormData) {
+    return this.common.handlePost(`${this.baseUrl}submission/prepare_${action}`, data)
+  }
+
+  finalize(data: FormData) {
+    return this.common.handlePost(`${this.baseUrl}submission/finalize`, data)
+  }
+  submission(action, data: FormData) {
+    return this.prepare(action, data).mergeMap((res: PrepareRes) => {
+      const hash = res.data.hash;
+      return this.user.hash(res.data.raw).mergeMap(tmpHash => {
+        return this.user.sig(tmpHash, this.user.loginInfo.SecKey).mergeMap(sig => {
+          data = new FormData()
+          data.append('hash', hash)
+          data.append('sig', sig)
+          return this.finalize(data);
+        })
+      })
+    })
+  }
   newThread(jsonStr: string, secret_key: string) {
     return this.submit(jsonStr, secret_key);
   }

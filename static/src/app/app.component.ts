@@ -1,4 +1,14 @@
-import { Component, OnInit, ViewChild, HostListener, QueryList, ViewChildren, ElementRef, Renderer } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  HostListener,
+  QueryList,
+  ViewChildren,
+  ElementRef,
+  Renderer,
+  TemplateRef
+} from '@angular/core';
 import {
   ApiService,
   UserService,
@@ -33,10 +43,11 @@ declare var cipher: any;
 export class AppComponent implements OnInit {
   @ViewChild(FixedButtonComponent) fb: FixedButtonComponent;
   @ViewChildren('aliasItem') aliasItems: QueryList<ElementRef>;
+  @ViewChild('login') loginTemplate: TemplateRef<any>;
   public title = 'app';
   public name = '';
   public isMasterNode = false;
-  userName = 'LogIn';
+  userName = '';
   alias = '';
   seed = '';
   isLogIn = false;
@@ -77,16 +88,32 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.common.fb = this.fb;
     this.userList = this.user.getUserList();
-    const loginInfo = JSON.parse(this.user.getTmpItem());
+    const loginInfo = this.user.getTmpItem();
     if (loginInfo) {
       this.userName = loginInfo.name;
-      this.user.loginInfo = loginInfo.data;
     }
-    this.common.fb = this.fb;
-    // this.api.getStats().subscribe(stats => {
-    //   this.isMasterNode = stats.node_is_master;
-    // });
+    // if (!loginInfo.data) {
+    Observable.timer(10).subscribe(() => {
+      this.loginForm.patchValue({ user: this.userName })
+      this.pop.open(this.loginTemplate, { isDialog: true, canClickBackdrop: false }).result.then(result => {
+        if (result === true) {
+          const user = this.loginForm.get('user').value;
+          const hash = this.user.getItem(user);
+          this.user.decrypt(hash, this.loginForm.get('pass').value).subscribe((info: any) => {
+            if (info) {
+              this.userName = user;
+              this.user.setTmpItem(this.userName);
+              this.user.loginInfo = info;
+            }
+          })
+        }
+      });
+    });
+    // } else {
+    //   this.user.loginInfo = loginInfo.data;
+    // }
     Observable.timer(10).subscribe(() => {
       this.pop.open(ToTopComponent, { isDialog: false });
     });
@@ -121,6 +148,9 @@ export class AppComponent implements OnInit {
     this.userMenu = false;
     this.loginForm.reset();
     this.showPassword = false;
+    // if (this.userName) {
+    //   this.loginForm.patchValue({ user: this.userName })
+    // }
     this.pop.open(login, { isDialog: true, canClickBackdrop: false }).result.then(result => {
       if (result === 'create') {
         this.createForm.patchValue({ seed: this.user.newSeed() });
@@ -143,9 +173,8 @@ export class AppComponent implements OnInit {
         const hash = this.user.getItem(user);
         this.user.decrypt(hash, this.loginForm.get('pass').value).subscribe((loginInfo: any) => {
           if (loginInfo) {
-            console.log('login success', loginInfo);
             this.userName = user;
-            this.user.setTmpItem(this.userName, loginInfo);
+            this.user.setTmpItem(this.userName);
             this.user.loginInfo = loginInfo;
           }
         })

@@ -5,8 +5,7 @@ import {
   ConnectionComponent,
   ThreadPageComponent,
   ThreadsComponent,
-  UserlistComponent,
-} from '../components';
+} from '../pages';
 
 const routes: Routes = [
   { path: '', component: BoardsListComponent, pathMatch: 'full' },
@@ -16,7 +15,6 @@ const routes: Routes = [
       { path: 'p', component: ThreadPageComponent },
     ],
   },
-  { path: 'userlist', component: UserlistComponent },
   { path: 'conn', component: ConnectionComponent },
   { path: '**', redirectTo: '' },
 

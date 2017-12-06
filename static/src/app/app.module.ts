@@ -10,13 +10,14 @@ import { AppRouterRoutingModule } from '../router/app-router-routing.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NoopInterceptor } from '../tools/http.Interceptor';
-
 import {
   BoardsListComponent,
   ThreadsComponent,
   ThreadPageComponent,
+  ConnectionComponent
+} from '../pages';
+import {
   UserlistComponent,
-  ConnectionComponent,
   AlertComponent,
   FixedButtonComponent,
   FabComponent,
