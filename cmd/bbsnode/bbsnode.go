@@ -28,8 +28,8 @@ const (
 	defaultCXOPort      = 8998
 	defaultCXORPCPort   = 8997
 	defaultWebPort      = 8080
-	defaultMedialGarbageCollectionInterval = time.Minute * 3
-	defaultMedialItemTimeout = time.Minute * 5
+	defaultMedialGarbageCollectionInterval = time.Minute
+	defaultMedialItemTimeout = time.Minute * 3
 )
 
 var (
