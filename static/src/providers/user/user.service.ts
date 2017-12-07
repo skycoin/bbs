@@ -11,7 +11,7 @@ export class UserService {
   private tmpUser = 'tmp_user';
   private sessionUser = 'session_user';
   loginInfo: { PublicKey?: string, SecKey?: string, Seed?: string } = null;
-  constructor() {}
+  constructor() { }
 
   setTmpItem(name: string) {
     const item = { name: name, timestamp: new Date().getTime() + (86400000 * 7) }
@@ -63,7 +63,7 @@ export class UserService {
     return cipher.generateSeed();
   }
   newKeyPair(seed: string) {
-    return cipher.generateKeyPair(seed);
+    return Observable.of(cipher.generateKeyPair(seed));
   }
   hash(data: string) {
     return Observable.of(cipher.hash(data));

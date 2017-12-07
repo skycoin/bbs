@@ -29,8 +29,12 @@
         <span>{{userName}}</span>
         <span *ngIf="!userName">Login</span>
         <ul class="user-menu" *ngIf="userMenu">
-          <li><a href="javascript:void(0);" (click)="openLogin($event,login,create,true)">Switch User</a></li>
-          <li><a href="javascript:void(0);" (click)="logout($event)">Logout</a></li>
+          <li>
+            <a href="javascript:void(0);" (click)="openLogin($event,login,create,true)">Switch User</a>
+          </li>
+          <li>
+            <a href="javascript:void(0);" (click)="logout($event)">Logout</a>
+          </li>
         </ul>
       </a>
     </div>
@@ -51,8 +55,11 @@
       <form [formGroup]="createForm">
         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
           <div class="input-group-addon">Alias</div>
-          <input type="text" class="form-control" id="alias" formControlName="alias">
+          <input type="text" class="form-control" id="alias" formControlName="alias" (blur)="checkAlias()">
         </div>
+        <p *ngIf="hasAlias" style="margin:0;padding:0;color:red">
+          <small>the Alias already exists</small>
+        </p>
         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
           <div class="input-group-addon">Seed</div>
           <input type="text" class="form-control" id="seed" formControlName="seed">
@@ -71,7 +78,7 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-lg btn-block close-btn" (click)="c(false)">Close</button>
-      <button type="button" class="btn btn-lg btn-block create-btn" (click)="c(true)" [disabled]="!createForm.valid">Create</button>
+      <button type="button" class="btn btn-lg btn-block create-btn" (click)="c(true)" [disabled]="!createForm.valid || hasAlias">Create</button>
     </div>
   </div>
 </ng-template>

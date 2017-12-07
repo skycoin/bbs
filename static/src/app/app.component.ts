@@ -44,6 +44,7 @@ export class AppComponent implements OnInit {
   @ViewChild(FixedButtonComponent) fb: FixedButtonComponent;
   @ViewChildren('aliasItem') aliasItems: QueryList<ElementRef>;
   @ViewChild('login') loginTemplate: TemplateRef<any>;
+  @ViewChild('create') createTemplate: TemplateRef<any>;
   public title = 'app';
   public name = '';
   public isMasterNode = false;
@@ -67,6 +68,7 @@ export class AppComponent implements OnInit {
   selectUser = '';
   selectUserPass = '';
   showPassword = false;
+  hasAlias = false;
   loginForm = new FormGroup({
     user: new FormControl('', Validators.required),
     pass: new FormControl('', Validators.required)
@@ -108,6 +110,24 @@ export class AppComponent implements OnInit {
               this.user.loginInfo = info;
             }
           })
+        } else if (result === 'create') {
+          this.createForm.reset();
+          this.hasAlias = false;
+          this.createForm.patchValue({ seed: this.user.newSeed() });
+          this.pop.open(this.createTemplate, { isDialog: true, canClickBackdrop: false }).result.then(createRsult => {
+            if (createRsult) {
+              this.user.newKeyPair(this.createForm.get('seed').value).subscribe(json => {
+                const password = this.createForm.get('password').value;
+                const alias = this.createForm.get('alias').value;
+                this.user.encrypt(JSON.stringify(json), password).do(() => {
+                }).subscribe(data => {
+                  this.user.setItem(alias, data);
+                  this.userList = this.user.getUserList();
+                  this.loading.close();
+                })
+              })
+            }
+          }, err => { });
         }
       });
     });
@@ -117,6 +137,9 @@ export class AppComponent implements OnInit {
     Observable.timer(10).subscribe(() => {
       this.pop.open(ToTopComponent, { isDialog: false });
     });
+  }
+  test(content) {
+    this.loading.start();
   }
   isShowPassword(ev: Event, input: any) {
     ev.stopImmediatePropagation();
@@ -128,6 +151,14 @@ export class AppComponent implements OnInit {
     } else {
       input.type = 'password';
     }
+  }
+  checkAlias() {
+    const item = this.user.getItem(this.createForm.get('alias').value)
+    if (item) {
+      this.hasAlias = true;
+      return
+    }
+    this.hasAlias = false;
   }
   openRegister(ev: Event, content: any) {
     ev.stopImmediatePropagation();
@@ -153,18 +184,20 @@ export class AppComponent implements OnInit {
     // }
     this.pop.open(login, { isDialog: true, canClickBackdrop: false }).result.then(result => {
       if (result === 'create') {
+        this.createForm.reset();
+        this.hasAlias = false;
         this.createForm.patchValue({ seed: this.user.newSeed() });
         this.pop.open(create, { isDialog: true, canClickBackdrop: false }).result.then(createRsult => {
           if (createRsult) {
-            const json = this.user.newKeyPair(this.createForm.get('seed').value)
-            const password = this.createForm.get('password').value;
-            const alias = this.createForm.get('alias').value;
-            this.user.encrypt(JSON.stringify(json), password).do(() => {
-              this.loading.start();
-            }).subscribe(data => {
-              this.user.setItem(alias, data);
-              this.userList = this.user.getUserList();
-              this.loading.close();
+            this.user.newKeyPair(this.createForm.get('seed').value).subscribe(json => {
+              const password = this.createForm.get('password').value;
+              const alias = this.createForm.get('alias').value;
+              this.user.encrypt(JSON.stringify(json), password).do(() => {
+              }).subscribe(data => {
+                this.user.setItem(alias, data);
+                this.userList = this.user.getUserList();
+                this.loading.close();
+              })
             })
           }
         }, err => { });
