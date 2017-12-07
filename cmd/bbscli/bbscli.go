@@ -37,6 +37,7 @@ func main() {
 	app.Name = "bbscli"
 	app.Usage = "a command-line interface to interact with a Skycoin BBS node"
 	app.Version = Version
+	app.EnableBashCompletion = true
 	app.Flags = cli.FlagsByName{
 		cli.IntFlag{
 			Name:        "port, p",
