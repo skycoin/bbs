@@ -19,6 +19,18 @@ Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) 
 
 After installation, ensure that the `GOPATH` environmental variable is set and that `$GOPATH/bin` is added to the `PATH` environment variable.
 
+### Dependencies
+
+Dependencies are managed with [dep](https://github.com/golang/dep).
+
+To install `dep`:
+
+```sh
+go get -u github.com/golang/dep
+```
+
+`dep` vendors all dependencies into the repo.
+
 ### Download and Compile BBS Executables
 
 ```sh
@@ -56,56 +68,6 @@ There are currently two ways of interacting with Skycoin BBS.
 * **Restful json api -** This is ideal for viewing/submitting content without a graphical user interface. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [doc/bbs_postman_collection.json](./doc/bbs_postman_collection.json) which can be viewed online at: [https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS](https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS). A brief written documentation is provided at [doc/api_explnation.md](./doc/api_explanantion.md).
 
 * **Command-line interface -** This is ideal for administration tools. Detailed instructions are located at [cmd/bbscli/README.md](./cmd/bbscli/README.md).
-
-## Dependency Management
-
-Dependencies are managed with [dep](https://github.com/golang/dep).
-
-To install `dep`:
-
-```sh
-go get -u github.com/golang/dep
-```
-
-`dep` vendors all dependencies into the repo.
-
-If you change the dependencies, you should update them as needed with `dep ensure`.
-
-Use `dep help` for instructions on vendoring a specific version of a dependency, or updating them.
-
-After adding a new dependency (with `dep ensure`), run `dep prune` to remove any unnecessary subpackages from the dependency.
-
-When updating or initializing, `dep` will find the latest version of a dependency that will compile.
-
-Examples:
-
-Initialize all dependencies:
-
-```sh
-dep init
-dep prune
-```
-
-Update all dependencies:
-
-```sh
-dep ensure -update -v
-dep prune
-```
-
-Add a single dependency (latest version):
-
-```sh
-dep ensure github.com/foo/bar
-dep prune
-```
-
-Add a single dependency (more specific version), or downgrade an existing dependency:
-
-```sh
-dep ensure github.com/foo/bar@tag
-dep prune
-```
 
 ## Participate
 

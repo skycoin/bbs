@@ -31,6 +31,7 @@ const (
 	FileName      = "bbs.json"
 	ExportSubDir  = "exports"
 	ExportFileExt = ".export"
+	BashAutoCompleteFileName = "bash_autocomplete"
 	RetryDuration = time.Second * 5
 )
 
@@ -201,6 +202,9 @@ func (m *Manager) prepareNode() error {
 
 // Sets up CXO file.
 func (m *Manager) prepareFile() error {
+	//if e := m.file.EnsureBashAutoComplete(path.Join(*m.c.Config, BashAutoCompleteFileName)); e != nil {
+	//	return e
+	//}
 	if e := m.file.Load(m.filePath()); e != nil {
 		return e
 	}

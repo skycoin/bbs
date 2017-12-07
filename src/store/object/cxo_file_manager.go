@@ -65,6 +65,30 @@ func (m *CXOFileManager) Save(path string) error {
 	return nil
 }
 
+func (m *CXOFileManager) EnsureBashAutoComplete(path string) error {
+	data := `#! /bin/bash
+
+: ${PROG:=$(basename ${BASH_SOURCE})}
+
+_cli_bash_autocomplete() {
+     local cur opts base
+     COMPREPLY=()
+     cur="${COMP_WORDS[COMP_CWORD]}"
+     opts=$( ${COMP_WORDS[@]:0:$COMP_CWORD} --generate-bash-completion )
+     COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+     return 0
+ }
+
+ complete -F _cli_bash_autocomplete $PROG
+`
+	defer m.lock()()
+	if m.memMode() == false {
+		return file.SaveBinary(path, []byte(data), os.FileMode(0755))
+	} else {
+		return nil
+	}
+}
+
 // AddMasterSub adds a master subscription to file.
 func (m *CXOFileManager) AddMasterSub(pk cipher.PubKey, sk cipher.SecKey) error {
 	defer m.lock()()
