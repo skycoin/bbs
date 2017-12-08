@@ -116,7 +116,7 @@ export class AppComponent implements OnInit {
           this.createForm.patchValue({ seed: this.user.newSeed() });
           this.pop.open(this.createTemplate, { isDialog: true, canClickBackdrop: false }).result.then(createRsult => {
             if (createRsult) {
-              this.user.newKeyPair(this.createForm.get('seed').value).subscribe(json => {
+              this.user.newKeyPair(this.createForm.get('seed').value).then(json => {
                 const password = this.createForm.get('password').value;
                 const alias = this.createForm.get('alias').value;
                 this.user.encrypt(JSON.stringify(json), password).do(() => {
@@ -189,7 +189,7 @@ export class AppComponent implements OnInit {
         this.createForm.patchValue({ seed: this.user.newSeed() });
         this.pop.open(create, { isDialog: true, canClickBackdrop: false }).result.then(createRsult => {
           if (createRsult) {
-            this.user.newKeyPair(this.createForm.get('seed').value).subscribe(json => {
+            this.user.newKeyPair(this.createForm.get('seed').value).then(json => {
               const password = this.createForm.get('password').value;
               const alias = this.createForm.get('alias').value;
               this.user.encrypt(JSON.stringify(json), password).do(() => {

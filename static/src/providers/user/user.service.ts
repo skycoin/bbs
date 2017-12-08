@@ -63,7 +63,10 @@ export class UserService {
     return cipher.generateSeed();
   }
   newKeyPair(seed: string) {
-    return Observable.of(cipher.generateKeyPair(seed));
+    return new Promise((resolve, reject) => {
+      resolve(cipher.generateKeyPair(seed))
+    });
+    // return Observable.of(cipher.generateKeyPair(seed));
   }
   hash(data: string) {
     return Observable.of(cipher.hash(data));

@@ -1,3 +1,6 @@
+export interface Base {
+  okay?: boolean;
+}
 export interface BoardBody {
   body?: string;
   created?: number;
@@ -19,6 +22,9 @@ export interface AllBoardsData {
 
 export interface AllBoards extends Base {
   data?: AllBoardsData;
+}
+export interface User {
+  alias?: string;
 }
 
 export interface LoginSessionUser extends User {
@@ -70,9 +76,7 @@ export interface Users extends Base {
 export interface UserData {
   users?: Array<User>;
 }
-export interface User {
-  alias?: string;
-}
+
 export interface VotesSummary {
   up_votes?: number; // Total number of up-votes.
   down_votes?: number; // Total number of down-votes.
@@ -169,9 +173,7 @@ export interface SubscriptionOption {
   secret_key?: string;
 }
 
-export interface Base {
-  okay?: boolean;
-}
+
 export interface BaseHeader {
   type?: string;
   hash?: string;

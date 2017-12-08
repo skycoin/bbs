@@ -14,6 +14,11 @@ import { PopupRef } from './popup-ref';
 import { Router } from '@angular/router';
 
 @Injectable()
+export class ActivePop {
+  close(result?: any): void { }
+}
+
+@Injectable()
 export class PopupStack {
   private _windowFactory: ComponentFactory<PopupWindow>;
   private _backdropFactory: ComponentFactory<PopupBackdrop>;
@@ -70,7 +75,4 @@ export interface PopUpOptions {
 }
 
 
-@Injectable()
-export class ActivePop {
-  close(result?: any): void { }
-}
+
