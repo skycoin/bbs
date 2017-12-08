@@ -33,11 +33,7 @@ export class ApiService {
   private subscriptionsUrl = this.adminUrl + 'subscriptions/';
   private threadsUrl = this.baseUrl + 'threads/';
   private postsUrl = this.baseUrl + 'posts/';
-  constructor(private common: CommonService, private user: UserService) {
-    if (environment.production) {
-      this.baseUrl = '127.0.0.1:7410/api/';
-    }
-  }
+  constructor(private common: CommonService, private user: UserService) {}
 
   // Board
   addBoard(data: FormData) {
