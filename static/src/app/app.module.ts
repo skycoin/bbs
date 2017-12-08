@@ -5,24 +5,26 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
-import { ApiService, CommonService } from '../providers';
+import { ApiService, CommonService, UserService } from '../providers';
 import { AppRouterRoutingModule } from '../router/app-router-routing.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NoopInterceptor } from '../tools/http.Interceptor';
-
 import {
   BoardsListComponent,
   ThreadsComponent,
   ThreadPageComponent,
+  ConnectionComponent
+} from '../pages';
+import {
   UserlistComponent,
-  ConnectionComponent,
   AlertComponent,
   FixedButtonComponent,
   FabComponent,
   FabButton,
   ToTopComponent,
   ChipComponent,
+  SelectListComponent,
 } from '../components';
 import { SafeHTMLPipe, OrderByPipe, RepalcePipe, CutTextPipe } from '../pipes';
 import { ClipDirective, EditorDirective, FocusDirective } from '../directives/index';
@@ -59,6 +61,7 @@ import { DialogModule } from '../providers/dialog/dialog.module';
     FixedButtonComponent,
     ToTopComponent,
     ChipComponent,
+    SelectListComponent,
     // Pipes
     SafeHTMLPipe,
     OrderByPipe,
@@ -70,7 +73,7 @@ import { DialogModule } from '../providers/dialog/dialog.module';
     FocusDirective
   ],
   entryComponents: [AlertComponent, FixedButtonComponent, ToTopComponent],
-  providers: [CommonService, ApiService, {
+  providers: [CommonService, ApiService, UserService, {
     provide: HTTP_INTERCEPTORS,
     useClass: NoopInterceptor,
     multi: true,

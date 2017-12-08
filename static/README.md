@@ -27,9 +27,14 @@ From your command line:
 ```bash
 git clone https://github.com/skycoin/bbs.git
 cd bbs/static
-npm update
 npm install
-npm start
+npm run start
+```
+or
+```bash
+git clone https://github.com/skycoin/bbs.git
+cd bbs/static
+./run.sh
 ```
 
 ## Build
@@ -37,7 +42,12 @@ From your command line:
 ```bash
 git clone https://github.com/skycoin/bbs.git
 cd bbs/static
-npm update
 npm install
-ng build
+npm run build
+```
+or
+```bash
+git clone https://github.com/skycoin/bbs.git
+cd bbs/static
+./build.sh
 ```

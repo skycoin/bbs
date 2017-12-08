@@ -11,9 +11,6 @@ export class CommonService {
   public fb: FixedButtonComponent = null;
   constructor(private http: HttpClient, private alert: Alert, private loading: LoadingService) {
   }
-
-
-
   replaceURL(str: string) {
     let start = -1;
     let end = -1;

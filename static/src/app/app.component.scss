@@ -2,6 +2,46 @@
   .nav-box {
     display: inline-block;
   }
+  .navbar-user-box {
+    a {
+      &:hover {
+        text-decoration: none;
+      }
+    }
+    .alias {
+      position: relative;
+      color: #ceea4b;
+      margin-right: .5rem;
+      &:hover {
+        color: yellow;
+      }
+      .user-menu {
+        position: absolute;
+        left: -1.5rem;
+        list-style: none;
+        width: 7rem;
+        background-color: #fff;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+        border-radius: .25rem;
+        z-index: 99;
+        li {
+          padding: .25rem;
+          a {
+            color: #000;
+          }
+          &:hover {
+            background-color: rgba(153, 153, 153, 0.1);
+          }
+        }
+      }
+    }
+    .logged {
+      border-right: 1px solid rgba(255, 255, 255, 0.5);
+      padding-right: .5rem;
+    }
+  }
   .login-register-box {
     position: absolute; // display: flex;
     right: 1%;
@@ -226,6 +266,72 @@
     }
     i {
       margin-right: 5px;
+    }
+  }
+}
+
+// other
+.register-box {
+  border-radius: .75rem;
+  .operation {
+    cursor: pointer;
+  }
+  .input-group {
+    margin: 1.5rem 0;
+    .input-group-addon {
+      background-color: transparent;
+    }
+  }
+  .close-btn {
+    background-color: #999;
+    color: #fff;
+  }
+  .hint-text {
+    text-align: center;
+    color: rgb(255, 71, 71);
+    text-decoration: underline;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    &:hover {
+      color: rgb(212, 49, 49);
+    }
+  }
+  .btn {
+    border-radius: .25rem;
+    margin-bottom: 1rem;
+    font-weight: normal;
+  }
+  .btn-block+.btn-block {
+    margin-top: 0;
+  }
+  input[type="text"] {
+    &:focus {
+      box-shadow: none;
+    }
+  }
+  input[type="password"] {
+    padding: .75rem 1rem;
+  }
+  .create-btn {
+    background-color: rgb(255, 71, 71);
+    color: #fff;
+  }
+  .modal-header {
+    justify-content: center;
+    border-bottom: none;
+  }
+  .modal-footer {
+    justify-content: center;
+    border-top: none;
+  }
+  .create-box {
+    form {
+      .input-group {
+        margin: 1.5rem 0;
+        .input-group-addon {
+          background-color: transparent;
+        }
+      }
     }
   }
 }

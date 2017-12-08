@@ -1,0 +1,38 @@
+@import '../../common.scss';
+.select-list {
+  position: relative;
+  border: 1px solid $light-dark;
+  padding: .5rem;
+  border-radius: .25rem;
+  text-align: center;
+  color: #999;
+  font-size: 1.1rem;
+  .hint-text-box {
+    cursor: pointer;
+    user-select: none;
+  }
+  .dropdown-list {
+    position: absolute;
+    top: 105%;
+    left: 0;
+    right: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    z-index: 99;
+    box-shadow: 0.1rem 0.1rem 1rem $shadow-color;
+    li {
+      background-color: #fff;
+      padding: .5rem;
+      font-size: 1.05rem;
+      cursor: pointer;
+      &:hover {
+        background-color: $hover-light-dark;
+      }
+      &:last-child {
+        border-bottom-left-radius: .25rem;
+        border-bottom-right-radius: .25rem;
+      }
+    }
+  }
+}

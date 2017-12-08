@@ -1,3 +1,50 @@
+export interface Base {
+  okay?: boolean;
+}
+export interface BoardBody {
+  body?: string;
+  created?: number;
+  name?: string;
+  submission_keys?: Array<string>;
+  tags?: Array<string>;
+  header?: BaseHeader;
+}
+export interface Board {
+  body?: BoardBody;
+  public_key?: string;
+  ui_options?: UIOptions; // custom param
+}
+
+export interface AllBoardsData {
+  master_boards?: Array<Board>;
+  remote_boards?: Array<Board>;
+}
+
+export interface AllBoards extends Base {
+  data?: AllBoardsData;
+}
+export interface User {
+  alias?: string;
+}
+
+export interface LoginSessionUser extends User {
+  public_key?: string;
+  secret_key?: string;
+}
+
+export interface LoginSession {
+  seed?: string;
+  user?: LoginSessionUser;
+}
+export interface LoginData {
+  logged_in?: boolean;
+  session?: LoginSession;
+}
+
+export interface LoginInfo extends Base {
+  data?: LoginData;
+}
+
 export interface FollowPage extends Base {
   data?: FollowPageData;
 }
@@ -29,22 +76,25 @@ export interface Users extends Base {
 export interface UserData {
   users?: Array<User>;
 }
-export interface User {
-  alias?: string;
-}
+
 export interface VotesSummary {
   up_votes?: number; // Total number of up-votes.
   down_votes?: number; // Total number of down-votes.
   current_user_voted?: boolean; // Whether current user has voted on this thread/post.
   current_user_vote_mode?: number; // (1: current user up-voted) | (-1: current user down-voted)
 }
-
-export interface Post {
+export interface PostBody {
   name?: string;
-  body?: string;
   creator?: string;
-  created?: number;
-  ref?: string;
+  body?: string;
+  of_board?: string;
+  of_thread?: string;
+  ts?: number;
+  type?: string;
+}
+export interface Post {
+  body?: PostBody;
+  header?: BaseHeader;
   votes?: Votes;
   uiOptions?: VoteOptions;
   voteMenu?: boolean;
@@ -79,12 +129,17 @@ export interface Stats {
   node_cxo_address: string;
 }
 
-export interface Thread {
-  name?: string;
+export interface ThreadBody {
   body?: string;
   created?: number;
-  ref?: string;
   creator?: string;
+  name?: string;
+  of_board?: string;
+}
+export interface Thread {
+  body?: ThreadBody;
+  name?: string;
+  header?: BaseHeader;
   // author_alias?: string;
   votes?: Votes;
   uiOptions?: VoteOptions;
@@ -98,14 +153,7 @@ export interface VoteData {
   voted?: boolean;
   count?: number;
 }
-export interface Board {
-  name?: string;
-  body?: string;
-  created?: number;
-  submission_addresses?: Array<string>;
-  public_key?: string;
-  ui_options?: UIOptions; // custom param
-}
+
 
 export interface UIOptions {
   subscribe?: boolean;
@@ -125,15 +173,27 @@ export interface SubscriptionOption {
   secret_key?: string;
 }
 
-export interface Base {
-  okay?: boolean;
+
+export interface BaseHeader {
+  type?: string;
+  hash?: string;
+  pk?: string;
+  sig?: string;
 }
 
-export interface AllBoardsData {
-  master_boards?: Array<Board>;
-  remote_boards?: Array<Board>;
+export interface ThreadSubmission {
+  name?: string;
+  body?: string;
+  created?: number;
+  creator?; string;
+  of_board?: string;
 }
 
-export interface AllBoards extends Base {
-  data?: AllBoardsData;
+export interface PrepareRes extends Base {
+  data: PrepareData
+}
+
+export interface PrepareData {
+  hash?: string;
+  raw?: string;
 }
