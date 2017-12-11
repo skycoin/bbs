@@ -26,13 +26,13 @@ import (
 )
 
 const (
-	LogPrefix     = "CXO"
-	SubDir        = "cxo_v5"
-	FileName      = "bbs.json"
-	ExportSubDir  = "exports"
-	ExportFileExt = ".export"
+	LogPrefix                = "CXO"
+	SubDir                   = "cxo_v5"
+	FileName                 = "bbs.json"
+	ExportSubDir             = "exports"
+	ExportFileExt            = ".export"
 	BashAutoCompleteFileName = "bash_autocomplete"
-	RetryDuration = time.Second * 5
+	RetryDuration            = time.Second * 5
 )
 
 // ManagerConfig represents the configuration for CXO Manager.

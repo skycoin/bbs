@@ -72,6 +72,7 @@ RunNode() {
         -cxo-rpc=false \
         -web-port=${PORT_HTTP} \
         -web-gui=${GUI} \
+        -web-gui-dir=${GOPATH}/src/github.com/skycoin/bbs/static/dist \
         &
 }
 

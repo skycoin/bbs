@@ -25,17 +25,24 @@ func CheckBody(body string) error {
 	return nil
 }
 
+func CheckPort(port int) error {
+	if port < 0 || port > 65535 {
+		return boo.Newf(boo.InvalidInput,
+			"port %d is invalid ", port)
+	}
+	return nil
+}
+
 // CheckAddress ensures validity of address. TODO
 func CheckAddress(address string) error {
 	pts := strings.Split(address, ":")
-	port, err := strconv.ParseUint(pts[len(pts)-1], 10, 16)
+	port, err := strconv.ParseInt(pts[len(pts)-1], 10, 16)
 	if err != nil {
 		return boo.Newf(boo.InvalidInput,
 			"address '%s' is invalid", string(address))
 	}
-	if port < 0 || port > 65535 {
-		return boo.Newf(boo.InvalidInput,
-			"address:%s port is invalid ", string(address))
+	if e := CheckPort(int(port)); e != nil {
+		return boo.Wrapf(e, "address '%s' is invalid", string(address))
 	}
 	return nil
 }

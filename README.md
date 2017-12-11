@@ -42,22 +42,24 @@ This will download `github.com/skycoin/bbs` to `$GOPATH/src/github.com/skycoin/b
 You can also clone the repo directly with `git clone https://github.com/skycoin/bbs`,
 but it must be cloned to this path: `$GOPATH/src/github.com/skycoin/bbs`.
 
-## Building Static Files For The Web Thin Client
+### Static Files For The Web Thin Client
 
 Building instructions for static files can be found in [static/README.md](./static/README.md).
 
 ## Running BBS Node
 
 ```bash
-bbsnode
+$ bbsnode
 ```
 
-Detailed instructions are located at [cmd/bbsnode/README.md](./cmd/bbsnode/README.md)
+For more detailed instructions:
+* [cmd/bbsnode/README.md](./cmd/bbsnode/README.md)
+* [Wiki: Setting up a Skycoin BBS Node](./wiki/Setting-up-a-Skycoin-BBS-Node)
 
 The script [`run.sh`](./run.sh) is provided as a convenient to run BBS, serving static files in `static/dist`.
 
 ```bash
-bash run.sh
+$ ./run.sh
 ```
 
 ## Using Skycoin BBS
@@ -67,7 +69,7 @@ There are currently two ways of interacting with Skycoin BBS.
 
 * **Restful json api -** This is ideal for viewing/submitting content without a graphical user interface. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [doc/bbs_postman_collection.json](./doc/bbs_postman_collection.json) which can be viewed online at: [https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS](https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS). A brief written documentation is provided at [doc/api_explnation.md](./doc/api_explanantion.md).
 
-* **Command-line interface -** This is ideal for administration tools. Detailed instructions are located at [cmd/bbscli/README.md](./cmd/bbscli/README.md).
+* **Command-line interface -** This is for administration tools. Detailed instructions are located at [cmd/bbscli/README.md](./cmd/bbscli/README.md).
 
 ## Participate
 
