@@ -52,7 +52,9 @@ Building instructions for static files can be found in [static/README.md](./stat
 $ bbsnode
 ```
 
-Detailed instructions are located at [cmd/bbsnode/README.md](./cmd/bbsnode/README.md)
+For more detailed instructions:
+* [cmd/bbsnode/README.md](./cmd/bbsnode/README.md)
+* [Wiki: Setting up a Skycoin BBS Node](./wiki/Setting-up-a-Skycoin-BBS-Node)
 
 The script [`run.sh`](./run.sh) is provided as a convenient to run BBS, serving static files in `static/dist`.
 

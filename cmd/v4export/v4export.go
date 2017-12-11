@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"encoding/json"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 var (
 	FlagPort        = 7410
 	FlagBoardPubKey = ""
-	FlagFileName    = ""
+	FlagFileName    = "exported_board"
 )
 
 func main() {
@@ -41,8 +42,8 @@ func main() {
 			Destination: &FlagBoardPubKey,
 		},
 		cli.StringFlag{
-			Name:        "file-path, fp",
-			Usage:       "file path to export the board to",
+			Name:        "file-name, fn",
+			Usage:       "file name to export the board to",
 			Value:       FlagFileName,
 			Destination: &FlagFileName,
 		},
@@ -50,10 +51,11 @@ func main() {
 	app.Action = action
 	if e := app.Run(os.Args); e != nil {
 		log.Println(e)
+		log.Println("run 'v4export -h' to see usage")
 	}
 }
 
-func action(_ *cli.Context) error {
+func action(ctx *cli.Context) error {
 
 	// Check inputs.
 	if e := tag.CheckPort(FlagPort); e != nil {
@@ -63,14 +65,14 @@ func action(_ *cli.Context) error {
 		return boo.Wrap(e, "invalid 'board-public-key' provided")
 	}
 	if e := tag.CheckPath(FlagFileName); e != nil {
-		return boo.Wrap(e, "invalid 'file-path' provided")
+		return boo.Wrap(e, "invalid 'file-name' provided")
 	}
 
 	v := make(url.Values)
 	v.Add("board_public_key", FlagBoardPubKey)
 	v.Add("file_name", FlagFileName)
 
-	address := "127.0.0.1:" + strconv.Itoa(FlagPort) + "/api/admin/board/export"
+	address := "http://127.0.0.1:" + strconv.Itoa(FlagPort) + "/api/admin/board/export"
 
 	res, e := http.PostForm(address, v)
 	if e != nil {
@@ -82,6 +84,13 @@ func action(_ *cli.Context) error {
 		return boo.Wrap(e, "unable to read reply")
 	}
 
-	log.Println(string(out))
+	outRep := make(map[string]interface{})
+	if e := json.Unmarshal(out, &outRep); e != nil {
+		return boo.Wrap(e, "unable to parse reply")
+	}
+
+	outRepRep, _ := json.MarshalIndent(outRep, "", "    ")
+
+	log.Println(string(outRepRep))
 	return nil
 }
