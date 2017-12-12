@@ -54,14 +54,12 @@ space
 # Build static files.
 msg "BUILDING STATIC FILES"
 cmd "cd ${STATIC_DIR}"
-cmd "npm install -g @angular/cli@latest"
-cmd "yarn install"
-cmd "ng build --prod"
+cmd "bash build.sh"
 space
 
 # Build.
 build() {
-    # 1: OS, 2: Build Directory.
+    # 1: OS, 2: Build Directory, 3: Name.
     msg "BUILDING (${1})"
     cmd "cd ${2}"
     cmd "env GOOS=${1} go build ${BBSNODE_MAIN}"
