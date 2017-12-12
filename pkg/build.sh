@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-VERSION=4.1
+VERSION=5.0
 GOARCH=amd64
 NAME=skycoin_bbs
 
@@ -28,6 +28,7 @@ space() {
 ROOT_DIR=${GOPATH}/src/github.com/skycoin/bbs
 
 BUILD_DIR=${ROOT_DIR}/pkg/build
+DATA_DIR=${ROOT_DIR}/pkg/data
 STATIC_DIR=${ROOT_DIR}/static
 
 WINDOWS_NAME=${NAME}_${VERSION}_windows_${GOARCH}
@@ -37,6 +38,10 @@ OSX_NAME=${NAME}_${VERSION}_osx_${GOARCH}
 WINDOWS_DIR=${BUILD_DIR}/${WINDOWS_NAME}
 LINUX_DIR=${BUILD_DIR}/${LINUX_NAME}
 OSX_DIR=${BUILD_DIR}/${OSX_NAME}
+
+WINDOWS_DATA_DIR=${DATA_DIR}/windows
+LINUX_DATA_DIR=${DATA_DIR}/linux
+OSX_DATA_DIR=${DATA_DIR}/osx
 
 BBSNODE_MAIN=${ROOT_DIR}/cmd/bbsnode/bbsnode.go
 
@@ -70,6 +75,17 @@ build() {
 build windows ${WINDOWS_DIR} ${WINDOWS_NAME}
 build linux ${LINUX_DIR} ${LINUX_NAME}
 build darwin ${OSX_DIR} ${OSX_NAME}
+
+# Copy.
+copy() {
+    # 1: From, 2: To.
+    msg "COPYING (${1} -> ${2})"
+    cmd "cp ${1} ${2}"
+    space
+}
+#copy ${WINDOWS_DATA_DIR} ${WINDOWS_DIR}
+copy ${LINUX_DATA_DIR}/run.sh ${LINUX_DIR}
+copy ${OSX_DATA_DIR}/run.sh ${OSX_DIR}
 
 # Finish.
 echo "All done!"
