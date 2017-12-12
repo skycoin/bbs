@@ -1,5 +1,5 @@
 import { Directive, ElementRef, Input, OnInit, HostListener } from '@angular/core';
-import { UserService, ConnectServiceInfo } from '../../service';
+import { ApiService } from '../../service/api/api.service';
 
 
 @Directive({
@@ -7,11 +7,11 @@ import { UserService, ConnectServiceInfo } from '../../service';
 })
 export class LabelDirective implements OnInit {
   @Input() text = '';
-  @Input() info: ConnectServiceInfo | null;
+  @Input() info: any | null;
   @Input() index = -1;
-  @Input() key = '';
+  @Input() client = '';
   isEdit = false;
-  constructor(private el: ElementRef, private user: UserService) { }
+  constructor(private el: ElementRef, private api: ApiService) { }
   ngOnInit() {
     this.el.nativeElement.value = this.text;
     this.change();
@@ -32,7 +32,14 @@ export class LabelDirective implements OnInit {
     const value = this.el.nativeElement.value;
     if (this.text !== value) {
       this.info.label = value;
-      this.user.editClientConnectInfo(this.info, this.key, this.index);
+      // this.user.editClientConnectInfo(this.info, this.key, this.index);
+      const data = new FormData();
+      data.append('client', this.client);
+      data.append('label', this.info.label);
+      data.append('index', String(this.index));
+      this.api.editClientConnection(data).subscribe(result => {
+        console.log('edit connection:', result);
+      });
     }
     this.change();
   }

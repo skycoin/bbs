@@ -66,13 +66,14 @@ RunNode() {
 
     go run ${BBS_NODE_PATH} \
         -memory=true \
-        -enforced-messenger-addresses=127.0.0.1:8080 \
+        -enforced-messenger-addresses=messenger.skycoin.net:8080 \
         -rpc-port=${PORT_RPC} \
         -cxo-port=${PORT_CXO} \
         -cxo-rpc=false \
         -web-port=${PORT_HTTP} \
         -web-gui=${GUI} \
         -web-gui-dir=${GOPATH}/src/github.com/skycoin/bbs/static/dist \
+        -open-browser=${GUI} \
         &
 }
 
