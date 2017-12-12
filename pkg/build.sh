@@ -69,23 +69,31 @@ build() {
     cmd "cd ${2}"
     cmd "env GOOS=${1} go build ${BBSNODE_MAIN}"
     cmd "cp -R ${STATIC_DIR}/dist ${2}/static"
-    cmd "zip -r ../${3}.zip *"
     space
 }
-build windows ${WINDOWS_DIR} ${WINDOWS_NAME}
-build linux ${LINUX_DIR} ${LINUX_NAME}
-build darwin ${OSX_DIR} ${OSX_NAME}
-
-# Copy.
 copy() {
     # 1: From, 2: To.
     msg "COPYING (${1} -> ${2})"
     cmd "cp ${1} ${2}"
     space
 }
-#copy ${WINDOWS_DATA_DIR} ${WINDOWS_DIR}
+compress() {
+    # 1: To.
+    msg "COMPRESSING (${1})"
+    cmd "zip -r ../${1}.zip *"
+}
+
+build windows ${WINDOWS_DIR}
+copy ${WINDOWS_DATA_DIR}/run.bat ${WINDOWS_DIR}
+compress ${WINDOWS_NAME}
+
+build linux ${LINUX_DIR}
 copy ${LINUX_DATA_DIR}/run.sh ${LINUX_DIR}
+compress ${LINUX_NAME}
+
+build darwin ${OSX_DIR}
 copy ${OSX_DATA_DIR}/run.sh ${OSX_DIR}
+compress ${OSX_NAME}
 
 # Finish.
 echo "All done!"

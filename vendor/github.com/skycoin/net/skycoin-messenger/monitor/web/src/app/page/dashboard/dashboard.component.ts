@@ -25,6 +25,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.dataSource = new ConnDataSource(this._database);
     this.labelObj = this.user.get(this.user.HOMENODELABLE);
+    // const data = new FormData();
+    // data.append('client', 'ssh');
+    // this.api.getClientConnection(data).subscribe(res => {
+    //   console.log('get connection:', res);
+    // });
   }
   ngOnDestroy() {
     this.close();

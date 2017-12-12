@@ -73,6 +73,21 @@ app-sub-status {
         flex-direction: column;
         border-right: 1px solid $light-dark-2x;
       }
+      .mat-icon-button {
+        width: auto;
+      }
+      .unread {
+        &::before {
+          position: absolute;
+          top: 0;
+          right: 1px;
+          border-radius: 50%;
+          width: 13px;
+          height: 13px;
+          content: '';
+          background-color: red;
+        }
+      }
     }
     .status-box-item-content {
       font-size: 1.3em;
@@ -156,9 +171,10 @@ app-sub-status {
       overflow-x: hidden;
       overflow-y: auto;
       li {
+        word-break: break-all;
         padding: 2.5px 0;
         .time {
-          margin-right: 10px;
+          margin-right: 5px;
           color: #d2aa44;
         }
         .msg {

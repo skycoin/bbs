@@ -7,7 +7,7 @@ source "include/include.sh"
 
 # Run a messenger server (ADDRESS).
 
-RunMS :8080
+#RunMS :8080
 
 # Wait for messenger server to start (assuming 5s is enough).
 

@@ -1,7 +1,18 @@
 import { Component, OnInit, ViewEncapsulation, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment as env } from '../../../environments/environment';
-import { ApiService, NodeServices, App, Transports, NodeInfo, Message, FeedBackItem, UserService, ConnectServiceInfo } from '../../service';
+import {
+  ApiService,
+  NodeServices,
+  App,
+  Transports,
+  NodeInfo,
+  Message,
+  FeedBackItem,
+  UserService,
+  ConnectServiceInfo,
+  MessageItem
+} from '../../service';
 import { MatSnackBar, MatDialog, MatDialogRef } from '@angular/material';
 import { DataSource } from '@angular/cdk/collections';
 import { Observable } from 'rxjs/Observable';
@@ -51,30 +62,33 @@ export class SubStatusComponent implements OnInit, OnDestroy {
   timer: Subscription = null;
   startRequest = false;
   feedBacks: Array<FeedBackItem> = [];
+  formValidatorsSlice = [Validators.required, Validators.minLength(66), Validators.maxLength(66)];
   sshClientForm = new FormGroup({
-    nodeKey: new FormControl('', Validators.required),
-    appKey: new FormControl('', Validators.required),
+    nodeKey: new FormControl('', this.formValidatorsSlice),
+    appKey: new FormControl('', this.formValidatorsSlice),
   });
   socketClientForm = new FormGroup({
-    nodeKey: new FormControl('', Validators.required),
-    appKey: new FormControl('', Validators.required),
+    nodeKey: new FormControl('', this.formValidatorsSlice),
+    appKey: new FormControl('', this.formValidatorsSlice),
   });
   configForm = new FormGroup({
-    DiscoveryAddresses: new FormControl('', Validators.required),
+    DiscoveryAddresses: new FormControl('', this.formValidatorsSlice),
   });
   sshClientPort = 0;
   socketClientPort = 0;
-  nodeVersion = '';
-  nodeTag = '';
+  nodeVersion = '0.0.1';
+  nodeTag = 'dev';
   _appData = new SubDatabase();
   _transportData = new SubDatabase();
   _sshServerData = new SubDatabase();
   _socketServerData = new SubDatabase();
   isProduction = env.production;
-  sshClientConnectionInfo: ConnectServiceInfo | null;
-  socketClientConnectionInfo: ConnectServiceInfo | null;
+  clientConnectionInfo: ConnectServiceInfo | null;
+  // socketClientConnectionInfo: ConnectServiceInfo | null;
   discoveries: Map<string, boolean>;
   debugData = '';
+  messages: Array<Message> = [];
+  showMsgs: Array<MessageItem> = [];
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -140,10 +154,31 @@ export class SubStatusComponent implements OnInit, OnDestroy {
       this.startTask();
     }
   }
-  openLog(content: any) {
+  openLog(service: string, content: any) {
+    this.showMsgs = [];
+    const app = this.findService(service);
+    const data = new FormData();
+    data.append('key', app.key);
+    this.api.checkAppMsg(this.status.addr, data).subscribe((res) => {
+      console.log('check msg:', res);
+      this.showMsgs = res;
+      this.task.next();
+    });
     this.dialog.open(content, {
       panelClass: 'log-dialog'
     });
+  }
+
+  isUnread(service: string) {
+    const app = this.findService(service);
+    if (app && this.feedBacks) {
+      const result = this.feedBacks.find(el => {
+        return el.key === app.key;
+      });
+      return result.unread;
+    }
+    return 0;
+    // return result.read ? result.read : false;
   }
   // discoveriesStatus(ev: Event, conent: any) {
   //   this.dialog.open(conent);
@@ -154,7 +189,7 @@ export class SubStatusComponent implements OnInit, OnDestroy {
   appTrackBy(index, app) {
     return app ? app.key : undefined;
   }
-  connectSocket(ev: Event, info?: ConnectServiceInfo, index?: number) {
+  connectSocket(ev: Event, action: string, info?: ConnectServiceInfo, ) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
@@ -168,24 +203,28 @@ export class SubStatusComponent implements OnInit, OnDestroy {
     }
     this.api.connectSocketClicent(this.status.addr, data).subscribe(result => {
       console.log('conect socket client');
+      data.append('client', action);
       if (result) {
         if (info) {
-          this.user.saveClientConnectInfo(info, this.user.SOCKETCLIENTINFO);
+          data.append('data', JSON.stringify(info));
         } else {
-          this.user.saveClientConnectInfo(
-            {
-              label: '',
-              nodeKey: this.socketClientForm.get('nodeKey').value,
-              appKey: this.socketClientForm.get('appKey').value,
-              count: 1
-            }, this.user.SOCKETCLIENTINFO);
+          const jsonStr = {
+            label: '',
+            nodeKey: this.socketClientForm.get('nodeKey').value,
+            appKey: this.socketClientForm.get('appKey').value,
+            count: 1
+          };
+          data.append('data', JSON.stringify(jsonStr));
         }
+        this.api.saveClientConnection(data).subscribe(res => {
+          console.log('save:', res);
+        });
       }
       this.task.next();
     });
     this.dialog.closeAll();
   }
-  connectSSH(ev: Event, info?: ConnectServiceInfo, index?: number) {
+  connectSSH(ev: Event, action: string, info?: ConnectServiceInfo, ) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
@@ -199,18 +238,22 @@ export class SubStatusComponent implements OnInit, OnDestroy {
     }
     this.api.connectSSHClient(this.status.addr, data).subscribe(result => {
       console.log('conect ssh client');
+      data.append('client', action);
       if (result) {
         if (info) {
-          this.user.saveClientConnectInfo(info, this.user.SSHCLIENTINFO);
+          data.append('data', JSON.stringify(info));
         } else {
-          this.user.saveClientConnectInfo(
-            {
-              label: '',
-              nodeKey: this.sshClientForm.get('nodeKey').value,
-              appKey: this.sshClientForm.get('appKey').value,
-              count: 1
-            }, this.user.SSHCLIENTINFO);
+          const jsonStr = {
+            label: '',
+            nodeKey: this.sshClientForm.get('nodeKey').value,
+            appKey: this.sshClientForm.get('appKey').value,
+            count: 1
+          };
+          data.append('data', JSON.stringify(jsonStr));
         }
+        this.api.saveClientConnection(data).subscribe(res => {
+          console.log('save:', res);
+        });
       }
       this.task.next();
     });
@@ -359,12 +402,23 @@ export class SubStatusComponent implements OnInit, OnDestroy {
       }
     });
   }
-  inputKeys(ev: Event, content: any) {
+  inputKeys(ev: Event, action: string, content: any) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
-    this.sshClientConnectionInfo = this.user.get(this.user.SSHCLIENTINFO);
-    this.socketClientConnectionInfo = this.user.get(this.user.SOCKETCLIENTINFO);
+    if (!action) {
+      this.snackBar.open('Unable to obtain historical connection information', 'Dismiss', {
+        duration: 3000,
+        verticalPosition: 'top',
+        extraClasses: ['bg-warn']
+      });
+    } else {
+      const data = new FormData();
+      data.append('client', action);
+      this.api.getClientConnection(data).subscribe((info: ConnectServiceInfo) => {
+        this.clientConnectionInfo = info;
+      });
+    }
     this.sshClientForm.reset();
     this.socketClientForm.reset();
     this.dialog.open(content, {
@@ -478,6 +532,9 @@ export class SubStatusComponent implements OnInit, OnDestroy {
           this._transportData.push(this.transports);
           this.feedBacks = info.app_feedbacks;
           this.discoveries = info.discoveries;
+          // if (info.messages.length !== this.messages.length) {
+          //   this.messages = info.messages;
+          // }
           // this.showMessage(info.messages);
         }
       }, err => {
@@ -492,7 +549,7 @@ export class SubStatusComponent implements OnInit, OnDestroy {
       const result = this.feedBacks.find(el => {
         return el.key === app.key;
       });
-      port = result.feedbacks ? result.feedbacks.port : 0;
+      port = result.port ? result.port : 0;
     }
     switch (client) {
       case 'sshc':
@@ -507,44 +564,44 @@ export class SubStatusComponent implements OnInit, OnDestroy {
         break;
     }
   }
-  showMessage(msgs: Array<Array<Message>>) {
-    if (!msgs || msgs[0] == null) {
-      return;
-    } else if (msgs.length === 1) {
-      msgs[0].sort(this.compareMsg);
-    } else {
-      msgs.sort((m1, m2) => {
-        m1.sort(this.compareMsg);
-        m2.sort(this.compareMsg);
-        if (m1[0].priority < m2[0].priority) {
-          return 1;
-        }
-        if (m1[0].priority > m2[0].priority) {
-          return -1;
-        }
-        return 0;
-      });
-    }
-    this.alertMsg = msgs[0][0].msg;
-    setTimeout(() => {
-      this.dialog.open(AlertComponent, {
-        width: '45rem',
-        panelClass: 'alert',
-        data: {
-          msg: this.alertMsg
-        }
-      });
-    }, 500);
-  }
-  compareMsg(msg1: Message, msg2: Message) {
-    if (msg1.priority < msg2.priority) {
-      return 1;
-    }
-    if (msg1.priority > msg2.priority) {
-      return -1;
-    }
-    return 0;
-  }
+  // showMessage(msgs: Array<Array<Message>>) {
+  //   if (!msgs || msgs[0] == null) {
+  //     return;
+  //   } else if (msgs.length === 1) {
+  //     msgs[0].sort(this.compareMsg);
+  //   } else {
+  //     msgs.sort((m1, m2) => {
+  //       m1.sort(this.compareMsg);
+  //       m2.sort(this.compareMsg);
+  //       if (m1[0].priority < m2[0].priority) {
+  //         return 1;
+  //       }
+  //       if (m1[0].priority > m2[0].priority) {
+  //         return -1;
+  //       }
+  //       return 0;
+  //     });
+  //   }
+  //   this.alertMsg = msgs[0][0].msg;
+  //   setTimeout(() => {
+  //     this.dialog.open(AlertComponent, {
+  //       width: '45rem',
+  //       panelClass: 'alert',
+  //       data: {
+  //         msg: this.alertMsg
+  //       }
+  //     });
+  //   }, 500);
+  // }
+  // compareMsg(msg1: Message, msg2: Message) {
+  //   if (msg1.priority < msg2.priority) {
+  //     return 1;
+  //   }
+  //   if (msg1.priority > msg2.priority) {
+  //     return -1;
+  //   }
+  //   return 0;
+  // }
   fillApps() {
     if (env.isManager) {
       this.api.getApps(this.status.addr).subscribe((apps: Array<App>) => {
@@ -604,13 +661,17 @@ export class SubStatusComponent implements OnInit, OnDestroy {
       }
     });
   }
-  removeClientConnection(key: string, index: number) {
-    this.user.removeClientConnectInfo(key, index);
-    switch (key) {
-      case this.user.SSHCLIENTINFO:
-        this.sshClientConnectionInfo = this.user.get(key);
-        break;
-    }
+  removeClientConnection(action: string, index: number) {
+    const data = new FormData();
+    data.append('client', action);
+    data.append('index', String(index));
+    this.api.removeClientConnection(data).subscribe((result) => {
+      if (result) {
+        this.api.getClientConnection(data).subscribe((info: ConnectServiceInfo) => {
+          this.clientConnectionInfo = info;
+        });
+      }
+    });
   }
   init() {
     this.startRequest = true;
