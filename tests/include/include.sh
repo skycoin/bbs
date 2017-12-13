@@ -29,6 +29,7 @@ fi
 
 BBS_NODE_PATH=${GOPATH}/src/github.com/skycoin/bbs/cmd/bbsnode/bbsnode.go
 BBS_CLI_PATH=${GOPATH}/src/github.com/skycoin/bbs/cmd/bbscli/bbscli.go
+BBS_DIS_PATH=${GOPATH}/src/github.com/skycoin/bbs/cmd/discoverynode/discoverynode.go
 
 # Prints awesome stuff.
 pv () {
@@ -49,7 +50,7 @@ RunMS() {
 
     pv "START MESSENGER SERVER: PORT_MS ${ADDRESS_MS}..."
 
-    go run ${GOPATH}/src/github.com/skycoin/net/skycoin-messenger/server/main.go \
+    go run ${BBS_DIS_PATH} \
         -address ${ADDRESS_MS} \
         &
 }
