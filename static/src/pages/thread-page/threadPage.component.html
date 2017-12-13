@@ -82,10 +82,16 @@
   </div>
 </div>
 <!-- Ng Template -->
+<ng-template #refreshFab>
+  <a href="javascript:void(0);" class="fab" (click)="refresh($event)">
+    <i class="fa fa-repeat" aria-hidden="true"></i>
+  </a>
+</ng-template>
+
 <ng-template #fab>
-  <fab>
-    <fa-button name="New Post" icon="fa-pencil" (click)="openReply(addPost)"></fa-button>
-  </fab>
+  <a href="javascript:void(0);" class="fab" style="bottom: 11%;background-color:#d23f31;color:#fff" (click)="openReply(addPost)">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+  </a>
 </ng-template>
 <ng-template #addPost let-c="close">
   <div class="pop-dialog pop-dialog-lg" [@bounceIn]>

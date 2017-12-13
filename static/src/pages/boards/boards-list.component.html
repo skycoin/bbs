@@ -45,7 +45,11 @@
     </h5>
   </div>
 </div>
-
+<ng-template #refreshFab>
+    <a href="javascript:void(0);" class="fab" (click)="refresh($event)">
+      <i class="fa fa-repeat" aria-hidden="true"></i>
+    </a>
+  </ng-template>
 <!-- <ng-template #fab>
   <fab>
     <fa-button name="New Board" icon="fa-th-large" (click)="openAdd(add)"></fa-button>

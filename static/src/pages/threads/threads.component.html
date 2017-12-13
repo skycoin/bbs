@@ -6,11 +6,14 @@
     </div>
   </div>
   <div class="container">
-    <div class="card" (click)="open(thread?.header?.hash)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads" [@flyInOut]>
+    <div class="card" (click)="open(thread?.header?.hash)" *ngFor="let thread of (threads | orderBy: sort);trackBy: trackThreads"
+      [@flyInOut]>
       <div class="card-block">
         <div class="row card-top">
           <div class="col">
-            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="thread?.name">{{thread?.body?.name}}<small class="time">{{thread?.body?.ts / 1000000 | date: 'M/d/y H:mm'}}</small></a>
+            <a href="javascript:void(0);" class="title tooltip-normal break-line" [attr.aria-label]="thread?.name">{{thread?.body?.name}}
+              <small class="time">{{thread?.body?.ts / 1000000 | date: 'M/d/y H:mm'}}</small>
+            </a>
           </div>
         </div>
         <p class="margin-0 block-with-text text-muted">{{thread?.body?.body}}</p>
@@ -20,10 +23,16 @@
   </div>
 </div>
 
+<ng-template #refreshFab>
+  <a href="javascript:void(0);" class="fab" (click)="refresh($event)">
+    <i class="fa fa-repeat" aria-hidden="true"></i>
+  </a>
+</ng-template>
+
 <ng-template #fab>
-  <fab>
-    <fa-button name="New Thread" icon="fa-th-large" (click)="openAdd(add)"></fa-button>
-  </fab>
+  <a href="javascript:void(0);" class="fab" style="bottom: 11%;background-color:#d23f31;color:#fff" (click)="openAdd(add)">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+  </a>
 </ng-template>
 
 
@@ -35,10 +44,22 @@
         Thread Info
       </div>
       <div class="card-block">
-        <p class="thread-item">Name: <span>{{tmpThread.name}}</span></p>
-        <p class="thread-item">Description: <span>{{tmpThread.description}}</span></p>
-        <p class="thread-item">Master Board: <span>{{tmpThread.master_board}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.master_board" (onClip)="common.copy($event)"></i></span></p>
-        <p class="thread-item">Ref: <span>{{tmpThread.ref}}<i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.ref" (onClip)="common.copy($event)"></i></span></p>
+        <p class="thread-item">Name:
+          <span>{{tmpThread.name}}</span>
+        </p>
+        <p class="thread-item">Description:
+          <span>{{tmpThread.description}}</span>
+        </p>
+        <p class="thread-item">Master Board:
+          <span>{{tmpThread.master_board}}
+            <i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.master_board" (onClip)="common.copy($event)"></i>
+          </span>
+        </p>
+        <p class="thread-item">Ref:
+          <span>{{tmpThread.ref}}
+            <i class="fa fa-files-o clip" title="copy" appClip [clipText]="tmpThread.ref" (onClip)="common.copy($event)"></i>
+          </span>
+        </p>
       </div>
     </div>
   </div>
@@ -50,8 +71,8 @@
     <div class="modal-header">
       <h4 class="modal-title">New Thread</h4>
       <button type="button" class="close" aria-label="Close" (click)="c(false)">
-      <span aria-hidden="true">&times;</span>
-    </button>
+        <span aria-hidden="true">&times;</span>
+      </button>
     </div>
     <div class="modal-body">
       <form [formGroup]="addForm" novalidate>
@@ -85,7 +106,7 @@
       <label for="toBoard">Destination board</label>
       <select class="form-control" id="toBoard" [(ngModel)]="importBoardKey" placeholder="Choose to move">
         <option *ngFor="let board of importBoards" value="{{board.public_key}}">{{board.name}}</option>
-    </select>
+      </select>
       <!--<input type="text" class="form-control" placeholder="toBoard" id="toBoard">-->
     </div>
   </div>

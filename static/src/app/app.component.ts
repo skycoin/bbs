@@ -76,8 +76,10 @@ export class AppComponent implements OnInit {
   createForm = new FormGroup({
     alias: new FormControl('', Validators.required),
     seed: new FormControl('', Validators.required),
-    password: new FormControl('', Validators.required)
+    password: new FormControl('', Validators.required),
+    confirmPassword: new FormControl('', Validators.required),
   });
+  authPassword = false;
   constructor(
     private api: ApiService,
     public common: CommonService,
@@ -108,11 +110,15 @@ export class AppComponent implements OnInit {
               this.userName = user;
               this.user.setTmpItem(this.userName);
               this.user.loginInfo = info;
+              this.alert.success({ content: 'Authentication is successful' });
+            } else {
+              this.alert.error({ content: 'Password error or system is busy, please try again later' });
             }
           })
         } else if (result === 'create') {
           this.createForm.reset();
           this.hasAlias = false;
+          this.authPassword = false;
           this.createForm.patchValue({ seed: this.user.newSeed() });
           this.pop.open(this.createTemplate, { isDialog: true, canClickBackdrop: false }).result.then(createRsult => {
             if (createRsult) {
@@ -123,11 +129,13 @@ export class AppComponent implements OnInit {
                 }).subscribe(data => {
                   this.user.setItem(alias, data);
                   this.userList = this.user.getUserList();
-                  this.loading.close();
+                  this.alert.success({ content: 'Successfully created' });
                 })
               })
             }
-          }, err => { });
+          }, err => {
+            console.log('error:', err);
+          });
         }
       });
     });
@@ -152,6 +160,12 @@ export class AppComponent implements OnInit {
       input.type = 'password';
     }
   }
+  checkPassword() {
+    const pass = this.createForm.get('password').value;
+    const confirmPassword = this.createForm.get('confirmPassword').value;
+    this.authPassword = !(pass === confirmPassword);
+  }
+
   checkAlias() {
     const item = this.user.getItem(this.createForm.get('alias').value)
     if (item) {
@@ -200,7 +214,9 @@ export class AppComponent implements OnInit {
               })
             })
           }
-        }, err => { });
+        }, err => {
+          console.log('error:', err);
+        });
       } else if (result === true) {
         const user = this.loginForm.get('user').value;
         const hash = this.user.getItem(user);
@@ -209,7 +225,12 @@ export class AppComponent implements OnInit {
             this.userName = user;
             this.user.setTmpItem(this.userName);
             this.user.loginInfo = loginInfo;
+            this.alert.success({ content: 'Authentication is successful' });
+          } else {
+            this.alert.error({ content: 'Password error or system is busy, please try again later' });
           }
+        }, err => {
+          console.log('error:', err);
         })
       }
     }, err => { });

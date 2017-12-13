@@ -74,11 +74,24 @@
             <i class="fa fa-eye" aria-hidden="true" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
           </div>
         </div>
+        <!-- <p *ngIf="hasAlias" style="margin:0;padding:0;color:red">
+          <small>the Alias already exists</small>
+        </p> -->
+        <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+          <div class="input-group-addon">Confirm password</div>
+          <input type="password" class="form-control" id="registerPass" #registerPass formControlName="confirmPassword" (blur)="checkPassword()">
+          <div class="input-group-addon operation" (click)="isShowPassword($event,registerPass)">
+            <i class="fa fa-eye" aria-hidden="true" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
+          </div>
+        </div>
+        <p *ngIf="authPassword" style="margin:0;padding:0;color:red">
+          <small>the two passwords are different</small>
+        </p>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-lg btn-block close-btn" (click)="c(false)">Close</button>
-      <button type="button" class="btn btn-lg btn-block create-btn" (click)="c(true)" [disabled]="!createForm.valid || hasAlias">Create</button>
+      <button type="button" class="btn btn-lg btn-block create-btn" (click)="c(true)" [disabled]="!createForm.valid || hasAlias || authPassword">Create</button>
     </div>
   </div>
 </ng-template>

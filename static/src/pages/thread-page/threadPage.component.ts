@@ -47,6 +47,7 @@ export class ThreadPageComponent implements OnInit {
   @HostBinding('style.display') display = 'block';
   @ViewChild('editor') editor: ElementRef;
   @ViewChild('fab') fab: TemplateRef<any>;
+  @ViewChild('refreshFab') refreshFab: TemplateRef<any>;
   @ViewChildren('post') posts: QueryList<ElementRef>;
   sort = 'esc';
   boardKey = '';
@@ -121,6 +122,7 @@ export class ThreadPageComponent implements OnInit {
     });
     Observable.timer(10).subscribe(() => {
       this.pop.open(this.fab, { isDialog: false });
+      this.pop.open(this.refreshFab, { isDialog: false });
     });
   }
   showUserMenu(post: Post, ev: Event) {
@@ -146,6 +148,12 @@ export class ThreadPageComponent implements OnInit {
     } else {
       post.voteMenu = false;
     }
+  }
+  refresh(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.getThreadPage(this.boardKey, this.threadKey, true);
   }
   public setSort() {
     this.sort = this.sort === 'desc' ? 'asc' : 'desc';
@@ -305,7 +313,7 @@ export class ThreadPageComponent implements OnInit {
       post.uiOptions.menu = !post.uiOptions.menu;
     }
   }
-  getThreadPage(boardKey, ref: string) {
+  getThreadPage(boardKey, ref: string, isShowTip: boolean = false) {
     if (boardKey === '' || ref === '') {
       this.alert.error({ content: 'Parameter error!!!' });
       return;
@@ -315,6 +323,9 @@ export class ThreadPageComponent implements OnInit {
     data.append('thread_ref', ref);
     this.api.getThreadpage(data).subscribe(res => {
       this.threadPage = res;
+      if (isShowTip) {
+        this.alert.success({ content: 'Successful refresh' });
+      }
     }, err => {
       // this.router.navigate(['']);
     });

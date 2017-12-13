@@ -200,8 +200,7 @@ $tableHover-color: hsla(235,
   margin: 3rem auto;
   box-shadow: 0 0 1rem rgba(0, 0, 0, .5);
   input[type="text"] {
-    padding: .75rem 1rem;
-    // border-radius: 2rem;
+    padding: .75rem 1rem; // border-radius: 2rem;
     &:focus {
       border: 1px solid hsla(208, 98%, 68%, 0.5);
       box-shadow: 0.1rem 0.1rem 1rem hsla(208, 98%, 68%, 0.5);
@@ -309,7 +308,6 @@ $bgColor: white) {
     box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.3);
     z-index: $tooltip-index;
   }
-
   &:hover:after,
   &:focus:after {
     display: block;
@@ -327,5 +325,29 @@ $bgColor: white) {
   &:after {
     top: 110%;
     left: 10%;
+  }
+}
+
+.fab {
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.25rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  bottom: 20%;
+  right: 1%;
+  background-color: #fff;
+  border-radius: 50%;
+  text-decoration: none;
+  box-shadow: 0 0.3rem 0.4rem rgba(0, 0, 0, 0.3);
+  transition: box-shadow .5s;
+  &:hover {
+    text-decoration: none;
+  }
+  &:active {
+    box-shadow: none;
+    outline: none;
   }
 }
