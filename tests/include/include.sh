@@ -50,23 +50,23 @@ RunMS() {
     pv "START MESSENGER SERVER: PORT_MS ${ADDRESS_MS}..."
 
     go run ${GOPATH}/src/github.com/skycoin/net/skycoin-messenger/server/main.go \
-        -address [::1]:${ADDRESS_MS} \
+        -address ${ADDRESS_MS} \
         &
 }
 
 RunNode() {
-    if [[ $# -ne 4 ]] ; then
+    if [[ $# -ne 5 ]] ; then
         echo "4 arguments required"
         exit 1
     fi
 
-    PORT_HTTP=$1 ; PORT_CXO=$2 ; PORT_RPC=$3 ; GUI=$4
+    ADDRESS_MS=$1 ; PORT_HTTP=$2 ; PORT_CXO=$3 ; PORT_RPC=$4 ; GUI=$5
 
     pv "START NODE: PORT_HTTP ${PORT_HTTP}, PORT_CXO ${PORT_CXO}, PORT_RPC ${PORT_RPC}, GUI ${GUI}..."
 
     go run ${BBS_NODE_PATH} \
         -memory=true \
-        -enforced-messenger-addresses=messenger.skycoin.net:8080 \
+        -enforced-messenger-addresses=${ADDRESS_MS} \
         -rpc-port=${PORT_RPC} \
         -cxo-port=${PORT_CXO} \
         -cxo-rpc=false \
