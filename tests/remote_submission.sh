@@ -7,7 +7,8 @@ source "include/include.sh"
 
 # Run a messenger server (ADDRESS).
 
-#RunMS :8080
+DISCOVERY_ADDRESS=[::]:8008
+RunMS ${DISCOVERY_ADDRESS}
 
 # Wait for messenger server to start (assuming 5s is enough).
 
@@ -16,8 +17,8 @@ sleep 5
 
 # Run some nodes (HTTP | CXO | RPC | GUI).
 
-RunNode 5410 5412 5414 false
-RunNode 7410 7412 7414 true
+RunNode ${DISCOVERY_ADDRESS} 5410 5412 5414 false
+RunNode ${DISCOVERY_ADDRESS} 7410 7412 7414 true
 
 # Wait for nodes to start running (assuming 10s is enough).
 

@@ -41,7 +41,7 @@
   branch = "master"
   name = "github.com/skycoin/cxo"
   packages = ["data","data/cxds","data/idxdb","node","node/gnet","node/log","node/msg","skyobject","skyobject/statutil"]
-  revision = "fa779599386d09c462b4d100b037da1f61c88346"
+  revision = "475d8ef72a87e05d020b1799bf63a66c9a6b6584"
 
 [[projects]]
   branch = "master"
@@ -52,8 +52,8 @@
 [[projects]]
   name = "github.com/skycoin/skycoin"
   packages = ["src/cipher","src/cipher/base58","src/cipher/chacha20","src/cipher/encoder","src/cipher/go-bip39","src/cipher/ripemd160","src/cipher/secp256k1-go","src/cipher/secp256k1-go/secp256k1-go2","src/util/browser","src/util/file","src/util/logging"]
-  revision = "ee33f18f2eed78515bce3b1c412d0e67b0570c24"
-  version = "v0.19.1"
+  revision = "bf49bf9a06ead0aa5cf7b51c347223dee1c6cc4b"
+  version = "v0.21.0"
 
 [[projects]]
   name = "github.com/toqueteos/webbrowser"
@@ -82,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c8573d34cdbb8a93c927703edd83651e78c426954c715454622e6c8c025560b2"
+  inputs-digest = "085150165d2a1179e78f084e88bf8b0bfcb5b86b4fecc898b313526022090b27"
   solver-name = "gps-cdcl"
   solver-version = 1

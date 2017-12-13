@@ -85,10 +85,10 @@ func (uo *UxOut) CoinHours(t uint64) uint64 {
 		return uo.Body.Hours
 	}
 
-	seconds := (t - uo.Head.Time)                  //number of seconds
-	coinSeconds := (seconds * uo.Body.Coins) / 1e6 //coin seconds
-	coinHours := coinSeconds / 3600                //coin hours
-	return uo.Body.Hours + coinHours               //starting+earned
+	seconds := (t - uo.Head.Time)                  // number of seconds
+	coinSeconds := (seconds * uo.Body.Coins) / 1e6 // coin seconds
+	coinHours := coinSeconds / 3600                // coin hours
+	return uo.Body.Hours + coinHours               // starting+earned
 }
 
 // UxHashSet set mapping from UxHash to a placeholder value. Ignore the byte value,
@@ -159,6 +159,25 @@ func (ua UxArray) Swap(i, j int) {
 	ua[i], ua[j] = ua[j], ua[i]
 }
 
+// Coins returns the total coins
+func (ua UxArray) Coins() uint64 {
+	var coins uint64
+	for _, ux := range ua {
+		coins += ux.Body.Coins
+	}
+
+	return coins
+}
+
+// CoinHours returns the total coin hours
+func (ua UxArray) CoinHours(headTime uint64) uint64 {
+	var hours uint64
+	for _, ux := range ua {
+		hours += ux.CoinHours(headTime)
+	}
+	return hours
+}
+
 // AddressUxOuts maps address with uxarray
 type AddressUxOuts map[cipher.Address]UxArray
 
@@ -211,6 +230,23 @@ func (auo AddressUxOuts) Sub(other AddressUxOuts) AddressUxOuts {
 	return ox
 }
 
+// Add returns a new unspents, with merged unspents
+func (auo AddressUxOuts) Add(other AddressUxOuts) AddressUxOuts {
+	ox := make(AddressUxOuts, len(auo))
+	for a, o := range auo {
+		ox[a] = o
+	}
+
+	for a, uxs := range other {
+		if suxs, ok := ox[a]; ok {
+			ox[a] = suxs.Add(uxs)
+		} else {
+			ox[a] = uxs
+		}
+	}
+	return ox
+}
+
 // Sub returns a new UxArray with elements in other removed from self
 // Deprecate
 func (ua UxArray) Sub(other UxArray) UxArray {
@@ -222,4 +258,15 @@ func (ua UxArray) Sub(other UxArray) UxArray {
 		}
 	}
 	return uxa
+}
+
+// Add returns a new UxArray with merged elements
+func (ua UxArray) Add(other UxArray) UxArray {
+	m := ua.Set()
+	for i := range other {
+		if _, ok := m[other[i].Hash()]; !ok {
+			ua = append(ua, other[i])
+		}
+	}
+	return ua
 }

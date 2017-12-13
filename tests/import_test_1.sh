@@ -14,11 +14,11 @@ A_PK=032ffee44b9554cd3350ee16760688b2fb9d0faae7f3534917ff07e971eb36fd6b
 A_SK=b4f56cab07ea360c16c22ac241738e923b232138b69089fe0134f81a432ffaff
 
 # ADDRESS
-RunMS :8080
+RunMS [::1]:8008
 sleep 5
 
 # HTTP | CXO | RPC | GUI
-RunNode 7410 7412 7414 false
+RunNode [::1]:8008 7410 7412 7414 false
 sleep 10
 
 # RPC | Name | Body | Seed

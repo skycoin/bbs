@@ -1,11 +1,12 @@
+// +build ignore
 package visor
 
 import (
-	"crypto/rand"
+	"testing"
 	"time"
 
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/skycoin/skycoin/src/coin"
+	"github.com/skycoin/skycoin/src/testutil"
 	"github.com/skycoin/skycoin/src/util/utc"
 )
 
@@ -105,34 +106,28 @@ const (
 // 	}
 // }
 
-func randSHA256() cipher.SHA256 {
-	b := make([]byte, 128)
-	rand.Read(b)
-	return cipher.SumSHA256(b)
-}
-
-func createUnconfirmedTxn() UnconfirmedTxn {
+func createUnconfirmedTxn(t *testing.T) UnconfirmedTxn {
 	ut := UnconfirmedTxn{}
 	ut.Txn = coin.Transaction{}
-	ut.Txn.InnerHash = randSHA256()
+	ut.Txn.InnerHash = testutil.RandSHA256(t)
 	ut.Received = utc.Now().UnixNano()
 	ut.Checked = ut.Received
 	ut.Announced = time.Time{}.UnixNano()
 	return ut
 }
 
-func addUnconfirmedTxn(v *Visor) UnconfirmedTxn {
-	ut := createUnconfirmedTxn()
-	ut.Hash()
-	v.Unconfirmed.Txns.put(&ut)
-	return ut
-}
+// func addUnconfirmedTxn(v *Visor) UnconfirmedTxn {
+// 	ut := createUnconfirmedTxn()
+// 	ut.Hash()
+// 	v.Unconfirmed.txns.put(&ut)
+// 	return ut
+// }
 
-func addUnconfirmedTxnToPool(utp *UnconfirmedTxnPool) UnconfirmedTxn {
-	ut := createUnconfirmedTxn()
-	utp.Txns.put(&ut)
-	return ut
-}
+// func addUnconfirmedTxnToPool(utp *UnconfirmedTxnPool) UnconfirmedTxn {
+// 	ut := createUnconfirmedTxn()
+// 	utp.txns.put(&ut)
+// 	return ut
+// }
 
 // func transferCoinsToSelf(v *Visor, addr cipher.Address) error {
 // 	tx, err := v.Spend(v.Wallets[0].GetFilename(), wallet.Balance{1e6, 0}, 0, addr)
