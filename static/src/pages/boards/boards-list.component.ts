@@ -20,6 +20,7 @@ import 'rxjs/add/observable/timer'
 export class BoardsListComponent implements OnInit, AfterViewInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
+  @ViewChild('refreshFab') refreshFab: TemplateRef<any>;
   sort = 'asc';
   isRoot = false;
   boards: Array<Board> = [];
@@ -50,22 +51,34 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     // this.api.getStats().subscribe(status => {
     //   this.isRoot = status.node_is_master;
     // });
+    Observable.timer(10).subscribe(() => {
+      this.pop.open(this.refreshFab, { isDialog: false });
+    });
   }
   ngAfterViewInit() {
 
   }
+  refresh(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.getBoards(true);
 
+  }
   setSort() {
     this.sort = this.sort === 'desc' ? 'asc' : 'desc';
   }
 
-  getBoards() {
+  getBoards(isShowTip: boolean = false;) {
     this.api.getBoards().subscribe((allBoards: AllBoards) => {
       if (!allBoards.okay) {
         return;
       }
       this.boards = allBoards.data.master_boards;
       this.remoteBoards = allBoards.data.remote_boards;
+      if (isShowTip) {
+        this.alert.success({ content: 'Successful refresh' });
+      }
     });
   }
 

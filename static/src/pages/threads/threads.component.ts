@@ -20,6 +20,7 @@ export class ThreadsComponent implements OnInit {
   @HostBinding('@routeAnimation') routeAnimation = true;
   @HostBinding('style.display') display = 'block';
   @ViewChild('fab') fabBtnTemplate: TemplateRef<any>;
+  @ViewChild('refreshFab') refreshFab: TemplateRef<any>;
   threads: Array<Thread> = [];
   importBoards: Array<Board> = [];
   importBoardKey = '';
@@ -51,6 +52,7 @@ export class ThreadsComponent implements OnInit {
     })
     Observable.timer(10).subscribe(() => {
       this.pop.open(this.fabBtnTemplate, { isDialog: false });
+      this.pop.open(this.refreshFab, { isDialog: false });
     });
   }
   trackThreads(index, thread: Thread) {
@@ -67,13 +69,21 @@ export class ThreadsComponent implements OnInit {
       this.threads = threads;
     });
   }
-
-  init() {
+  refresh(ev: Event) {
+    ev.stopImmediatePropagation();
+    ev.stopPropagation();
+    ev.preventDefault();
+    this.init(true);
+  }
+  init(isShowTip: boolean = false) {
     const data = new FormData();
     data.append('board_public_key', this.boardKey);
     this.api.getBoardPage(data).subscribe((res: BoardPage) => {
       this.board = res.data.board;
       this.threads = res.data.threads;
+      if (isShowTip) {
+        this.alert.success({ content: 'Successful refresh' });
+      }
     }, err => {
       this.router.navigate(['']);
     });
@@ -82,6 +92,7 @@ export class ThreadsComponent implements OnInit {
   openInfo(ev: Event, thread: Thread, content: any) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
+    ev.preventDefault();
     this.tmpThread = thread;
     this.pop.open(content);
   }
