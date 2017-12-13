@@ -69,7 +69,7 @@ export class BoardsListComponent implements OnInit, AfterViewInit {
     this.sort = this.sort === 'desc' ? 'asc' : 'desc';
   }
 
-  getBoards(isShowTip: boolean = false;) {
+  getBoards(isShowTip: boolean = false) {
     this.api.getBoards().subscribe((allBoards: AllBoards) => {
       if (!allBoards.okay) {
         return;
