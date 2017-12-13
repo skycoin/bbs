@@ -2,25 +2,15 @@ package coin
 
 import (
 	"bytes"
-	"crypto/rand"
 	"sort"
 	"testing"
 
-	"github.com/skycoin/skycoin/src/cipher"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/skycoin/skycoin/src/cipher"
+	"github.com/skycoin/skycoin/src/testutil"
 )
-
-func randBytes(t *testing.T, n int) []byte {
-	b := make([]byte, n)
-	x, err := rand.Read(b)
-	assert.Equal(t, n, x) //end unit testing.
-	assert.Nil(t, err)
-	return b
-}
-
-func randSHA256(t *testing.T) cipher.SHA256 {
-	return cipher.SumSHA256(randBytes(t, 128))
-}
 
 func makeUxBody(t *testing.T) UxBody {
 	body, _ := makeUxBodyWithSecret(t)
@@ -35,7 +25,7 @@ func makeUxOut(t *testing.T) UxOut {
 func makeUxBodyWithSecret(t *testing.T) (UxBody, cipher.SecKey) {
 	p, s := cipher.GenerateKeyPair()
 	return UxBody{
-		SrcTransaction: cipher.SumSHA256(randBytes(t, 128)),
+		SrcTransaction: testutil.RandSHA256(t),
 		Address:        cipher.AddressFromPubKey(p),
 		Coins:          1e6,
 		Hours:          100,
@@ -79,7 +69,7 @@ func TestUxOutSnapshotHash(t *testing.T) {
 	ux2.Head.BkSeq = 4
 	assert.NotEqual(t, ux2.SnapshotHash(), h)
 	ux2 = ux
-	ux2.Body.SrcTransaction = randSHA256(t)
+	ux2.Body.SrcTransaction = testutil.RandSHA256(t)
 	assert.NotEqual(t, ux2.SnapshotHash(), h)
 	ux2 = ux
 	ux2.Body.Address = makeAddress()
@@ -335,6 +325,37 @@ func TestAddressUxOutsSub(t *testing.T) {
 	// Originals should be unmodified
 	assert.Equal(t, len(up), 3)
 	assert.Equal(t, len(up[uxs[0].Body.Address]), 2)
+	assert.Equal(t, len(up[uxs[2].Body.Address]), 1)
+	assert.Equal(t, len(up[uxs[3].Body.Address]), 1)
+	assert.Equal(t, len(up2), 2)
+	assert.Equal(t, len(up2[uxs[0].Body.Address]), 1)
+	assert.Equal(t, len(up2[uxs[2].Body.Address]), 1)
+}
+
+func TestAddressUxOutsAdd(t *testing.T) {
+	up := make(AddressUxOuts)
+	up2 := make(AddressUxOuts)
+	uxs := makeUxArray(t, 4)
+
+	uxs[1].Body.Address = uxs[0].Body.Address
+	up[uxs[0].Body.Address] = UxArray{uxs[0]}
+	up[uxs[2].Body.Address] = UxArray{uxs[2]}
+	up[uxs[3].Body.Address] = UxArray{uxs[3]}
+
+	up2[uxs[0].Body.Address] = UxArray{uxs[1]}
+	up2[uxs[2].Body.Address] = UxArray{uxs[2]}
+
+	up3 := up.Add(up2)
+	require.Equal(t, 3, len(up3))
+	require.Equal(t, len(up3[uxs[0].Body.Address]), 2)
+	require.Equal(t, up3[uxs[0].Body.Address], UxArray{uxs[0], uxs[1]})
+	require.Equal(t, up3[uxs[2].Body.Address], UxArray{uxs[2]})
+	require.Equal(t, up3[uxs[3].Body.Address], UxArray{uxs[3]})
+	require.Equal(t, up3[uxs[1].Body.Address], UxArray{uxs[0], uxs[1]})
+
+	// Originals should be unmodified
+	assert.Equal(t, len(up), 3)
+	assert.Equal(t, len(up[uxs[0].Body.Address]), 1)
 	assert.Equal(t, len(up[uxs[2].Body.Address]), 1)
 	assert.Equal(t, len(up[uxs[3].Body.Address]), 1)
 	assert.Equal(t, len(up2), 2)

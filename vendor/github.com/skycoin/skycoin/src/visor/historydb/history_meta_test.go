@@ -4,16 +4,14 @@ import (
 	"testing"
 
 	"github.com/boltdb/bolt"
-	"github.com/skycoin/skycoin/src/visor/bucket"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/skycoin/skycoin/src/testutil"
+	"github.com/skycoin/skycoin/src/visor/bucket"
 )
 
 func TestNewHistoryMeta(t *testing.T) {
-	db, td, err := setup(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	db, td := testutil.PrepareDB(t)
 	defer td()
 
 	hm, err := newHistoryMeta(db)
@@ -29,10 +27,7 @@ func TestNewHistoryMeta(t *testing.T) {
 }
 
 func TestHistoryMetaGetParsedHeight(t *testing.T) {
-	db, td, err := setup(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	db, td := testutil.PrepareDB(t)
 	defer td()
 
 	hm, err := newHistoryMeta(db)
@@ -45,19 +40,15 @@ func TestHistoryMetaGetParsedHeight(t *testing.T) {
 }
 
 func TestHistoryMetaSetParsedHeight(t *testing.T) {
-	db, td, err := setup(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	db, td := testutil.PrepareDB(t)
 	defer td()
 
 	hm, err := newHistoryMeta(db)
 	assert.Nil(t, err)
-	assert.Nil(t, hm.setParsedHeight(0))
+	assert.Nil(t, hm.SetParsedHeight(0))
 	assert.Equal(t, uint64(0), bucket.Btoi(hm.v.Get(parsedHeightKey)))
 
 	// set 10
-	hm.setParsedHeight(10)
+	hm.SetParsedHeight(10)
 	assert.Equal(t, uint64(10), bucket.Btoi(hm.v.Get(parsedHeightKey)))
 }

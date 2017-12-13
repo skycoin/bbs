@@ -28,7 +28,7 @@ required = ["github.com/disiqueira/gotree"]
 
 [[constraint]]
   name = "github.com/skycoin/skycoin"
-  version = "0.19.1"
+  version = "0.21.0"
 
 [[constraint]]
   name = "gopkg.in/urfave/cli.v1"
