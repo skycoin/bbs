@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	log "github.com/sirupsen/logrus"
+	"log"
 	"github.com/skycoin/net/skycoin-messenger/factory"
 )
 
@@ -26,19 +26,21 @@ func main() {
 
 	f := factory.NewMessengerFactory()
 	f.SetLoggerLevel(factory.DebugLevel)
-	err := f.Listen(address)
-	log.Debugf("listen on %s", address)
-	if err != nil {
-		log.Error(err)
+
+	log.Printf("listening on %s", address)
+
+	if e := f.Listen(address); e != nil {
+		log.Println(e)
 		os.Exit(1)
 	}
 
 	select {
-	case signal := <-osSignal:
-		if signal == os.Interrupt {
-			log.Debugln("exit by signal Interrupt")
-		} else if signal == os.Kill {
-			log.Debugln("exit by signal Kill")
+	case s := <-osSignal:
+		switch s {
+		case os.Interrupt:
+			log.Printf("exit by signal Interrupt")
+		case os.Kill:
+			log.Printf("exit by signal Kill")
 		}
 	}
 }
