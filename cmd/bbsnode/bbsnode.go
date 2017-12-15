@@ -30,7 +30,7 @@ const (
 
 var (
 	defaultMessengerAddresses = cli.StringSlice{
-		"messenger.skycoin.net:8080",
+		"messenger.skycoin.net:9090",
 	}
 	defaultDevMessengerAddresses = cli.StringSlice{
 		"127.0.0.1:8080",
@@ -250,6 +250,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "Skycoin BBS Node"
 	app.Usage = "Runs a Skycoin BBS Node"
+	app.Version = "4.4"
 	app.Flags = flags
 	app.Action = config.GenerateAction()
 	if e := app.Run(os.Args); e != nil {
