@@ -30,7 +30,7 @@ const (
 
 var (
 	defaultMessengerAddresses = cli.StringSlice{
-		"35.227.102.45:8000",
+		"35.227.102.45:8080",
 	}
 	defaultDevMessengerAddresses = cli.StringSlice{
 		"127.0.0.1:8080",
