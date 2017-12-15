@@ -1,0 +1,28 @@
+[Unit]
+Description=Skycoin Discovery Node
+ConditionPathExists=/home/evan_linjin/go/bin/discoverynode
+After=network.target
+
+[Service]
+Type=simple
+User=skycoin
+Group=skycoin
+LimitNOFILE=1024
+
+Restart=on-failure
+RestartSec=10
+
+WorkingDirectory=/home/evan_linjin
+ExecStart=/home/evan_linjin/go/bin/discoverynode --address=:8080
+
+# make sure log directory exists and owned by syslog
+PermissionsStartOnly=true
+ExecStartPre=/bin/mkdir -p /var/log/skycoin-discoverynode
+ExecStartPre=/bin/chown syslog:adm /var/log/skycoin-discoverynode
+ExecStartPre=/bin/chmod 755 /var/log/skycoin-discoverynode
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=skycoin-discoverynode
+ 
+[Install]
+WantedBy=multi-user.target

@@ -22,10 +22,10 @@ func main() {
 	parseFlags()
 
 	osSignal := make(chan os.Signal, 1)
-	signal.Notify(osSignal, os.Interrupt, os.Kill)
+	signal.Notify(osSignal)
 
 	f := factory.NewMessengerFactory()
-	f.SetLoggerLevel(factory.PanicLevel)
+	f.SetLoggerLevel(factory.InfoLevel)
 	err := f.Listen(address)
 	log.Debugf("listen on %s", address)
 	if err != nil {
@@ -41,5 +41,4 @@ func main() {
 			log.Debugln("exit by signal Kill")
 		}
 	}
-
 }
