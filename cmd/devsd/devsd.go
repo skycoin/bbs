@@ -27,7 +27,7 @@ func main() {
 	f := factory.NewMessengerFactory()
 	f.SetLoggerLevel(factory.InfoLevel)
 	err := f.Listen(address)
-	log.Debugf("listen on %s", address)
+	log.Printf("listening on %s", address)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
