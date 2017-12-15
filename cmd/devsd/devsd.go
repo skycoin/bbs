@@ -25,7 +25,7 @@ func main() {
 	signal.Notify(osSignal)
 
 	f := factory.NewMessengerFactory()
-	f.SetLoggerLevel(factory.InfoLevel)
+	f.SetLoggerLevel(factory.DebugLevel)
 	err := f.Listen(address)
 	log.Printf("listening on %s", address)
 	if err != nil {
