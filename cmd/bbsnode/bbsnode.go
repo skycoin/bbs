@@ -30,7 +30,7 @@ const (
 
 var (
 	defaultMessengerAddresses = cli.StringSlice{
-		"messenger.skycoin.net:9090",
+		"35.227.102.45:8000",
 	}
 	defaultDevMessengerAddresses = cli.StringSlice{
 		"127.0.0.1:8080",
