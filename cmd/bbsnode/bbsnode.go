@@ -38,6 +38,7 @@ var (
 
 // Config represents configuration for node.
 type Config struct {
+	Public                     bool            `json:"public"`                       // Whether to expose node publicly.
 	Memory                     bool            `json:"memory"`                       // Whether to run node in memory.
 	ConfigDir                  string          `json:"config-dir"`                   // Full path for configuration directory.
 	RPC                        bool            `json:"rpc"`                          // Enable RPC interface for admin control.
@@ -59,6 +60,7 @@ type Config struct {
 // NewDefaultConfig returns a default configuration for BBS node.
 func NewDefaultConfig() *Config {
 	return &Config{
+		Public:                     false,
 		Memory:                     false, // Save to disk.
 		ConfigDir:                  "",    // --> Action: set as '$HOME/.skybbs'
 		RPC:                        true,
@@ -117,6 +119,7 @@ func (c *Config) GenerateAction() cli.ActionFunc {
 				Access: &store.Access{
 					CXO: cxo.NewManager(
 						&cxo.ManagerConfig{
+							Public: &c.Public,
 							Memory: &c.Memory,
 							Config: &c.ConfigDir,
 							EnforcedMessengerAddresses: c.EnforcedMessengerAddresses,
@@ -192,9 +195,14 @@ func main() {
 	config := NewDefaultConfig()
 	flags := []cli.Flag{
 		cli.BoolFlag{
+			Name:        "public",
+			Destination: &config.Public,
+			Usage:       "whether this node is exposed publicly and shares it's subscribed boards",
+		},
+		cli.BoolFlag{
 			Name:        "memory",
 			Destination: &config.Memory,
-			Usage:       "avoid storing BBS data on disk and use memory instead",
+			Usage:       "whether to avoid storing BBS data on disk and use memory instead",
 		},
 		cli.StringFlag{
 			Name:        "config-dir",
