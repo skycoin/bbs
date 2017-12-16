@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/skycoin/bbs/src/misc/boo"
 	"github.com/skycoin/bbs/src/misc/tag"
 	"gopkg.in/urfave/cli.v1"
@@ -10,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"encoding/json"
 )
 
 const (

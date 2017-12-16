@@ -37,6 +37,7 @@ const (
 
 // ManagerConfig represents the configuration for CXO Manager.
 type ManagerConfig struct {
+	Public                     *bool    // Whether to expose node publicly.
 	Memory                     *bool    // Whether to enable memory mode.
 	EnforcedMessengerAddresses []string // Messenger addresses.
 	EnforcedSubscriptions      []string // Subscriptions
@@ -153,8 +154,8 @@ func (m *Manager) prepareNode() error {
 	//c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
-	c.EnableListener = true
-	c.PublicServer = true
+	c.EnableListener = *m.c.Public
+	c.PublicServer = *m.c.Public
 	c.DiscoveryAddresses = m.c.EnforcedMessengerAddresses
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
 	c.EnableRPC = *m.c.CXORPCEnable
