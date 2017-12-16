@@ -154,7 +154,7 @@ func (m *Manager) prepareNode() error {
 	//c.MaxMessageSize = 0 // TODO -> Adjust.
 	c.InMemoryDB = *m.c.Memory
 	c.DataDir = filepath.Join(*m.c.Config, SubDir)
-	c.EnableListener = *m.c.Public
+	c.EnableListener = true
 	c.PublicServer = *m.c.Public
 	c.DiscoveryAddresses = m.c.EnforcedMessengerAddresses
 	c.Listen = "[::]:" + strconv.Itoa(*m.c.CXOPort)
