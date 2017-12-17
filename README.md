@@ -71,6 +71,10 @@ There are currently two ways of interacting with Skycoin BBS.
 
 * **Command-line interface -** This is for administration tools. Detailed instructions are located at [cmd/bbscli/README.md](./cmd/bbscli/README.md).
 
+## Documentation
+
+Please make use of the [Skycoin BBS Wiki](./wiki)!
+
 ## Participate
 
 #### Telegram
