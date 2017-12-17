@@ -70,13 +70,4 @@ func RegisterSubmissionHandlers(mux *http.ServeMux, g *Gateway) {
 				SigStr:  r.FormValue("sig"),
 			}))
 		})
-
-	// LEGACY. TODO: (Get rid of it)
-	mux.HandleFunc("/api/new_submission",
-		func(w http.ResponseWriter, r *http.Request) {
-			send(w)(g.Access.SubmitContent(r.Context(), &store.SubmissionIn{
-				Body:   []byte(r.FormValue("body")),
-				SigStr: r.FormValue("sig"),
-			}))
-		})
 }

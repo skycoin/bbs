@@ -67,7 +67,7 @@ $ ./run.sh
 There are currently two ways of interacting with Skycoin BBS.
 * **Web interface thin client -** By default, the flag `-web-gui` is enabled. Hence, when BBS is launched, the web gui will be served at a port specified by `-web-port`. One can only submit and view content via the thin client.
 
-* **Restful json api -** This is ideal for viewing/submitting content without a graphical user interface. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [doc/bbs_postman_collection.json](./doc/bbs_postman_collection.json) which can be viewed online at: [https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS](https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS). A brief written documentation is provided at [doc/api_explnation.md](./doc/api_explanantion.md).
+* **Restful json api -** This is ideal for viewing/submitting content without a graphical user interface. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [doc/bbs_postman_collection.json](doc/postman_collection.json) which can be viewed online at: [https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS](https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS). A brief written documentation is provided at [doc/api_explnation.md](./doc/api_explanantion.md).
 
 * **Command-line interface -** This is for administration tools. Detailed instructions are located at [cmd/bbscli/README.md](./cmd/bbscli/README.md).
 

@@ -147,58 +147,6 @@ func (a *Access) FinalizeSubmission(ctx context.Context, in *FinalizeSubmissionI
 	}
 }
 
-func (a *Access) SubmitContent(ctx context.Context, in *SubmissionIn) (interface{}, error) {
-	if e := in.Process(); e != nil {
-		return nil, e
-	}
-
-	transport, e := object.NewTransport(in.Body, in.Sig)
-	if e != nil {
-		return nil, e
-	}
-
-	bi, e := submitAndWait(ctx, a, transport)
-	if e != nil {
-		return nil, e
-	}
-
-	switch transport.Body.Type {
-	case object.V5ThreadType:
-		return bi.Viewer().GetBoardPage(&state.BoardPageIn{
-			Perspective:    transport.Body.Creator,
-			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
-		})
-
-	case object.V5PostType:
-		return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
-			Perspective:    transport.Body.Creator,
-			ThreadHash:     transport.Body.OfThread,
-			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
-		})
-
-	case object.V5ThreadVoteType:
-		return bi.Viewer().GetVotes(&state.ContentVotesIn{
-			Perspective: transport.Body.Creator,
-			ContentHash: transport.Body.OfThread,
-		})
-
-	case object.V5PostVoteType:
-		return bi.Viewer().GetVotes(&state.ContentVotesIn{
-			Perspective: transport.Body.Creator,
-			ContentHash: transport.Body.OfPost,
-		})
-
-	case object.V5UserVoteType:
-		return bi.Viewer().GetUserProfile(&state.UserProfileIn{
-			UserPubKey: transport.Body.Creator,
-		})
-
-	default:
-		return nil, boo.Newf(boo.InvalidInput,
-			"content submission of type '%s' is invalid", transport.Body.Type)
-	}
-}
-
 func submitAndWait(ctx context.Context, a *Access, transport *object.Transport) (*state.BoardInstance, error) {
 	bi, e := a.CXO.GetBoardInstance(transport.GetOfBoard())
 	if e != nil {
