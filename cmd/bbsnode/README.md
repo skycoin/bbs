@@ -21,7 +21,8 @@ COMMANDS:
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --memory                              avoid storing BBS data on disk and use memory instead
+   --public                              whether this node is exposed publicly and shares it's subscribed boards
+   --memory                              whether to avoid storing BBS data on disk and use memory instead
    --config-dir value                    the name of the directory to store and access BBS configuration and associated cxo data (if left blank, $HOME/.skybbs will be used)
    --rpc                                 whether to enable RPC interface to interact with BBS node (used for bbscli)
    --rpc-port value                      port to serve BBS RPC interface (default: 8996)
