@@ -54,7 +54,7 @@ $ bbsnode
 
 For more detailed instructions:
 * [cmd/bbsnode/README.md](./cmd/bbsnode/README.md)
-* [Wiki: Setting up a Skycoin BBS Node](https://github.com/skycoin/bbs/wiki/Setting-up-a-Skycoin-BBS-Node)
+* [Wiki: Setting up a Skycoin BBS Node](./wiki/Setting-up-a-Skycoin-BBS-Node)
 
 The script [`run.sh`](./run.sh) is provided as a convenient to run BBS, serving static files in `static/dist`.
 
@@ -73,7 +73,7 @@ There are currently two ways of interacting with Skycoin BBS.
 
 ## Documentation
 
-Please make use of the [Skycoin BBS Wiki](https://github.com/skycoin/bbs/wiki)!
+Please make use of the [Skycoin BBS Wiki](./wiki)!
 
 ## Participate
 

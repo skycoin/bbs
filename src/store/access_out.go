@@ -10,7 +10,6 @@ import (
 type SubmissionOut struct {
 	NewSubmission   *object.ContentRep `json:"new_submission"`
 	NewVotesSummary *state.VoteRepView `json:"new_votes_summary"`
-	NewUserProfile  *state.ProfileView `json:"new_user_profile"`
 }
 
 type MessengersOut struct {

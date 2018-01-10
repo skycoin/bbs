@@ -90,7 +90,7 @@ func (a *Access) PrepareUserVote(ctx context.Context, in *PrepareUserVoteIn) (*P
 	}
 }
 
-func (a *Access) FinalizeSubmission(ctx context.Context, in *FinalizeSubmissionIn) (*SubmissionOut, error) {
+func (a *Access) FinalizeSubmission(ctx context.Context, in *FinalizeSubmissionIn) (interface{}, error) {
 	if e := in.Process(); e != nil {
 		return nil, e
 	}
@@ -110,45 +110,41 @@ func (a *Access) FinalizeSubmission(ctx context.Context, in *FinalizeSubmissionI
 		return nil, e
 	}
 
-	var (
-		votesSummary *state.ContentVotesOut
-		userProfile  *state.UserProfileOut
-	)
-
 	switch transport.Body.Type {
+	case object.V5ThreadType:
+		return bi.Viewer().GetBoardPage(&state.BoardPageIn{
+			Perspective:    transport.Body.Creator,
+			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
+		})
+
+	case object.V5PostType:
+		return bi.Viewer().GetThreadPage(&state.ThreadPageIn{
+			Perspective:    transport.Body.Creator,
+			ThreadHash:     transport.Body.OfThread,
+			PaginatedInput: typ.PaginatedInput{PageSize: math.MaxUint64},
+		})
+
 	case object.V5ThreadVoteType:
-		if votesSummary, e = bi.Viewer().GetVotes(&state.ContentVotesIn{
+		return bi.Viewer().GetVotes(&state.ContentVotesIn{
 			Perspective: transport.Body.Creator,
 			ContentHash: transport.Body.OfThread,
-		}); e != nil {
-			return nil, e
-		}
+		})
 
 	case object.V5PostVoteType:
-		if votesSummary, e = bi.Viewer().GetVotes(&state.ContentVotesIn{
+		return bi.Viewer().GetVotes(&state.ContentVotesIn{
 			Perspective: transport.Body.Creator,
 			ContentHash: transport.Body.OfPost,
-		}); e != nil {
-			return nil, e
-		}
+		})
 
 	case object.V5UserVoteType:
-		if userProfile, e = bi.Viewer().GetUserProfile(&state.UserProfileIn{
+		return bi.Viewer().GetUserProfile(&state.UserProfileIn{
 			UserPubKey: transport.Body.Creator,
-		}); e != nil {
-			return nil, e
-		}
+		})
 
 	default:
 		return nil, boo.Newf(boo.InvalidInput,
 			"content submission of type '%s' is invalid", transport.Body.Type)
 	}
-
-	return &SubmissionOut{
-		NewSubmission:   transport.Content.ToRep(),
-		NewVotesSummary: votesSummary.Votes,
-		NewUserProfile:  userProfile.Profile,
-	}, nil
 }
 
 func submitAndWait(ctx context.Context, a *Access, transport *object.Transport) (*state.BoardInstance, error) {
