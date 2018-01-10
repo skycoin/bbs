@@ -69,8 +69,8 @@
         </div>
         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
           <div class="input-group-addon">Password</div>
-          <input type="password" class="form-control" id="registerPass" #registerPass formControlName="password">
-          <div class="input-group-addon operation" (click)="isShowPassword($event,registerPass)">
+          <input type="password" class="form-control" #registerPassword formControlName="password">
+          <div class="input-group-addon operation" (click)="isShowPassword($event,registerPassword,registerConfirmPassword)">
             <i class="fa fa-eye" aria-hidden="true" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
           </div>
         </div>
@@ -79,8 +79,8 @@
         </p> -->
         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
           <div class="input-group-addon">Confirm password</div>
-          <input type="password" class="form-control" id="registerPass" #registerPass formControlName="confirmPassword" (blur)="checkPassword()">
-          <div class="input-group-addon operation" (click)="isShowPassword($event,registerPass)">
+          <input type="password" class="form-control" #registerConfirmPassword formControlName="confirmPassword" (blur)="checkPassword()">
+          <div class="input-group-addon operation" (click)="isShowPassword($event,registerPassword,registerConfirmPassword)">
             <i class="fa fa-eye" aria-hidden="true" [class.fa-eye]="showPassword" [class.fa-eye-slash]="!showPassword"></i>
           </div>
         </div>
