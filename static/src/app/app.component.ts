@@ -149,15 +149,17 @@ export class AppComponent implements OnInit {
   test(content) {
     this.loading.start();
   }
-  isShowPassword(ev: Event, input: any) {
+  isShowPassword(ev: Event, input: any, confirmInput: any) {
     ev.stopImmediatePropagation();
     ev.stopPropagation();
     ev.preventDefault();
     this.showPassword = !this.showPassword;
     if (this.showPassword) {
       input.type = 'text';
+      confirmInput.type = 'text';
     } else {
       input.type = 'password';
+      confirmInput.type = 'password';
     }
   }
   checkPassword() {
