@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	Version = "5.0"
+	Version = "5.1"
 
 	defaultConfigSubDir                    = ".skybbs"
 	defaultStaticSubDir                    = "static/dist"
