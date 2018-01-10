@@ -72,7 +72,7 @@ func NewDefaultConfig() *Config {
 		EnforcedSubscriptions:      []string{},
 		WebPort:                    defaultWebPort,
 		WebGUI:                     true,
-		WebGUIDir:                  defaultStaticSubDir, // --> Action: set as '$HOME/.skybbs/static/dist'
+		WebGUIDir:                  defaultStaticSubDir, // --> Action: set as '$HOME/.skybbs/static'
 		Browser:                    false,
 	}
 }

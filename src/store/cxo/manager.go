@@ -136,7 +136,7 @@ func (m *Manager) Relay() *accord.Relay {
 
 // Sets up the CXO node.
 func (m *Manager) prepareNode() error {
-	c := setup.NewCXOConfig()
+	c := node.NewConfig()
 
 	c.Log.Prefix = "[CXO] "
 	c.Log.Debug = false
