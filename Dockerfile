@@ -35,7 +35,7 @@ COPY --from=build-node /bbs/static/dist /usr/local/bbs/static
 VOLUME /data
 WORKDIR /
 
-EXPOSE $CXO_PORT $WEB_PORT
+EXPOSE 8080 8998
 
 CMD [ \
     "bbsnode", \
