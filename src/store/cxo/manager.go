@@ -23,6 +23,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/skycoin/cxo/node/gnet"
 )
 
 const (
@@ -178,14 +179,29 @@ func (m *Manager) prepareNode() error {
 		for _, pk := range m.node.Feeds() {
 			c.Subscribe(pk)
 		}
+
 		m.file.SetConnectionStatus(c.Address(), true)
+		m.l.Printf("Connected to '%s'", c.Address())
 	}
 
 	c.OnCloseConnection = func(c *node.Conn) {
 		m.file.SetConnectionStatus(c.Address(), false)
+		m.l.Printf("Disconnected from '%s'", c.Address())
+
 		go func() {
-			time.Sleep(time.Second * 2)
-			m.node.Connect(c.Address())
+			for {
+				time.Sleep(time.Second * 2)
+				switch c, e := m.node.Connect(c.Address()); e {
+				case nil, gnet.ErrAlreadyListen:
+					return
+				default:
+					if c == nil {
+						m.l.Printf("Reconnecting due to error: '%s'", e.Error())
+					} else {
+						m.l.Printf("Reconnecting to `%s` due to error: '%s'", c.Address(), e.Error())
+					}
+				}
+			}
 		}()
 	}
 

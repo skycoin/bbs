@@ -13,17 +13,23 @@ COPY . /bbs
 
 # `unsafe` flag used as work around to prevent infinite loop in Docker
 # see https://github.com/nodejs/node-gyp/issues/1236
-RUN npm install -g --unsafe @angular/cli && \
-    cd /bbs/static && \
-    yarn && \
-    npm run build
+RUN cd /bbs/static && \
+    rm -rf package-lock.json && \
+    npm install -g --unsafe && \
+    npm run build --prod
 
 ## Skycoin BBS Image
 FROM alpine:3.7
 
+ENV DATA_DIR=/data \
+    MESSENGER_ADDR=35.227.102.45:8005 \
+    RPC_PORT=8996 \
+    CXO_PORT=8998 \
+    WEB_PORT=8080
+
 RUN adduser -D skycoin
-RUN mkdir /data
-RUN chown skycoin: /data
+RUN mkdir $DATA_DIR
+RUN chown skycoin: $DATA_DIR
 
 USER skycoin
 
@@ -32,19 +38,18 @@ COPY --from=build-go /go/bin/* /usr/bin/
 COPY --from=build-node /bbs/static/dist /usr/local/bbs/static
 # volumes
 
-VOLUME /data
+VOLUME $DATA_DIR
 WORKDIR /
 
-EXPOSE 8080 8998
+EXPOSE $RPC_PORT $CXO_PORT $WEB_PORT
 
-CMD [ \
-    "bbsnode", \
-    "--public=true", \
-    "--memory=false", \
-    "--config-dir=/data", \
-    "--cxo-port=8998", \
-    "--enforced-messenger-addresses=35.227.102.45:8005", \
-    "--enforced-subscriptions=03588a2c8085e37ece47aec50e1e856e70f893f7f802cb4f92d52c81c4c3212742", \
-    "--web-port=8080", \
-    "--web-gui-dir=/usr/local/bbs/static" \
-]
+CMD bbsnode \
+    --public=true \
+    --memory=false \
+    --config-dir=$DATA_DIR \
+    --rpc=true \
+    --rpc-port=$RPC_PORT \
+    --cxo-port=$CXO_PORT \
+    --enforced-messenger-addresses=$MESSENGER_ADDR \
+    --web-port=$WEB_PORT \
+    --web-gui-dir=/usr/local/bbs/static

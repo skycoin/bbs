@@ -11,7 +11,7 @@ Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) 
 
 [![Skycoin BBS Showcase 4 - YouTube](https://i.ytimg.com/vi/6ZqwgefYauU/0.jpg)](https://youtu.be/6ZqwgefYauU)
 
-## Installation
+## Install
 
 ### Go 1.9+ Installation and Setup
 
@@ -46,7 +46,7 @@ but it must be cloned to this path: `$GOPATH/src/github.com/skycoin/bbs`.
 
 Building instructions for static files can be found in [static/README.md](./static/README.md).
 
-## Running BBS Node
+## Run
 
 ```bash
 $ bbsnode
@@ -62,14 +62,47 @@ The script [`run.sh`](./run.sh) is provided as a convenient to run BBS, serving 
 $ ./run.sh
 ```
 
-## Using Skycoin BBS
+## Docker
 
-There are currently two ways of interacting with Skycoin BBS.
-* **Web interface thin client -** By default, the flag `-web-gui` is enabled. Hence, when BBS is launched, the web gui will be served at a port specified by `-web-port`. One can only submit and view content via the thin client.
+Pull docker image.
 
-* **Restful json api -** This is ideal for viewing/submitting content without a graphical user interface. Documentation for the api is provided as a [Postman](https://www.getpostman.com/) Collection located at [doc/bbs_postman_collection.json](doc/postman_collection.json) which can be viewed online at: [https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS](https://documenter.getpostman.com/view/985347/skycoin-bbs-v05/719YYTS). A brief written documentation is provided at [doc/api_explnation.md](./doc/api_explanantion.md).
+```bash
+$ docker pull skycoin/bbs
+```
 
-* **Command-line interface -** This is for administration tools. Detailed instructions are located at [cmd/bbscli/README.md](./cmd/bbscli/README.md).
+Create a docker volume.
+
+```bash
+$ docker volume create bbs-data
+```
+
+Run Skycoin BBS.
+
+```bash
+$ docker run -p 8080:8080 -p 8998:8998 -p 8996:8996 -v bbs0:/data skycoin/bbs
+```
+
+List network interfaces.
+
+```bash
+$ ifconfig
+```
+
+Use CLI.
+
+```bash
+# help menu
+$ docker run skycoin/bbs bbscli -h
+
+# interact with bbs node
+$ docker run skycoin/bbs bbscli -a 172.17.0.1:8996 messengers discover
+```
+
+## Command-line interface
+
+The Command-line interface is for administration control over the BBS node.
+
+Detailed instructions are located at [cmd/bbscli/README.md](./cmd/bbscli/README.md).
 
 ## Documentation
 
