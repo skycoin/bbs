@@ -11,15 +11,20 @@ import (
 )
 
 const (
-	Version = "5.1"
+	Version = "5.2"
 )
 
 var (
 	Port = 8996
+	Address = ""
 )
 
 func address() string {
-	return "[::]:" + strconv.Itoa(Port)
+	if Address != "" {
+		return Address
+	} else {
+		return "[::]:" + strconv.Itoa(Port)
+	}
 }
 
 func call(method string, in interface{}) error {
@@ -45,6 +50,12 @@ func main() {
 			EnvVar:      "BBS_RPC_PORT",
 			Value:       Port,
 			Destination: &Port,
+		},
+		cli.StringFlag{
+			Name: "address, a",
+			Usage: "rpc address of the bbs node, over-rides 'port, p' flag",
+			Value: Address,
+			Destination: &Address,
 		},
 	}
 	app.Commands = cli.Commands{
