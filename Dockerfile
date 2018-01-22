@@ -15,8 +15,8 @@ COPY . /bbs
 # see https://github.com/nodejs/node-gyp/issues/1236
 RUN cd /bbs/static && \
     rm -rf package-lock.json && \
-    npm install -g --unsafe && \
-    npm run build --prod
+    npm install --unsafe -g && \
+    npm run build
 
 ## Skycoin BBS Image
 FROM alpine:3.7
