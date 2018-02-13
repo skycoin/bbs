@@ -1,0 +1,27 @@
+sudo: required
+
+dist: trusty
+
+language:
+  - go
+
+services:
+  - docker
+
+before_install:
+  - sudo apt-get update 
+  - sudo apt-get install curl git mercurial make binutils gcc bzr bison libgmp3-dev screen -y
+  - bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
+  - source $HOME/.gvm/scripts/gvm
+  - gvm install go1.9 -B
+  - gvm use go1.9 --default
+  - go get -u github.com/golang/dep
+  - docker pull skycoin/bbs
+  - docker run -d -p 8080:8080 -p 8998:8998 -p 8996:8996 -v bbs0:/data skycoin/bbs
+  - docker ps -a
+
+install:
+  - go get -v github.com/skycoin/bbs/...
+
+notifications:
+  email: false
