@@ -1,0 +1,23 @@
+sudo: required
+
+dist: trusty
+
+language:
+  - go
+
+go:
+ - 1.9.x
+
+services:
+  - docker
+
+before_install:
+  - docker pull skycoin/bbs
+  - docker run -d -p 8080:8080 -p 8998:8998 -p 8996:8996 -v bbs0:/data skycoin/bbs
+  - docker ps -a
+
+install:
+  - go get -v github.com/skycoin/bbs/...
+
+notifications:
+  email: false

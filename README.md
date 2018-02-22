@@ -4,8 +4,7 @@
 
 [![GoReportCard](https://goreportcard.com/badge/skycoin/bbs)](https://goreportcard.com/report/skycoin/bbs)
 [![Telegram group link](telegram-group.svg)](https://t.me/skycoinbbs)
-
-Skycoin BBS is a next generation decentralised social network (BBS stands for [Bulletin Board System](https://en.wikipedia.org/wiki/Bulletin_board_system)).
+[![Build Status](https://travis-ci.org/skycoin/bbs.svg?branch=ui_automation)](https://travis-ci.org/skycoin/bbs)
 
 Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) (CXO) to store and synchronise data between nodes and the [Skycoin Messenger](https://github.com/skycoin/net) (net) for inter-node content submission.
 
