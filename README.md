@@ -4,7 +4,7 @@
 
 [![GoReportCard](https://goreportcard.com/badge/skycoin/bbs)](https://goreportcard.com/report/skycoin/bbs)
 [![Telegram group link](telegram-group.svg)](https://t.me/skycoinbbs)
-[![Build Status](https://travis-ci.org/skycoin/bbs.svg?branch=ui_automation)](https://travis-ci.org/skycoin/bbs)
+[![Build Status](https://travis-ci.com/skycoin/bbs.svg?branch=master)](https://travis-ci.com/skycoin/bbs)
 
 Skycoin BBS uses the [Skycoin CX Object System](https://github.com/skycoin/cxo) (CXO) to store and synchronise data between nodes and the [Skycoin Messenger](https://github.com/skycoin/net) (net) for inter-node content submission.
 
